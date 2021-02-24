@@ -1,3 +1,5 @@
+declare ARCH=$( uname )
+
 if [[ $ARCH == "Darwin" ]]; then
 	declare NPROC=$( sysctl -n hw.logicalcpu )
 	declare DYLIB_EXT="dylib"
@@ -10,15 +12,15 @@ fi
 function build_project() {
 	local ret=0
 	if [ -f "$(pwd)/eos/build/CMakeCache.txt" ]; then
-        	pushd eos/build
-        	make -j$NPROC
+        pushd eos/build
+        make -j$NPROC
 		ret=$?
-	        popd
+	    popd
 	else
-                pushd eos
+        pushd eos
 		./scripts/eosio_build.sh
 		ret=$?
-                popd
+        popd
 	fi
 	return $ret
 }
