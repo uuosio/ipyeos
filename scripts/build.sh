@@ -29,7 +29,7 @@ build_project
 #cp eos/build/programs/uuos/uuos bin/uuos
 
 if [[ $ARCH == "Darwin" ]]; then
-	./build-mac.sh
+	./scripts/build-mac.sh
 else
-	./build-linux.sh
+	./scripts/build-linux.sh
 fi
