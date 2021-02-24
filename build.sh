@@ -1,9 +1,9 @@
-if [[ $ARCH == "Linux" ]]; then
-	declare NPROC=$( nproc )
-	declare DYLIB_EXT="so"
-else
+if [[ $ARCH == "Darwin" ]]; then
 	declare NPROC=$( sysctl -n hw.logicalcpu )
 	declare DYLIB_EXT="dylib"
+else
+	declare NPROC=$( nproc )
+	declare DYLIB_EXT="so"
 fi
 
 
@@ -24,6 +24,10 @@ function build_project() {
 }
 
 build_project
-cp eos/build/programs/uuos/uuos bin/uuos
+#cp eos/build/programs/uuos/uuos bin/uuos
 
-
+if [[ $ARCH == "Darwin" ]]; then
+	./build-mac.sh
+else
+	./build-linux.sh
+fi
