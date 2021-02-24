@@ -1,0 +1,13 @@
+#!/bin/bash
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+if [[ $( uname ) == 'Darwin' ]]; then
+    export CHAIN_API_LIB=$DIR/../lib/libchain_api.dylib
+    export VM_API_LIB=$DIR/../lib/libvm_api.dylib
+    export PYTHON_SHARED_LIB_PATH=$DIR/../lib/libpython3.7m.dylib
+else
+    export CHAIN_API_LIB=$DIR/../lib/libchain_api.so
+    export VM_API_LIB=$DIR/../lib/libvm_api.so
+    export PYTHON_SHARED_LIB_PATH=/usr/lib/x86_64-linux-gnu/libpython3.7m.so
+fi
+
+$DIR/uuos $@
