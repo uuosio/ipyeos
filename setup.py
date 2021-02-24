@@ -1,6 +1,7 @@
 import os
 import sys
 import platform
+from setuptools import find_packages
 from skbuild import setup
 
 # Require pytest-runner only when running tests
@@ -11,14 +12,14 @@ pytest_runner = (['pytest-runner>=2.0,<3dev']
 setup_requires = pytest_runner
 
 data_files = [
-    ('bin', ['bin/uuos']),
+    ('bin', ['eos/build/programs/uuos/uuos']),
 ]
 
 _system = platform.system()
 if _system == 'Darwin':
-    data_files.append(('lib', ['lib/libchain_api.dylib', 'lib/libvm_api.dylib']))
+    data_files.append(('lib', ['eos/build/libraries/chain_api/libchain_api.dylib', 'eos/build/libraries/vm_api/libvm_api.dylib']))
 elif _system == 'Linux':
-    data_files.append(('lib',['lib/libchain_api.so', 'lib/libvm_api.so']))
+    data_files.append(('lib',['eos/build/libraries/chain_api/libchain_api.so', 'eos/build/libraries/vm_api/libvm_api.so']))
 else:
     raise Exception(f'unsupported platform: {_system}')
 
@@ -44,7 +45,7 @@ setup(
     author='The UUOSIO Team',
     license="MIT",
     packages=['uuosio'],
-    package_dir={'uuosio': 'uuosio'},
+    package_dir={'uuosio': 'py'},
     package_data={'uuosio': ['tests/contracts/eosio.bios/*',
                              'tests/contracts/eosio.msig/*',
                              'tests/contracts/eosio.system/*',

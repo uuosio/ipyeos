@@ -1,0 +1,6 @@
+include LICENSE CHANGES requirements.txt
+recursive-exclude eos
+recursive-exclude * __pycache__
+recursive-exclude * *.pyc
+recursive-exclude * *.pyo
+recursive-exclude * *.orig
