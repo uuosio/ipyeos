@@ -45,7 +45,7 @@ setup(
     author='The UUOSIO Team',
     license="MIT",
     packages=['uuosio'],
-    package_dir={'uuosio': 'py'},
+    package_dir={'uuosio': 'pysrc'},
     package_data={'uuosio': ['tests/contracts/eosio.bios/*',
                              'tests/contracts/eosio.msig/*',
                              'tests/contracts/eosio.system/*',

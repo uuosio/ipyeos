@@ -70,7 +70,7 @@ def apply(a, b, c):
 
     def test_debug(self):
         uuos.enable_native_contracts(True)
-        eosio_contract = f'build/libraries/vm_api//test/libnative_eosio_system2.{self.so}'
+        eosio_contract = f'eos/build/libraries/vm_api//test/libnative_eosio_system2.{self.so}'
         ret = uuos.set_native_contract(uuos.s2n('eosio'), eosio_contract)
         assert ret
 

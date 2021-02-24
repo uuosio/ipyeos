@@ -28,4 +28,4 @@ target_include_directories(_uuos PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
 
 set_property(TARGET _uuos PROPERTY CXX_STANDARD 17)
 
-install(TARGETS _uuos LIBRARY DESTINATION uuosio)
+install(TARGETS _uuos LIBRARY DESTINATION pysrc)
