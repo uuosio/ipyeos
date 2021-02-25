@@ -1,5 +1,6 @@
 import sys
 from . import _uuos
+from uuosio.uuostyping import Name
 
 class NativeType:
     handshake_message = 0
@@ -16,51 +17,51 @@ class NativeType:
     genesis_state = 11
     abi_def = 12
 
-def set_log_level(logger_name, level):
+def set_log_level(logger_name: str, level: int) -> None:
     _uuos.set_log_level(logger_name, level)
 
-def set_block_interval_ms(ms):
+def set_block_interval_ms(ms: int) -> None:
     _uuos.set_block_interval_ms(ms)
 
-def pack_native_object(_type, obj):
+def pack_native_object(_type: int, obj: dict) -> bytes:
     return _uuos.pack_native_object(_type, obj)
 
-def unpack_native_object(_type, packed_obj):
+def unpack_native_object(_type: int, packed_obj: bytes) -> dict:
     return _uuos.unpack_native_object(_type, packed_message)
 
-def pack_abi(abi):
+def pack_abi(abi: str) -> bytes:
     return pack_native_object(NativeType.abi_def, abi)
 
-def s2n(s):
+def s2n(s: str) -> int:
     '''
     Convert a EOSIO name to uint64_t
     '''
     return _uuos.s2n(s)
 
-def n2s(n):
+def n2s(n: int) -> str:
     '''
     Convert int to a EOSIO name
     '''
     return _uuos.n2s(n)
 
-def s2b(s):
+def s2b(s: str) -> bytes:
     n = s2n(s)
     return int.to_bytes(n, 8, 'little')
 
-def set_native_contract(contract, native_contract_lib):
+def set_native_contract(contract: Name, native_contract_lib) -> bool:
     return _uuos.set_native_contract(contract, native_contract_lib)
 
-def get_native_contract(contract):
+def get_native_contract(contract) -> str:
     return _uuos.get_native_contract(contract)
 
-def enable_native_contracts(debug):
+def enable_native_contracts(debug) -> None:
     _uuos.enable_native_contracts(debug)
 
-def is_native_contracts_enabled():
+def is_native_contracts_enabled() -> bool:
     return _uuos.is_native_contracts_enabled()
 
-def init():
+def init() -> bool:
     return _uuos.init(sys.argv)
 
-def exec():
+def exec() -> None:
     _uuos.exec()
