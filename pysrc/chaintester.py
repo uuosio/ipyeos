@@ -11,6 +11,8 @@ from uuosio import chain, chainapi, uuos, config
 from datetime import datetime, timedelta
 
 from uuosio import log
+from typing import List, Dict, Union, Optional
+from uuosio.uuostyping import Name
 
 logger = log.get_logger(__name__)
 
@@ -315,7 +317,7 @@ class ChainTester(object):
     def free(self):
         self.chain.free()
 
-    def find_private_key(self, actor, perm_name):
+    def find_private_key(self, actor: Name, perm_name: Name):
         ret, result = self.api.get_account(actor)
         if not ret:
             raise Exception(f'actor not found {actor}')
@@ -332,7 +334,7 @@ class ChainTester(object):
                         keys.append(priv_key)
         return keys
 
-    def push_action(self, account, action, args, permissions={}):
+    def push_action(self, account: Name, action: List, args: Dict, permissions: Dict={}):
         auth = []
         for actor in permissions:
             perm = permissions[actor]
@@ -360,7 +362,7 @@ class ChainTester(object):
         #     logger.info(f'+++++{account} {action} {elapsed}')
         return ret
 
-    def push_actions(self, actions):
+    def push_actions(self, actions: List):
         chain_id = self.chain.id()
         ref_block_id = self.chain.last_irreversible_block_id()
         priv_keys = []
@@ -435,7 +437,7 @@ class ChainTester(object):
         self.chain.commit_block()
         self.start_block()
 
-    def create_account(self, creator, account, owner_key, active_key, ram_bytes=0, stake_net=0.0, stake_cpu=0.0):
+    def create_account(self, creator: Name, account: Name, owner_key: Name, active_key: Name, ram_bytes: int=0, stake_net: float=0.0, stake_cpu: float=0.0):
         actions = []
         # logger.info(f'{creator} {account}')
         args = {
@@ -481,11 +483,11 @@ class ChainTester(object):
 
         return self.push_actions(actions)
 
-    def buy_ram_bytes(self, payer, receiver, _bytes):
+    def buy_ram_bytes(self, payer: Name, receiver: Name, _bytes):
         args = {'payer': payer, 'receiver': receiver, 'bytes': _bytes}
         return self.push_action('eosio', 'buyrambytes', args, {payer:'active'})
 
-    def delegatebw(self, _from, receiver, stake_net, stake_cpu, transfer=0):
+    def delegatebw(self, _from: Name, receiver: Name, stake_net: float, stake_cpu: float, transfer: bool=0):
         # logger.info(os.getpid())
         # logger.info(input('<<<'))
         args = {
@@ -497,7 +499,7 @@ class ChainTester(object):
         }
         return self.push_action('eosio', 'delegatebw', args, {_from:'active'})
 
-    def deploy_contract(self, account, code, abi, vm_type=0, show_elapse=True):
+    def deploy_contract(self, account: Name, code: bytes, abi: str, vm_type: int=0, show_elapse: bool=True):
         actions = []
         setcode = {"account": account,
                    "vmtype": vm_type,
@@ -534,25 +536,25 @@ class ChainTester(object):
         self.chain.clear_abi_cache(account)
         return ret
 
-    def transfer(self, _from, _to, _amount, _memo='', token_account='eosio.token', token_name='', permission='active'):
+    def transfer(self, _from: Name, _to: Name, _amount: float, _memo: str='', token_account: Name='eosio.token', token_name: str='', permission: Name='active'):
         if not token_name:
             token_name = self.main_token
         args = {"from":_from, "to":_to, "quantity":'%.4f %s'%(_amount,token_name), "memo":_memo}
         return self.push_action(token_account, 'transfer', args, {_from:permission})
 
-    def pack_args(self, account, action , args):
+    def pack_args(self, account: Name, action: Name , args: dict):
         ret = self.chain.pack_action_args(account, action, args)
         if not ret:
             raise Exception('pack error')
         return ret
 
-    def unpack_args(self, account, action, raw_args):
+    def unpack_args(self, account: Name, action: Name, raw_args: bytes):
         ret = self.chain.unpack_action_args(account, action, raw_args)
         if not ret:
             raise Exception('unpack error')
         return ret
 
-    def mp_compile(self, file_name, src):
+    def mp_compile(self, file_name: str, src: str):
         if src in self.code_cache:
             return self.code_cache[src]
 

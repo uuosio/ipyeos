@@ -1,8 +1,11 @@
 import ujson as json
 from datetime import datetime
+from typing import Dict, List, Union, Optional
 
 from uuosio import _chain, _uuos
 from uuosio import log
+from uuosio.uuostyping import Name
+
 logger = log.get_logger(__name__)
 
 def isoformat(dt):
@@ -10,10 +13,10 @@ def isoformat(dt):
 
 class Chain(object):
 
-    def __init__(self, config, genesis, protocol_features_dir, snapshot_dir):
+    def __init__(self, config: dict, genesis: dict, protocol_features_dir: str, snapshot_dir: str):
         self.new(config, genesis, protocol_features_dir, snapshot_dir)
 
-    def new(self, config, genesis, protocol_features_dir, snapshot_dir):
+    def new(self, config: dict, genesis: dict, protocol_features_dir: str, snapshot_dir: str):
         """
         Create a new Chain instance
         Code example::
@@ -40,7 +43,7 @@ class Chain(object):
             error = _chain.get_last_error()
             raise Exception(error)
 
-    def startup(self, initdb):
+    def startup(self, initdb: bool):
         """
         Startup a chain
         Code example::
@@ -66,7 +69,7 @@ class Chain(object):
         """
         return _chain.id(self.ptr)
 
-    def start_block(self, _time, confirm_block_count=0, features=None):
+    def start_block(self, _time: Union[datetime, str], confirm_block_count: int=0, features: Optional[list]=None):
         """
         Start a new block
         :param str _time
@@ -89,7 +92,7 @@ class Chain(object):
         """
         return _chain.abort_block(self.ptr)
 
-    def get_global_properties(self, json=True):
+    def get_global_properties(self, json: bool=True):
         '''
         Get global properties
         :returns str
@@ -99,53 +102,37 @@ class Chain(object):
             return json.loads(ret)
         return ret
 
-    def get_dynamic_global_properties(self, json=True):
+    def get_dynamic_global_properties(self):
         ret = _chain.get_dynamic_global_properties(self.ptr)
-        if json:
-            return json.loads(ret)
-        return ret
+        return json.loads(ret)
 
-    def get_actor_whitelist(self, json=True):
+    def get_actor_whitelist(self):
         ret = _chain.get_actor_whitelist(self.ptr)
-        if ret:
-            return json.loads(ret)
-        return ret
+        return json.loads(ret)
 
-    def get_actor_blacklist(self, json=True):
+    def get_actor_blacklist(self):
         ret = _chain.get_actor_blacklist(self.ptr)
-        if json:
-            return json.loads(ret)
-        return ret
+        return json.loads(ret)
 
-    def get_contract_whitelist(self, json=True):
+    def get_contract_whitelist(self):
         ret = _chain.get_contract_whitelist(self.ptr)
-        if json:
-            return json.loads(ret)
-        return ret
+        return json.loads(ret)
 
-    def get_contract_blacklist(self, json=True):
+    def get_contract_blacklist(self):
         ret = _chain.get_contract_blacklist(self.ptr)
-        if json:
-            return json.loads(ret)
-        return ret
+        return json.loads(ret)
 
-    def get_action_blacklist(self, json=True):
+    def get_action_blacklist(self):
         ret = _chain.get_action_blacklist(self.ptr)
-        if json:
-            return json.loads(ret)
-        return ret
+        return json.loads(ret)
 
-    def get_key_blacklist(self, json=True):
+    def get_key_blacklist(self):
         ret = _chain.get_key_blacklist(self.ptr)
-        if json:
-            return json.loads(ret)
-        return ret
+        return json.loads(ret)
 
-    def get_key_blacklist(self, json=True):
+    def get_key_blacklist(self):
         ret = _chain.get_key_blacklist(self.ptr)
-        if json:
-            return json.loads(ret)
-        return ret
+        return json.loads(ret)
 
     def set_actor_whitelist(self, whitelist):
         whitelist = json.dumps(whitelist)
@@ -186,11 +173,9 @@ class Chain(object):
             return json.loads(ret)
         return ret
 
-    def head_block_state(self, json=True):
+    def head_block_state(self):
         ret = _chain.head_block_state(self.ptr)
-        if json:
-            return json.loads(ret)
-        return ret
+        return json.loads(ret)
 
     def fork_db_head_block_num(self):
         return _chain.fork_db_head_block_num(self.ptr)
@@ -235,23 +220,17 @@ class Chain(object):
             return json.loads(ret)
         return ret
 
-    def active_producers(self, json=True):
+    def active_producers(self):
         ret = _chain.active_producers(self.ptr)
-        if json:
-            return json.loads(ret)
-        return ret
+        return json.loads(ret)
 
-    def pending_producers(self, json=True):
+    def pending_producers(self):
         ret = _chain.pending_producers(self.ptr)
-        if json:
-            return json.loads(ret)
-        return ret
+        return json.loads(ret)
 
-    def proposed_producers(self, json=True):
+    def proposed_producers(self):
         ret = _chain.proposed_producers(self.ptr)
-        if json:
-            return json.loads(ret)
-        return ret
+        return json.loads(ret)
 
     def last_irreversible_block_num(self):
         return _chain.last_irreversible_block_num(self.ptr)
@@ -313,11 +292,9 @@ class Chain(object):
     def get_resource_greylist(self):
         return _chain.get_resource_greylist(self.ptr)
 
-    def get_config(self, json=True):
+    def get_config(self):
         ret = _chain.get_config(self.ptr)
-        if json:
-            return json.loads(ret)
-        return ret
+        return json.loads(ret)
 
     def validate_expiration(self, trx):
         return _chain.validate_expiration(self.ptr, trx)
@@ -412,7 +389,7 @@ class Chain(object):
             raise Exception(result)
         return result
 
-    def get_scheduled_transaction(self, sender_id, sender):
+    def get_scheduled_transaction(self, sender_id: int, sender: Name):
         ret = _chain.get_scheduled_transaction(self.ptr, sender_id, sender)
         if ret:
             return json.loads(ret)
@@ -421,7 +398,7 @@ class Chain(object):
         ret = _chain.get_scheduled_transactions(self.ptr)
         return json.loads(ret)
 
-    def push_scheduled_transaction(self, scheduled_tx_id, deadline, billed_cpu_time_us):
+    def push_scheduled_transaction(self, scheduled_tx_id: str, deadline: Union[datetime, str], billed_cpu_time_us: int):
         if isinstance(deadline, datetime):
             deadline = deadline.isoformat(timespec='milliseconds')
         return _chain.push_scheduled_transaction(self.ptr, scheduled_tx_id, deadline, billed_cpu_time_us)
@@ -432,18 +409,18 @@ class Chain(object):
     def pop_block(self):
         return _chain.pop_block(self.ptr)
 
-    def get_account(self, account):
+    def get_account(self, account: Name):
         return _chain.get_account(self.ptr, account)
 
-    def get_scheduled_producer(self, block_time):
+    def get_scheduled_producer(self, block_time: Union[datetime, str]):
         return _chain.get_scheduled_producer(self.ptr, block_time)
 
-    def get_scheduled_producer(self, block_time):
+    def get_scheduled_producer(self, block_time: Union[datetime, str]):
         if not isinstance(block_time, str):
             block_time = block_time.isoformat(timespec='milliseconds')
         return _chain.get_scheduled_producer(self.ptr, block_time)
 
-    def finalize_block(self, priv_keys):
+    def finalize_block(self, priv_keys: Union[list, str]):
         if isinstance(priv_keys, list):
             priv_keys = json.dumps(priv_keys)
         _chain.finalize_block(self.ptr, priv_keys)
@@ -452,18 +429,18 @@ class Chain(object):
         ret = _chain.get_producer_public_keys(self.ptr)
         return json.loads(ret)
 
-    def clear_abi_cache(self, account):
+    def clear_abi_cache(self, account: Name):
         _chain.clear_abi_cache(self.ptr, account)
 
-    def pack_action_args(self, name, action, args):
+    def pack_action_args(self, name: Name, action: Name, args: dict):
         if isinstance(args, dict):
             args = json.dumps(args)
         return _chain.pack_action_args(self.ptr, name, action, args)
 
-    def unpack_action_args(self, name, action, raw_args):
+    def unpack_action_args(self, name: Name, action: Name, raw_args: bytes):
         return _chain.unpack_action_args(self.ptr, name, action, raw_args)
 
-    def gen_transaction(self, _actions, expiration, reference_block_id, _id, compress, _private_keys):
+    def gen_transaction(self, _actions: List, expiration: datetime, reference_block_id: str, _id: str, compress: bool, _private_keys: List):
         if isinstance(expiration, datetime):
             expiration = isoformat(expiration)
         if isinstance(_actions, dict):
@@ -473,7 +450,7 @@ class Chain(object):
     def get_last_error(self):
         return _chain.get_last_error(self.ptr)
 
-    def set_last_error(self, error):
+    def set_last_error(self, error: str):
         _chain.set_last_error(self.ptr, error)
 
     def get_producer_public_keys(self):
