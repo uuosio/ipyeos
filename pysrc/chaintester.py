@@ -301,8 +301,8 @@ class ChainTester(object):
         self.deploy_contract('eosio', code, abi)
 
     def deploy_micropython(self):
-        code_path = os.path.join(test_dir, 'tests/contracts/micropython/micropython.wasm')
-        code_path = '/Users/newworld/dev/uuos3/externals/micropython/build/ports/micropython_eosio.wasm'
+        code_path = os.path.join(test_dir, 'tests/contracts/micropython/micropython_eosio.wasm')
+        # code_path = '/Users/newworld/dev/uuos3/externals/micropython/build/ports/micropython_eosio.wasm'
         #code_path = '/Users/newworld/dev/uuos3/build/externals/micropython/ports/uuosio/micropython_eosio.wasm'
         abi_path = os.path.join(test_dir, 'tests/contracts/micropython/micropython.abi')
         with open(code_path, 'rb') as f:
