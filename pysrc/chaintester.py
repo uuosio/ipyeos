@@ -390,6 +390,9 @@ class ChainTester(object):
         # expiration = datetime.utcnow() + timedelta(seconds=60*60)
 
         expiration = self.chain.head_block_time()
+        now = datetime.utcnow()
+        if expiration < now:
+            expiration = now
         expiration = expiration + timedelta(seconds=60)
         raw_signed_trx = self.chain.gen_transaction(actions, expiration, ref_block_id, chain_id, False, priv_keys)
         # signed_trx = PackedTransactionMessage.unpack(raw_signed_trx)
@@ -402,8 +405,8 @@ class ChainTester(object):
         return result
 
     def calc_pending_block_time(self):
-        base = self.chain.head_block_time()
-        return base + timedelta(microseconds=config.block_interval_us)
+        # base = self.chain.head_block_time()
+        # return base + timedelta(microseconds=config.block_interval_us)
 
 #        self.chain.abort_block()
         now = datetime.utcnow()
@@ -414,7 +417,8 @@ class ChainTester(object):
         # print('min_time_to_next_block:', min_time_to_next_block)
         block_time = base + timedelta(microseconds=min_time_to_next_block)
         if block_time - now < timedelta(microseconds=config.block_interval_us/10):
-            block_time += timedelta(microseconds=config.block_interval_us)        
+            block_time += timedelta(microseconds=config.block_interval_us)
+            logger.warning("++++block time too small!")
         return block_time
 
     def start_block(self):
