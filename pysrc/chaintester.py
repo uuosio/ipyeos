@@ -417,7 +417,7 @@ class ChainTester(object):
         # print('min_time_to_next_block:', min_time_to_next_block)
         block_time = base + timedelta(microseconds=min_time_to_next_block)
         if block_time - now < timedelta(microseconds=config.block_interval_us/10):
-            block_time += timedelta(microseconds=config.block_interval_us)
+            # block_time += timedelta(microseconds=config.block_interval_us)
             logger.warning("++++block time too small!")
         return block_time
 
