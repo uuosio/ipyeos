@@ -3,7 +3,7 @@ from uuosio import uuos
 
 def run():
     ret = uuos.init()
-    if not ret == 6: #INIT_SUCCESS
+    if not ret == 6: #exit on not init success
         sys.exit(ret)
     uuos.exec()
     print('done!')
