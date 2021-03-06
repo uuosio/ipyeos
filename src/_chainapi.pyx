@@ -28,6 +28,7 @@ cdef extern from "<uuos.hpp>":
     ctypedef struct chain_rpc_api_proxy:
         int get_info(string& result)
         int get_account(string& params, string& result)
+        int get_table_rows(string& params, string& result)
 
     ctypedef struct chain_proxy:
         chain_rpc_api_proxy* api_proxy()
@@ -42,4 +43,9 @@ def get_info(uint64_t ptr):
 def get_account(uint64_t ptr, string& params):
     cdef string result
     ret = chain_api(ptr).get_account(params, result)
+    return ret, result
+
+def get_table_rows(uint64_t ptr, params):
+    cdef string result
+    ret = chain_api(ptr).get_table_rows(params, result)
     return ret, result
