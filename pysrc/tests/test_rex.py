@@ -76,7 +76,57 @@ class TestRex(object):
     def teardown_method(self, method):
         pass
 
-    def test_powerup(self):
+    def test_rex(self):
+        args = {
+            'proxy': 'bob',
+            'isproxy': True
+        }
+        self.tester.push_action('eosio', 'regproxy', args, {'bob': 'active'})
+
+        self.tester.transfer('eosio', 'alice', 1000000)
+        self.tester.buy_ram_bytes('alice', 'alice', 512*1024)
+        self.tester.delegatebw('alice', 'alice', 100.0, 100.0)
+
+        args = {
+            "voter": 'alice',
+            "proxy": 'bob',
+            "producers": []
+        }
+
+        self.tester.push_action('eosio', 'voteproducer', args, {'alice': 'active'})
+
+        args = {
+            'owner': 'alice',
+            'amount': '1.0000 UUOS'
+        }
+        self.tester.push_action('eosio', 'deposit', args, {'alice': 'active'})
+        self.tester.push_action('eosio', 'withdraw', args, {'alice': 'active'})
+
+        args = {
+            'owner': 'alice',
+            'amount': '1000.0000 UUOS'
+        }
+        self.tester.push_action('eosio', 'deposit', args, {'alice': 'active'})
+
+        args = {
+            'from': 'alice',
+            'amount': '2.1000 UUOS'
+        }
+        # logger.info('+++++++balance %s', self.tester.get_balance('alice'))
+        self.tester.push_action('eosio', 'buyrex', args, {'alice': 'active'})
+
+        params = dict(
+            json=True,
+            code='eosio',
+            scope='eosio',
+            table='rexbal',
+            lower_bound='alice',
+            upper_bound='',
+            limit=10,
+        )
+        r = self.tester.api.get_table_rows(params)
+        print(r)
+
         account = 'alice'
         args = {
             'payer':account,
@@ -91,4 +141,3 @@ class TestRex(object):
     def test_hello(self):
         r = self.tester.push_action('eosio.mpy', 'hellompy', b'', {'alice':'active'})
         logger.info(r['action_traces'][0]['console'])
-
