@@ -61,6 +61,7 @@ chain_config = {
     'disable_all_subjective_mitigations': False,
     'terminate_at_block': 0,
     'wasm_runtime': 'eos_vm_jit',
+    # 'wasm_runtime': 'eos_vm',
     'eosvmoc_config': {'cache_size': 1073741824, 'threads': 1},
     'eosvmoc_tierup': False,
     'read_mode': 'SPECULATIVE',
@@ -77,7 +78,7 @@ genesis_test = {
   "initial_configuration": {
     "max_block_net_usage": 1048576,
     "target_block_net_usage_pct": 1000,
-    "max_transaction_net_usage": 524288,
+    "max_transaction_net_usage": 642441,
     "base_per_transaction_net_usage": 12,
     "net_usage_leeway": 500,
     "context_free_discount_net_usage_num": 20,
@@ -101,7 +102,7 @@ genesis_test = {
   "initial_configuration": {
     "max_block_net_usage": 1048576,
     "target_block_net_usage_pct": 1000,
-    "max_transaction_net_usage": 524288,
+    "max_transaction_net_usage": 652441,
     "base_per_transaction_net_usage": 12,
     "net_usage_leeway": 500,
     "context_free_discount_net_usage_num": 20,
@@ -176,7 +177,7 @@ class ChainTester(object):
         uuos.set_log_level('default', 10)
         self.chain = chain.Chain(self.chain_config, self.genesis_test, os.path.join(config_dir, "protocol_features"), "")
         self.chain.startup(True)
-        self.api = chainapi.ChainApi(self.chain.ptr)
+        self.api = chainapi.ChainApi(self.chain)
 
         # logger.info(self.api.get_info())
         # logger.info(self.api.get_account('eosio'))
@@ -293,6 +294,7 @@ class ChainTester(object):
 
     def deploy_eosio_system(self):
         code_path = os.path.join(test_dir, 'tests/contracts/eosio.system/eosio.system.wasm')
+        # code_path = '/Users/newworld/dev/eosio.contracts/build/contracts/eosio.system/eosio.system.wasm.pp'
         abi_path = os.path.join(test_dir, 'tests/contracts/eosio.system/eosio.system.abi')
         with open(code_path, 'rb') as f:
             code = f.read()
@@ -400,8 +402,8 @@ class ChainTester(object):
         # r = uuos.unpack_native_object(13, bytes.fromhex(signed_trx.packed_trx))
         # logger.info(r)
         deadline = datetime.max
-        billed_cpu_time_us = 100
-        result = self.chain.push_transaction(raw_signed_trx, deadline, billed_cpu_time_us)
+        billed_cpu_time_us = 200
+        result = self.chain.push_transaction(raw_signed_trx, deadline, billed_cpu_time_us, True)
         return result
 
     def calc_pending_block_time(self):
@@ -576,3 +578,21 @@ class ChainTester(object):
             code = f.read()
             self.code_cache[src] = code
             return code
+
+    def get_balance(self, account):
+        params = dict(
+            json=True,
+            code='eosio.token',
+            scope=account,
+            table='accounts',
+            lower_bound='',
+            upper_bound='',
+            limit=10,
+        )
+        try:
+            ret = self.api.get_table_rows(params)
+            balance = ret['rows'][0]['balance'].split(' ')[0]
+            return round(float(balance) * 10000) / 10000
+        except Exception as e:
+            logger.info(e)
+            return 0.0

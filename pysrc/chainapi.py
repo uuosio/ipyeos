@@ -3,8 +3,9 @@ import json
 
 class ChainApi(object):
 
-    def __init__(self, chain_ptr):
-        self.ptr = chain_ptr
+    def __init__(self, chain):
+        self.ptr = chain.ptr
+        self.chain = chain
 
     def get_info(self):
         return _chainapi.get_info(self.ptr)
@@ -34,6 +35,7 @@ class ChainApi(object):
         return _chainapi.get_code_hash(self.ptr, params)
 
     def get_abi(self, params: dict):
+        params = json.dumps(params)
         return _chainapi.get_abi(self.ptr, params)
 
     def get_raw_code_and_abi(self, params: dict):
@@ -43,7 +45,11 @@ class ChainApi(object):
         return _chainapi.get_raw_abi(self.ptr, params)
 
     def get_table_rows(self, params: dict):
-        return _chainapi.get_table_rows(self.ptr, params)
+        params = json.dumps(params)
+        success, ret = _chainapi.get_table_rows(self.ptr, params)
+        if not success:
+            raise Exception(self.chain.get_last_error())
+        return json.loads(ret)
 
     def get_table_by_scope(self, params: dict):
         return _chainapi.get_table_by_scope(self.ptr, params)
@@ -85,9 +91,6 @@ class ChainApi(object):
 
     def repair_log(self, blocks_dir: str, truncate_at_block: int=0):
         return _chainapi.repair_log(blocks_dir, truncate_at_block)
-
-    def get_table_rows(self, params: dict):
-        return _chainapi.get_table_rows(self.ptr, params)
 
     def db_size_api_get(self):
         return _chainapi.db_size_api_get(self.ptr)
