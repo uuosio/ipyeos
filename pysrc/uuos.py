@@ -1,5 +1,8 @@
 import sys
+import json
+
 from . import _uuos
+from typing import Union
 from uuosio.uuostyping import Name
 
 class NativeType:
@@ -23,11 +26,25 @@ def set_log_level(logger_name: str, level: int) -> None:
 def set_block_interval_ms(ms: int) -> None:
     _uuos.set_block_interval_ms(ms)
 
-def pack_native_object(_type: int, obj: dict) -> bytes:
+def pack_native_object(_type: int, obj: Union[dict, str]) -> bytes:
+    if isinstance(obj, dict):
+        obj = json.dumps(obj)
+    else:
+        assert isinstance(obj, (str, bytes))
     return _uuos.pack_native_object(_type, obj)
 
 def unpack_native_object(_type: int, packed_obj: bytes) -> dict:
-    return _uuos.unpack_native_object(_type, packed_message)
+    return _uuos.unpack_native_object(_type, packed_obj)
+
+def pack_block(obj: Union[dict, str]) -> bytes:
+    if isinstance(obj, dict):
+        obj = json.dumps(obj)
+    else:
+        assert isinstance(obj, (str, bytes))
+    return _uuos.pack_native_object(NativeType.signed_block, obj)
+
+def unpack_block(packed_obj: bytes) -> dict:
+    return _uuos.unpack_native_object(NativeType.signed_block, packed_obj)
 
 def pack_abi(abi: str) -> bytes:
     return pack_native_object(NativeType.abi_def, abi)
