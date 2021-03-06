@@ -4,7 +4,7 @@ import pytest
 import logging
 import tempfile
 
-from chaintester import ChainTester
+from uuosio.chaintester import ChainTester
 from uuosio import log, uuos
 from uuosio import _chain, _uuos
 from uuosio import uuos
@@ -127,11 +127,11 @@ class TestSystem(object):
 
     @classmethod
     def setup_class(cls):
-        cls.chain = ChainTester()
+        cls.tester = ChainTester()
 
     @classmethod
     def teardown_class(cls):
-        cls.chain.free()
+        cls.tester.free()
 
     def setup_method(self, method):
         logger.warning('test start: %s', method.__name__)
@@ -159,13 +159,24 @@ class TestSystem(object):
         abi = uuos.pack_abi(abi)
         logger.info(abi)
 
+    def test_block(self):
+        self.tester.produce_block()
+        self.tester.push_action('eosio.mpy', 'hellompy', b'')
+        self.tester.produce_block()
+        num = self.tester.chain.fork_db_head_block_num()
+        block = self.tester.chain.fetch_block_by_number(num)
+        logger.info(block)
+        logger.info(num)
+        r = uuos.unpack_block(block)
+        logger.info(r)
+
     def test_chain(self):
         _uuos.set_block_interval_ms(1000)
 
-        chain_config = json.dumps(chain_config)
-        genesis_test = json.dumps(genesis_test)
+        _chain_config = json.dumps(chain_config)
+        _genesis_test = json.dumps(genesis_test)
 
-        ptr = _chain.chain_new(chain_config, genesis_test, os.path.join(config_dir, "protocol_features"), "")
+        ptr = _chain.chain_new(_chain_config, _genesis_test, os.path.join(config_dir, "protocol_features"), "")
         _chain.chain_say_hello(ptr)
         _chain.startup(ptr, True)
 
@@ -186,19 +197,19 @@ class TestSystem(object):
         print(_chain.is_ram_billing_in_notify_allowed(ptr))
 
         for i in range(1):
-        _chain.abort_block(ptr)
-        dt += timedelta(seconds=1)
-        _chain.start_block(ptr, isoformat(dt), 0, '')
+          _chain.abort_block(ptr)
+          dt += timedelta(seconds=1)
+          _chain.start_block(ptr, isoformat(dt), 0, '')
 
-        print('++++is building block:', _chain.is_building_block(ptr))
+          print('++++is building block:', _chain.is_building_block(ptr))
 
-        priv_keys = ['5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3']
-        priv_keys = json.dumps(priv_keys)
-        _chain.finalize_block(ptr, priv_keys)
-        print('++++is building block:', _chain.is_building_block(ptr))
-        _chain.commit_block(ptr)
-        print('++++is building block:', _chain.is_building_block(ptr))
+          priv_keys = ['5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3']
+          priv_keys = json.dumps(priv_keys)
+          _chain.finalize_block(ptr, priv_keys)
+          print('++++is building block:', _chain.is_building_block(ptr))
+          _chain.commit_block(ptr)
+          print('++++is building block:', _chain.is_building_block(ptr))
 
-        _chain.chain_free(ptr)
+          _chain.chain_free(ptr)
 
 
