@@ -1,4 +1,4 @@
-# cython: c_string_type=str, c_string_encoding=ascii
+# cython: c_string_type=str, c_string_encoding=utf8
 
 from cython.operator cimport dereference as deref, preincrement as inc
 from libcpp.string cimport string
@@ -29,6 +29,7 @@ cdef extern from "<uuos.hpp>":
         int get_info(string& result)
         int get_account(string& params, string& result)
         int get_table_rows(string& params, string& result)
+        int get_abi(string& params, string& result)
 
     ctypedef struct chain_proxy:
         chain_rpc_api_proxy* api_proxy()
@@ -43,6 +44,11 @@ def get_info(uint64_t ptr):
 def get_account(uint64_t ptr, string& params):
     cdef string result
     ret = chain_api(ptr).get_account(params, result)
+    return ret, result
+
+def get_abi(uint64_t ptr, string& params):
+    cdef string result
+    ret = chain_api(ptr).get_abi(params, result)
     return ret, result
 
 def get_table_rows(uint64_t ptr, params):

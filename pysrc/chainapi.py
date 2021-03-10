@@ -34,9 +34,13 @@ class ChainApi(object):
     def get_code_hash(self, params: dict):
         return _chainapi.get_code_hash(self.ptr, params)
 
-    def get_abi(self, params: dict):
+    def get_abi(self, account):
+        params = dict(account_name=account)
         params = json.dumps(params)
-        return _chainapi.get_abi(self.ptr, params)
+        success, result = _chainapi.get_abi(self.ptr, params)
+        if not success:
+            raise Exception(result)
+        return json.loads(result)
 
     def get_raw_code_and_abi(self, params: dict):
         return _chainapi.get_raw_code_and_abi(self.ptr, params)
@@ -47,8 +51,9 @@ class ChainApi(object):
     def get_table_rows(self, params: dict):
         params = json.dumps(params)
         success, ret = _chainapi.get_table_rows(self.ptr, params)
+        print(success, ret)
         if not success:
-            raise Exception(self.chain.get_last_error())
+            raise Exception(ret)
         return json.loads(ret)
 
     def get_table_by_scope(self, params: dict):
