@@ -135,7 +135,10 @@ key_map = {
     'EOS73ECcVHVWvuxJVm5ATnqBTCFMtA6WUsdDovdWH5NFHaXNq1hw1':'5Jbh1Dn57DKPUHQ6F6eExX55S2nSFNxZhpZUxNYFjJ1arKGK9Q3',
     'EOS8h8TmXCU7Pzo5XQKqyWwXAqLpPj4DPZCv5Wx9Y4yjRrB6R64ok':'5JJYrXzjt47UjHyo3ud5rVnNEPTCqWvf73yWHtVHtB1gsxtComG',
     'EOS65jj8NPh2EzLwje3YRy4utVAATthteZyhQabpQubxHNJ44mem9':'5J9PozRVudGYf2D4b8JzvGxPBswYbtJioiuvYaiXWDYaihNFGKP',
-    'EOS5fVw435RSwW3YYWAX9qz548JFTWuFiBcHT3PGLryWaAMmxgjp1':'5K9AZWR2wEwtZii52vHigrxcSwCzLhhJbNpdXpVFKHP5fgFG5Tx'
+    'EOS5fVw435RSwW3YYWAX9qz548JFTWuFiBcHT3PGLryWaAMmxgjp1':'5K9AZWR2wEwtZii52vHigrxcSwCzLhhJbNpdXpVFKHP5fgFG5Tx',
+
+    #for manager user accounts
+    'EOS7urTYiCkvUz6XAzAr6fMC9NA1hzgzMRbk49MmpDtongEociQUZ':'5J1PLNAFqxw26ryrkGB81erVQyS5gdJ8fSCmcxAmWh9QJ4vKHH5'
 }
 
 producer_key_map = {
@@ -248,6 +251,13 @@ class ChainTester(object):
         self.deploy_eosio_system()
         self.produce_block()
 
+        self.deploy_eosio_msig()
+
+        args = dict(account='eosio.msig', is_priv=1)
+        logger.info('+++++', self.api.get_abi('eosio'))
+        self.push_action('eosio', 'setpriv', args, {'eosio':'active'})
+        self.produce_block()
+
         self.main_token = 'UUOS'
         args = {"issuer":"eosio", "maximum_supply":f"11000000000.0000 {self.main_token}"}
         r = self.push_action('eosio.token', 'create', args, {'eosio.token':'active'})
@@ -267,12 +277,19 @@ class ChainTester(object):
 
         logger.info('+++++++++deploy micropython')
         self.deploy_micropython()
+        self.produce_block()
         # r = self.push_action('eosio.mpy', 'hellompy', b'', {'hello':'active'})
         # logger.info(r['action_traces'][0]['console'])
         # self.buy_ram_bytes('eosio', 'eosio', 10*1024*1024)
         # self.delegatebw('eosio', 'eosio', 1.0, 1.0, transfer=0)
 
         self.code_cache = {}
+
+    def __enter__(self):
+        self.start_block()
+
+    def __exit__(self, _type, value, traceback):
+        self.produce_block()
 
     def deploy_eosio_token(self):
         code_path = os.path.join(test_dir, 'tests/contracts/eosio.token/eosio.token.wasm')
@@ -301,6 +318,15 @@ class ChainTester(object):
         with open(abi_path, 'rb') as f:
             abi = f.read()
         self.deploy_contract('eosio', code, abi)
+
+    def deploy_eosio_msig(self):
+        code_path = os.path.join(test_dir, 'tests/contracts/eosio.msig/eosio.msig.wasm')
+        abi_path = os.path.join(test_dir, 'tests/contracts/eosio.msig/eosio.msig.abi')
+        with open(code_path, 'rb') as f:
+            code = f.read()
+        with open(abi_path, 'rb') as f:
+            abi = f.read()
+        self.deploy_contract('eosio.msig', code, abi)
 
     def deploy_micropython(self):
         code_path = os.path.join(test_dir, 'tests/contracts/micropython/micropython_eosio.wasm')
@@ -403,7 +429,7 @@ class ChainTester(object):
         # logger.info(r)
         deadline = datetime.max
         billed_cpu_time_us = 200
-        result = self.chain.push_transaction(raw_signed_trx, deadline, billed_cpu_time_us, True)
+        result = self.chain.push_transaction(raw_signed_trx, deadline, billed_cpu_time_us, False)
         return result
 
     def calc_pending_block_time(self):
@@ -428,7 +454,7 @@ class ChainTester(object):
         self.chain.start_block(self.calc_pending_block_time(), 0, self.feature_digests)
         self.feature_digests.clear()
 
-    def produce_block(self):
+    def produce_block(self, start_block=True):
         trxs = self.chain.get_scheduled_transactions()
         deadline = datetime.utcnow() + timedelta(microseconds=10000000)
         priv_keys = []
@@ -441,7 +467,8 @@ class ChainTester(object):
         logger.info("+++priv_keys: %s", priv_keys)
         self.chain.finalize_block(priv_keys)
         self.chain.commit_block()
-        self.start_block()
+        if start_block:
+            self.start_block()
 
     def create_account(self, creator: Name, account: Name, owner_key: Name, active_key: Name, ram_bytes: int=0, stake_net: float=0.0, stake_cpu: float=0.0):
         actions = []
@@ -488,6 +515,25 @@ class ChainTester(object):
             actions.append(act)
 
         return self.push_actions(actions)
+
+    def gen_action(self, account, action, args, permissions={}):
+        auth = []
+        for actor in permissions:
+            perm = permissions[actor]
+            auth.append({'actor': actor, 'permission': perm})
+        if not auth:
+            auth.append({'actor': account, 'permission': 'active'})
+
+        if isinstance(args, dict):
+            args = self.pack_args(account, action, args)
+        assert type(args) is bytes
+        return {
+            'account': account,
+            'name': action,
+            'data': args.hex(),
+            'authorization': auth
+        }
+
 
     def buy_ram_bytes(self, payer: Name, receiver: Name, _bytes):
         args = {'payer': payer, 'receiver': receiver, 'bytes': _bytes}
@@ -565,19 +611,26 @@ class ChainTester(object):
             return self.code_cache[src]
 
         tempdir = tempfile.mkdtemp()
-        py_file = os.path.join(tempdir, file_name + '.py')
-        with open(py_file, 'w') as f:
-            f.write(src)
-        mpy_file = os.path.join(tempdir, file_name + '.mpy')
-        proc = mpy_cross.run('-o', mpy_file, py_file, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        err = proc.stderr.read()
-        if err:
-            err = err.decode('utf8')
-            raise Exception(err)
-        with open(mpy_file, 'rb') as f:
-            code = f.read()
-            self.code_cache[src] = code
-            return code
+        cur_dir = os.getcwd()
+        os.chdir(tempdir)
+        try:
+            py_file = file_name + '.py'
+            with open(py_file, 'w') as f:
+                f.write(src)
+            mpy_file = os.path.join(tempdir, file_name + '.mpy')
+            proc = mpy_cross.run('-o', mpy_file, py_file, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            err = proc.stderr.read()
+            if err:
+                err = err.decode('utf8')
+                raise Exception(err)
+            with open(mpy_file, 'rb') as f:
+                code = f.read()
+                self.code_cache[src] = code
+                return code
+        except Exception as e:
+            raise e
+        finally:
+            os.chdir(cur_dir)
 
     def get_balance(self, account):
         params = dict(
