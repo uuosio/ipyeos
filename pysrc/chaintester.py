@@ -422,7 +422,7 @@ class ChainTester(object):
         if expiration < now:
             expiration = now
         expiration = expiration + timedelta(seconds=60)
-        raw_signed_trx = self.chain.gen_transaction(actions, expiration, ref_block_id, chain_id, False, priv_keys)
+        raw_signed_trx = self.chain.gen_transaction(False, actions, expiration, ref_block_id, chain_id, False, priv_keys)
         # signed_trx = PackedTransactionMessage.unpack(raw_signed_trx)
         # logger.info(signed_trx)
         # r = uuos.unpack_native_object(13, bytes.fromhex(signed_trx.packed_trx))

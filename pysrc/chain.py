@@ -381,7 +381,7 @@ class Chain(object):
             deadline = deadline.isoformat(timespec='milliseconds')
         result = _chain.push_transaction(self.ptr, packed_trx, deadline, billed_cpu_time_us, explicit_cpu_bill)
         if not result:
-            result = _chain.get_last_error()
+            result = _chain.get_last_error(self.ptr)
         result = json.loads(result)
         if 'except' in result:
             raise Exception(result)
@@ -439,12 +439,17 @@ class Chain(object):
         ret = _chain.unpack_action_args(self.ptr, name, action, raw_args)
         return json.loads(ret)
 
-    def gen_transaction(self, _actions: List, expiration: datetime, reference_block_id: str, _id: str, compress: bool, _private_keys: List) -> str:
+    def gen_transaction(self, json_str, _actions: List, expiration: datetime, reference_block_id: str, _id: str, compress: bool, _private_keys: List) -> str:
         if isinstance(expiration, datetime):
             expiration = isoformat(expiration)
-        if isinstance(_actions, dict):
+
+        if isinstance(_actions, list):
             _actions = json.dumps(_actions)
-        return _chain.gen_transaction(self.ptr, _actions, expiration, reference_block_id, _id, compress, _private_keys)
+
+        if isinstance(_private_keys, list):
+            _private_keys = json.dumps(_private_keys)
+
+        return _chain.gen_transaction(self.ptr, json_str, _actions, expiration, reference_block_id, _id, compress, _private_keys)
 
     def get_last_error(self) -> str:
         return _chain.get_last_error(self.ptr)

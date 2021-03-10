@@ -109,7 +109,7 @@ cdef extern from "<uuos.hpp>":
         bool all_subjective_mitigations_disabled()
         string get_scheduled_producer(string& _block_time)
 
-        void gen_transaction(string& _actions, string& expiration, string& reference_block_id, string& _chain_id, bool compress, string& _private_keys, vector[char]& result)
+        void gen_transaction(bool json, string& _actions, string& expiration, string& reference_block_id, string& _chain_id, bool compress, string& _private_keys, vector[char]& result)
         string push_transaction(string& _packed_trx, string& deadline, uint32_t billed_cpu_time_us, bool explicit_cpu_bill)
 
         string get_scheduled_transactions()
@@ -549,9 +549,9 @@ def get_scheduled_producer(uint64_t ptr, string& block_time):
     '''
     return chain(ptr).get_scheduled_producer(block_time)
 
-def gen_transaction(uint64_t ptr, string& _actions, string& expiration, string& reference_block_id, string& _chain_id, bool compress, string& _private_keys):
+def gen_transaction(uint64_t ptr, bool json, string& _actions, string& expiration, string& reference_block_id, string& _chain_id, bool compress, string& _private_keys):
     cdef vector[char] result
-    chain(ptr).gen_transaction(_actions, expiration, reference_block_id, _chain_id, compress, _private_keys, result)
+    chain(ptr).gen_transaction(json, _actions, expiration, reference_block_id, _chain_id, compress, _private_keys, result)
     return PyBytes_FromStringAndSize(result.data(), result.size())
 
 def push_transaction(uint64_t ptr, string& _packed_trx, string& deadline, uint32_t billed_cpu_time_us, bool explicit_cpu_bill = 0):
