@@ -42,6 +42,11 @@ function build_project() {
 }
 
 build_project
+
+if [[ $? != 0 ]]; then
+	exit $?
+fi
+
 #cp eos/build/programs/uuos/uuos bin/uuos
 
 if [[ $ARCH == "Darwin" ]]; then
