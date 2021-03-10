@@ -125,7 +125,7 @@ class TestRex(object):
             limit=10,
         )
         r = self.tester.api.get_table_rows(params)
-        print(r)
+        logger.info(r)
 
         account = 'alice'
         args = {

@@ -65,6 +65,10 @@ def s2b(s: str) -> bytes:
     n = s2n(s)
     return int.to_bytes(n, 8, 'little')
 
+def b2s(s: bytes) -> str:
+    s = int.from_bytes(s, 'little')
+    return n2s(s)
+
 def set_native_contract(contract: Name, native_contract_lib) -> bool:
     return _uuos.set_native_contract(contract, native_contract_lib)
 
