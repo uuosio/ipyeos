@@ -210,7 +210,8 @@ class ChainTester(object):
                 'alice',
                 'bob',
                 'testmetestme',
-                'dothetesting'
+                'dothetesting',
+                'helloworld11'
         ]
         for a in systemAccounts:
             self.create_account('eosio', a, key, key)
@@ -286,7 +287,8 @@ class ChainTester(object):
         self.code_cache = {}
 
     def __enter__(self):
-        self.start_block()
+        if not self.chain.is_producing_block():
+            self.start_block()
 
     def __exit__(self, _type, value, traceback):
         self.produce_block()
@@ -346,10 +348,7 @@ class ChainTester(object):
         self.chain.free()
 
     def find_private_key(self, actor: Name, perm_name: Name):
-        ret, result = self.api.get_account(actor)
-        if not ret:
-            raise Exception(f'actor not found {actor}')
-            return None
+        result = self.api.get_account(actor)
         keys = []
         for permission in result['permissions']:
             # logger.info("%s %s %s", actor, perm_name, permission)
@@ -464,7 +463,7 @@ class ChainTester(object):
 
         for scheduled_tx_id in trxs:
             self.chain.push_scheduled_transaction(scheduled_tx_id, deadline, 100)
-        logger.info("+++priv_keys: %s", priv_keys)
+        # logger.info("+++priv_keys: %s", priv_keys)
         self.chain.finalize_block(priv_keys)
         self.chain.commit_block()
         if start_block:
@@ -560,7 +559,6 @@ class ChainTester(object):
         }
 
         setcode = self.chain.pack_action_args('eosio', 'setcode', setcode)
-        actions = []
         setcode = {
             'account': 'eosio',
             'name': 'setcode',
@@ -585,6 +583,43 @@ class ChainTester(object):
         # if show_elapse and code:
         #     logger.info(f'+++++deploy contract: {account} {elapsed}')
         # logger.info(ret)
+        self.chain.clear_abi_cache(account)
+        return ret
+
+    def deploy_code(self, account: Name, code: bytes, vm_type: int=0):
+        actions = []
+        setcode = {"account": account,
+                   "vmtype": vm_type,
+                   "vmversion": 0,
+                   "code": code.hex()
+        }
+
+        setcode = self.chain.pack_action_args('eosio', 'setcode', setcode)
+        setcode = {
+            'account': 'eosio',
+            'name': 'setcode',
+            'data': setcode.hex(),
+            'authorization':[{'actor': account, 'permission':'active'}]
+        }
+        actions.append(setcode)
+        # logger.info(actions)
+        ret = self.push_actions(actions)
+#        logger.info('++++%s', ret)
+        return ret
+
+    def deploy_abi(self, account: Name, abi: str):
+        actions = []
+        if abi:
+            abi = uuos.pack_abi(abi)
+        setabi = self.chain.pack_action_args('eosio', 'setabi', {'account':account, 'abi':abi.hex()})
+        setabi = {
+            'account': 'eosio',
+            'name': 'setabi',
+            'data': setabi.hex(),
+            'authorization':[{'actor': account, 'permission':'active'}]
+        }
+        actions.append(setabi)
+        ret = self.push_actions(actions)
         self.chain.clear_abi_cache(account)
         return ret
 
