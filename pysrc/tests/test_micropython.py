@@ -87,3 +87,19 @@ def apply(a, b, c):
         uuos.enable_native_contracts(False)
         uuos.set_native_contract(uuos.s2n('eosio.mpy'), '')
 
+    def test_setcode2(self):
+        code = '/Users/newworld/dev/uuos3/externals/micropython/build/ports/micropython_eosio.wasm'
+        with open(code, 'rb') as f:
+            code = f.read()
+        self.tester.deploy_code('eosio.mpy', code, vm_type=0)
+
+        code = '''
+def init(args):
+    print(args)
+def apply(a, b, c):
+    print('hello,world')
+'''
+        code = self.tester.mp_compile('hello', code)
+        args = uuos.s2b('hello') + int.to_bytes(len(code), 4, 'little') + code + b'hello, init function'
+        self.tester.push_action('hello', 'setcode2', args, {'hello':'active'})
+        r = self.tester.push_action('hello', 'sayhello', b'', {'hello':'active'})
