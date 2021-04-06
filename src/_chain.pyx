@@ -1,4 +1,4 @@
-# cython: c_string_type=str, c_string_encoding=ascii
+# cython: c_string_type=str, c_string_encoding=utf8
 
 from cython.operator cimport dereference as deref, preincrement as inc
 from libcpp.string cimport string
@@ -31,7 +31,7 @@ cdef extern from "<uuos.hpp>":
         void say_hello()
 
         void id(string& chain_id)
-        void start_block(string& _time, uint16_t confirm_block_count, string& _new_features)
+        int start_block(string& _time, uint16_t confirm_block_count, string& _new_features)
         int abort_block()
         bool startup(bool initdb)
         void finalize_block(string& _priv_keys)
@@ -125,6 +125,8 @@ cdef extern from "<uuos.hpp>":
         string& get_last_error()
         void set_last_error(string& error)
 
+        int modify_cpu_usage( uint64_t cpu_usage_us )
+
     ctypedef struct uuos_proxy:
         chain_proxy* chain_new(string& config, string& _genesis, string& protocol_features_dir, string& snapshot_dir)
         void chain_free(chain_proxy* api)
@@ -164,6 +166,7 @@ def commit_block(uint64_t ptr):
 def get_last_error(uint64_t ptr):
     cdef string error
     error = chain(ptr).get_last_error()
+    return error
 
 def set_last_error(uint64_t ptr, string& error):
     chain(ptr).set_last_error(error)
@@ -584,4 +587,7 @@ def clear_abi_cache(uint64_t ptr, string& account):
 
 def get_producer_public_keys(uint64_t ptr):
     return chain(ptr).get_producer_public_keys()
+
+def modify_cpu_usage(uint64_t ptr, uint64_t cpu_usage_us ):
+    return chain(ptr).modify_cpu_usage(cpu_usage_us)
 

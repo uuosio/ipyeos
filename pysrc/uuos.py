@@ -46,6 +46,9 @@ def pack_block(obj: Union[dict, str]) -> bytes:
 def unpack_block(packed_obj: bytes) -> dict:
     return _uuos.unpack_native_object(NativeType.signed_block, packed_obj)
 
+def unpack_transaction(packed_obj: bytes) -> dict:
+    return _uuos.unpack_native_object(NativeType.packed_transaction_v0, packed_obj)
+
 def pack_abi(abi: str) -> bytes:
     return pack_native_object(NativeType.abi_def, abi)
 

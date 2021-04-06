@@ -11,6 +11,16 @@ logger = log.get_logger(__name__)
 def isoformat(dt):
     return dt.isoformat(timespec='milliseconds')
 
+def handle_error(fn):
+    def call_method(*args):
+        ret = fn(*args)
+        if not ret:
+            self = args[0]
+            err = self.get_last_error()
+            raise Exception(err)
+        return ret
+    return call_method
+
 class Chain(object):
 
     def __init__(self, config: dict, genesis: dict, protocol_features_dir: str, snapshot_dir: str):
@@ -83,14 +93,18 @@ class Chain(object):
                 features = json.dumps(features)
         else:
             features = ''
-        _chain.start_block(self.ptr, _time, confirm_block_count, features)
+        if not _chain.start_block(self.ptr, _time, confirm_block_count, features):
+            err = self.get_last_error()
+            raise Exception(err)
 
     def abort_block(self) -> bool:
         """
         Abort the current block
         :returns bool
         """
-        return _chain.abort_block(self.ptr)
+        if not _chain.abort_block(self.ptr):
+            err = self.get_last_error()
+            raise Exception(err)
 
     def get_global_properties(self, json: bool=True) -> dict:
         '''
@@ -425,6 +439,9 @@ class Chain(object):
 
     def get_producer_public_keys(self) -> List[str]:
         ret = _chain.get_producer_public_keys(self.ptr)
+        if not ret:
+            err = self.get_last_error()
+            raise Exception(err)
         return json.loads(ret)
 
     def clear_abi_cache(self, account: Name) -> None:
@@ -456,4 +473,12 @@ class Chain(object):
 
     def set_last_error(self, error: str):
         _chain.set_last_error(self.ptr, error)
+
+    @handle_error
+    def modify_cpu_usage(self, cpu_usage_us):
+        ret = _chain.modify_cpu_usage(self.ptr, cpu_usage_us)
+        if not ret:
+            err = self.get_last_error()
+            raise Exception(err)
+        return ret
 
