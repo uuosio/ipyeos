@@ -449,7 +449,10 @@ class Chain(object):
 
     def pack_action_args(self, name: Name, action: Name, args: dict) -> bytes:
         if isinstance(args, dict):
-            args = json.dumps(args)
+            if args:
+                args = json.dumps(args)
+            else:
+                args = b''
         return _chain.pack_action_args(self.ptr, name, action, args)
 
     def unpack_action_args(self, name: Name, action: Name, raw_args: bytes) -> dict:
@@ -473,12 +476,4 @@ class Chain(object):
 
     def set_last_error(self, error: str):
         _chain.set_last_error(self.ptr, error)
-
-    @handle_error
-    def modify_cpu_usage(self, cpu_usage_us):
-        ret = _chain.modify_cpu_usage(self.ptr, cpu_usage_us)
-        if not ret:
-            err = self.get_last_error()
-            raise Exception(err)
-        return ret
 

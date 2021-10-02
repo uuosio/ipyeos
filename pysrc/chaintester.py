@@ -9,6 +9,7 @@ import subprocess
 
 from uuosio import chain, chainapi, uuos, config
 from datetime import datetime, timedelta
+from datetime import timezone
 
 from uuosio import log
 from typing import List, Dict, Union, Optional
@@ -18,6 +19,8 @@ logger = log.get_logger(__name__)
 
 test_dir = os.path.dirname(__file__)
 
+# default_time = datetime.fromtimestamp(946684800000/1e3, tz=timezone.utc)
+default_time = datetime.utcfromtimestamp(946684800000/1e3)
 
 chain_config = {
     'sender_bypass_whiteblacklist': [],
@@ -107,7 +110,7 @@ genesis_test = {
     "net_usage_leeway": 500,
     "context_free_discount_net_usage_num": 20,
     "context_free_discount_net_usage_den": 100,
-    "max_block_cpu_usage": 200000,
+    "max_block_cpu_usage": 960000,
     "target_block_cpu_usage_pct": 1000,
     "max_transaction_cpu_usage": 100000,
     "min_transaction_cpu_usage": 100,
@@ -255,11 +258,11 @@ class ChainTester(object):
         self.deploy_eosio_msig()
 
         args = dict(account='eosio.msig', is_priv=1)
-        logger.info('+++++', self.api.get_abi('eosio'))
+        # logger.info('+++++', self.api.get_abi('eosio'))
         self.push_action('eosio', 'setpriv', args, {'eosio':'active'})
         self.produce_block()
 
-        self.main_token = 'UUOS'
+        self.main_token = 'EOS'
         args = {"issuer":"eosio", "maximum_supply":f"11000000000.0000 {self.main_token}"}
         r = self.push_action('eosio.token', 'create', args, {'eosio.token':'active'})
 
@@ -271,7 +274,7 @@ class ChainTester(object):
         self.transfer('eosio', 'hello', 5000000.0)
 
         args = dict(version = 0,
-                    core = '4,UUOS'
+                    core = '4,EOS'
         )
 
         self.push_action('eosio', 'init', args, {'eosio':'active'})
@@ -341,8 +344,8 @@ class ChainTester(object):
             abi = f.read()
         self.deploy_contract('eosio.mpy', code, abi)
 
-    def start_block(self):
-        self.chain.start_block(self.calc_pending_block_time(), 0, self.feature_digests)
+    # def start_block(self):
+    #     self.chain.start_block(self.calc_pending_block_time(), 0, self.feature_digests)
 
     def free(self):
         self.chain.free()
@@ -361,7 +364,7 @@ class ChainTester(object):
                         keys.append(priv_key)
         return keys
 
-    def push_action(self, account: Name, action: List, args: Dict, permissions: Dict={}):
+    def push_action(self, account: Name, action: List, args: Dict, permissions: Dict={}, explicit_cpu_bill=False):
         auth = []
         for actor in permissions:
             perm = permissions[actor]
@@ -371,11 +374,13 @@ class ChainTester(object):
 
         # logger.debug(f'{account}, {action}, {args}')
         if not isinstance(args, bytes):
-            _args = self.chain.pack_action_args(account, action, args)
-            if not _args:
-                error = self.chain.get_last_error()
-                raise Exception(f'{error}')
-            args = _args
+            if args:
+                args = self.chain.pack_action_args(account, action, args)
+                if not args:
+                    error = self.chain.get_last_error()
+                    raise Exception(f'{error}')
+            else:
+                args = b''
             # logger.error(f'++++{args}')
         a = {
             'account': account,
@@ -383,13 +388,13 @@ class ChainTester(object):
             'data': args.hex(),
             'authorization': auth
         }
-        ret = self.push_actions([a])
+        ret = self.push_actions([a], explicit_cpu_bill)
         elapsed = ret['elapsed']
         # if not action == 'activate':
         #     logger.info(f'+++++{account} {action} {elapsed}')
         return ret
 
-    def push_actions(self, actions: List):
+    def push_actions(self, actions: List, explicit_cpu_bill=False):
         chain_id = self.chain.id()
         ref_block_id = self.chain.last_irreversible_block_id()
         priv_keys = []
@@ -417,9 +422,9 @@ class ChainTester(object):
         # expiration = datetime.utcnow() + timedelta(seconds=60*60)
 
         expiration = self.chain.head_block_time()
-        now = datetime.utcnow()
-        if expiration < now:
-            expiration = now
+        # now = datetime.utcnow()
+        # if expiration < now:
+        #     expiration = now
         expiration = expiration + timedelta(seconds=60)
         raw_signed_trx = self.chain.gen_transaction(False, actions, expiration, ref_block_id, chain_id, False, priv_keys)
         # signed_trx = PackedTransactionMessage.unpack(raw_signed_trx)
@@ -427,8 +432,8 @@ class ChainTester(object):
         # r = uuos.unpack_native_object(13, bytes.fromhex(signed_trx.packed_trx))
         # logger.info(r)
         deadline = datetime.max
-        billed_cpu_time_us = 200
-        result = self.chain.push_transaction(raw_signed_trx, deadline, billed_cpu_time_us, False)
+        billed_cpu_time_us = 100
+        result = self.chain.push_transaction(raw_signed_trx, deadline, billed_cpu_time_us, explicit_cpu_bill)
         return result
 
     def calc_pending_block_time(self):
@@ -448,12 +453,17 @@ class ChainTester(object):
             logger.warning("++++block time too small!")
         return block_time
 
-    def start_block(self):
+    def start_block(self, block_time=default_time):
         self.chain.abort_block()
-        self.chain.start_block(self.calc_pending_block_time(), 0, self.feature_digests)
+        if not block_time:
+            self.chain.start_block(self.calc_pending_block_time(), 0, self.feature_digests)
+        else:
+            # logger.info(block_time)
+            self.chain.start_block(block_time, 0, self.feature_digests)
+
         self.feature_digests.clear()
 
-    def produce_block(self, start_block=True):
+    def produce_block(self, next_block_time=default_time, start_block=True):
         trxs = self.chain.get_scheduled_transactions()
         deadline = datetime.utcnow() + timedelta(microseconds=10000000)
         priv_keys = []
@@ -467,7 +477,7 @@ class ChainTester(object):
         self.chain.finalize_block(priv_keys)
         self.chain.commit_block()
         if start_block:
-            self.start_block()
+            self.start_block(next_block_time)
 
     def create_account(self, creator: Name, account: Name, owner_key: Name, active_key: Name, ram_bytes: int=0, stake_net: float=0.0, stake_cpu: float=0.0):
         actions = []
@@ -684,3 +694,16 @@ class ChainTester(object):
         except Exception as e:
             logger.info(e)
             return 0.0
+
+    def get_table_rows(self, _json, code, scope, table, lower_bound, upper_bound, limit=10):
+        params = dict(
+                json=_json,
+                code=code,
+                scope=scope,
+                table=table,
+                lower_bound=lower_bound,
+                upper_bound=upper_bound,
+                limit=10,
+        )
+        return self.api.get_table_rows(params)
+

@@ -1,9 +1,11 @@
 import sys
 from uuosio import uuos
 
+INIT_SUCCESS = 6
+
 def run():
     ret = uuos.init()
-    if not ret == 6: #exit on not init success
+    if not ret == INIT_SUCCESS: #exit on not init success
         sys.exit(ret)
     uuos.exec()
     print('done!')

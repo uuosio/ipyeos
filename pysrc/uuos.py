@@ -84,7 +84,9 @@ def enable_native_contracts(debug) -> None:
 def is_native_contracts_enabled() -> bool:
     return _uuos.is_native_contracts_enabled()
 
-def init() -> bool:
+def init(argv=None) -> bool:
+    if argv:
+        return _uuos.init(argv)
     return _uuos.init(sys.argv)
 
 def exec() -> None:
