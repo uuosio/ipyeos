@@ -33,6 +33,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
         with:
+          submodules: false
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          ref: develop-uuosio-2.1
+          token: ${{ secrets.MY_REPO_PAT }}
           submodules: recursive
       - name: Cache eos build
         uses: actions/cache@v2
