@@ -11,7 +11,7 @@ from uuosio import chain, chainapi, uuos, config
 from datetime import datetime, timedelta
 from datetime import timezone
 
-from uuosio import log
+from uuosio import log, uuos
 from typing import List, Dict, Union, Optional
 from uuosio.uuostyping import Name
 
@@ -349,6 +349,9 @@ class ChainTester(object):
 
     def free(self):
         self.chain.free()
+
+    def get_account(self, account):
+        return self.api.get_account(account)
 
     def find_private_key(self, actor: Name, perm_name: Name):
         result = self.api.get_account(actor)
@@ -695,7 +698,13 @@ class ChainTester(object):
             logger.info(e)
             return 0.0
 
-    def get_table_rows(self, _json, code, scope, table, lower_bound, upper_bound, limit=10):
+    def get_table_rows(self, _json, code, scope, table,
+                                    lower_bound, upper_bound,
+                                    limit,
+                                    key_type='',
+                                    index_position='', 
+                                    reverse = False,
+                                    show_payer = False):
         params = dict(
                 json=_json,
                 code=code,
@@ -703,7 +712,16 @@ class ChainTester(object):
                 table=table,
                 lower_bound=lower_bound,
                 upper_bound=upper_bound,
-                limit=10,
+                limit=limit,
+                key_type=key_type,
+                index_position=index_position,
+                reverse = False,
+                show_payer = False
         )
         return self.api.get_table_rows(params)
 
+    def s2n(self, s: str) -> int:
+        return uuos.s2n(s)
+
+    def n2s(self, n: int) -> str:
+        return uuos.n2s(n)
