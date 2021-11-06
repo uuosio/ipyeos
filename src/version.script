@@ -1,0 +1,4 @@
+CODEABI_1.0 {
+    global: PyInit__chain;PyInit__chainapi;PyInit__uuos;
+    local: *;
+};
