@@ -156,7 +156,6 @@ class ChainApi(object):
         '''
         params = json.dumps(params)
         success, ret = _chainapi.get_table_rows(self.ptr, params)
-        print(success, ret)
         if not success:
             raise Exception(ret)
         return json.loads(ret)
