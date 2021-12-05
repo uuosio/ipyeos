@@ -20,7 +20,6 @@ jobs:
         # os: ['ubuntu-18.04', 'macos-latest']
         os: ['ubuntu-18.04']
       fail-fast: false
-
     steps:
       - name: Install Go
         uses: actions/setup-go@v2
@@ -40,6 +39,7 @@ jobs:
         with:
           token: ${{ secrets.MY_REPO_PAT }}
           submodules: recursive
+          fetch-depth: 0
       - name: Cache eos build
         uses: actions/cache@v2
         id: cache-eosio-build
