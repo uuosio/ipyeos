@@ -3,8 +3,8 @@ import time
 import json
 import platform
 
-from uuosio.chaintester import ChainTester
-from uuosio import log, uuos
+from ipyeos.chaintester import ChainTester
+from ipyeos import log, uuos
 logger = log.get_logger(__name__)
 
 # print(os.getpid())

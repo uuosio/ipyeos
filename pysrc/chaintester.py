@@ -7,13 +7,13 @@ import tempfile
 import mpy_cross
 import subprocess
 
-from uuosio import chain, chainapi, uuos, config
+from ipyeos import chain, chainapi, uuos, config
 from datetime import datetime, timedelta
 from datetime import timezone
 
-from uuosio import log, uuos
+from ipyeos import log, uuos
 from typing import List, Dict, Union, Optional
-from uuosio.uuostyping import Name
+from ipyeos.uuostyping import Name
 
 logger = log.get_logger(__name__)
 
@@ -336,7 +336,7 @@ class ChainTester(object):
     def deploy_micropython(self):
         code_path = os.path.join(test_dir, 'tests/contracts/micropython/micropython_eosio.wasm')
         # code_path = '/Users/newworld/dev/uuos3/externals/micropython/build/ports/micropython_eosio.wasm'
-        #code_path = '/Users/newworld/dev/uuos3/build/externals/micropython/ports/uuosio/micropython_eosio.wasm'
+        #code_path = '/Users/newworld/dev/uuos3/build/externals/micropython/ports/ipyeos/micropython_eosio.wasm'
         abi_path = os.path.join(test_dir, 'tests/contracts/micropython/micropython.abi')
         with open(code_path, 'rb') as f:
             code = f.read()

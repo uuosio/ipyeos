@@ -3,8 +3,8 @@ import json
 import pytest
 import logging
 import tempfile
-from uuosio import chain, chainapi, uuos
-from uuosio.chaintester import ChainTester
+from ipyeos import chain, chainapi, uuos
+from ipyeos.chaintester import ChainTester
 from datetime import datetime, timedelta
 
 logging.basicConfig(level=logging.INFO,

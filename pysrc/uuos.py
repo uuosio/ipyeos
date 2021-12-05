@@ -3,7 +3,7 @@ import json
 
 from . import _uuos
 from typing import Union
-from uuosio.uuostyping import Name
+from ipyeos.uuostyping import Name
 
 class NativeType:
     handshake_message = 0

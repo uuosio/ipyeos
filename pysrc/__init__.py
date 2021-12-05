@@ -15,7 +15,7 @@ class CustomImporter(object):
         from . import _uuos        
         mod = sys.modules.get(module_name)
         if mod is None:
-            uuos_module = sys.modules.get('uuosio._uuos')
+            uuos_module = sys.modules.get('ipyeos._uuos')
             if not uuos_module:
                 return
             uuos_so = uuos_module.__file__
@@ -28,7 +28,7 @@ class CustomImporter(object):
 
 sys.meta_path.append(CustomImporter())
 
-def run_uuos():
+def run_pyeos():
     dir_name = os.path.dirname(os.path.realpath(__file__))
     dir_name = os.path.join(dir_name, "release")
     uuos_program = os.path.join(dir_name, "bin/uuos")

@@ -4,10 +4,10 @@ import pytest
 import logging
 import tempfile
 
-from uuosio.chaintester import ChainTester
-from uuosio import log, uuos
-from uuosio import _chain, _uuos
-from uuosio import uuos
+from ipyeos.chaintester import ChainTester
+from ipyeos import log, uuos
+from ipyeos import _chain, _uuos
+from ipyeos import uuos
 from datetime import datetime, timedelta
 
 uuos.set_log_level('default', 0)

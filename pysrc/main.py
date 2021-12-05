@@ -1,5 +1,5 @@
 import sys
-from uuosio import uuos
+from ipyeos import uuos
 
 INIT_SUCCESS = 6
 

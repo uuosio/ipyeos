@@ -31,14 +31,14 @@ release_files.extend([
 ])
 
 setup(
-    name="uuosio",
+    name="ipyeos",
     version="0.1.0",
-    description="UUOSIO project",
-    author='The UUOSIO Team',
+    description="IPYEOS project",
+    author='The IPYEOS Team',
     license="MIT",
-    packages=['uuosio'],
-    package_dir={'uuosio': 'pysrc'},
-    package_data={'uuosio': release_files},
+    packages=['ipyeos'],
+    package_dir={'ipyeos': 'pysrc'},
+    package_data={'ipyeos': release_files},
 
     scripts=['bin/run-uuos'],
     install_requires=['mpy-cross', 'ujson'],

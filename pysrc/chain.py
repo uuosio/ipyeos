@@ -2,9 +2,9 @@ import ujson as json
 from datetime import datetime
 from typing import Dict, List, Union, Optional
 
-from uuosio import _chain, _uuos
-from uuosio import log
-from uuosio.uuostyping import Name, PublicKey
+from ipyeos import _chain, _uuos
+from ipyeos import log
+from ipyeos.uuostyping import Name, PublicKey
 
 logger = log.get_logger(__name__)
 
