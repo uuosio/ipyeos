@@ -15,7 +15,7 @@ jobs:
       PYEOS_VERSION: v0.1.6
     strategy:
       matrix:
-        python-version: [3.7, 3.8, 3.9]
+        python-version: [3.7, 3.8, 3.9, "3.10"]
         # os: ['windows-latest', 'ubuntu-latest', 'macos-latest']
         # os: ['ubuntu-18.04', 'macos-latest']
         os: ['ubuntu-18.04']
@@ -50,7 +50,7 @@ jobs:
           key: ${{ matrix.os }}-eosio-build-v2.0.0
           path: eos/build
       - name: Build eos
-        if: steps.cache-eosio-build.cache-hit != 'true'
+        if: steps.cache-eosio-build.outputs.cache-hit != 'true'
         working-directory: eos
         run: ./scripts/eosio_build.sh -y
       - name: Set up Python
@@ -63,6 +63,7 @@ jobs:
           python -m pip install flake8 pytest scikit-build cython auditwheel
       - name: Build pyeos
         run: |
+          ./release.sh
           python setup.py sdist bdist_wheel
       - name: get whl file
         id: whlfile
