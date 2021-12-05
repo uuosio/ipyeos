@@ -390,10 +390,10 @@ class Chain(object):
     # def get_unapplied_transactions(self):
     #     return _chain.get_unapplied_transactions(self.ptr)
  
-    def push_transaction(self, packed_trx: bytes, deadline: Union[str, datetime], billed_cpu_time_us: int, explicit_cpu_bill: int = False) -> dict:
+    def push_transaction(self, packed_trx: bytes, deadline: Union[str, datetime], billed_cpu_time_us: int, explicit_cpu_bill: int = 0, subjective_cpu_bill_us = 0) -> dict:
         if isinstance(deadline, datetime):
             deadline = deadline.isoformat(timespec='milliseconds')
-        result = _chain.push_transaction(self.ptr, packed_trx, deadline, billed_cpu_time_us, explicit_cpu_bill)
+        result = _chain.push_transaction(self.ptr, packed_trx, deadline, billed_cpu_time_us, explicit_cpu_bill, subjective_cpu_bill_us)
         if not result:
             result = _chain.get_last_error(self.ptr)
         result = json.loads(result)

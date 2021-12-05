@@ -110,7 +110,7 @@ cdef extern from "<uuos.hpp>":
         string get_scheduled_producer(string& _block_time)
 
         void gen_transaction(bool json, string& _actions, string& expiration, string& reference_block_id, string& _chain_id, bool compress, string& _private_keys, vector[char]& result)
-        string push_transaction(string& _packed_trx, string& deadline, uint32_t billed_cpu_time_us, bool explicit_cpu_bill)
+        string push_transaction(string& _packed_trx, string& deadline, uint32_t billed_cpu_time_us, bool explicit_cpu_bill, uint32_t subjective_cpu_bill_us)
 
         string get_scheduled_transactions()
         string get_scheduled_transaction(__uint128_t sender_id, string& sender)
@@ -555,8 +555,8 @@ def gen_transaction(uint64_t ptr, bool json, string& _actions, string& expiratio
     chain(ptr).gen_transaction(json, _actions, expiration, reference_block_id, _chain_id, compress, _private_keys, result)
     return PyBytes_FromStringAndSize(result.data(), result.size())
 
-def push_transaction(uint64_t ptr, string& _packed_trx, string& deadline, uint32_t billed_cpu_time_us, bool explicit_cpu_bill = 0):
-    return chain(ptr).push_transaction(_packed_trx, deadline, billed_cpu_time_us, explicit_cpu_bill)
+def push_transaction(uint64_t ptr, string& _packed_trx, string& deadline, uint32_t billed_cpu_time_us, bool explicit_cpu_bill = 0, uint32_t subjective_cpu_bill_us=0):
+    return chain(ptr).push_transaction(_packed_trx, deadline, billed_cpu_time_us, explicit_cpu_bill, subjective_cpu_bill_us)
 
 def get_scheduled_transactions(uint64_t ptr):
     return chain(ptr).get_scheduled_transactions()

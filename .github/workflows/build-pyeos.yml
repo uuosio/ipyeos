@@ -47,7 +47,7 @@ jobs:
         uses: actions/cache@v2
         id: cache-eosio-build
         with:
-          key: ${{ matrix.os }}-eosio-build-v2.0.0
+          key: ${{ matrix.os }}-eosio-build-v2.1.0
           path: eos/build
       - name: Build eos
         if: steps.cache-eosio-build.outputs.cache-hit != 'true'

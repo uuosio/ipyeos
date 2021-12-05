@@ -4,14 +4,6 @@ import platform
 from setuptools import find_packages
 from skbuild import setup
 
-# Require pytest-runner only when running tests
-pytest_runner = (['pytest-runner>=2.0,<3dev']
-                 if any(arg in sys.argv for arg in ('pytest', 'test'))
-                 else [])
-
-setup_requires = pytest_runner
-
-
 release_files = []
 for root, dirs, files in os.walk("pysrc/release"):
     for f in files:
@@ -40,9 +32,7 @@ setup(
     package_dir={'ipyeos': 'pysrc'},
     package_data={'ipyeos': release_files},
 
-    scripts=['bin/run-uuos'],
     install_requires=['mpy-cross', 'ujson'],
     tests_require=['pytest'],
-    setup_requires=setup_requires,
     include_package_data=True
 )
