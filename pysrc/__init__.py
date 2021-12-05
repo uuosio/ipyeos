@@ -2,6 +2,7 @@ import os
 import sys
 import platform
 import subprocess
+import sysconfig
 
 class CustomImporter(object):
     def find_module(self, fullname, mpath=None):
@@ -28,29 +29,34 @@ class CustomImporter(object):
 
 sys.meta_path.append(CustomImporter())
 
-def run_pyeos():
+def run_ipyeos():
     dir_name = os.path.dirname(os.path.realpath(__file__))
     dir_name = os.path.join(dir_name, "release")
     uuos_program = os.path.join(dir_name, "bin/uuos")
 
+    libdir, py_version_short, abiflags = sysconfig.get_config_vars('LIBDIR', 'py_version_short', 'abiflags')
+
     _system = platform.system()
     if _system == 'Darwin':
         lib_suffix = 'dylib'
+        pylib = f'libpython{py_version_short}{abiflags}.dylib'
+        os.environ['PYTHON_SHARED_LIB_PATH']=f'{libdir}/{pylib}'
     elif _system == 'Linux':
         lib_suffix = 'so'
+        pylib = f'libpython{py_version_short}{abiflags}.so'
+        os.environ['PYTHON_SHARED_LIB_PATH']=f'/usr/lib/x86_64-linux-gnu/{pylib}'
     else:
         raise Exception('Unsupported platform: ' + _system)
 
     os.environ['CHAIN_API_LIB'] = os.path.join(dir_name, 'lib/libchain_api.' + lib_suffix)
     os.environ['VM_API_LIB'] = os.path.join(dir_name, 'lib/libvm_api.' + lib_suffix)
-    os.environ['PYTHON_SHARED_LIB_PATH']='/usr/lib/x86_64-linux-gnu/libpython3.7m.so'
-    os.environ['RUN_UUOS']=uuos_program
+    os.environ['RUN_IPYEOS']=uuos_program
 
     cmd = sys.argv[:]
     cmd[0] = uuos_program
     return subprocess.call(cmd, stdout=sys.stdout, stderr=sys.stderr)
 
-if 'RUN_UUOS' in os.environ:
+if 'RUN_IPYEOS' in os.environ:
     from . import _uuos
     import _chainapi
     import _chain
