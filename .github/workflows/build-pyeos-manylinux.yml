@@ -14,7 +14,7 @@ jobs:
     container:
       image: quay.io/pypa/manylinux2014_x86_64
     env:
-      IPYEOS_VERSION: 0.1.1
+      IPYEOS_VERSION: 0.1.2
     steps:
       - name: Install Go
         uses: actions/setup-go@v2

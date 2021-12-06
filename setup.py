@@ -24,7 +24,7 @@ release_files.extend([
 
 setup(
     name="ipyeos",
-    version="0.1.1",
+    version="0.1.2",
     description="IPYEOS project",
     author='The IPYEOS Team',
     license="MIT",
