@@ -4,7 +4,7 @@ import json
 import platform
 
 from ipyeos.chaintester import ChainTester
-from ipyeos import log, uuos
+from ipyeos import log
 logger = log.get_logger(__name__)
 
 # print(os.getpid())
@@ -59,7 +59,7 @@ class TestMicropython(object):
         with open(os.path.join(test_dir, 'test_contracts/kv.py'), 'r') as f:
             code = f.read()
         code = self.tester.mp_compile('alice', code)
-        args = uuos.s2b('alice') + code
+        args = eos.s2b('alice') + code
         self.tester.push_action('alice', 'setcode', args, {'alice':'active'})
         r = self.tester.push_action('alice', 'sayhello', b'', {'alice':'active'})
         logger.info('+++elapsed: %s', r['elapsed'])
@@ -83,9 +83,9 @@ def apply(a, b, c):
         account = 'eosio.mpy'
         account = 'alice'
         code = self.tester.mp_compile(account, code)
-        args = uuos.s2b(account) + code
+        args = eos.s2b(account) + code
         self.tester.push_action(account, 'setcode', args, {account:'active'})
-        args = uuos.s2b(account)
+        args = eos.s2b(account)
         r = self.tester.push_action(account, 'exec3', args, {account:'active'})
         logger.info('+++elapsed: %s', r['elapsed'])
         self.tester.produce_block()

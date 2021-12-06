@@ -13,10 +13,10 @@ class CustomImporter(object):
 
     def load_module(self, module_name):
 #        print('+++load_module', module_name)
-        from . import _uuos        
+        from . import _eos        
         mod = sys.modules.get(module_name)
         if mod is None:
-            uuos_module = sys.modules.get('ipyeos._uuos')
+            uuos_module = sys.modules.get('ipyeos._eos')
             if not uuos_module:
                 return
             uuos_so = uuos_module.__file__
@@ -57,6 +57,6 @@ def run_ipyeos():
     return subprocess.call(cmd, stdout=sys.stdout, stderr=sys.stderr)
 
 if 'RUN_IPYEOS' in os.environ:
-    from . import _uuos
+    from . import _eos
     import _chainapi
     import _chain

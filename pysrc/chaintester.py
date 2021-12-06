@@ -7,11 +7,11 @@ import tempfile
 import mpy_cross
 import subprocess
 
-from ipyeos import chain, chainapi, uuos, config
+from ipyeos import chain, chainapi, config
 from datetime import datetime, timedelta
 from datetime import timezone
 
-from ipyeos import log, uuos
+from ipyeos import log
 from typing import List, Dict, Union, Optional
 from ipyeos.uuostyping import Name
 
@@ -175,12 +175,12 @@ class ChainTester(object):
         chain_config['state_dir'] = os.path.join(data_dir, 'state')
 
 
-        uuos.set_log_level('default', 0)
-        uuos.set_block_interval_ms(1000)
+        eos.set_log_level('default', 0)
+        eos.set_block_interval_ms(1000)
 
         self.chain_config = json.dumps(chain_config)
         self.genesis_test = json.dumps(genesis_test)
-        uuos.set_log_level('default', 10)
+        eos.set_log_level('default', 10)
         self.chain = chain.Chain(self.chain_config, self.genesis_test, os.path.join(config_dir, "protocol_features"), "")
         self.chain.startup(True)
         self.api = chainapi.ChainApi(self.chain)
@@ -189,7 +189,7 @@ class ChainTester(object):
         # logger.info(self.api.get_account('eosio'))
 
         self.feature_digests = []
-        uuos.set_log_level('default', 0)
+        eos.set_log_level('default', 0)
 
         self.feature_digests = ['0ec7e080177b2c02b278d5088611686b49d739925a92d9bfcacd7fc6b74053bd']
         self.start_block()
@@ -432,7 +432,7 @@ class ChainTester(object):
         raw_signed_trx = self.chain.gen_transaction(False, actions, expiration, ref_block_id, chain_id, False, priv_keys)
         # signed_trx = PackedTransactionMessage.unpack(raw_signed_trx)
         # logger.info(signed_trx)
-        # r = uuos.unpack_native_object(13, bytes.fromhex(signed_trx.packed_trx))
+        # r = eos.unpack_native_object(13, bytes.fromhex(signed_trx.packed_trx))
         # logger.info(r)
         deadline = datetime.max
         billed_cpu_time_us = 100
@@ -580,7 +580,7 @@ class ChainTester(object):
         }
         actions.append(setcode)
         if abi:
-            abi = uuos.pack_abi(abi)
+            abi = eos.pack_abi(abi)
         setabi = self.chain.pack_action_args('eosio', 'setabi', {'account':account, 'abi':abi.hex()})
         setabi = {
             'account': 'eosio',
@@ -623,7 +623,7 @@ class ChainTester(object):
     def deploy_abi(self, account: Name, abi: str):
         actions = []
         if abi:
-            abi = uuos.pack_abi(abi)
+            abi = eos.pack_abi(abi)
         setabi = self.chain.pack_action_args('eosio', 'setabi', {'account':account, 'abi':abi.hex()})
         setabi = {
             'account': 'eosio',
@@ -721,7 +721,7 @@ class ChainTester(object):
         return self.api.get_table_rows(params)
 
     def s2n(self, s: str) -> int:
-        return uuos.s2n(s)
+        return eos.s2n(s)
 
     def n2s(self, n: int) -> str:
-        return uuos.n2s(n)
+        return eos.n2s(n)

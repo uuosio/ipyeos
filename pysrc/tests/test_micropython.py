@@ -4,7 +4,7 @@ import json
 import platform
 
 from ipyeos.chaintester import ChainTester
-from ipyeos import log, uuos
+from ipyeos import log
 logger = log.get_logger(__name__)
 
 # print(os.getpid())
@@ -43,7 +43,7 @@ def apply(a, b, c):
     print('hello,world')
 '''
         code = self.tester.mp_compile('hello', code)
-        args = uuos.s2b('hello') + code
+        args = eos.s2b('hello') + code
         self.tester.push_action('hello', 'setcode', args, {'hello':'active'})
         r = self.tester.push_action('hello', 'sayhello', b'', {'hello':'active'})
 
@@ -52,10 +52,10 @@ def apply(a, b, c):
     print('hello,world from alice')
 '''
         code = self.tester.mp_compile('hello', code)
-        args = uuos.s2b('alice') + code
+        args = eos.s2b('alice') + code
         self.tester.push_action('hello', 'setcode', args, {'alice':'active'})
 
-        args = uuos.s2b('alice')
+        args = eos.s2b('alice')
         r = self.tester.push_action('hello', 'exec', args, {'hello':'active'})
         logger.info(r['action_traces'][0]['console'])
         print(r['elapsed'])
@@ -69,9 +69,9 @@ def apply(a, b, c):
         logger.info(r['action_traces'][0]['console'])
 
     def test_debug(self):
-        uuos.enable_native_contracts(True)
+        eos.enable_native_contracts(True)
         eosio_contract = f'eos/build/libraries/vm_api//test/libnative_eosio_system2.{self.so}'
-        ret = uuos.set_native_contract(uuos.s2n('eosio'), eosio_contract)
+        ret = eos.set_native_contract(eos.s2n('eosio'), eosio_contract)
         assert ret
 
         self.tester.buy_ram_bytes('eosio', 'hello', 10*1024*1024)
@@ -84,8 +84,8 @@ def apply(a, b, c):
         logger.info(r['action_traces'][0]['console'])
         print(r['elapsed'])
 
-        uuos.enable_native_contracts(False)
-        uuos.set_native_contract(uuos.s2n('eosio.mpy'), '')
+        eos.enable_native_contracts(False)
+        eos.set_native_contract(eos.s2n('eosio.mpy'), '')
 
     def test_setcode2(self):
         code = '/Users/newworld/dev/uuos3/externals/micropython/build/ports/micropython_eosio.wasm'
@@ -100,6 +100,6 @@ def apply(a, b, c):
     print('hello,world')
 '''
         code = self.tester.mp_compile('hello', code)
-        args = uuos.s2b('hello') + int.to_bytes(len(code), 4, 'little') + code + b'hello, init function'
+        args = eos.s2b('hello') + int.to_bytes(len(code), 4, 'little') + code + b'hello, init function'
         self.tester.push_action('hello', 'setcode2', args, {'hello':'active'})
         r = self.tester.push_action('hello', 'sayhello', b'', {'hello':'active'})

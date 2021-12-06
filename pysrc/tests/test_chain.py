@@ -5,12 +5,11 @@ import logging
 import tempfile
 
 from ipyeos.chaintester import ChainTester
-from ipyeos import log, uuos
-from ipyeos import _chain, _uuos
-from ipyeos import uuos
+from ipyeos import _chain, _eos
+from ipyeos import eos
 from datetime import datetime, timedelta
 
-uuos.set_log_level('default', 0)
+eos.set_log_level('default', 0)
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(levelname)s %(module)s %(lineno)d %(message)s')
@@ -156,7 +155,7 @@ class TestSystem(object):
     "abi_extensions": []
 }
 '''
-        abi = uuos.pack_abi(abi)
+        abi = eos.pack_abi(abi)
         logger.info(abi)
 
     def test_block(self):
@@ -167,11 +166,11 @@ class TestSystem(object):
         block = self.tester.chain.fetch_block_by_number(num)
         logger.info(block)
         logger.info(num)
-        r = uuos.unpack_block(block)
+        r = eos.unpack_block(block)
         logger.info(r)
 
     def test_chain(self):
-        _uuos.set_block_interval_ms(1000)
+        _eos.set_block_interval_ms(1000)
 
         _chain_config = json.dumps(chain_config)
         _genesis_test = json.dumps(genesis_test)

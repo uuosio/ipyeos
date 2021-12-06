@@ -1,13 +1,13 @@
 import sys
-from ipyeos import uuos
+from ipyeos import eos
 
 INIT_SUCCESS = 6
 
 def run():
-    ret = uuos.init()
+    ret = eos.init()
     if not ret == INIT_SUCCESS: #exit on not init success
         sys.exit(ret)
-    uuos.exec()
+    eos.exec()
     print('done!')
 
 if __name__ == "__main__":

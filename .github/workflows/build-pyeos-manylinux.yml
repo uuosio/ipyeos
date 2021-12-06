@@ -14,7 +14,7 @@ jobs:
     container:
       image: quay.io/pypa/manylinux2014_x86_64
     env:
-      PYEOS_VERSION: v0.1.6
+      IPYEOS_VERSION: 0.1.1
     steps:
       - name: Install Go
         uses: actions/setup-go@v2
@@ -60,16 +60,18 @@ jobs:
       - name: run auditwheel
         working-directory: dist
         run: |
-          python3.7 -m auditwheel repair --plat manylinux_2_17_x86_64 ipyeos-0.1.0-cp37-cp37m-linux_x86_64.whl
-          python3.8 -m auditwheel repair --plat manylinux_2_17_x86_64 ipyeos-0.1.0-cp38-cp38-linux_x86_64.whl
-          python3.9 -m auditwheel repair --plat manylinux_2_17_x86_64 ipyeos-0.1.0-cp39-cp39-linux_x86_64.whl
-          python3.10 -m auditwheel repair --plat manylinux_2_17_x86_64 ipyeos-0.1.0-cp310-cp310-linux_x86_64.whl
+          python3.7 -m auditwheel repair --plat manylinux_2_17_x86_64 ipyeos-${{ env.RUN_IPYEOS }}-cp37-cp37m-linux_x86_64.whl
+          python3.8 -m auditwheel repair --plat manylinux_2_17_x86_64 ipyeos-${{ env.RUN_IPYEOS }}-cp38-cp38-linux_x86_64.whl
+          python3.9 -m auditwheel repair --plat manylinux_2_17_x86_64 ipyeos-${{ env.RUN_IPYEOS }}-cp39-cp39-linux_x86_64.whl
+          python3.10 -m auditwheel repair --plat manylinux_2_17_x86_64 ipyeos-${{ env.RUN_IPYEOS }}-cp310-cp310-linux_x86_64.whl
       - name: release-pyeos
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            ./dist/wheelhouse/ipyeos-0.1.0-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
-            ./dist/wheelhouse/ipyeos-0.1.0-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
-            ./dist/wheelhouse/ipyeos-0.1.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
-            ./dist/wheelhouse/ipyeos-0.1.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+            ./dist/wheelhouse/ipyeos-${{ env.RUN_IPYEOS }}-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+            ./dist/wheelhouse/ipyeos-${{ env.RUN_IPYEOS }}-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+            ./dist/wheelhouse/ipyeos-${{ env.RUN_IPYEOS }}-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+            ./dist/wheelhouse/ipyeos-${{ env.RUN_IPYEOS }}-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+
+

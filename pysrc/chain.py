@@ -2,7 +2,7 @@ import ujson as json
 from datetime import datetime
 from typing import Dict, List, Union, Optional
 
-from ipyeos import _chain, _uuos
+from ipyeos import _chain, _eos
 from ipyeos import log
 from ipyeos.uuostyping import Name, PublicKey
 

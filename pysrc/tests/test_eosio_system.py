@@ -4,7 +4,7 @@ import json
 import platform
 
 from ipyeos.chaintester import ChainTester
-from ipyeos import log, uuos
+from ipyeos import log
 logger = log.get_logger(__name__)
 
 # print(os.getpid())
@@ -31,17 +31,17 @@ class TestMicropython(object):
         self.tester.produce_block()
 
     def test_native_contract(self):
-        uuos.enable_native_contracts(True)
+        eos.enable_native_contracts(True)
         eosio_contract = f'build/libraries/vm_api//test/libnative_eosio_system2.{self.so}'
-        ret = uuos.set_native_contract(uuos.s2n('eosio'), eosio_contract)
+        ret = eos.set_native_contract(eos.s2n('eosio'), eosio_contract)
         assert ret
 
         logger.info(self.tester.api.get_account('hello'))
         self.tester.buy_ram_bytes('hello', 'hello', 10*1024*1024)
         logger.info(self.tester.api.get_account('hello'))
 
-        uuos.enable_native_contracts(False)
-        uuos.set_native_contract(uuos.s2n('eosio'), '')
+        eos.enable_native_contracts(False)
+        eos.set_native_contract(eos.s2n('eosio'), '')
 
     def test_mpy(self):
         code = '''
@@ -53,12 +53,12 @@ def apply(a, b, c):
         print('hello,world')
 '''
         code = self.tester.mp_compile('hello', code)
-        args = uuos.s2b('hello') + code
+        args = eos.s2b('hello') + code
         r = self.tester.push_action('eosio', 'deploycode', args, {'hello':'active'})
         logger.info(r['action_traces'][0]['console'])
 
 
-        args = uuos.s2b('hello') + b'hello,world'
+        args = eos.s2b('hello') + b'hello,world'
         r = self.tester.push_action('eosio', 'exec', args, {'hello':'active'})
         # logger.info('+++%s', r['action_traces'][0]['console'])
         logger.info('++++elapsed: %s', r['elapsed'])

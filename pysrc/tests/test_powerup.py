@@ -3,7 +3,6 @@ import json
 import pytest
 import logging
 import tempfile
-from ipyeos import chain, chainapi, uuos
 from ipyeos.chaintester import ChainTester
 from datetime import datetime, timedelta
 

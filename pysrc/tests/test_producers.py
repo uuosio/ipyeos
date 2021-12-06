@@ -3,7 +3,6 @@ import json
 import pytest
 import logging
 import tempfile
-from ipyeos import chain, chainapi, uuos
 from ipyeos.chaintester import ChainTester
 from datetime import datetime, timedelta
 
@@ -48,7 +47,7 @@ class TestProducers(object):
             args = {
                 "producer": producer,
                 "producer_key":"EOS6AjF6hvF7GSuSd4sCgfPKq5uWaXvGM2aQtEUCwmEHygQaqxBSV",
-                "url":"http://uuos.io",
+                "url":"http://eos.io",
                 "location":1
             }
             self.tester.push_action('eosio', 'regproducer', args, {producer:'active'})
@@ -60,7 +59,7 @@ class TestProducers(object):
         args = {
             "producer": 'helloworld11',
             "producer_key":"EOS6AjF6hvF7GSuSd4sCgfPKq5uWaXvGM2aQtEUCwmEHygQaqxBSV",
-            "url":"http://uuos.io",
+            "url":"http://eos.io",
             "location":1
         }
         self.tester.push_action('eosio', 'regproducer', args, {'helloworld11':'active'})
