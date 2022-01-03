@@ -20,6 +20,7 @@ release_files.extend([
     'tests/contracts/eosio.wrap/*',
     'tests/contracts/micropython/*',
     'tests/test_template.py',
+    'tests/activate_kv.wasm',
 ])
 
 setup(

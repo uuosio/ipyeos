@@ -16,10 +16,6 @@ jobs:
     env:
       IPYEOS_VERSION: 0.1.3
     steps:
-      - name: Install Go
-        uses: actions/setup-go@v2
-        with:
-          go-version: '1.17'
       - name: Checkout
         uses: actions/checkout@v2
         with:
@@ -46,16 +42,24 @@ jobs:
           python3.8 -m pip install scikit-build cython auditwheel
           python3.9 -m pip install scikit-build cython auditwheel
           python3.10 -m pip install scikit-build cython auditwheel
-      - name: Build pyeos
+      - name: call release.sh
         run: |
           ./release.sh
-          ln -sf /opt/_internal/cpython-3.7.12/bin/cython /usr/local/bin/cython
+      - name: Build pyeos with python3.7
+        run: |
+          ln -sf /opt/python/cp37-cp37m/bin/cython /usr/local/bin/cython
           python3.7 setup.py sdist bdist_wheel
-          ln -sf /opt/_internal/cpython-3.8.12/bin/cython /usr/local/bin/cython
+      - name: Build pyeos with python3.8
+        run: |
+          ln -sf /opt/python/cp38-cp38/bin/cython /usr/local/bin/cython
           python3.8 setup.py sdist bdist_wheel
-          ln -sf /opt/_internal/cpython-3.9.9/bin/cython /usr/local/bin/cython
+      - name: Build pyeos with python3.9
+        run: |
+          ln -sf /opt/python/cp39-cp39/bin/cython /usr/local/bin/cython
           python3.9 setup.py sdist bdist_wheel
-          ln -sf /opt/_internal/cpython-3.10.0/bin/cython /usr/local/bin/cython
+      - name: Build pyeos with python3.10
+        run: |
+          ln -sf /opt/python/cp310-cp310/bin/cython /usr/local/bin/cython
           python3.10 setup.py sdist bdist_wheel
       - name: run auditwheel
         working-directory: dist
@@ -88,5 +92,3 @@ jobs:
         with:
           user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
-
-
