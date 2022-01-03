@@ -15,8 +15,8 @@ files = [
     f'ipyeos-{version}-cp38-cp38-macosx_10_16_x86_64.whl',
 ]
 
-url = f'https://github.com/uuosio/pyeos/archive/refs/tags/v{version}.tar.gz'
-subprocess.call(['wget', url])
+# url = f'https://github.com/uuosio/pyeos/archive/refs/tags/v{version}.tar.gz'
+# subprocess.call(['wget', url])
 
 url = f'https://github.com/uuosio/pyeos/releases/download/v{version}/'
 for f in files:
