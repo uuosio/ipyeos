@@ -83,7 +83,7 @@ jobs:
         run: |
           rm *.whl
           rm -r wheelhouse
-          python ../scripts/download.py ${{ env.IPYEOS_VERSION }}
+          python3.7 ../scripts/download.py ${{ env.IPYEOS_VERSION }}
       - name: Publish a Python distribution to PyPI
         if: ${{ startsWith(github.ref, 'refs/tags/') }}
         uses: pypa/gh-action-pypi-publish@release/v1
