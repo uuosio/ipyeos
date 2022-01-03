@@ -1,4 +1,4 @@
-name: build ipyeos
+name: release ipyeos
 
 on:
   push:
