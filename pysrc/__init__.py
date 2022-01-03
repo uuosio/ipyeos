@@ -44,7 +44,8 @@ def run_ipyeos():
     elif _system == 'Linux':
         lib_suffix = 'so'
         pylib = f'libpython{py_version_short}{abiflags}.so'
-        os.environ['PYTHON_SHARED_LIB_PATH']=f'/usr/lib/x86_64-linux-gnu/{pylib}'
+        if not 'PYTHON_SHARED_LIB_PATH' in os.environ:
+            os.environ['PYTHON_SHARED_LIB_PATH']=f'/usr/lib/x86_64-linux-gnu/{pylib}'
     else:
         raise Exception('Unsupported platform: ' + _system)
 
