@@ -15,7 +15,10 @@ files = [
     f'ipyeos-{version}-cp38-cp38-macosx_10_15_x86_64.whl',
 ]
 
-url = 'https://github.com/uuosio/pyeos/releases/download/v{version}/'
+url = f'https://github.com/uuosio/pyeos/archive/refs/tags/v{version}.tar.gz'
+subprocess.call(['wget', url])
+
+url = f'https://github.com/uuosio/pyeos/releases/download/v{version}/'
 for f in files:
     count = 3*60*60/10
     while True:
