@@ -15,7 +15,7 @@ jobs:
       run:
         shell: bash
     env:
-      IPYEOS_VERSION: 0.1.3
+      IPYEOS_VERSION: 0.1.4
     strategy:
       matrix:
         python-version: [3.9]
