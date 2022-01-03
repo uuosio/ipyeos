@@ -11,7 +11,7 @@ from ipyeos import chain, chainapi, config
 from datetime import datetime, timedelta
 from datetime import timezone
 
-from ipyeos import log
+from ipyeos import log, eos
 from typing import List, Dict, Union, Optional
 from ipyeos.uuostyping import Name
 

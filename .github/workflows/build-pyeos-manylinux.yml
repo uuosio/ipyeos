@@ -14,7 +14,7 @@ jobs:
     container:
       image: quay.io/pypa/manylinux2014_x86_64
     env:
-      IPYEOS_VERSION: 0.1.2
+      IPYEOS_VERSION: 0.1.3
     steps:
       - name: Install Go
         uses: actions/setup-go@v2
@@ -73,5 +73,19 @@ jobs:
             ./dist/wheelhouse/ipyeos-${{ env.IPYEOS_VERSION }}-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
             ./dist/wheelhouse/ipyeos-${{ env.IPYEOS_VERSION }}-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
             ./dist/wheelhouse/ipyeos-${{ env.IPYEOS_VERSION }}-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+
+      - name: Downloading whl files
+        if: ${{ startsWith(github.ref, 'refs/tags/') && matrix.os == 'ubuntu-18.04' }}
+        working-directory: dist
+        run: |
+          rm *.whl
+          rm wheelhouse
+          python ../scripts/download.py ${{ env.IPYEOS_VERSION }}
+      - name: Publish a Python distribution to PyPI
+        if: ${{ startsWith(github.ref, 'refs/tags/') && matrix.os == 'ubuntu-18.04' }}
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}
 
 

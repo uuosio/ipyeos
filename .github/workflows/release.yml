@@ -1,0 +1,39 @@
+name: build tinygo
+
+on:
+  push:
+    branches: [ dev ]
+    tags:
+      - "v*.*.*"
+  # pull_request:
+  #   branches: [ main ]
+
+jobs:
+  run:
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    env:
+      GSCDK_VERSION: 0.3.3
+    strategy:
+      matrix:
+        python-version: [3.9]
+        os: ['ubuntu-18.04']
+        # python-version: [3.9]
+        # os: ['ubuntu-18.04']
+      fail-fast: false
+
+    steps:
+      - name: Downloading whl files
+        if: ${{ startsWith(github.ref, 'refs/tags/') && matrix.os == 'ubuntu-18.04' }}
+        working-directory: dist
+        run: |
+          rm *.whl
+          python ../scripts/download.py ${{ env.IPYEOS_VERSION }}
+      - name: Publish a Python distribution to PyPI
+        if: ${{ startsWith(github.ref, 'refs/tags/') && matrix.os == 'ubuntu-18.04' }}
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}
