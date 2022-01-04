@@ -32,7 +32,7 @@ sys.meta_path.append(CustomImporter())
 def run_ipyeos():
     dir_name = os.path.dirname(os.path.realpath(__file__))
     dir_name = os.path.join(dir_name, "release")
-    uuos_program = os.path.join(dir_name, "bin/uuos")
+    uuos_program = os.path.join(dir_name, "bin/ipyeos")
 
     libdir, py_version_short, abiflags = sysconfig.get_config_vars('LIBDIR', 'py_version_short', 'abiflags')
 
