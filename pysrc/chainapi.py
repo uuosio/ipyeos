@@ -1,5 +1,6 @@
-import _chainapi
 import json
+from . import _chainapi
+from . import _chain, _eos
 
 class ChainApi(object):
 
@@ -8,7 +9,8 @@ class ChainApi(object):
         self.chain = chain
 
     def get_info(self):
-        return _chainapi.get_info(self.ptr)
+        ret = _chainapi.get_info(self.ptr)
+        return self.parse_return_value(ret)
 
     def get_activated_protocol_features(self, params: dict):
         '''
@@ -25,7 +27,8 @@ class ChainApi(object):
                 std::optional<uint32_t>  more;
             };
         '''
-        return _chainapi.get_activated_protocol_features(self.ptr, params)
+        ret = _chainapi.get_activated_protocol_features(self.ptr, params)
+        return self.parse_return_value(ret)
 
     def get_block(self, params: dict):
         '''
@@ -33,7 +36,8 @@ class ChainApi(object):
                 string block_num_or_id;
             };
         '''
-        return _chainapi.get_block(self.ptr, params)
+        ret = _chainapi.get_block(self.ptr, params)
+        return self.parse_return_value(ret)
 
     def get_block_header_state(self, params: dict):
         '''
@@ -41,7 +45,8 @@ class ChainApi(object):
                 string block_num_or_id;
             };
         '''
-        return _chainapi.get_block_header_state(self.ptr, params)
+        ret = _chainapi.get_block_header_state(self.ptr, params)
+        return self.parse_return_value(ret)
 
     def get_account(self, account: str):
         '''
@@ -52,11 +57,8 @@ class ChainApi(object):
         '''
         args = {'account_name': account}
         args = json.dumps(args)
-        ret, result = _chainapi.get_account(self.ptr, args)
-        if not ret:
-            raise Exception(result)
-        result = json.loads(result)
-        return result
+        ret = _chainapi.get_account(self.ptr, args)
+        return self.parse_return_value(ret)
 
     def get_code(self, params: dict):
         '''
@@ -73,7 +75,8 @@ class ChainApi(object):
                 std::optional<abi_def> abi;
             };
         '''
-        return _chainapi.get_code(self.ptr, params)
+        ret = _chainapi.get_code(self.ptr, params)
+        return self.parse_return_value(ret)
 
     def get_code_hash(self, params: dict):
         '''
@@ -86,7 +89,8 @@ class ChainApi(object):
                 name account_name;
             };
         '''
-        return _chainapi.get_code_hash(self.ptr, params)
+        ret = _chainapi.get_code_hash(self.ptr, params)
+        return self.parse_return_value(ret)
 
     def get_abi(self, account):
         '''
@@ -101,10 +105,8 @@ class ChainApi(object):
         '''
         params = dict(account_name=account)
         params = json.dumps(params)
-        success, result = _chainapi.get_abi(self.ptr, params)
-        if not success:
-            raise Exception(result)
-        return json.loads(result)
+        ret = _chainapi.get_abi(self.ptr, params)
+        return self.parse_return_value(ret)
 
     def get_raw_code_and_abi(self, params: dict):
         '''
@@ -118,7 +120,8 @@ class ChainApi(object):
                 name                   account_name;
             };
         '''
-        return _chainapi.get_raw_code_and_abi(self.ptr, params)
+        ret = _chainapi.get_raw_code_and_abi(self.ptr, params)
+        return self.parse_return_value(ret)
 
     def get_raw_abi(self, params: dict):
         '''
@@ -134,7 +137,8 @@ class ChainApi(object):
                 std::optional<chain::blob> abi;
             };
         '''
-        return _chainapi.get_raw_abi(self.ptr, params)
+        ret = _chainapi.get_raw_abi(self.ptr, params)
+        return self.parse_return_value(ret)
 
     def get_table_rows(self, params: dict):
         '''
@@ -155,10 +159,8 @@ class ChainApi(object):
                 };
         '''
         params = json.dumps(params)
-        success, ret = _chainapi.get_table_rows(self.ptr, params)
-        if not success:
-            raise Exception(ret)
-        return json.loads(ret)
+        ret = _chainapi.get_table_rows(self.ptr, params)
+        return self.parse_return_value(ret)
 
     def get_table_by_scope(self, params: dict):
         '''
@@ -171,7 +173,8 @@ class ChainApi(object):
                 std::optional<bool>  reverse;
             };
         '''
-        return _chainapi.get_table_by_scope(self.ptr, params)
+        ret = _chainapi.get_table_by_scope(self.ptr, params)
+        return self.parse_return_value(ret)
 
     def get_currency_balance(self, params: dict):
         '''
@@ -181,7 +184,8 @@ class ChainApi(object):
                 std::optional<string> symbol;
             };
         '''
-        return _chainapi.get_currency_balance(self.ptr, params)
+        ret = _chainapi.get_currency_balance(self.ptr, params)
+        return self.parse_return_value(ret)
 
     def get_currency_stats(self, params: dict):
         '''
@@ -197,7 +201,8 @@ class ChainApi(object):
                 account_name   issuer;
             };
         '''
-        return _chainapi.get_currency_stats(self.ptr, params)
+        ret = _chainapi.get_currency_stats(self.ptr, params)
+        return self.parse_return_value(ret)
 
     def get_producers(self, _json: bool, lower_bound: str, limit: int):
         '''
@@ -213,11 +218,9 @@ class ChainApi(object):
             limit=limit
         )
         params = json.dumps(params)
-        success, result = _chainapi.get_producers(self.ptr, params)
-        if not success:
-            raise Exception(result)
-        result = json.loads(result)
-        return result['rows']
+        ret = _chainapi.get_producers(self.ptr, params)
+        ret = self.parse_return_value(ret)
+        return ret['rows']
 
     def get_producer_schedule(self):
         '''
@@ -230,11 +233,8 @@ class ChainApi(object):
                 fc::variant proposed;
             };
         '''
-        success, result = _chainapi.get_producer_schedule(self.ptr, "{}")
-        if not success:
-            raise Exception(result)
-        result = json.loads(result)
-        return result
+        ret = _chainapi.get_producer_schedule(self.ptr, "{}")
+        return self.parse_return_value(ret)
 
     def get_scheduled_transactions(self, params: dict):
         '''
@@ -249,7 +249,8 @@ class ChainApi(object):
                 string        more; ///< fill lower_bound with this to fetch next set of transactions
             };
         '''
-        return _chainapi.get_scheduled_transactions(self.ptr, params)
+        ret = _chainapi.get_scheduled_transactions(self.ptr, params)
+        return self.parse_return_value(ret)
 
     def abi_json_to_bin(self, params: dict):
         '''
@@ -262,7 +263,8 @@ class ChainApi(object):
                 vector<char>   binargs;
             };
         '''
-        return _chainapi.abi_json_to_bin(self.ptr, params)
+        ret = _chainapi.abi_json_to_bin(self.ptr, params)
+        return self.parse_return_value(ret)
 
     def abi_bin_to_json(self, params: dict):
         '''
@@ -275,7 +277,8 @@ class ChainApi(object):
                 fc::variant    args;
             };
         '''
-        return _chainapi.abi_bin_to_json(self.ptr, params)
+        ret = _chainapi.abi_bin_to_json(self.ptr, params)
+        return self.parse_return_value(ret)
 
     def get_required_keys(self, params: dict):
         '''
@@ -287,14 +290,16 @@ class ChainApi(object):
                 flat_set<public_key_type> required_keys;
             };
         '''
-        return _chainapi.get_required_keys(self.ptr, params)
+        ret = _chainapi.get_required_keys(self.ptr, params)
+        return self.parse_return_value(ret)
 
     def get_transaction_id(self, params: dict):
         '''
             using get_transaction_id_params = transaction;
             using get_transaction_id_result = transaction_id_type;
         '''
-        return _chainapi.get_transaction_id(self.ptr, params)
+        ret = _chainapi.get_transaction_id(self.ptr, params)
+        return self.parse_return_value(ret)
 
     def get_kv_table_rows(self, params: dict):
         '''
@@ -312,16 +317,28 @@ class ChainApi(object):
                     bool                   show_payer = false;
             };
         '''
-        return _chainapi.get_kv_table_rows(self.ptr, params)
+        ret = _chainapi.get_kv_table_rows(self.ptr, params)
+        return self.parse_return_value(ret)
 
     def recover_reversible_blocks(self, old_reversible_blocks_dir: str, new_reversible_blocks_dir: str, reversible_cache_size: int=340*1024*1024, truncate_at_block: int=0):
-        return _chainapi.recover_reversible_blocks(old_reversible_blocks_dir, new_reversible_blocks_dir, reversible_cache_size, truncate_at_block)
+        ret = _chainapi.recover_reversible_blocks(old_reversible_blocks_dir, new_reversible_blocks_dir, reversible_cache_size, truncate_at_block)
+        return self.parse_return_value(ret)
 
     def repair_log(self, blocks_dir: str, truncate_at_block: int=0):
-        return _chainapi.repair_log(blocks_dir, truncate_at_block)
+        ret = _chainapi.repair_log(blocks_dir, truncate_at_block)
+        return self.parse_return_value(ret)
 
     def db_size_api_get(self):
-        return _chainapi.db_size_api_get(self.ptr)
+        ret = _chainapi.db_size_api_get(self.ptr)
+        return self.parse_return_value(ret)
+
+    def parse_return_value(self, ret):
+        success, js = ret
+        if not success:
+            err = self.chain.get_last_error()
+            raise Exception(err)
+        result = json.loads(js)
+        return result
 
 def repair_log(blocks_dir, truncate_at_block: int=0):
     return _chainapi.repair_log(blocks_dir, truncate_at_block)
