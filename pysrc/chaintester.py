@@ -11,9 +11,9 @@ from ipyeos import chain, chainapi, config
 from datetime import datetime, timedelta
 from datetime import timezone
 
-from ipyeos import log, eos
+from . import log, eos
 from typing import List, Dict, Union, Optional
-from ipyeos.uuostyping import Name
+from .types import Name
 
 logger = log.get_logger(__name__)
 
