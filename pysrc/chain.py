@@ -1,4 +1,4 @@
-import ujson as json
+import json
 from datetime import datetime
 from typing import Dict, List, Union, Optional
 

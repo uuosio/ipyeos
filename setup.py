@@ -33,7 +33,7 @@ setup(
     package_dir={'ipyeos': 'pysrc'},
     package_data={'ipyeos': release_files},
 
-    install_requires=['mpy-cross', 'ujson'],
+    install_requires=[],
     tests_require=['pytest'],
     include_package_data=True
 )
