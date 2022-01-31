@@ -2,7 +2,10 @@ import os
 import sys
 import platform
 from setuptools import find_packages
-from skbuild import setup
+if platform.system() == 'Windows':
+    from distutils.core import setup
+else:
+    from skbuild import setup
 
 release_files = []
 for root, dirs, files in os.walk("pysrc/release"):

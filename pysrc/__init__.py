@@ -35,6 +35,7 @@ def run_ipyeos():
         cmd = f'docker run --rm -it -w /root/dev -v "{os.getcwd()}:/root/dev" -t gscdk/test'
         cmd = shlex.split(cmd)
         cmd.append(sys.argv[1:])
+        print(' '.join(cmd))
         return subprocess.call(cmd, stdout=sys.stdout, stderr=sys.stderr)
 
     dir_name = os.path.dirname(os.path.realpath(__file__))
