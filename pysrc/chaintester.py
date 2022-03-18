@@ -3,6 +3,7 @@ import json
 import pytest
 import atexit
 import logging
+import shutil
 import tempfile
 import mpy_cross
 import subprocess
@@ -166,13 +167,13 @@ class ChainTester(object):
     def __init__(self):
         atexit.register(self.free)
 
-        data_dir = tempfile.mkdtemp()
-        config_dir = tempfile.mkdtemp()
-        logger.info('++++data_dir %s', data_dir)
-        logger.info('++++config_dir %s', config_dir)
+        self.data_dir = tempfile.mkdtemp()
+        self.config_dir = tempfile.mkdtemp()
+        logger.info('++++data_dir %s', self.data_dir)
+        logger.info('++++config_dir %s', self.config_dir)
 
-        chain_config['blog']['log_dir'] = os.path.join(data_dir, 'blocks')
-        chain_config['state_dir'] = os.path.join(data_dir, 'state')
+        chain_config['blog']['log_dir'] = os.path.join(self.data_dir, 'blocks')
+        chain_config['state_dir'] = os.path.join(self.data_dir, 'state')
 
 
         eos.set_log_level('default', 0)
@@ -181,7 +182,7 @@ class ChainTester(object):
         self.chain_config = json.dumps(chain_config)
         self.genesis_test = json.dumps(genesis_test)
         eos.set_log_level('default', 10)
-        self.chain = chain.Chain(self.chain_config, self.genesis_test, os.path.join(config_dir, "protocol_features"), "")
+        self.chain = chain.Chain(self.chain_config, self.genesis_test, os.path.join(self.config_dir, "protocol_features"), "")
         self.chain.startup(True)
         self.api = chainapi.ChainApi(self.chain)
 
@@ -349,6 +350,11 @@ class ChainTester(object):
 
     def free(self):
         self.chain.free()
+        if self.data_dir:
+            shutil.rmtree(self.data_dir)
+            shutil.rmtree(self.config_dir)
+            self.data_dir = None
+            self.config_dir = None
 
     def get_account(self, account):
         return self.api.get_account(account)
