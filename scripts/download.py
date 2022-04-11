@@ -5,10 +5,10 @@ import subprocess
 
 version = sys.argv[1]
 files = [
-    f'ipyeos-{version}-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl',
-    f'ipyeos-{version}-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl',
-    f'ipyeos-{version}-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl',
-    f'ipyeos-{version}-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl',
+    # f'ipyeos-{version}-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl',
+    # f'ipyeos-{version}-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl',
+    # f'ipyeos-{version}-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl',
+    # f'ipyeos-{version}-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl',
     f'ipyeos-{version}-cp39-cp39-macosx_10_16_x86_64.whl',
     f'ipyeos-{version}-cp310-cp310-macosx_10_16_x86_64.whl',
     f'ipyeos-{version}-cp37-cp37m-macosx_10_16_x86_64.whl',
