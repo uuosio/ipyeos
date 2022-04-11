@@ -1,1 +1,3 @@
-v0.1.6 release
+v0.1.7 release
+
+1. Delete tmp dir on exit
