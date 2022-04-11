@@ -32,7 +32,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
         with:
-          token: ${{ secrets.MY_REPO_PAT }}
+          # token: ${{ secrets.MY_REPO_PAT }}
           submodules: recursive
           fetch-depth: 0
       - name: Cache eos build
