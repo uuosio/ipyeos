@@ -5,7 +5,6 @@ import atexit
 import logging
 import shutil
 import tempfile
-import mpy_cross
 import subprocess
 
 from ipyeos import chain, chainapi, config
@@ -672,6 +671,7 @@ class ChainTester(object):
             with open(py_file, 'w') as f:
                 f.write(src)
             mpy_file = os.path.join(tempdir, file_name + '.mpy')
+            import mpy_cross
             proc = mpy_cross.run('-o', mpy_file, py_file, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             err = proc.stderr.read()
             if err:
