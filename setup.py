@@ -36,7 +36,9 @@ setup(
     package_dir={'ipyeos': 'pysrc'},
     package_data={'ipyeos': release_files},
 
-    install_requires=[],
-    tests_require=['pytest'],
+    install_requires=[
+        'pytest>=6.2.5'
+    ],
+    tests_require=[],
     include_package_data=True
 )
