@@ -1,3 +1,5 @@
-v0.1.7 release
+v0.1.8 release
 
-1. Delete tmp dir on exit
+1. Add pytest as an install requirement
+2. import mpy_cross in mp_compile
+
