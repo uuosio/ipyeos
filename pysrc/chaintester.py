@@ -402,13 +402,19 @@ class ChainTester(object):
             'data': args.hex(),
             'authorization': auth
         }
-        ret = self.push_actions([a], explicit_cpu_bill)
+        ret = self.push_actions_ex([a], explicit_cpu_bill)
         elapsed = ret['elapsed']
         # if not action == 'activate':
         #     logger.info(f'+++++{account} {action} {elapsed}')
         return ret
 
-    def push_actions(self, actions: List, explicit_cpu_bill=False):
+    def gen_transaction(self, actions: List, json_str=False):
+        _actions = []
+        for a in actions:
+            _actions.append(self.gen_action(*a))
+        return self.gen_transaction_ex(_actions, json_str)
+
+    def gen_transaction_ex(self, actions: List, json_str=False):
         chain_id = self.chain.id()
         ref_block_id = self.chain.last_irreversible_block_id()
         priv_keys = []
@@ -440,11 +446,23 @@ class ChainTester(object):
         # if expiration < now:
         #     expiration = now
         expiration = expiration + timedelta(seconds=60)
-        raw_signed_trx = self.chain.gen_transaction(False, actions, expiration, ref_block_id, chain_id, False, priv_keys)
-        # signed_trx = PackedTransactionMessage.unpack(raw_signed_trx)
-        # logger.info(signed_trx)
-        # r = eos.unpack_native_object(13, bytes.fromhex(signed_trx.packed_trx))
-        # logger.info(r)
+        ret = self.chain.gen_transaction(json_str, actions, expiration, ref_block_id, chain_id, False, priv_keys)
+        if json_str:
+            return json.loads(ret)
+        return ret
+
+    def push_actions(self, actions: List, explicit_cpu_bill=False):
+        _actions = []
+        for a in actions:
+            _actions.append(self.gen_action(*a))
+        raw_signed_trx = self.gen_transaction_ex(_actions)
+        deadline = datetime.max
+        billed_cpu_time_us = 100
+        result = self.chain.push_transaction(raw_signed_trx, deadline, billed_cpu_time_us, explicit_cpu_bill)
+        return result
+
+    def push_actions_ex(self, actions: List, explicit_cpu_bill=False):
+        raw_signed_trx = self.gen_transaction_ex(actions)
         deadline = datetime.max
         billed_cpu_time_us = 100
         result = self.chain.push_transaction(raw_signed_trx, deadline, billed_cpu_time_us, explicit_cpu_bill)
@@ -537,7 +555,7 @@ class ChainTester(object):
             act = self.gen_action('eosio', 'delegatebw', args, {creator:'active'})
             actions.append(act)
 
-        return self.push_actions(actions)
+        return self.push_actions_ex(actions)
 
     def gen_action(self, account, action, args, permissions={}):
         auth = []
@@ -601,7 +619,7 @@ class ChainTester(object):
         }
         actions.append(setabi)
         # logger.info(actions)
-        ret = self.push_actions(actions)
+        ret = self.push_actions_ex(actions)
 #        logger.info('++++%s', ret)
         elapsed = ret['elapsed']
         # if show_elapse and code:
@@ -627,7 +645,7 @@ class ChainTester(object):
         }
         actions.append(setcode)
         # logger.info(actions)
-        ret = self.push_actions(actions)
+        ret = self.push_actions_ex(actions)
 #        logger.info('++++%s', ret)
         return ret
 
@@ -643,7 +661,7 @@ class ChainTester(object):
             'authorization':[{'actor': account, 'permission':'active'}]
         }
         actions.append(setabi)
-        ret = self.push_actions(actions)
+        ret = self.push_actions_ex(actions)
         self.chain.clear_abi_cache(account)
         return ret
 
