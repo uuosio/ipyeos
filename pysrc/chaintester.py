@@ -348,12 +348,18 @@ class ChainTester(object):
     #     self.chain.start_block(self.calc_pending_block_time(), 0, self.feature_digests)
 
     def free(self):
-        self.chain.free()
+        if self.chain:
+            self.chain.free()
+            self.chain = None
+
         if self.data_dir:
             shutil.rmtree(self.data_dir)
             shutil.rmtree(self.config_dir)
             self.data_dir = None
             self.config_dir = None
+
+    def __del__(self):
+        self.free()
 
     def get_account(self, account):
         return self.api.get_account(account)
