@@ -8,7 +8,7 @@ import sysconfig
 class CustomImporter(object):
     def find_module(self, fullname, mpath=None):
 #        print('+++find_module', fullname)
-        if fullname in ['_chain', '_chainapi']:
+        if fullname in ['_chain', '_chainapi', '_vm_api']:
             return self
         return
 
@@ -69,3 +69,4 @@ if 'RUN_IPYEOS' in os.environ:
     from . import _eos
     import _chainapi
     import _chain
+    import _vm_api

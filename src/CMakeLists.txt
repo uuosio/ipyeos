@@ -1,11 +1,13 @@
 add_cython_target(_eos CXX)
 add_cython_target(_chain CXX)
 add_cython_target(_chainapi CXX)
+add_cython_target(_vm_api CXX)
 
 add_library(_eos MODULE
     ${_eos}
     ${_chain}
     ${_chainapi}
+    ${_vm_api}
     main.cpp
     uuos.cpp
 )
@@ -32,6 +34,7 @@ endif (APPLE)
 target_include_directories(_eos PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
     ${PROJECT_DIR}/libraries/chain/chain_api
     ${PROJECT_DIR}/libraries/chain_api
+    ${PROJECT_DIR}/libraries/chain/vm_api
 )
 
 set_property(TARGET _eos PROPERTY CXX_STANDARD 17)
