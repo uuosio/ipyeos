@@ -32,6 +32,8 @@ cdef extern from "<uuos.hpp>":
         void printui( uint64_t value )
 
         uint32_t read_action_data( void* msg, uint32_t len )
+        uint32_t action_data_size();
+
         void send_inline(char *serialized_action, uint32_t size)
         void  eosio_assert( uint32_t test, const char* msg )
 
@@ -118,157 +120,161 @@ cdef extern void native_apply(uint64_t a, uint64_t b, uint64_t c):
     except Exception as e:
         import traceback
         traceback.print_exc()
-        get_vm_api_proxy().eosio_assert(0, str(e))
+        api().eosio_assert(0, str(e))
 
 
 def prints(const char* cstr):
-    get_vm_api_proxy().prints(cstr)
+    api().prints(cstr)
 
 def printi(int64_t value):
-    get_vm_api_proxy().printi(value)
+    api().printi(value)
 
 def printui(uint64_t value):
-    get_vm_api_proxy().printui(value)
+    api().printui(value)
+
+# uint32_t action_data_size();
+def action_data_size():
+    return api().action_data_size()
 
 def read_action_data(uint32_t length):
     if length == 0:
-        data_size = get_vm_api_proxy().read_action_data(<void *>0, 0)
+        data_size = api().read_action_data(<void *>0, 0)
         return data_size, None
     else:
         data = <char *>malloc(length)
-        length = get_vm_api_proxy().read_action_data(<void *>data, length)
+        length = api().read_action_data(<void *>data, length)
         ret = length, PyBytes_FromStringAndSize(data, length)
         free(data)
         return ret
 
 def send_inline(serialized_data: bytes):
     print('_vm_api.send_inline:', serialized_data)
-    get_vm_api_proxy().send_inline(serialized_data, len(serialized_data))
+    api().send_inline(serialized_data, len(serialized_data))
     print('_vm_api.send_inline end')
 
 def db_store_i64(scope: uint64_t, table: uint64_t, payer: uint64_t, id: uint64_t,  data: bytes):
-    return get_vm_api_proxy().db_store_i64(scope, table, payer, id,  <void *><const unsigned char *>data, len(data))
+    return api().db_store_i64(scope, table, payer, id,  <void *><const unsigned char *>data, len(data))
 
 def db_update_i64(iterator: int32_t, payer: uint64_t, data: bytes):
-    get_vm_api_proxy().db_update_i64(iterator, payer, <void *><const char *>data, len(data))
+    api().db_update_i64(iterator, payer, <void *><const char *>data, len(data))
 
 def db_remove_i64(iterator: int32_t):
-    get_vm_api_proxy().db_remove_i64(iterator)
+    api().db_remove_i64(iterator)
 
 def db_get_i64(iterator: int32_t, length: int32_t):
     cdef char *buffer
     if length == 0:
-        data_size = get_vm_api_proxy().db_get_i64(iterator, <void*>0, 0)
+        data_size = api().db_get_i64(iterator, <void*>0, 0)
         return data_size, None
     else:
         buffer = <char *>malloc(length)
-        data_size = get_vm_api_proxy().db_get_i64(iterator, <void*>buffer, length)
+        data_size = api().db_get_i64(iterator, <void*>buffer, length)
         ret = data_size, PyBytes_FromStringAndSize(buffer, data_size)
         free(buffer)
         return ret
 
 def db_next_i64(iterator: int32_t):
     cdef uint64_t primary = 0
-    it = get_vm_api_proxy().db_next_i64(iterator, &primary)
+    it = api().db_next_i64(iterator, &primary)
     return it, primary
 
 def db_previous_i64(iterator: int32_t):
     cdef uint64_t primary = 0
-    it = get_vm_api_proxy().db_previous_i64(iterator, &primary)
+    it = api().db_previous_i64(iterator, &primary)
     return it, primary
 
 def db_find_i64(code: uint64_t, scope: uint64_t, table: uint64_t, id: uint64_t):
-    return get_vm_api_proxy().db_find_i64(code, scope, table, id)
+    return api().db_find_i64(code, scope, table, id)
 
 def db_lowerbound_i64(code: uint64_t, scope: uint64_t, table: uint64_t, id: uint64_t):
-    return get_vm_api_proxy().db_lowerbound_i64(code, scope, table, id)
+    return api().db_lowerbound_i64(code, scope, table, id)
 
 def db_upperbound_i64(code: uint64_t, scope: uint64_t, table: uint64_t, id: uint64_t):
-    return get_vm_api_proxy().db_upperbound_i64(code, scope, table, id)
+    return api().db_upperbound_i64(code, scope, table, id)
 
 def db_end_i64(code: uint64_t, scope: uint64_t, table: uint64_t):
-    return get_vm_api_proxy().db_end_i64(code, scope, table)
+    return api().db_end_i64(code, scope, table)
 
 # int32_t db_idx64_store(uint64_t scope, uint64_t table, uint64_t payer, uint64_t id, const uint64_t* secondary);
 def db_idx64_store(uint64_t scope, uint64_t table, uint64_t payer, uint64_t id, uint64_t secondary):
-    return get_vm_api_proxy().db_idx64_store(scope, table, payer, id, &secondary)
+    return api().db_idx64_store(scope, table, payer, id, &secondary)
 
 # void db_idx64_update(int32_t iterator, uint64_t payer, const uint64_t* secondary);
 def db_idx64_update(int32_t iterator, uint64_t payer, uint64_t secondary):
-    get_vm_api_proxy().db_idx64_update(iterator, payer, &secondary)
+    api().db_idx64_update(iterator, payer, &secondary)
 
 # void db_idx64_remove(int32_t iterator);
 def db_idx64_remove(int32_t iterator):
-    get_vm_api_proxy().db_idx64_remove(iterator)
+    api().db_idx64_remove(iterator)
 
 # int32_t db_idx64_next(int32_t iterator, uint64_t* primary);
 def db_idx64_next(int32_t iterator):
     cdef uint64_t primary = 0
-    it = get_vm_api_proxy().db_idx64_next(iterator, &primary)
+    it = api().db_idx64_next(iterator, &primary)
     return it, primary 
 
 # int32_t db_idx64_previous(int32_t iterator, uint64_t* primary);
 def db_idx64_previous(int32_t iteratory):
     cdef uint64_t primary = 0
-    it = get_vm_api_proxy().db_idx64_previous(iteratory, &primary)
+    it = api().db_idx64_previous(iteratory, &primary)
     return it, primary 
 
 # int32_t db_idx64_find_primary(uint64_t code, uint64_t scope, uint64_t table, uint64_t* secondary, uint64_t primary);
 def db_idx64_find_primary(uint64_t code, uint64_t scope, uint64_t table, uint64_t primary):
     cdef uint64_t secondary = 0
-    it = get_vm_api_proxy().db_idx64_find_primary(code, scope, table, &secondary, primary)
+    it = api().db_idx64_find_primary(code, scope, table, &secondary, primary)
     return it, secondary
 
 # int32_t db_idx64_find_secondary(uint64_t code, uint64_t scope, uint64_t table, const uint64_t* secondary, uint64_t* primary);
 def db_idx64_find_secondary(uint64_t code, uint64_t scope, uint64_t table, const uint64_t secondary):
     cdef uint64_t primary = 0
-    it = get_vm_api_proxy().db_idx64_find_secondary(code, scope, table, &secondary, &primary)
+    it = api().db_idx64_find_secondary(code, scope, table, &secondary, &primary)
     return it, primary
 
 # int32_t db_idx64_lowerbound(uint64_t code, uint64_t scope, uint64_t table, uint64_t* secondary, uint64_t* primary);
 def db_idx64_lowerbound(uint64_t code, uint64_t scope, uint64_t table, uint64_t secondary, uint64_t primary):
-    it = get_vm_api_proxy().db_idx64_lowerbound(code, scope, table, &secondary, &primary)
+    it = api().db_idx64_lowerbound(code, scope, table, &secondary, &primary)
     return it, secondary, primary
 
 # int32_t db_idx64_upperbound(uint64_t code, uint64_t scope, uint64_t table, uint64_t* secondary, uint64_t* primary);
 def db_idx64_upperbound(uint64_t code, uint64_t scope, uint64_t table, uint64_t secondary, uint64_t primary):
-    it = get_vm_api_proxy().db_idx64_upperbound(code, scope, table, &secondary, &primary)
+    it = api().db_idx64_upperbound(code, scope, table, &secondary, &primary)
     return it, secondary, primary
 
 # int32_t db_idx64_end(uint64_t code, uint64_t scope, uint64_t table);
 def db_idx64_end(uint64_t code, uint64_t scope, uint64_t table):
-    return get_vm_api_proxy().db_idx64_end(code, scope, table)
+    return api().db_idx64_end(code, scope, table)
 
 # int32_t db_idx128_store(uint64_t scope, uint64_t table, uint64_t payer, uint64_t id, const uint128_t* secondary);
 def db_idx128_store(uint64_t scope, uint64_t table, uint64_t payer, uint64_t id, secondary: bytes):
     assert len(secondary) == 16, "db_idx128_store: bad secondary size"
-    return get_vm_api_proxy().db_idx128_store(scope, table, payer, id, <uint128_t*><char *>secondary)
+    return api().db_idx128_store(scope, table, payer, id, <uint128_t*><char *>secondary)
 
 # void db_idx128_update(int32_t iterator, uint64_t payer, const uint128_t* secondary);
 def db_idx128_update(int32_t iterator, uint64_t payer, secondary: bytes):
     assert len(secondary) == 16, "db_idx128_update: bad secondary size"
-    get_vm_api_proxy().db_idx128_update(iterator, payer, <uint128_t*><char *>secondary)
+    api().db_idx128_update(iterator, payer, <uint128_t*><char *>secondary)
 
 # void db_idx128_remove(int32_t iterator);
 def db_idx128_remove(int32_t iterator):
-    get_vm_api_proxy().db_idx128_remove(iterator)
+    api().db_idx128_remove(iterator)
 
 # int32_t db_idx128_next(int32_t iterator, uint64_t* primary);
 def db_idx128_next(int32_t iterator):
     cdef uint64_t primary = 0
-    it = get_vm_api_proxy().db_idx128_next(iterator, &primary)
+    it = api().db_idx128_next(iterator, &primary)
     return it, primary
 
 # int32_t db_idx128_previous(int32_t iterator, uint64_t* primary);
 def db_idx128_previous(int32_t iterator):
     cdef uint64_t primary = 0
-    it = get_vm_api_proxy().db_idx128_previous(iterator, &primary)
+    it = api().db_idx128_previous(iterator, &primary)
     return it, primary
 
 # int32_t db_idx128_find_primary(uint64_t code, uint64_t scope, uint64_t table, uint128_t* secondary, uint64_t primary);
 def db_idx128_find_primary(uint64_t code, uint64_t scope, uint64_t table, uint64_t primary):
     cdef uint128_t secondary = 0
-    it = get_vm_api_proxy().db_idx128_find_primary(code, scope, table, &secondary, primary)
+    it = api().db_idx128_find_primary(code, scope, table, &secondary, primary)
     return it, PyBytes_FromStringAndSize(<char *>&secondary, 16)
 
 # int32_t db_idx128_find_secondary(uint64_t code, uint64_t scope, uint64_t table, const uint128_t* secondary, uint64_t* primary);
@@ -277,7 +283,7 @@ def db_idx128_find_secondary(uint64_t code, uint64_t scope, uint64_t table, seco
     cdef uint128_t _secondary = 0
     assert len(secondary) == 16, "db_idx128_find_secondary: bad secondary size"
     memcpy(&_secondary, <char *>secondary, 16)
-    it = get_vm_api_proxy().db_idx128_find_secondary(code, scope, table, <uint128_t*><char *>_secondary, &primary)
+    it = api().db_idx128_find_secondary(code, scope, table, <uint128_t*><char *>_secondary, &primary)
     return it, primary
 
 # int32_t db_idx128_lowerbound(uint64_t code, uint64_t scope, uint64_t table, uint128_t* secondary, uint64_t* primary);
@@ -285,7 +291,7 @@ def db_idx128_lowerbound(uint64_t code, uint64_t scope, uint64_t table, secondar
     cdef uint128_t _secondary = 0
     assert len(secondary) == 16, "db_idx128_lowerbound: bad secondary size"
     memcpy(&_secondary, <char *>secondary, 16)
-    it = get_vm_api_proxy().db_idx128_lowerbound(code, scope, table, &_secondary, &primary)
+    it = api().db_idx128_lowerbound(code, scope, table, &_secondary, &primary)
     return it, PyBytes_FromStringAndSize(<char *>_secondary, 16), primary
 
 # int32_t db_idx128_upperbound(uint64_t code, uint64_t scope, uint64_t table, uint128_t* secondary, uint64_t* primary);
@@ -293,102 +299,102 @@ def db_idx128_upperbound(uint64_t code, uint64_t scope, uint64_t table, secondar
     cdef uint128_t _secondary = 0
     assert len(secondary) == 16, "db_idx128_upperbound: bad secondary size"
     memcpy(&_secondary, <char *>secondary, 16)
-    it = get_vm_api_proxy().db_idx128_upperbound(code, scope, table, &_secondary, &primary)
+    it = api().db_idx128_upperbound(code, scope, table, &_secondary, &primary)
     return it, PyBytes_FromStringAndSize(<char *>_secondary, 16), primary
 
 # int32_t db_idx128_end(uint64_t code, uint64_t scope, uint64_t table);
 def db_idx128_end(uint64_t code, uint64_t scope, uint64_t table):
-    return get_vm_api_proxy().db_idx128_end(code, scope, table)
+    return api().db_idx128_end(code, scope, table)
 
 # int32_t db_idx256_store(uint64_t scope, uint64_t table, uint64_t payer, uint64_t id, const uint128_t* data, uint32_t data_len );
 def db_idx256_store(uint64_t scope, uint64_t table, uint64_t payer, uint64_t id, data: bytes):
     assert len(data) == 32, "db_idx256_store: bad data size"
-    return get_vm_api_proxy().db_idx256_store(scope, table, payer, id, <uint128_t *><char *>data, 2)
+    return api().db_idx256_store(scope, table, payer, id, <uint128_t *><char *>data, 2)
 
 # void db_idx256_update(int32_t iterator, uint64_t payer, const uint128_t* data, uint32_t data_len);
 def db_idx256_update(int32_t iterator, uint64_t payer, data: bytes):
     assert len(data) == 32, "db_idx256_update: bad data size"
-    get_vm_api_proxy().db_idx256_update(iterator, payer, <uint128_t*><char *>data, 2)
+    api().db_idx256_update(iterator, payer, <uint128_t*><char *>data, 2)
 
 # void db_idx256_remove(int32_t iterator);
 def db_idx256_remove(int32_t iterator):
-    get_vm_api_proxy().db_idx256_remove(iterator)
+    api().db_idx256_remove(iterator)
 
 # int32_t db_idx256_next(int32_t iterator, uint64_t* primary);
 def db_idx256_next(int32_t iterator):
     cdef uint64_t primary = 0
-    it = get_vm_api_proxy().db_idx256_next(iterator, &primary)
+    it = api().db_idx256_next(iterator, &primary)
     return it, primary
 
 # int32_t db_idx256_previous(int32_t iterator, uint64_t* primary);
 def db_idx256_previous(int32_t iterator):
     cdef uint64_t primary = 0
-    it = get_vm_api_proxy().db_idx256_previous(iterator, &primary)
+    it = api().db_idx256_previous(iterator, &primary)
     return it, primary
 
 # int32_t db_idx256_find_primary(uint64_t code, uint64_t scope, uint64_t table, uint128_t* data, uint32_t data_len, uint64_t primary);
 def db_idx256_find_primary(uint64_t code, uint64_t scope, uint64_t table, uint64_t primary):
     cdef uint128_t data[2]
-    it = get_vm_api_proxy().db_idx256_find_primary(code, scope, table, data, 2, primary)
+    it = api().db_idx256_find_primary(code, scope, table, data, 2, primary)
     return it, primary
 
 # int32_t db_idx256_find_secondary(uint64_t code, uint64_t scope, uint64_t table, const uint128_t* data, uint32_t data_len, uint64_t* primary);
 def db_idx256_find_secondary(uint64_t code, uint64_t scope, uint64_t table, data: bytes):
     cdef uint64_t primary = 0
     assert len(data) == 32, "db_idx256_find_secondary: bad data size"
-    it = get_vm_api_proxy().db_idx256_find_secondary(code, scope, table, <uint128_t*><char *>data, 2, &primary)
+    it = api().db_idx256_find_secondary(code, scope, table, <uint128_t*><char *>data, 2, &primary)
 
 # int32_t db_idx256_lowerbound(uint64_t code, uint64_t scope, uint64_t table, uint128_t* data, uint32_t data_len, uint64_t* primary);
 def db_idx256_lowerbound(uint64_t code, uint64_t scope, uint64_t table, data: bytes, uint64_t primary):
     assert len(data) == 32, "db_idx256_find_secondary: bad data size"
-    it = get_vm_api_proxy().db_idx256_lowerbound(code, scope, table, <uint128_t*><char *>data, 2, &primary)
+    it = api().db_idx256_lowerbound(code, scope, table, <uint128_t*><char *>data, 2, &primary)
     return it, data, primary
 
 # int32_t db_idx256_upperbound(uint64_t code, uint64_t scope, uint64_t table, uint128_t* data, uint32_t data_len, uint64_t* primary);
 def db_idx256_upperbound(uint64_t code, uint64_t scope, uint64_t table, data: bytes, uint64_t primary):
     assert len(data) == 32, "db_idx256_find_secondary: bad data size"
-    it = get_vm_api_proxy().db_idx256_upperbound(code, scope, table, <uint128_t*><char *>data, 2, &primary)
+    it = api().db_idx256_upperbound(code, scope, table, <uint128_t*><char *>data, 2, &primary)
     return it, data, primary
 
 # int32_t db_idx256_end(uint64_t code, uint64_t scope, uint64_t table);
 def db_idx256_end(uint64_t code, uint64_t scope, uint64_t table):
-    return get_vm_api_proxy().db_idx256_end(code, scope, table)
+    return api().db_idx256_end(code, scope, table)
 
 # int32_t db_idx_double_store(uint64_t scope, uint64_t table, uint64_t payer, uint64_t id, const double* secondary);
 def db_idx_double_store(uint64_t scope, uint64_t table, uint64_t payer, uint64_t id, secondary: bytes):
-    return get_vm_api_proxy().db_idx_double_store(scope, table, payer, id, <double*><char *>secondary)
+    return api().db_idx_double_store(scope, table, payer, id, <double*><char *>secondary)
 
 # void db_idx_double_update(int32_t iterator, uint64_t payer, const double* secondary);
 def db_idx_double_update(int32_t iterator, uint64_t payer, secondary: bytes):
-    get_vm_api_proxy().db_idx_double_update(iterator, payer, <double*><char*>secondary)
+    api().db_idx_double_update(iterator, payer, <double*><char*>secondary)
 
 # void db_idx_double_remove(int32_t iterator);
 def db_idx_double_remove(int32_t iterator):
-    get_vm_api_proxy().db_idx_double_remove(iterator)
+    api().db_idx_double_remove(iterator)
 
 # int32_t db_idx_double_next(int32_t iterator, uint64_t* primary);
 def db_idx_double_next(int32_t iterator):
     cdef uint64_t primary = 0
-    it = get_vm_api_proxy().db_idx_double_next(iterator, &primary)
+    it = api().db_idx_double_next(iterator, &primary)
     return it, primary
 
 # int32_t db_idx_double_previous(int32_t iterator, uint64_t* primary);
 def db_idx_double_previous(int32_t iterator):
     cdef uint64_t primary = 0
-    it = get_vm_api_proxy().db_idx_double_previous(iterator, &primary)
+    it = api().db_idx_double_previous(iterator, &primary)
     return it, primary
 
 # int32_t db_idx_double_find_primary(uint64_t code, uint64_t scope, uint64_t table, double* secondary, uint64_t primary);
 def db_idx_double_find_primary(uint64_t code, uint64_t scope, uint64_t table, uint64_t primary):
     cdef double secondary = 0.0
-    it = get_vm_api_proxy().db_idx_double_find_primary(code, scope, table, &secondary, primary)
+    it = api().db_idx_double_find_primary(code, scope, table, &secondary, primary)
     return it, PyBytes_FromStringAndSize(<char*>&secondary, 8)
 
 # int32_t db_idx_double_find_secondary(uint64_t code, uint64_t scope, uint64_t table, const double* secondary, uint64_t* primary);
 def db_idx_double_find_secondary(uint64_t code, uint64_t scope, uint64_t table, secondary: bytes):
     cdef uint64_t primary = 0
     assert len(secondary) == 8, "db_idx_double_find_secondary:bad secondary size"
-    it = get_vm_api_proxy().db_idx_double_find_secondary(code, scope, table, <double *><char *>secondary, &primary)
+    it = api().db_idx_double_find_secondary(code, scope, table, <double *><char *>secondary, &primary)
     return it, primary
 
 # int32_t db_idx_double_lowerbound(uint64_t code, uint64_t scope, uint64_t table, double* secondary, uint64_t* primary);
@@ -396,7 +402,7 @@ def db_idx_double_lowerbound(uint64_t code, uint64_t scope, uint64_t table, seco
     cdef double _secondary = 0.0
     assert len(secondary) == 8, "db_idx_double_lowerbound:bad secondary size"
     memcpy(&_secondary, <char *>secondary, 8)
-    it = get_vm_api_proxy().db_idx_double_lowerbound(code, scope, table, &_secondary, &primary)
+    it = api().db_idx_double_lowerbound(code, scope, table, &_secondary, &primary)
     return it, PyBytes_FromStringAndSize(<char *>&_secondary, 8), primary
 
 # int32_t db_idx_double_upperbound(uint64_t code, uint64_t scope, uint64_t table, double* secondary, uint64_t* primary);
@@ -404,37 +410,37 @@ def db_idx_double_upperbound(uint64_t code, uint64_t scope, uint64_t table, seco
     cdef double _secondary = 0.0
     assert len(secondary) == 8, "db_idx_double_upperbound:bad secondary size"
     memcpy(&_secondary, <char *>secondary, 8)
-    it = get_vm_api_proxy().db_idx_double_upperbound(code, scope, table, &_secondary, &primary)
+    it = api().db_idx_double_upperbound(code, scope, table, &_secondary, &primary)
     return it, PyBytes_FromStringAndSize(<char *>&_secondary, 8), primary
 
 # int32_t db_idx_double_end(uint64_t code, uint64_t scope, uint64_t table);
 def db_idx_double_end(uint64_t code, uint64_t scope, uint64_t table):
-    return get_vm_api_proxy().db_idx_double_end(code, scope, table)
+    return api().db_idx_double_end(code, scope, table)
 
 # int32_t db_idx_long_double_store(uint64_t scope, uint64_t table, uint64_t payer, uint64_t id, const long double* secondary);
 def db_idx_long_double_store(uint64_t scope, uint64_t table, uint64_t payer, uint64_t id, secondary: bytes):
     assert len(secondary) == 16, "db_idx_long_double_store:bad secondary size"
-    return get_vm_api_proxy().db_idx_long_double_store(scope, table, payer, id, <const long double*><char *>secondary)
+    return api().db_idx_long_double_store(scope, table, payer, id, <const long double*><char *>secondary)
 
 # void db_idx_long_double_update(int32_t iterator, uint64_t payer, const long double* secondary);
 def db_idx_long_double_update(int32_t iterator, uint64_t payer, secondary: bytes):
     assert len(secondary) == 16, "db_idx_long_double_update:bad secondary size"
-    get_vm_api_proxy().db_idx_long_double_update(iterator, payer, <const long double*><char *>secondary)
+    api().db_idx_long_double_update(iterator, payer, <const long double*><char *>secondary)
 
 # void db_idx_long_double_remove(int32_t iterator);
 def db_idx_long_double_remove(int32_t iterator):
-    get_vm_api_proxy().db_idx_long_double_remove(iterator)
+    api().db_idx_long_double_remove(iterator)
 
 # int32_t db_idx_long_double_next(int32_t iterator, uint64_t* primary);
 def db_idx_long_double_next(int32_t iterator):
     cdef uint64_t primary = 0
-    it = get_vm_api_proxy().db_idx_long_double_next(iterator, &primary)
+    it = api().db_idx_long_double_next(iterator, &primary)
     return it, primary
 
 # int32_t db_idx_long_double_previous(int32_t iterator, uint64_t* primary);
 def db_idx_long_double_previous(int32_t iterator):
     cdef uint64_t primary = 0
-    it = get_vm_api_proxy().db_idx_long_double_next(iterator, &primary)
+    it = api().db_idx_long_double_next(iterator, &primary)
     return it, primary
 
 # int32_t db_idx_long_double_find_primary(uint64_t code, uint64_t scope, uint64_t table, long double* secondary, uint64_t primary);
