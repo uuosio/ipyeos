@@ -16,4 +16,4 @@ void uuosext_init();
 
 #define get_vm_api_proxy get_uuos_proxy()->get_vm_api_proxy
 
-extern "C" void native_apply(uint64_t a, uint64_t b, uint64_t c);
+extern "C" int native_apply(uint64_t a, uint64_t b, uint64_t c);

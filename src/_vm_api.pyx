@@ -17,7 +17,8 @@ cdef extern from * :
     ctypedef unsigned short uint16_t
     ctypedef unsigned char uint8_t
     ctypedef int __uint128_t
-    ctypedef unsigned int uint128_t
+    ctypedef unsigned int uint128_t #fake definition
+    ctypedef int int128_t #fake definition
 
 cdef extern from "<Python.h>":
     ctypedef long long PyLongObject
@@ -27,9 +28,17 @@ cdef extern from "<Python.h>":
 
 cdef extern from "<uuos.hpp>":
     ctypedef struct vm_api_proxy:
-        void prints( const char* cstr )
-        void printi( int64_t value )
-        void printui( uint64_t value )
+        void prints( const char* cstr );
+        void prints_l( const char* cstr, uint32_t len);
+        void printi( int64_t value );
+        void printui( uint64_t value );
+        void printi128( const int128_t* value );
+        void printui128( const uint128_t* value );
+        void printsf(float value);
+        void printdf(double value);
+        void printqf(const long double* value);
+        void printn( uint64_t name );
+        void printhex( const void* data, uint32_t datalen );
 
         uint32_t read_action_data( void* msg, uint32_t len )
         uint32_t action_data_size();
@@ -114,23 +123,58 @@ def set_apply_callback(fn):
     global apply_callback
     apply_callback = fn
 
-cdef extern void native_apply(uint64_t a, uint64_t b, uint64_t c):
+cdef extern int native_apply(uint64_t a, uint64_t b, uint64_t c):
     try:
-        apply(a, b, c)
+        return apply(a, b, c)
     except Exception as e:
         import traceback
         traceback.print_exc()
         api().eosio_assert(0, str(e))
 
-
 def prints(const char* cstr):
     api().prints(cstr)
+
+#void prints_l( const char* cstr, uint32_t len);
+def prints_l(cstr: bytes):
+    api().prints_l(cstr, len(cstr))
 
 def printi(int64_t value):
     api().printi(value)
 
 def printui(uint64_t value):
     api().printui(value)
+
+# void printi128( const int128_t* value );
+def printi128(value: bytes):
+    assert len(value) == 16, "printi128: bad value size"
+    api().printi128(<int128_t *><char *>value)
+
+# void printui128( const uint128_t* value );
+def printui128(value: bytes):
+    assert len(value) == 16, "printui128: bad value size"
+    api().printui128(<uint128_t *><char *>value)
+
+# void printsf(float value);
+def printsf(value: bytes):
+    assert len(value) == 4, "printsf: bad value size"
+    api().printsf((<float*><char *>value)[0])
+
+# void printdf(double value);
+def printdf(value: bytes):
+    api().printdf((<double *><char *>value)[0])
+
+# void printqf(const long double* value);
+def printqf(value: bytes):
+    api().printqf(<long double *><char *>value)
+
+# void printn( uint64_t name );
+def printn( uint64_t name ):
+    api().printn(name)
+
+# void printhex( const void* data, uint32_t datalen );
+def printhex( data: bytes):
+    api().printhex(<void *><char *>data, len(data))
+
 
 # uint32_t action_data_size();
 def action_data_size():
@@ -148,9 +192,7 @@ def read_action_data(uint32_t length):
         return ret
 
 def send_inline(serialized_data: bytes):
-    print('_vm_api.send_inline:', serialized_data)
     api().send_inline(serialized_data, len(serialized_data))
-    print('_vm_api.send_inline end')
 
 def db_store_i64(scope: uint64_t, table: uint64_t, payer: uint64_t, id: uint64_t,  data: bytes):
     return api().db_store_i64(scope, table, payer, id,  <void *><const unsigned char *>data, len(data))
@@ -223,7 +265,7 @@ def db_idx64_previous(int32_t iteratory):
 def db_idx64_find_primary(uint64_t code, uint64_t scope, uint64_t table, uint64_t primary):
     cdef uint64_t secondary = 0
     it = api().db_idx64_find_primary(code, scope, table, &secondary, primary)
-    return it, secondary
+    return it, int.to_bytes(secondary, 8, 'little')
 
 # int32_t db_idx64_find_secondary(uint64_t code, uint64_t scope, uint64_t table, const uint64_t* secondary, uint64_t* primary);
 def db_idx64_find_secondary(uint64_t code, uint64_t scope, uint64_t table, const uint64_t secondary):
@@ -234,11 +276,13 @@ def db_idx64_find_secondary(uint64_t code, uint64_t scope, uint64_t table, const
 # int32_t db_idx64_lowerbound(uint64_t code, uint64_t scope, uint64_t table, uint64_t* secondary, uint64_t* primary);
 def db_idx64_lowerbound(uint64_t code, uint64_t scope, uint64_t table, uint64_t secondary, uint64_t primary):
     it = api().db_idx64_lowerbound(code, scope, table, &secondary, &primary)
+    secondary = int.to_bytes(secondary, 8, 'little')
     return it, secondary, primary
 
 # int32_t db_idx64_upperbound(uint64_t code, uint64_t scope, uint64_t table, uint64_t* secondary, uint64_t* primary);
 def db_idx64_upperbound(uint64_t code, uint64_t scope, uint64_t table, uint64_t secondary, uint64_t primary):
     it = api().db_idx64_upperbound(code, scope, table, &secondary, &primary)
+    secondary = int.to_bytes(secondary, 8, 'little')
     return it, secondary, primary
 
 # int32_t db_idx64_end(uint64_t code, uint64_t scope, uint64_t table);
@@ -346,13 +390,13 @@ def db_idx256_find_secondary(uint64_t code, uint64_t scope, uint64_t table, data
 
 # int32_t db_idx256_lowerbound(uint64_t code, uint64_t scope, uint64_t table, uint128_t* data, uint32_t data_len, uint64_t* primary);
 def db_idx256_lowerbound(uint64_t code, uint64_t scope, uint64_t table, data: bytes, uint64_t primary):
-    assert len(data) == 32, "db_idx256_find_secondary: bad data size"
+    assert len(data) == 32, "db_idx256_lowerbound: bad data size"
     it = api().db_idx256_lowerbound(code, scope, table, <uint128_t*><char *>data, 2, &primary)
     return it, data, primary
 
 # int32_t db_idx256_upperbound(uint64_t code, uint64_t scope, uint64_t table, uint128_t* data, uint32_t data_len, uint64_t* primary);
 def db_idx256_upperbound(uint64_t code, uint64_t scope, uint64_t table, data: bytes, uint64_t primary):
-    assert len(data) == 32, "db_idx256_find_secondary: bad data size"
+    assert len(data) == 32, "db_idx256_upperbound: bad data size"
     it = api().db_idx256_upperbound(code, scope, table, <uint128_t*><char *>data, 2, &primary)
     return it, data, primary
 
@@ -440,7 +484,7 @@ def db_idx_long_double_next(int32_t iterator):
 # int32_t db_idx_long_double_previous(int32_t iterator, uint64_t* primary);
 def db_idx_long_double_previous(int32_t iterator):
     cdef uint64_t primary = 0
-    it = api().db_idx_long_double_next(iterator, &primary)
+    it = api().db_idx_long_double_previous(iterator, &primary)
     return it, primary
 
 # int32_t db_idx_long_double_find_primary(uint64_t code, uint64_t scope, uint64_t table, long double* secondary, uint64_t primary);
