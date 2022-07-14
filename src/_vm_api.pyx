@@ -6,7 +6,7 @@ from libcpp.vector cimport vector
 from libcpp.map cimport map
 from libcpp cimport bool
 from libc.stdlib cimport malloc, free
-from libc.string cimport memcpy
+from libc.string cimport memcpy, memset
 
 
 cdef extern from * :
@@ -423,14 +423,14 @@ def db_idx64_find_secondary(uint64_t code, uint64_t scope, uint64_t table, const
 # int32_t db_idx64_lowerbound(uint64_t code, uint64_t scope, uint64_t table, uint64_t* secondary, uint64_t* primary);
 def db_idx64_lowerbound(uint64_t code, uint64_t scope, uint64_t table, uint64_t secondary, uint64_t primary):
     it = api().db_idx64_lowerbound(code, scope, table, &secondary, &primary)
-    secondary = int.to_bytes(secondary, 8, 'little')
-    return it, secondary, primary
+    _secondary = PyBytes_FromStringAndSize(<char *>&secondary, 8)
+    return it, _secondary, primary
 
 # int32_t db_idx64_upperbound(uint64_t code, uint64_t scope, uint64_t table, uint64_t* secondary, uint64_t* primary);
 def db_idx64_upperbound(uint64_t code, uint64_t scope, uint64_t table, uint64_t secondary, uint64_t primary):
     it = api().db_idx64_upperbound(code, scope, table, &secondary, &primary)
-    secondary = int.to_bytes(secondary, 8, 'little')
-    return it, secondary, primary
+    _secondary = PyBytes_FromStringAndSize(<char *>&secondary, 8)
+    return it, _secondary, primary
 
 # int32_t db_idx64_end(uint64_t code, uint64_t scope, uint64_t table);
 def db_idx64_end(uint64_t code, uint64_t scope, uint64_t table):
@@ -472,26 +472,26 @@ def db_idx128_find_primary(uint64_t code, uint64_t scope, uint64_t table, uint64
 def db_idx128_find_secondary(uint64_t code, uint64_t scope, uint64_t table, secondary: bytes):
     cdef uint64_t primary = 0
     cdef uint128_t _secondary = 0
-    assert len(secondary) == 16, "db_idx128_find_secondary: bad secondary size"
+    assert len(secondary) == 16, "db_idx128_find_secondary: bad secondary size: %d"%(len(secondary),)
     memcpy(&_secondary, <char *>secondary, 16)
-    it = api().db_idx128_find_secondary(code, scope, table, <uint128_t*><char *>_secondary, &primary)
+    it = api().db_idx128_find_secondary(code, scope, table, &_secondary, &primary)
     return it, primary
 
 # int32_t db_idx128_lowerbound(uint64_t code, uint64_t scope, uint64_t table, uint128_t* secondary, uint64_t* primary);
 def db_idx128_lowerbound(uint64_t code, uint64_t scope, uint64_t table, secondary: bytes, uint64_t primary):
     cdef uint128_t _secondary = 0
-    assert len(secondary) == 16, "db_idx128_lowerbound: bad secondary size"
+    assert len(secondary) == 16, "db_idx128_lowerbound: bad secondary size: %d"%(len(secondary),)
     memcpy(&_secondary, <char *>secondary, 16)
     it = api().db_idx128_lowerbound(code, scope, table, &_secondary, &primary)
-    return it, PyBytes_FromStringAndSize(<char *>_secondary, 16), primary
+    return it, PyBytes_FromStringAndSize(<char *>&_secondary, 16), primary
 
 # int32_t db_idx128_upperbound(uint64_t code, uint64_t scope, uint64_t table, uint128_t* secondary, uint64_t* primary);
 def db_idx128_upperbound(uint64_t code, uint64_t scope, uint64_t table, secondary: bytes, uint64_t primary):
     cdef uint128_t _secondary = 0
-    assert len(secondary) == 16, "db_idx128_upperbound: bad secondary size"
+    assert len(secondary) == 16, "db_idx128_upperbound: bad secondary size: %d"%(len(secondary),)
     memcpy(&_secondary, <char *>secondary, 16)
     it = api().db_idx128_upperbound(code, scope, table, &_secondary, &primary)
-    return it, PyBytes_FromStringAndSize(<char *>_secondary, 16), primary
+    return it, PyBytes_FromStringAndSize(<char *>&_secondary, 16), primary
 
 # int32_t db_idx128_end(uint64_t code, uint64_t scope, uint64_t table);
 def db_idx128_end(uint64_t code, uint64_t scope, uint64_t table):
@@ -499,12 +499,12 @@ def db_idx128_end(uint64_t code, uint64_t scope, uint64_t table):
 
 # int32_t db_idx256_store(uint64_t scope, uint64_t table, uint64_t payer, uint64_t id, const uint128_t* data, uint32_t data_len );
 def db_idx256_store(uint64_t scope, uint64_t table, uint64_t payer, uint64_t id, data: bytes):
-    assert len(data) == 32, "db_idx256_store: bad data size"
+    assert len(data) == 32, "db_idx256_store: bad data size: %d"%(len(data),)
     return api().db_idx256_store(scope, table, payer, id, <uint128_t *><char *>data, 2)
 
 # void db_idx256_update(int32_t iterator, uint64_t payer, const uint128_t* data, uint32_t data_len);
 def db_idx256_update(int32_t iterator, uint64_t payer, data: bytes):
-    assert len(data) == 32, "db_idx256_update: bad data size"
+    assert len(data) == 32, "db_idx256_update: bad data size: %d"%(len(data),)
     api().db_idx256_update(iterator, payer, <uint128_t*><char *>data, 2)
 
 # void db_idx256_remove(int32_t iterator);
@@ -526,26 +526,32 @@ def db_idx256_previous(int32_t iterator):
 # int32_t db_idx256_find_primary(uint64_t code, uint64_t scope, uint64_t table, uint128_t* data, uint32_t data_len, uint64_t primary);
 def db_idx256_find_primary(uint64_t code, uint64_t scope, uint64_t table, uint64_t primary):
     cdef uint128_t data[2]
+    memset(data, 0, 32)
     it = api().db_idx256_find_primary(code, scope, table, data, 2, primary)
-    return it, primary
+    return it, PyBytes_FromStringAndSize(<char *>data, 32)
 
 # int32_t db_idx256_find_secondary(uint64_t code, uint64_t scope, uint64_t table, const uint128_t* data, uint32_t data_len, uint64_t* primary);
 def db_idx256_find_secondary(uint64_t code, uint64_t scope, uint64_t table, data: bytes):
     cdef uint64_t primary = 0
-    assert len(data) == 32, "db_idx256_find_secondary: bad data size"
+    assert len(data) == 32, "db_idx256_find_secondary: bad data size: %d"%(len(data),)
     it = api().db_idx256_find_secondary(code, scope, table, <uint128_t*><char *>data, 2, &primary)
+    return it, primary
 
 # int32_t db_idx256_lowerbound(uint64_t code, uint64_t scope, uint64_t table, uint128_t* data, uint32_t data_len, uint64_t* primary);
 def db_idx256_lowerbound(uint64_t code, uint64_t scope, uint64_t table, data: bytes, uint64_t primary):
-    assert len(data) == 32, "db_idx256_lowerbound: bad data size"
-    it = api().db_idx256_lowerbound(code, scope, table, <uint128_t*><char *>data, 2, &primary)
-    return it, data, primary
+    cdef uint128_t _data[2]
+    assert len(data) == 32, "db_idx256_lowerbound: bad data size: %d"%(len(data),)
+    memcpy(_data, <char *>data, 32)
+    it = api().db_idx256_lowerbound(code, scope, table, _data, 2, &primary)
+    return it, PyBytes_FromStringAndSize(<char *>_data, 32), primary
 
 # int32_t db_idx256_upperbound(uint64_t code, uint64_t scope, uint64_t table, uint128_t* data, uint32_t data_len, uint64_t* primary);
 def db_idx256_upperbound(uint64_t code, uint64_t scope, uint64_t table, data: bytes, uint64_t primary):
-    assert len(data) == 32, "db_idx256_upperbound: bad data size"
-    it = api().db_idx256_upperbound(code, scope, table, <uint128_t*><char *>data, 2, &primary)
-    return it, data, primary
+    cdef uint128_t _data[2]
+    assert len(data) == 32, "db_idx256_upperbound: bad data size: %d"%(len(data),)
+    memcpy(_data, <char *>data, 32)
+    it = api().db_idx256_upperbound(code, scope, table, _data, 2, &primary)
+    return it, PyBytes_FromStringAndSize(<char *>_data, 32), primary
 
 # int32_t db_idx256_end(uint64_t code, uint64_t scope, uint64_t table);
 def db_idx256_end(uint64_t code, uint64_t scope, uint64_t table):
@@ -553,10 +559,12 @@ def db_idx256_end(uint64_t code, uint64_t scope, uint64_t table):
 
 # int32_t db_idx_double_store(uint64_t scope, uint64_t table, uint64_t payer, uint64_t id, const double* secondary);
 def db_idx_double_store(uint64_t scope, uint64_t table, uint64_t payer, uint64_t id, secondary: bytes):
+    assert len(secondary) == 8, "db_idx_double_store: bad data size: %d"%(len(secondary),)
     return api().db_idx_double_store(scope, table, payer, id, <double*><char *>secondary)
 
 # void db_idx_double_update(int32_t iterator, uint64_t payer, const double* secondary);
 def db_idx_double_update(int32_t iterator, uint64_t payer, secondary: bytes):
+    assert len(secondary) == 8, "db_idx_double_update: bad data size: %d"%(len(secondary),)
     api().db_idx_double_update(iterator, payer, <double*><char*>secondary)
 
 # void db_idx_double_remove(int32_t iterator);
@@ -643,6 +651,7 @@ def db_idx_long_double_find_primary(uint64_t code, uint64_t scope, uint64_t tabl
 # int32_t db_idx_long_double_find_secondary(uint64_t code, uint64_t scope, uint64_t table, const long double* secondary, uint64_t* primary);
 def db_idx_long_double_find_secondary(uint64_t code, uint64_t scope, uint64_t table, secondary: bytes):
     cdef uint64_t primary = 0
+    assert len(secondary) == 16, "db_idx_long_double_find_secondary: bad data size: %d"%(len(secondary),)
     it = api().db_idx_long_double_find_secondary(code, scope, table, <long double *><char *>secondary, &primary)
     return it, primary
 
