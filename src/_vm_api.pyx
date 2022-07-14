@@ -20,6 +20,10 @@ cdef extern from * :
     ctypedef unsigned int uint128_t #fake definition
     ctypedef int int128_t #fake definition
 
+    ctypedef char capi_checksum256
+    ctypedef char capi_checksum160
+    ctypedef char capi_checksum512
+
 cdef extern from "<Python.h>":
     ctypedef long long PyLongObject
 
@@ -43,8 +47,14 @@ cdef extern from "<uuos.hpp>":
         uint32_t read_action_data( void* msg, uint32_t len )
         uint32_t action_data_size();
 
-        void send_inline(char *serialized_action, uint32_t size)
-        void  eosio_assert( uint32_t test, const char* msg )
+
+        void  eosio_assert( uint32_t test, const char* msg );
+        void  eosio_assert_message( uint32_t test, const char* msg, uint32_t msg_len );
+        void  eosio_assert_code( uint32_t test, uint64_t code );
+        void eosio_exit( int32_t code );
+        uint64_t  current_time();
+        bool is_feature_activated( const capi_checksum256* feature_digest );
+        uint64_t get_sender();
 
         int32_t db_store_i64(uint64_t scope, uint64_t table, uint64_t payer, uint64_t id,  const void* data, uint32_t len);
         void db_update_i64(int32_t iterator, uint64_t payer, const void* data, uint32_t len);
@@ -107,6 +117,27 @@ cdef extern from "<uuos.hpp>":
         int32_t db_idx_long_double_lowerbound(uint64_t code, uint64_t scope, uint64_t table, long double* secondary, uint64_t* primary);
         int32_t db_idx_long_double_upperbound(uint64_t code, uint64_t scope, uint64_t table, long double* secondary, uint64_t* primary);
         int32_t db_idx_long_double_end(uint64_t code, uint64_t scope, uint64_t table);
+
+        void require_recipient( uint64_t name );
+        void require_auth( uint64_t name );
+        bool has_auth( uint64_t name );
+        void require_auth2( uint64_t name, uint64_t permission );
+        bool is_account( uint64_t name );
+        void send_inline(char *serialized_action, uint32_t size);
+        void send_context_free_inline(char *serialized_action, uint32_t size);
+        uint64_t  publication_time();
+        uint64_t current_receiver();
+
+        void assert_sha256( const char* data, uint32_t length, const capi_checksum256* hash );
+        void assert_sha1( const char* data, uint32_t length, const capi_checksum160* hash );
+        void assert_sha512( const char* data, uint32_t length, const capi_checksum512* hash );
+        void assert_ripemd160( const char* data, uint32_t length, const capi_checksum160* hash );
+        void sha256( const char* data, uint32_t length, capi_checksum256* hash );
+        void sha1( const char* data, uint32_t length, capi_checksum160* hash );
+        void sha512( const char* data, uint32_t length, capi_checksum512* hash );
+        void ripemd160( const char* data, uint32_t length, capi_checksum160* hash );
+        int32_t recover_key( const capi_checksum256* digest, const char* sig, uint32_t siglen, char* pub, uint32_t publen );
+        void assert_recover_key( const capi_checksum256* digest, const char* sig, uint32_t siglen, const char* pub, uint32_t publen );
 
     vm_api_proxy *get_vm_api_proxy();
 
@@ -191,8 +222,124 @@ def read_action_data(uint32_t length):
         free(data)
         return ret
 
+# void require_recipient( uint64_t name );
+def require_recipient(uint64_t name):
+    api().require_recipient(name)
+
+# void require_auth( uint64_t name );
+def require_auth(uint64_t name):
+    api().require_auth(name)
+
+# bool has_auth( uint64_t name );
+def has_auth(uint64_t name):
+    return api().has_auth(name)
+
+# void require_auth2( uint64_t name, uint64_t permission );
+def require_auth2(uint64_t name, uint64_t permission):
+    api().require_auth2(name, permission)
+
+# bool is_account( uint64_t name );
+def is_account(uint64_t name):
+    return api().is_account(name)
+
 def send_inline(serialized_data: bytes):
     api().send_inline(serialized_data, len(serialized_data))
+
+def send_context_free_inline(serialized_data: bytes):
+    api().send_inline(serialized_data, len(serialized_data))
+
+# uint64_t  publication_time();
+def publication_time():
+    return api().publication_time()
+
+# uint64_t current_receiver();
+def current_receiver():
+    return api().current_receiver()
+
+# void  eosio_assert( uint32_t test, const char* msg );
+def eosio_assert(uint32_t test, msg: bytes):
+    api().eosio_assert(test, <char *>msg)
+
+# void  eosio_assert_message( uint32_t test, const char* msg, uint32_t msg_len );
+def eosio_assert_message(uint32_t test, msg: bytes):
+    api().eosio_assert_message(test, <char *>msg, len(msg))
+
+# void  eosio_assert_code( uint32_t test, uint64_t code );
+def eosio_assert_code(uint32_t test, uint64_t code):
+    api().eosio_assert_code(test, code)
+
+# void eosio_exit( int32_t code );
+def eosio_exit( int32_t code ):
+    api().eosio_exit(code)
+
+# uint64_t  current_time();
+def current_time():
+    return api().current_time()
+
+# bool is_feature_activated( const capi_checksum256* feature_digest );
+def is_feature_activated(feature_digest: bytes):
+    return api().is_feature_activated(<capi_checksum256*><char *>feature_digest)
+
+# uint64_t get_sender();
+def get_sender():
+    return api().get_sender()
+
+
+# void assert_sha256( const char* data, uint32_t length, const capi_checksum256* hash );
+def assert_sha256(data: bytes, hash: bytes):
+    assert len(hash) == 32, "assert_sha256: bad hash size"
+    api().assert_sha256(<char *>data, len(data), <capi_checksum256*><char *>hash)
+
+# void assert_sha1( const char* data, uint32_t length, const capi_checksum160* hash );
+def assert_sha1(data: bytes, hash: bytes):
+    assert len(hash) == 20, "assert_sha1: bad hash size"
+    api().assert_sha1(<char *>data, len(data), <capi_checksum160*><char *>hash)
+
+# void assert_sha512( const char* data, uint32_t length, const capi_checksum512* hash );
+def assert_sha512(data: bytes, hash: bytes):
+    assert len(hash) == 64, "assert_sha512: bad hash size"
+    api().assert_sha512(<char *>data, len(data), <capi_checksum512*><char *>hash)
+
+# void assert_ripemd160( const char* data, uint32_t length, const capi_checksum160* hash );
+def assert_ripemd160(data: bytes, hash: bytes):
+    assert len(hash) == 20, "assert_ripemd160: bad hash size"
+    api().assert_ripemd160(<char *>data, len(data), <capi_checksum160*><char *>hash)
+
+# void sha256( const char* data, uint32_t length, capi_checksum256* hash );
+def sha256(data: bytes):
+    cdef capi_checksum256 h
+    api().sha256(<char *>data, len(data), &h)
+    return PyBytes_FromStringAndSize(<char *>&h, 32)
+
+# void sha1( const char* data, uint32_t length, capi_checksum160* hash );
+def sha1(data: bytes):
+    cdef capi_checksum160 h
+    api().sha1(<char *>data, len(data), &h)
+    return PyBytes_FromStringAndSize(<char *>&h, 20)
+
+# void sha512( const char* data, uint32_t length, capi_checksum512* hash );
+def sha512(data: bytes):
+    cdef capi_checksum512 h
+    api().sha512(<char *>data, len(data), &h)
+    return PyBytes_FromStringAndSize(<char *>&h, 64)
+
+# void ripemd160( const char* data, uint32_t length, capi_checksum160* hash );
+def ripemd160(data: bytes):
+    cdef capi_checksum160 h
+    api().ripemd160(<char *>data, len(data), &h)
+    return PyBytes_FromStringAndSize(<char *>&h, 20)
+
+# int32_t recover_key( const capi_checksum256* digest, const char* sig, uint32_t siglen, char* pub, uint32_t publen );
+def recover_key(digest: bytes, sig: bytes):
+    cdef char pub[34]
+    api().recover_key(<capi_checksum256*><char *>digest, <char *>sig, len(sig), pub, 34)
+    return PyBytes_FromStringAndSize(pub, 34)
+
+# void assert_recover_key( const capi_checksum256* digest, const char* sig, uint32_t siglen, const char* pub, uint32_t publen );
+def assert_recover_key(digest: bytes, sig: bytes, pub: bytes):
+    assert len(pub) == 34, "assert_recover_key: bad pub size"
+    api().assert_recover_key(<capi_checksum256*><char *>digest, <char *>sig, len(sig), <char *>pub, 34)
+
 
 def db_store_i64(scope: uint64_t, table: uint64_t, payer: uint64_t, id: uint64_t,  data: bytes):
     return api().db_store_i64(scope, table, payer, id,  <void *><const unsigned char *>data, len(data))
