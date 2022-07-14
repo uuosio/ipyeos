@@ -378,7 +378,7 @@ class ChainTester(object):
                         keys.append(priv_key)
         return keys
 
-    def push_action(self, account: Name, action: List, args: Dict, permissions: Dict={}, explicit_cpu_bill=False):
+    def push_action(self, account: Name, action: Name, args: Dict, permissions: Dict={}, explicit_cpu_bill=False):
         auth = []
         for actor in permissions:
             perm = permissions[actor]
