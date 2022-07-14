@@ -472,7 +472,8 @@ class Chain(object):
         return _chain.gen_transaction(self.ptr, json_str, _actions, expiration, reference_block_id, _id, compress, _private_keys)
 
     def get_last_error(self) -> str:
-        return _chain.get_last_error(self.ptr)
+        err = _chain.get_last_error(self.ptr)
+        return f'{{"except": {err}}}'
 
     def set_last_error(self, error: str):
         _chain.set_last_error(self.ptr, error)
