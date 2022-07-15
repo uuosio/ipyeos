@@ -43,8 +43,12 @@ cdef extern from "<uuos.hpp>":
 
         bool set_native_contract(uint64_t contract, const string& native_contract_lib);
         string get_native_contract(uint64_t contract);
+
         void enable_native_contracts(bool debug);
         bool is_native_contracts_enabled();
+
+        void enable_debug(bool debug);
+        bool is_debug_enabled();
 
         int eos_init(int argc, char** argv);
         int eos_exec();
@@ -97,6 +101,12 @@ def enable_native_contracts(bool debug):
 
 def is_native_contracts_enabled():
     return get_uuos_proxy().is_native_contracts_enabled()
+
+def enable_debug(bool debug):
+    get_uuos_proxy().enable_debug(debug)
+
+def is_debug_enabled():
+    return get_uuos_proxy().is_debug_enabled()
 
 def init(args):
     cdef int argc;

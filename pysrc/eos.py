@@ -73,9 +73,11 @@ def b2s(s: bytes) -> str:
     return n2s(s)
 
 def set_native_contract(contract: Name, native_contract_lib) -> bool:
+    contract = _eos.s2n(contract)
     return _eos.set_native_contract(contract, native_contract_lib)
 
 def get_native_contract(contract) -> str:
+    contract = _eos.s2n(contract)
     return _eos.get_native_contract(contract)
 
 def enable_native_contracts(debug) -> None:
@@ -83,6 +85,12 @@ def enable_native_contracts(debug) -> None:
 
 def is_native_contracts_enabled() -> bool:
     return _eos.is_native_contracts_enabled()
+
+def enable_debug(debug) -> None:
+    _eos.enable_debug(debug)
+
+def is_debug_enabled() -> bool:
+    return _eos.is_debug_enabled()
 
 def init(argv=None) -> bool:
     if argv:
