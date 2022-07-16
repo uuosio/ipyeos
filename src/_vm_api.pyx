@@ -139,6 +139,17 @@ cdef extern from "<uuos.hpp>":
         int32_t recover_key( const capi_checksum256* digest, const char* sig, uint32_t siglen, char* pub, uint32_t publen );
         void assert_recover_key( const capi_checksum256* digest, const char* sig, uint32_t siglen, const char* pub, uint32_t publen );
 
+        #transaction.h
+        void send_deferred(const uint128_t sender_id, uint64_t payer, const char *serialized_transaction, uint32_t size, uint32_t replace_existing);
+        int32_t cancel_deferred(const uint128_t sender_id);
+        uint32_t read_transaction(char *buffer, uint32_t size);
+        uint32_t transaction_size();
+        int32_t tapos_block_num();
+        int32_t tapos_block_prefix();
+        uint32_t expiration();
+        int32_t get_action( uint32_t type, uint32_t index, char* buff, uint32_t size );
+        int32_t get_context_free_data( uint32_t index, char* buff, uint32_t size );
+
     vm_api_proxy *get_vm_api_proxy();
 
 cdef vm_api_proxy* api():
@@ -211,16 +222,13 @@ def printhex( data: bytes):
 def action_data_size():
     return api().action_data_size()
 
-def read_action_data(uint32_t length):
-    if length == 0:
-        data_size = api().read_action_data(<void *>0, 0)
-        return data_size, None
-    else:
-        data = <char *>malloc(length)
-        length = api().read_action_data(<void *>data, length)
-        ret = length, PyBytes_FromStringAndSize(data, length)
-        free(data)
-        return ret
+def read_action_data():
+    cdef uint32_t length = action_data_size()
+    data = <char *>malloc(length)
+    length = api().read_action_data(<void *>data, length)
+    ret = PyBytes_FromStringAndSize(data, length)
+    free(data)
+    return ret
 
 # void require_recipient( uint64_t name );
 def require_recipient(uint64_t name):
@@ -339,6 +347,68 @@ def recover_key(digest: bytes, sig: bytes):
 def assert_recover_key(digest: bytes, sig: bytes, pub: bytes):
     assert len(pub) == 34, "assert_recover_key: bad pub size"
     api().assert_recover_key(<capi_checksum256*><char *>digest, <char *>sig, len(sig), <char *>pub, 34)
+
+#transaction.h
+# void send_deferred(const uint128_t sender_id, uint64_t payer, const char *serialized_transaction, uint32_t size, uint32_t replace_existing = 0);
+def send_deferred(sender_id: bytes, uint64_t payer, serialized_transaction: bytes, uint32_t replace_existing):
+    cdef uint128_t _sender_id = 0
+    assert len(sender_id) == 16, "send_defered: bad sender_id size"
+    memcpy(&_sender_id, <char *>sender_id, 16)
+    api().send_deferred(_sender_id, payer, <char *>serialized_transaction, len(serialized_transaction), replace_existing)
+
+# int32_t cancel_deferred(const uint128_t sender_id);
+def cancel_deferred(sender_id: bytes):
+    cdef uint128_t _sender_id
+    assert len(sender_id) == 16, "send_defered: bad sender_id size"
+    memcpy(&_sender_id, <char *>sender_id, 16)
+    api().cancel_deferred(_sender_id)
+
+# uint32_t read_transaction(char *buffer, uint32_t size);
+def read_transaction():
+    size = transaction_size()
+    buffer = <char *>malloc(size)
+    api().read_transaction(buffer, size)
+    ret = PyBytes_FromStringAndSize(buffer, size)
+    free(buffer)
+    return ret
+
+# uint32_t transaction_size();
+def transaction_size():
+    return api().transaction_size() 
+
+# int32_t tapos_block_num();
+def tapos_block_num():
+    return api().tapos_block_num()
+
+# int32_t tapos_block_prefix();
+def tapos_block_prefix():
+    return api().tapos_block_prefix()
+
+# uint32_t expiration();
+def expiration():
+    return api().expiration()
+
+# int32_t get_action( uint32_t type, uint32_t index, char* buff, uint32_t size );
+def get_action( uint32_t _type, uint32_t index):
+    size = api().get_action(_type, index, <char *>0, 0)
+    if size == 0:
+        return None
+    buff = <char *>malloc(size)
+    api().get_action(_type, index, buff, size)
+    ret = PyBytes_FromStringAndSize(buff, size)
+    free(buff)
+    return ret
+
+# int32_t get_context_free_data( uint32_t index, char* buff, uint32_t size );
+def get_context_free_data(uint32_t index):
+    size = api().get_context_free_data(index, <char *>0, 0)
+    if size == 0:
+        return None
+    buff = <char *>malloc(size)
+    api().get_context_free_data(index, buff, size)
+    ret = PyBytes_FromStringAndSize(buff, size)
+    free(buff)
+    return ret
 
 
 def db_store_i64(scope: uint64_t, table: uint64_t, payer: uint64_t, id: uint64_t,  data: bytes):
