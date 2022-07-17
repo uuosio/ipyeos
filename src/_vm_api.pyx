@@ -420,17 +420,14 @@ def db_update_i64(iterator: int32_t, payer: uint64_t, data: bytes):
 def db_remove_i64(iterator: int32_t):
     api().db_remove_i64(iterator)
 
-def db_get_i64(iterator: int32_t, length: int32_t):
+def db_get_i64(iterator: int32_t):
     cdef char *buffer
-    if length == 0:
-        data_size = api().db_get_i64(iterator, <void*>0, 0)
-        return data_size, None
-    else:
-        buffer = <char *>malloc(length)
-        data_size = api().db_get_i64(iterator, <void*>buffer, length)
-        ret = data_size, PyBytes_FromStringAndSize(buffer, data_size)
-        free(buffer)
-        return ret
+    buffer_size = api().db_get_i64(iterator, <void*>0, 0)
+    buffer = <char *>malloc(buffer_size)
+    api().db_get_i64(iterator, <void*>buffer, buffer_size)
+    ret = PyBytes_FromStringAndSize(buffer, buffer_size)
+    free(buffer)
+    return ret
 
 def db_next_i64(iterator: int32_t):
     cdef uint64_t primary = 0
