@@ -21,10 +21,7 @@ def main():
 
         start_eos_parser = subparser.add_parser('eos-node', help='run a eos node')
 
-        result, unknown = parser.parse_known_args()
-        if result.subparser == 'eos-debugger':
-            server.start_debug_server(result.addr, result.server_port, result.vm_api_port, result.apply_request_addr, result.apply_request_port)
-        elif result.subparser == 'eos-node':
+        if sys.argv[1] == 'eos-node':
             argv = sys.argv[1:]
             argv[0] = 'ipyeos'
             ret = eos.init(argv)
@@ -33,7 +30,11 @@ def main():
             eos.exec()
             print('done!')
         else:
-            parser.print_help()
+            result, unknown = parser.parse_known_args()
+            if result.subparser == 'eos-debugger':
+                server.start_debug_server(result.addr, result.server_port, result.vm_api_port, result.apply_request_addr, result.apply_request_port)
+            else:
+                parser.print_help()
     else:
         custom_cmds = ['-m', 'ipyeos']
         custom_cmds.extend(sys.argv[1:])
