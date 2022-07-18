@@ -9,7 +9,7 @@ static fn_get_uuos_proxy s_get_uuos_proxy = nullptr;
 
 void uuosext_init() {
     const char * chain_api_lib = getenv("CHAIN_API_LIB");
-    printf("\n++++chain_api_lib %s\n", chain_api_lib);
+    // printf("\n++++chain_api_lib %s\n", chain_api_lib);
     if (chain_api_lib == nullptr) {
         printf("+++CHAIN_API_LIB environment variable not set!");
         exit(-1);

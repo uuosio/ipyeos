@@ -37,6 +37,7 @@ setup(
     package_data={'ipyeos': release_files},
 
     install_requires=[
+        'thrift>=0.16.0',
         'pytest>=6.2.5'
     ],
     tests_require=[],
