@@ -526,13 +526,13 @@ class DebugChainTester(ChainTester):
             return False
 
 class ChainTesterHandler:
-    def __init__(self, apply_request_port=9092):
+    def __init__(self, addr, vm_api_port, apply_request_addr, apply_request_port):
         self.testers: Dict[DebugChainTester] = {}
         self.tester_seq = 0
         _vm_api.set_apply_callback(self.on_apply)
         handler = VMAPIHandler()
         self.processor = ApplyProcessor(handler)
-        transport = TSocket.TServerSocket(host='127.0.0.1', port=apply_request_port)
+        transport = TSocket.TServerSocket(host=addr, port=vm_api_port)
         tfactory = TTransport.TBufferedTransportFactory()
         pfactory = TBinaryProtocol.TBinaryProtocolFactory()
 
@@ -543,9 +543,12 @@ class ChainTesterHandler:
 
         self.current_tester: Optional[DebugChainTester] = None
 
+        self.apply_request_addr = apply_request_addr
+        self.apply_request_port = apply_request_port
+
     def get_apply_client(self):
         if not self.apply_request_client:
-            self.apply_request_transport = TSocket.TSocket('127.0.0.1', 9091)
+            self.apply_request_transport = TSocket.TSocket(self.apply_request_addr, self.apply_request_port)
             # Buffering is critical. Raw sockets are very slow
             self.apply_request_transport = TTransport.TBufferedTransport(self.apply_request_transport)
             # Wrap in a protocol
@@ -867,10 +870,11 @@ class IPCChainTesterProcessor(IPCChainTester.Processor):
             return False
         return True
 
-def start_debug_server(addr, server_port, apply_request_port):
+# result.addr, result.server_port, result.vm_api_port, result.apply_request_addr, result.apply_request_port
+def start_debug_server(addr='127.0.0.1', server_port=9090, vm_api_port=9091, apply_request_addr='127.0.0.1', apply_request_port=9092):
     eos.enable_debug(True)
     eos.enable_native_contracts(True)
-    handler = ChainTesterHandler(apply_request_port)
+    handler = ChainTesterHandler(addr, vm_api_port, apply_request_addr, apply_request_port)
     processor = IPCChainTesterProcessor(handler)
     transport = TSocket.TServerSocket(host=addr, port=server_port)
     tfactory = TTransport.TBufferedTransportFactory()
@@ -878,7 +882,7 @@ def start_debug_server(addr, server_port, apply_request_port):
 
     server = ChainTesterServer(processor, transport, tfactory, pfactory, handler=handler)
 
-    print('Starting the ChainTester server...')
+    print('Starting the eos debugger server...')
     server.serve()
     print('done.')
 

@@ -48,6 +48,9 @@ def run_ipyeos(custom_cmds=None):
         cmds.extend(custom_cmds)
     return subprocess.call(cmds, stdout=sys.stdout, stderr=sys.stderr)
 
+def run_eosnode(custom_cmds=None):
+    run_ipyeos(custom_cmds)
+
 def start_debug_server():
     if platform.system() == 'Windows':
         cmd = f'docker run --rm -it -w /root/dev -v "{os.getcwd()}:/root/dev" -t gscdk/test'
@@ -56,21 +59,6 @@ def start_debug_server():
         print(' '.join(cmd))
         return subprocess.call(cmd, stdout=sys.stdout, stderr=sys.stderr)
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--addr', default="127.0.0.1")
-    parser.add_argument('--server-port', default="9090")
-    parser.add_argument('--apply-request-port', default="9092")
-    result = parser.parse_args()
-
-    custom_cmds = [
-        '-m',
-        'ipyeos',
-        'start-debug-server',
-        '--addr',
-        result.addr,
-        '--server-port',
-        result.server_port,
-        '--apply-request-port',
-        result.apply_request_port
-    ]
+    custom_cmds = ['-m', 'ipyeos', 'eos-debugger']
+    custom_cmds.extend(sys.argv[1:])
     run_ipyeos(custom_cmds)

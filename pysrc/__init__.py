@@ -41,5 +41,10 @@ if 'RUN_IPYEOS' in os.environ:
 def run_ipyeos(custom_cmds=[]):
     return run.run_ipyeos(custom_cmds)
 
+def run_eosnode():
+    custom_cmds=['-m', 'ipyeos', 'eos-node']
+    custom_cmds.extend(sys.argv[1:])
+    return run.run_eosnode(custom_cmds)
+
 def start_debug_server():
     return run.start_debug_server()
