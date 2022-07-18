@@ -504,8 +504,7 @@ class DebugChainTester(ChainTester):
     def __init__(self):
         super().__init__()
         self.debug_contracts = {}
-
-        ipyeos_dir = os.path.dirname(ipyeos.__file__)
+        ipyeos_dir = os.path.dirname(__file__)
         self.so_file = None
         for f in os.listdir(ipyeos_dir):
             if f.endswith('.so'):
