@@ -21,6 +21,17 @@ cd ..
 ./build.sh
 ```
 
+## Running a Node
+
+```
+eos-node
+```
+
+## Running a Debugging Server
+
+```
+eos-debugger
+```
 
 ## Testing
 
