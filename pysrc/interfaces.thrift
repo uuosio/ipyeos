@@ -31,7 +31,7 @@ service IPCChainTester {
    i32 free_chain(1:i32 id),
    void produce_block(1:i32 id),
    binary push_action(1:i32 id, 2:string account, 3:string action, 4:string arguments, 5: string permissions),
-   binary push_actions(1:i32 id, 2:list<Action> actions) throws (1:TransactionException exc),
+   binary push_actions(1:i32 id, 2:list<Action> actions),
 }
 
 struct Action {
