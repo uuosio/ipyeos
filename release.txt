@@ -1,5 +1,5 @@
-v0.1.8 release
+v0.2.0 release
 
-1. Add pytest as an install requirement
-2. import mpy_cross in mp_compile
+1. Add support for debugging
+
 
