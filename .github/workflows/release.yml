@@ -3,8 +3,8 @@ name: release ipyeos
 on:
   push:
     branches: [ release ]
-    # tags:
-    #   - "v*.*.*"
+    tags:
+      - "v*.*.*"
   # pull_request:
   #   branches: [ main ]
 
