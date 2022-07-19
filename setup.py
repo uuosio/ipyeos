@@ -32,8 +32,14 @@ setup(
     description="IPYEOS project",
     author='The IPYEOS Team',
     license="MIT",
-    packages=['ipyeos'],
-    package_dir={'ipyeos': 'pysrc'},
+    packages=[
+        'ipyeos',
+        'ipyeos.interfaces'
+    ],
+    package_dir={
+        'ipyeos': 'pysrc',
+        'ipyeos.interfaces': 'pysrc/interfaces'
+    },
     package_data={'ipyeos': release_files},
 
     install_requires=[
