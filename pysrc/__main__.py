@@ -15,9 +15,9 @@ def main():
         debug_sub_parser = subparser.add_parser('eos-debugger', help='start eos debugger server')
         debug_sub_parser.add_argument('--addr', default="127.0.0.1", help="eos debugger server address")
         debug_sub_parser.add_argument('--server-port', default="9090", help="eos debugger server port")
-        debug_sub_parser.add_argument('--vm-api-port', default="9091", help="eos debugger vm api port")
+        debug_sub_parser.add_argument('--vm-api-port', default="9092", help="eos debugger vm api port")
         debug_sub_parser.add_argument('--apply-request-addr', default="127.0.0.1", help="client side apply request server address")
-        debug_sub_parser.add_argument('--apply-request-port', default="9092", help="client side apply request server port")
+        debug_sub_parser.add_argument('--apply-request-port', default="9091", help="client side apply request server port")
 
         start_eos_parser = subparser.add_parser('eos-node', help='run a eos node')
 

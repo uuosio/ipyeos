@@ -871,7 +871,7 @@ class IPCChainTesterProcessor(IPCChainTester.Processor):
         return True
 
 # result.addr, result.server_port, result.vm_api_port, result.apply_request_addr, result.apply_request_port
-def start_debug_server(addr='127.0.0.1', server_port=9090, vm_api_port=9091, apply_request_addr='127.0.0.1', apply_request_port=9092):
+def start_debug_server(addr='127.0.0.1', server_port=9090, vm_api_port=9092, apply_request_addr='127.0.0.1', apply_request_port=9091):
     eos.enable_debug(True)
     eos.enable_native_contracts(True)
     handler = ChainTesterHandler(addr, vm_api_port, apply_request_addr, apply_request_port)
