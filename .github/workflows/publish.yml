@@ -1,6 +1,8 @@
 name: publish
 
-on: [push]
+on:
+  push:
+    branches: [ release ]
 
 jobs:
   publish-ipyeos-image:
