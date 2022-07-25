@@ -478,8 +478,6 @@ class Client(Iface):
         iprot.readMessageEnd()
         if result.success is not None:
             return result.success
-        if result.exc is not None:
-            raise result.exc
         raise TApplicationException(TApplicationException.MISSING_RESULT, "push_actions failed: unknown result")
 
 
@@ -760,9 +758,6 @@ class Processor(Iface, TProcessor):
             msg_type = TMessageType.REPLY
         except TTransport.TTransportException:
             raise
-        except TransactionException as exc:
-            msg_type = TMessageType.REPLY
-            result.exc = exc
         except TApplicationException as ex:
             logging.exception('TApplication exception in handler')
             msg_type = TMessageType.EXCEPTION
@@ -2160,14 +2155,12 @@ class push_actions_result(object):
     """
     Attributes:
      - success
-     - exc
 
     """
 
 
-    def __init__(self, success=None, exc=None,):
+    def __init__(self, success=None,):
         self.success = success
-        self.exc = exc
 
     def read(self, iprot):
         if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
@@ -2183,11 +2176,6 @@ class push_actions_result(object):
                     self.success = iprot.readBinary()
                 else:
                     iprot.skip(ftype)
-            elif fid == 1:
-                if ftype == TType.STRUCT:
-                    self.exc = TransactionException.read(iprot)
-                else:
-                    iprot.skip(ftype)
             else:
                 iprot.skip(ftype)
             iprot.readFieldEnd()
@@ -2201,10 +2189,6 @@ class push_actions_result(object):
         if self.success is not None:
             oprot.writeFieldBegin('success', TType.STRING, 0)
             oprot.writeBinary(self.success)
-            oprot.writeFieldEnd()
-        if self.exc is not None:
-            oprot.writeFieldBegin('exc', TType.STRUCT, 1)
-            self.exc.write(oprot)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
@@ -2225,7 +2209,6 @@ class push_actions_result(object):
 all_structs.append(push_actions_result)
 push_actions_result.thrift_spec = (
     (0, TType.STRING, 'success', 'BINARY', None, ),  # 0
-    (1, TType.STRUCT, 'exc', [TransactionException, None], None, ),  # 1
 )
 fix_spec(all_structs)
 del all_structs

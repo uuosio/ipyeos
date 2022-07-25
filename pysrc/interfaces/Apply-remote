@@ -25,6 +25,20 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
     print('')
     print('Functions:')
     print('  i32 end_apply()')
+    print('  string get_active_producers()')
+    print('  GetResourceLimitsReturn get_resource_limits(Uint64 account)')
+    print('  void set_resource_limits(Uint64 account, i64 ram_bytes, i64 net_weight, i64 cpu_weight)')
+    print('  i64 set_proposed_producers(string producer_data)')
+    print('  i64 set_proposed_producers_ex(Uint64 producer_data_format, Uint64 producer_data)')
+    print('  bool is_privileged(Uint64 account)')
+    print('  void set_privileged(Uint64 account, bool is_priv)')
+    print('  void set_blockchain_parameters_packed(string data)')
+    print('  i32 get_blockchain_parameters_packed()')
+    print('  void preactivate_feature(string feature_digest)')
+    print('  i32 check_transaction_authorization(string trx_data, string pubkeys_data, string perms_data)')
+    print('  i32 check_permission_authorization(Uint64 account, Uint64 permission, string pubkeys_data, string perms_data, Uint64 delay_us)')
+    print('  i64 get_permission_last_used(Uint64 account, Uint64 permission)')
+    print('  i64 get_account_creation_time(Uint64 account)')
     print('  void prints(string cstr)')
     print('  void prints_l(string cstr)')
     print('  void printi(i64 n)')
@@ -217,6 +231,90 @@ if cmd == 'end_apply':
         print('end_apply requires 0 args')
         sys.exit(1)
     pp.pprint(client.end_apply())
+
+elif cmd == 'get_active_producers':
+    if len(args) != 0:
+        print('get_active_producers requires 0 args')
+        sys.exit(1)
+    pp.pprint(client.get_active_producers())
+
+elif cmd == 'get_resource_limits':
+    if len(args) != 1:
+        print('get_resource_limits requires 1 args')
+        sys.exit(1)
+    pp.pprint(client.get_resource_limits(eval(args[0]),))
+
+elif cmd == 'set_resource_limits':
+    if len(args) != 4:
+        print('set_resource_limits requires 4 args')
+        sys.exit(1)
+    pp.pprint(client.set_resource_limits(eval(args[0]), eval(args[1]), eval(args[2]), eval(args[3]),))
+
+elif cmd == 'set_proposed_producers':
+    if len(args) != 1:
+        print('set_proposed_producers requires 1 args')
+        sys.exit(1)
+    pp.pprint(client.set_proposed_producers(args[0],))
+
+elif cmd == 'set_proposed_producers_ex':
+    if len(args) != 2:
+        print('set_proposed_producers_ex requires 2 args')
+        sys.exit(1)
+    pp.pprint(client.set_proposed_producers_ex(eval(args[0]), eval(args[1]),))
+
+elif cmd == 'is_privileged':
+    if len(args) != 1:
+        print('is_privileged requires 1 args')
+        sys.exit(1)
+    pp.pprint(client.is_privileged(eval(args[0]),))
+
+elif cmd == 'set_privileged':
+    if len(args) != 2:
+        print('set_privileged requires 2 args')
+        sys.exit(1)
+    pp.pprint(client.set_privileged(eval(args[0]), eval(args[1]),))
+
+elif cmd == 'set_blockchain_parameters_packed':
+    if len(args) != 1:
+        print('set_blockchain_parameters_packed requires 1 args')
+        sys.exit(1)
+    pp.pprint(client.set_blockchain_parameters_packed(args[0],))
+
+elif cmd == 'get_blockchain_parameters_packed':
+    if len(args) != 0:
+        print('get_blockchain_parameters_packed requires 0 args')
+        sys.exit(1)
+    pp.pprint(client.get_blockchain_parameters_packed())
+
+elif cmd == 'preactivate_feature':
+    if len(args) != 1:
+        print('preactivate_feature requires 1 args')
+        sys.exit(1)
+    pp.pprint(client.preactivate_feature(args[0],))
+
+elif cmd == 'check_transaction_authorization':
+    if len(args) != 3:
+        print('check_transaction_authorization requires 3 args')
+        sys.exit(1)
+    pp.pprint(client.check_transaction_authorization(args[0], args[1], args[2],))
+
+elif cmd == 'check_permission_authorization':
+    if len(args) != 5:
+        print('check_permission_authorization requires 5 args')
+        sys.exit(1)
+    pp.pprint(client.check_permission_authorization(eval(args[0]), eval(args[1]), args[2], args[3], eval(args[4]),))
+
+elif cmd == 'get_permission_last_used':
+    if len(args) != 2:
+        print('get_permission_last_used requires 2 args')
+        sys.exit(1)
+    pp.pprint(client.get_permission_last_used(eval(args[0]), eval(args[1]),))
+
+elif cmd == 'get_account_creation_time':
+    if len(args) != 1:
+        print('get_account_creation_time requires 1 args')
+        sys.exit(1)
+    pp.pprint(client.get_account_creation_time(eval(args[0]),))
 
 elif cmd == 'prints':
     if len(args) != 1:

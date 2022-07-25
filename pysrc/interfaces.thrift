@@ -76,6 +76,12 @@ struct LowerBoundUpperBoundReturn {
   3: Uint64 primary
 }
 
+struct GetResourceLimitsReturn {
+   1:i64 ram_bytes
+   2:i64 net_weight
+   3:i64 cpu_weight
+}
+
 service PushActions {
    i32 push_actions(1:list<Action> actions),
 }
@@ -88,6 +94,45 @@ service ApplyRequest {
 service Apply {
    i32 end_apply(),
 
+#chain.h
+# uint32_t get_active_producers( uint64_t* producers, uint32_t datalen );
+   binary get_active_producers(),
+#privileged.h
+# void get_resource_limits( uint64_t account, int64_t* ram_bytes, int64_t* net_weight, int64_t* cpu_weight );
+   GetResourceLimitsReturn get_resource_limits(1:Uint64 account),
+# void set_resource_limits( uint64_t account, int64_t ram_bytes, int64_t net_weight, int64_t cpu_weight );
+   void set_resource_limits(1:Uint64 account, 2:i64 ram_bytes, 3:i64 net_weight, 4:i64 cpu_weight ),
+# int64_t set_proposed_producers( const char *producer_data, uint32_t producer_data_size );
+   i64 set_proposed_producers(1:binary producer_data),
+# int64_t set_proposed_producers_ex( uint64_t producer_data_format, const char *producer_data, uint32_t producer_data_size );
+   i64 set_proposed_producers_ex(1:Uint64 producer_data_format, 2:Uint64 producer_data),
+# bool is_privileged( uint64_t account );
+   bool is_privileged(1:Uint64 account),
+# void set_privileged( uint64_t account, bool is_priv );
+   void set_privileged(1:Uint64 account, 2:bool is_priv),
+# void set_blockchain_parameters_packed( const char* data, uint32_t datalen );
+   void set_blockchain_parameters_packed(1:binary data),
+# uint32_t get_blockchain_parameters_packed( char* data, uint32_t datalen );
+   i32 get_blockchain_parameters_packed(),
+# void preactivate_feature( const capi_checksum256* feature_digest );
+   void preactivate_feature(1:binary feature_digest),
+#permission.h
+# int32_t check_transaction_authorization( const char* trx_data, uint32_t trx_size,
+#                                 const char* pubkeys_data, uint32_t pubkeys_size,
+#                                 const char* perms_data,   uint32_t perms_size
+#                             );
+   i32 check_transaction_authorization(1:binary trx_data, 2:binary pubkeys_data, 3:binary perms_data),
+# int32_t check_permission_authorization( uint64_t account,
+#                                 uint64_t permission,
+#                                 const char* pubkeys_data, uint32_t pubkeys_size,
+#                                 const char* perms_data,   uint32_t perms_size,
+#                                 uint64_t delay_us
+#                             );
+   i32 check_permission_authorization(1:Uint64 account, 2:Uint64 permission, 3:binary pubkeys_data, 4:binary perms_data, 5:Uint64 delay_us),
+# int64_t get_permission_last_used( uint64_t account, uint64_t permission );
+   i64 get_permission_last_used(1:Uint64 account, 2:Uint64 permission),
+# int64_t get_account_creation_time( uint64_t account );
+   i64 get_account_creation_time(1:Uint64 account),
    void prints(1:string cstr),
    void prints_l(1:binary cstr),
    void printi(1:i64 n),

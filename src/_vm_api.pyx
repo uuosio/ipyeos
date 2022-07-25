@@ -56,6 +56,36 @@ cdef extern from "<uuos.hpp>":
         bool is_feature_activated( const capi_checksum256* feature_digest );
         uint64_t get_sender();
 
+        #chain.h
+        uint32_t get_active_producers( uint64_t* producers, uint32_t datalen );
+
+        #privileged.h
+        void get_resource_limits( uint64_t account, int64_t* ram_bytes, int64_t* net_weight, int64_t* cpu_weight );
+        void set_resource_limits( uint64_t account, int64_t ram_bytes, int64_t net_weight, int64_t cpu_weight );
+        int64_t set_proposed_producers( const char *producer_data, uint32_t producer_data_size );
+        int64_t set_proposed_producers_ex( uint64_t producer_data_format, const char *producer_data, uint32_t producer_data_size );
+        bool is_privileged( uint64_t account );
+        void set_privileged( uint64_t account, bool is_priv );
+        void set_blockchain_parameters_packed( const char* data, uint32_t datalen );
+        uint32_t get_blockchain_parameters_packed( char* data, uint32_t datalen );
+        void preactivate_feature( const capi_checksum256* feature_digest );
+
+        #permission.h
+        int32_t check_transaction_authorization( const char* trx_data, uint32_t trx_size,
+                                        const char* pubkeys_data, uint32_t pubkeys_size,
+                                        const char* perms_data,   uint32_t perms_size
+                                    );
+        int32_t check_permission_authorization( uint64_t account,
+                                        uint64_t permission,
+                                        const char* pubkeys_data, uint32_t pubkeys_size,
+                                        const char* perms_data,   uint32_t perms_size,
+                                        uint64_t delay_us
+                                    );
+
+        int64_t get_permission_last_used( uint64_t account, uint64_t permission );
+        int64_t get_account_creation_time( uint64_t account );
+
+
         int32_t db_store_i64(uint64_t scope, uint64_t table, uint64_t payer, uint64_t id,  const void* data, uint32_t len);
         void db_update_i64(int32_t iterator, uint64_t payer, const void* data, uint32_t len);
         void db_remove_i64(int32_t iterator);
@@ -172,6 +202,96 @@ cdef extern int native_apply(uint64_t a, uint64_t b, uint64_t c):
         import traceback
         traceback.print_exc()
         api().eosio_assert(0, str(e))
+
+
+#chain.h
+# uint32_t get_active_producers( uint64_t* producers, uint32_t datalen );
+def get_active_producers():
+    cdef size_t producers_size = 0
+    cdef uint64_t *producers = <uint64_t *>0
+    producers_size = api().get_active_producers(<uint64_t *>0, 0)
+    producers = <uint64_t*>malloc(producers_size)
+    api().get_active_producers(producers, producers_size)
+    ret = PyBytes_FromStringAndSize(<char *>producers, producers_size)
+    free(producers)
+    return ret
+
+#privileged.h
+# void get_resource_limits( uint64_t account, int64_t* ram_bytes, int64_t* net_weight, int64_t* cpu_weight );
+def get_resource_limits( uint64_t account):
+    cdef int64_t ram_bytes = 0
+    cdef int64_t net_weight = 0
+    cdef int64_t cpu_weight = 0
+    api().get_resource_limits(account, &ram_bytes, &net_weight, &cpu_weight)
+    return ram_bytes, net_weight, cpu_weight
+
+# void set_resource_limits( uint64_t account, int64_t ram_bytes, int64_t net_weight, int64_t cpu_weight );
+def set_resource_limits( uint64_t account, int64_t ram_bytes, int64_t net_weight, int64_t cpu_weight ):
+    api().set_resource_limits(account, ram_bytes, net_weight, cpu_weight)
+
+# int64_t set_proposed_producers( const char *producer_data, uint32_t producer_data_size );
+def set_proposed_producers(producer_data: bytes):
+    return api().set_proposed_producers(producer_data, len(producer_data))
+
+# int64_t set_proposed_producers_ex( uint64_t producer_data_format, const char *producer_data, uint32_t producer_data_size );
+def set_proposed_producers_ex( uint64_t producer_data_format, producer_data: bytes):
+    return api().set_proposed_producers_ex(producer_data_format, producer_data, len(producer_data))
+
+# bool is_privileged( uint64_t account );
+def is_privileged( uint64_t account ):
+    return api().is_privileged(account)
+
+# void set_privileged( uint64_t account, bool is_priv );
+def set_privileged( uint64_t account, bool is_priv ):
+    api().set_privileged(account, is_priv)
+
+# void set_blockchain_parameters_packed( const char* data, uint32_t datalen );
+def set_blockchain_parameters_packed(data: bytes):
+    api().set_blockchain_parameters_packed(data, len(data))
+
+# uint32_t get_blockchain_parameters_packed( char* data, uint32_t datalen );
+def get_blockchain_parameters_packed():
+    cdef size_t size = 0
+    cdef char *data
+    size = api().get_blockchain_parameters_packed(<char *>0, 0)
+    data = <char *>malloc(size)
+    api().get_blockchain_parameters_packed(data, size)
+    ret = PyBytes_FromStringAndSize(data, size)
+    free(data)
+    return ret
+
+# void preactivate_feature( const capi_checksum256* feature_digest );
+def preactivate_feature(feature_digest: bytes):
+    assert(len(feature_digest) == 32)
+    return api().preactivate_feature(<capi_checksum256 *><char *>feature_digest)
+
+
+#permission.h
+# int32_t check_transaction_authorization( const char* trx_data, uint32_t trx_size,
+#                                 const char* pubkeys_data, uint32_t pubkeys_size,
+#                                 const char* perms_data,   uint32_t perms_size
+#                             );
+
+def check_transaction_authorization(trx_data: bytes, pubkeys_data: bytes, perms_data: bytes):
+    return api().check_transaction_authorization(trx_data, len(trx_data), pubkeys_data, len(pubkeys_data), perms_data, len(perms_data))
+
+# int32_t check_permission_authorization( uint64_t account,
+#                                 uint64_t permission,
+#                                 const char* pubkeys_data, uint32_t pubkeys_size,
+#                                 const char* perms_data,   uint32_t perms_size,
+#                                 uint64_t delay_us
+#                             );
+
+def check_permission_authorization(uint64_t account, uint64_t permission, pubkeys_data: bytes, perms_data: bytes, uint64_t delay_us):
+    return api().check_permission_authorization(account, permission, pubkeys_data, len(pubkeys_data), perms_data, len(perms_data), delay_us)
+
+# int64_t get_permission_last_used( uint64_t account, uint64_t permission );
+def get_permission_last_used(uint64_t account, uint64_t permission):
+    return api().get_permission_last_used(account, permission)
+
+# int64_t get_account_creation_time( uint64_t account );
+def get_account_creation_time(uint64_t account):
+    return api().get_account_creation_time(account)
 
 def prints(const char* cstr):
     api().prints(cstr)
@@ -409,7 +529,6 @@ def get_context_free_data(uint32_t index):
     ret = PyBytes_FromStringAndSize(buff, size)
     free(buff)
     return ret
-
 
 def db_store_i64(scope: uint64_t, table: uint64_t, payer: uint64_t, id: uint64_t,  data: bytes):
     return api().db_store_i64(scope, table, payer, id,  <void *><const unsigned char *>data, len(data))

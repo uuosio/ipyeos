@@ -22,6 +22,120 @@ class Iface(object):
     def end_apply(self):
         pass
 
+    def get_active_producers(self):
+        pass
+
+    def get_resource_limits(self, account):
+        """
+        Parameters:
+         - account
+
+        """
+        pass
+
+    def set_resource_limits(self, account, ram_bytes, net_weight, cpu_weight):
+        """
+        Parameters:
+         - account
+         - ram_bytes
+         - net_weight
+         - cpu_weight
+
+        """
+        pass
+
+    def set_proposed_producers(self, producer_data):
+        """
+        Parameters:
+         - producer_data
+
+        """
+        pass
+
+    def set_proposed_producers_ex(self, producer_data_format, producer_data):
+        """
+        Parameters:
+         - producer_data_format
+         - producer_data
+
+        """
+        pass
+
+    def is_privileged(self, account):
+        """
+        Parameters:
+         - account
+
+        """
+        pass
+
+    def set_privileged(self, account, is_priv):
+        """
+        Parameters:
+         - account
+         - is_priv
+
+        """
+        pass
+
+    def set_blockchain_parameters_packed(self, data):
+        """
+        Parameters:
+         - data
+
+        """
+        pass
+
+    def get_blockchain_parameters_packed(self):
+        pass
+
+    def preactivate_feature(self, feature_digest):
+        """
+        Parameters:
+         - feature_digest
+
+        """
+        pass
+
+    def check_transaction_authorization(self, trx_data, pubkeys_data, perms_data):
+        """
+        Parameters:
+         - trx_data
+         - pubkeys_data
+         - perms_data
+
+        """
+        pass
+
+    def check_permission_authorization(self, account, permission, pubkeys_data, perms_data, delay_us):
+        """
+        Parameters:
+         - account
+         - permission
+         - pubkeys_data
+         - perms_data
+         - delay_us
+
+        """
+        pass
+
+    def get_permission_last_used(self, account, permission):
+        """
+        Parameters:
+         - account
+         - permission
+
+        """
+        pass
+
+    def get_account_creation_time(self, account):
+        """
+        Parameters:
+         - account
+
+        """
+        pass
+
     def prints(self, cstr):
         """
         Parameters:
@@ -1006,6 +1120,458 @@ class Client(Iface):
         if result.success is not None:
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "end_apply failed: unknown result")
+
+    def get_active_producers(self):
+        self.send_get_active_producers()
+        return self.recv_get_active_producers()
+
+    def send_get_active_producers(self):
+        self._oprot.writeMessageBegin('get_active_producers', TMessageType.CALL, self._seqid)
+        args = get_active_producers_args()
+        args.write(self._oprot)
+        self._oprot.writeMessageEnd()
+        self._oprot.trans.flush()
+
+    def recv_get_active_producers(self):
+        iprot = self._iprot
+        (fname, mtype, rseqid) = iprot.readMessageBegin()
+        if mtype == TMessageType.EXCEPTION:
+            x = TApplicationException()
+            x.read(iprot)
+            iprot.readMessageEnd()
+            raise x
+        result = get_active_producers_result()
+        result.read(iprot)
+        iprot.readMessageEnd()
+        if result.success is not None:
+            return result.success
+        raise TApplicationException(TApplicationException.MISSING_RESULT, "get_active_producers failed: unknown result")
+
+    def get_resource_limits(self, account):
+        """
+        Parameters:
+         - account
+
+        """
+        self.send_get_resource_limits(account)
+        return self.recv_get_resource_limits()
+
+    def send_get_resource_limits(self, account):
+        self._oprot.writeMessageBegin('get_resource_limits', TMessageType.CALL, self._seqid)
+        args = get_resource_limits_args()
+        args.account = account
+        args.write(self._oprot)
+        self._oprot.writeMessageEnd()
+        self._oprot.trans.flush()
+
+    def recv_get_resource_limits(self):
+        iprot = self._iprot
+        (fname, mtype, rseqid) = iprot.readMessageBegin()
+        if mtype == TMessageType.EXCEPTION:
+            x = TApplicationException()
+            x.read(iprot)
+            iprot.readMessageEnd()
+            raise x
+        result = get_resource_limits_result()
+        result.read(iprot)
+        iprot.readMessageEnd()
+        if result.success is not None:
+            return result.success
+        raise TApplicationException(TApplicationException.MISSING_RESULT, "get_resource_limits failed: unknown result")
+
+    def set_resource_limits(self, account, ram_bytes, net_weight, cpu_weight):
+        """
+        Parameters:
+         - account
+         - ram_bytes
+         - net_weight
+         - cpu_weight
+
+        """
+        self.send_set_resource_limits(account, ram_bytes, net_weight, cpu_weight)
+        self.recv_set_resource_limits()
+
+    def send_set_resource_limits(self, account, ram_bytes, net_weight, cpu_weight):
+        self._oprot.writeMessageBegin('set_resource_limits', TMessageType.CALL, self._seqid)
+        args = set_resource_limits_args()
+        args.account = account
+        args.ram_bytes = ram_bytes
+        args.net_weight = net_weight
+        args.cpu_weight = cpu_weight
+        args.write(self._oprot)
+        self._oprot.writeMessageEnd()
+        self._oprot.trans.flush()
+
+    def recv_set_resource_limits(self):
+        iprot = self._iprot
+        (fname, mtype, rseqid) = iprot.readMessageBegin()
+        if mtype == TMessageType.EXCEPTION:
+            x = TApplicationException()
+            x.read(iprot)
+            iprot.readMessageEnd()
+            raise x
+        result = set_resource_limits_result()
+        result.read(iprot)
+        iprot.readMessageEnd()
+        return
+
+    def set_proposed_producers(self, producer_data):
+        """
+        Parameters:
+         - producer_data
+
+        """
+        self.send_set_proposed_producers(producer_data)
+        return self.recv_set_proposed_producers()
+
+    def send_set_proposed_producers(self, producer_data):
+        self._oprot.writeMessageBegin('set_proposed_producers', TMessageType.CALL, self._seqid)
+        args = set_proposed_producers_args()
+        args.producer_data = producer_data
+        args.write(self._oprot)
+        self._oprot.writeMessageEnd()
+        self._oprot.trans.flush()
+
+    def recv_set_proposed_producers(self):
+        iprot = self._iprot
+        (fname, mtype, rseqid) = iprot.readMessageBegin()
+        if mtype == TMessageType.EXCEPTION:
+            x = TApplicationException()
+            x.read(iprot)
+            iprot.readMessageEnd()
+            raise x
+        result = set_proposed_producers_result()
+        result.read(iprot)
+        iprot.readMessageEnd()
+        if result.success is not None:
+            return result.success
+        raise TApplicationException(TApplicationException.MISSING_RESULT, "set_proposed_producers failed: unknown result")
+
+    def set_proposed_producers_ex(self, producer_data_format, producer_data):
+        """
+        Parameters:
+         - producer_data_format
+         - producer_data
+
+        """
+        self.send_set_proposed_producers_ex(producer_data_format, producer_data)
+        return self.recv_set_proposed_producers_ex()
+
+    def send_set_proposed_producers_ex(self, producer_data_format, producer_data):
+        self._oprot.writeMessageBegin('set_proposed_producers_ex', TMessageType.CALL, self._seqid)
+        args = set_proposed_producers_ex_args()
+        args.producer_data_format = producer_data_format
+        args.producer_data = producer_data
+        args.write(self._oprot)
+        self._oprot.writeMessageEnd()
+        self._oprot.trans.flush()
+
+    def recv_set_proposed_producers_ex(self):
+        iprot = self._iprot
+        (fname, mtype, rseqid) = iprot.readMessageBegin()
+        if mtype == TMessageType.EXCEPTION:
+            x = TApplicationException()
+            x.read(iprot)
+            iprot.readMessageEnd()
+            raise x
+        result = set_proposed_producers_ex_result()
+        result.read(iprot)
+        iprot.readMessageEnd()
+        if result.success is not None:
+            return result.success
+        raise TApplicationException(TApplicationException.MISSING_RESULT, "set_proposed_producers_ex failed: unknown result")
+
+    def is_privileged(self, account):
+        """
+        Parameters:
+         - account
+
+        """
+        self.send_is_privileged(account)
+        return self.recv_is_privileged()
+
+    def send_is_privileged(self, account):
+        self._oprot.writeMessageBegin('is_privileged', TMessageType.CALL, self._seqid)
+        args = is_privileged_args()
+        args.account = account
+        args.write(self._oprot)
+        self._oprot.writeMessageEnd()
+        self._oprot.trans.flush()
+
+    def recv_is_privileged(self):
+        iprot = self._iprot
+        (fname, mtype, rseqid) = iprot.readMessageBegin()
+        if mtype == TMessageType.EXCEPTION:
+            x = TApplicationException()
+            x.read(iprot)
+            iprot.readMessageEnd()
+            raise x
+        result = is_privileged_result()
+        result.read(iprot)
+        iprot.readMessageEnd()
+        if result.success is not None:
+            return result.success
+        raise TApplicationException(TApplicationException.MISSING_RESULT, "is_privileged failed: unknown result")
+
+    def set_privileged(self, account, is_priv):
+        """
+        Parameters:
+         - account
+         - is_priv
+
+        """
+        self.send_set_privileged(account, is_priv)
+        self.recv_set_privileged()
+
+    def send_set_privileged(self, account, is_priv):
+        self._oprot.writeMessageBegin('set_privileged', TMessageType.CALL, self._seqid)
+        args = set_privileged_args()
+        args.account = account
+        args.is_priv = is_priv
+        args.write(self._oprot)
+        self._oprot.writeMessageEnd()
+        self._oprot.trans.flush()
+
+    def recv_set_privileged(self):
+        iprot = self._iprot
+        (fname, mtype, rseqid) = iprot.readMessageBegin()
+        if mtype == TMessageType.EXCEPTION:
+            x = TApplicationException()
+            x.read(iprot)
+            iprot.readMessageEnd()
+            raise x
+        result = set_privileged_result()
+        result.read(iprot)
+        iprot.readMessageEnd()
+        return
+
+    def set_blockchain_parameters_packed(self, data):
+        """
+        Parameters:
+         - data
+
+        """
+        self.send_set_blockchain_parameters_packed(data)
+        self.recv_set_blockchain_parameters_packed()
+
+    def send_set_blockchain_parameters_packed(self, data):
+        self._oprot.writeMessageBegin('set_blockchain_parameters_packed', TMessageType.CALL, self._seqid)
+        args = set_blockchain_parameters_packed_args()
+        args.data = data
+        args.write(self._oprot)
+        self._oprot.writeMessageEnd()
+        self._oprot.trans.flush()
+
+    def recv_set_blockchain_parameters_packed(self):
+        iprot = self._iprot
+        (fname, mtype, rseqid) = iprot.readMessageBegin()
+        if mtype == TMessageType.EXCEPTION:
+            x = TApplicationException()
+            x.read(iprot)
+            iprot.readMessageEnd()
+            raise x
+        result = set_blockchain_parameters_packed_result()
+        result.read(iprot)
+        iprot.readMessageEnd()
+        return
+
+    def get_blockchain_parameters_packed(self):
+        self.send_get_blockchain_parameters_packed()
+        return self.recv_get_blockchain_parameters_packed()
+
+    def send_get_blockchain_parameters_packed(self):
+        self._oprot.writeMessageBegin('get_blockchain_parameters_packed', TMessageType.CALL, self._seqid)
+        args = get_blockchain_parameters_packed_args()
+        args.write(self._oprot)
+        self._oprot.writeMessageEnd()
+        self._oprot.trans.flush()
+
+    def recv_get_blockchain_parameters_packed(self):
+        iprot = self._iprot
+        (fname, mtype, rseqid) = iprot.readMessageBegin()
+        if mtype == TMessageType.EXCEPTION:
+            x = TApplicationException()
+            x.read(iprot)
+            iprot.readMessageEnd()
+            raise x
+        result = get_blockchain_parameters_packed_result()
+        result.read(iprot)
+        iprot.readMessageEnd()
+        if result.success is not None:
+            return result.success
+        raise TApplicationException(TApplicationException.MISSING_RESULT, "get_blockchain_parameters_packed failed: unknown result")
+
+    def preactivate_feature(self, feature_digest):
+        """
+        Parameters:
+         - feature_digest
+
+        """
+        self.send_preactivate_feature(feature_digest)
+        self.recv_preactivate_feature()
+
+    def send_preactivate_feature(self, feature_digest):
+        self._oprot.writeMessageBegin('preactivate_feature', TMessageType.CALL, self._seqid)
+        args = preactivate_feature_args()
+        args.feature_digest = feature_digest
+        args.write(self._oprot)
+        self._oprot.writeMessageEnd()
+        self._oprot.trans.flush()
+
+    def recv_preactivate_feature(self):
+        iprot = self._iprot
+        (fname, mtype, rseqid) = iprot.readMessageBegin()
+        if mtype == TMessageType.EXCEPTION:
+            x = TApplicationException()
+            x.read(iprot)
+            iprot.readMessageEnd()
+            raise x
+        result = preactivate_feature_result()
+        result.read(iprot)
+        iprot.readMessageEnd()
+        return
+
+    def check_transaction_authorization(self, trx_data, pubkeys_data, perms_data):
+        """
+        Parameters:
+         - trx_data
+         - pubkeys_data
+         - perms_data
+
+        """
+        self.send_check_transaction_authorization(trx_data, pubkeys_data, perms_data)
+        return self.recv_check_transaction_authorization()
+
+    def send_check_transaction_authorization(self, trx_data, pubkeys_data, perms_data):
+        self._oprot.writeMessageBegin('check_transaction_authorization', TMessageType.CALL, self._seqid)
+        args = check_transaction_authorization_args()
+        args.trx_data = trx_data
+        args.pubkeys_data = pubkeys_data
+        args.perms_data = perms_data
+        args.write(self._oprot)
+        self._oprot.writeMessageEnd()
+        self._oprot.trans.flush()
+
+    def recv_check_transaction_authorization(self):
+        iprot = self._iprot
+        (fname, mtype, rseqid) = iprot.readMessageBegin()
+        if mtype == TMessageType.EXCEPTION:
+            x = TApplicationException()
+            x.read(iprot)
+            iprot.readMessageEnd()
+            raise x
+        result = check_transaction_authorization_result()
+        result.read(iprot)
+        iprot.readMessageEnd()
+        if result.success is not None:
+            return result.success
+        raise TApplicationException(TApplicationException.MISSING_RESULT, "check_transaction_authorization failed: unknown result")
+
+    def check_permission_authorization(self, account, permission, pubkeys_data, perms_data, delay_us):
+        """
+        Parameters:
+         - account
+         - permission
+         - pubkeys_data
+         - perms_data
+         - delay_us
+
+        """
+        self.send_check_permission_authorization(account, permission, pubkeys_data, perms_data, delay_us)
+        return self.recv_check_permission_authorization()
+
+    def send_check_permission_authorization(self, account, permission, pubkeys_data, perms_data, delay_us):
+        self._oprot.writeMessageBegin('check_permission_authorization', TMessageType.CALL, self._seqid)
+        args = check_permission_authorization_args()
+        args.account = account
+        args.permission = permission
+        args.pubkeys_data = pubkeys_data
+        args.perms_data = perms_data
+        args.delay_us = delay_us
+        args.write(self._oprot)
+        self._oprot.writeMessageEnd()
+        self._oprot.trans.flush()
+
+    def recv_check_permission_authorization(self):
+        iprot = self._iprot
+        (fname, mtype, rseqid) = iprot.readMessageBegin()
+        if mtype == TMessageType.EXCEPTION:
+            x = TApplicationException()
+            x.read(iprot)
+            iprot.readMessageEnd()
+            raise x
+        result = check_permission_authorization_result()
+        result.read(iprot)
+        iprot.readMessageEnd()
+        if result.success is not None:
+            return result.success
+        raise TApplicationException(TApplicationException.MISSING_RESULT, "check_permission_authorization failed: unknown result")
+
+    def get_permission_last_used(self, account, permission):
+        """
+        Parameters:
+         - account
+         - permission
+
+        """
+        self.send_get_permission_last_used(account, permission)
+        return self.recv_get_permission_last_used()
+
+    def send_get_permission_last_used(self, account, permission):
+        self._oprot.writeMessageBegin('get_permission_last_used', TMessageType.CALL, self._seqid)
+        args = get_permission_last_used_args()
+        args.account = account
+        args.permission = permission
+        args.write(self._oprot)
+        self._oprot.writeMessageEnd()
+        self._oprot.trans.flush()
+
+    def recv_get_permission_last_used(self):
+        iprot = self._iprot
+        (fname, mtype, rseqid) = iprot.readMessageBegin()
+        if mtype == TMessageType.EXCEPTION:
+            x = TApplicationException()
+            x.read(iprot)
+            iprot.readMessageEnd()
+            raise x
+        result = get_permission_last_used_result()
+        result.read(iprot)
+        iprot.readMessageEnd()
+        if result.success is not None:
+            return result.success
+        raise TApplicationException(TApplicationException.MISSING_RESULT, "get_permission_last_used failed: unknown result")
+
+    def get_account_creation_time(self, account):
+        """
+        Parameters:
+         - account
+
+        """
+        self.send_get_account_creation_time(account)
+        return self.recv_get_account_creation_time()
+
+    def send_get_account_creation_time(self, account):
+        self._oprot.writeMessageBegin('get_account_creation_time', TMessageType.CALL, self._seqid)
+        args = get_account_creation_time_args()
+        args.account = account
+        args.write(self._oprot)
+        self._oprot.writeMessageEnd()
+        self._oprot.trans.flush()
+
+    def recv_get_account_creation_time(self):
+        iprot = self._iprot
+        (fname, mtype, rseqid) = iprot.readMessageBegin()
+        if mtype == TMessageType.EXCEPTION:
+            x = TApplicationException()
+            x.read(iprot)
+            iprot.readMessageEnd()
+            raise x
+        result = get_account_creation_time_result()
+        result.read(iprot)
+        iprot.readMessageEnd()
+        if result.success is not None:
+            return result.success
+        raise TApplicationException(TApplicationException.MISSING_RESULT, "get_account_creation_time failed: unknown result")
 
     def prints(self, cstr):
         """
@@ -4611,6 +5177,20 @@ class Processor(Iface, TProcessor):
         self._handler = handler
         self._processMap = {}
         self._processMap["end_apply"] = Processor.process_end_apply
+        self._processMap["get_active_producers"] = Processor.process_get_active_producers
+        self._processMap["get_resource_limits"] = Processor.process_get_resource_limits
+        self._processMap["set_resource_limits"] = Processor.process_set_resource_limits
+        self._processMap["set_proposed_producers"] = Processor.process_set_proposed_producers
+        self._processMap["set_proposed_producers_ex"] = Processor.process_set_proposed_producers_ex
+        self._processMap["is_privileged"] = Processor.process_is_privileged
+        self._processMap["set_privileged"] = Processor.process_set_privileged
+        self._processMap["set_blockchain_parameters_packed"] = Processor.process_set_blockchain_parameters_packed
+        self._processMap["get_blockchain_parameters_packed"] = Processor.process_get_blockchain_parameters_packed
+        self._processMap["preactivate_feature"] = Processor.process_preactivate_feature
+        self._processMap["check_transaction_authorization"] = Processor.process_check_transaction_authorization
+        self._processMap["check_permission_authorization"] = Processor.process_check_permission_authorization
+        self._processMap["get_permission_last_used"] = Processor.process_get_permission_last_used
+        self._processMap["get_account_creation_time"] = Processor.process_get_account_creation_time
         self._processMap["prints"] = Processor.process_prints
         self._processMap["prints_l"] = Processor.process_prints_l
         self._processMap["printi"] = Processor.process_printi
@@ -4760,6 +5340,328 @@ class Processor(Iface, TProcessor):
             msg_type = TMessageType.EXCEPTION
             result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
         oprot.writeMessageBegin("end_apply", msg_type, seqid)
+        result.write(oprot)
+        oprot.writeMessageEnd()
+        oprot.trans.flush()
+
+    def process_get_active_producers(self, seqid, iprot, oprot):
+        args = get_active_producers_args()
+        args.read(iprot)
+        iprot.readMessageEnd()
+        result = get_active_producers_result()
+        try:
+            result.success = self._handler.get_active_producers()
+            msg_type = TMessageType.REPLY
+        except TTransport.TTransportException:
+            raise
+        except TApplicationException as ex:
+            logging.exception('TApplication exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = ex
+        except Exception:
+            logging.exception('Unexpected exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
+        oprot.writeMessageBegin("get_active_producers", msg_type, seqid)
+        result.write(oprot)
+        oprot.writeMessageEnd()
+        oprot.trans.flush()
+
+    def process_get_resource_limits(self, seqid, iprot, oprot):
+        args = get_resource_limits_args()
+        args.read(iprot)
+        iprot.readMessageEnd()
+        result = get_resource_limits_result()
+        try:
+            result.success = self._handler.get_resource_limits(args.account)
+            msg_type = TMessageType.REPLY
+        except TTransport.TTransportException:
+            raise
+        except TApplicationException as ex:
+            logging.exception('TApplication exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = ex
+        except Exception:
+            logging.exception('Unexpected exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
+        oprot.writeMessageBegin("get_resource_limits", msg_type, seqid)
+        result.write(oprot)
+        oprot.writeMessageEnd()
+        oprot.trans.flush()
+
+    def process_set_resource_limits(self, seqid, iprot, oprot):
+        args = set_resource_limits_args()
+        args.read(iprot)
+        iprot.readMessageEnd()
+        result = set_resource_limits_result()
+        try:
+            self._handler.set_resource_limits(args.account, args.ram_bytes, args.net_weight, args.cpu_weight)
+            msg_type = TMessageType.REPLY
+        except TTransport.TTransportException:
+            raise
+        except TApplicationException as ex:
+            logging.exception('TApplication exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = ex
+        except Exception:
+            logging.exception('Unexpected exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
+        oprot.writeMessageBegin("set_resource_limits", msg_type, seqid)
+        result.write(oprot)
+        oprot.writeMessageEnd()
+        oprot.trans.flush()
+
+    def process_set_proposed_producers(self, seqid, iprot, oprot):
+        args = set_proposed_producers_args()
+        args.read(iprot)
+        iprot.readMessageEnd()
+        result = set_proposed_producers_result()
+        try:
+            result.success = self._handler.set_proposed_producers(args.producer_data)
+            msg_type = TMessageType.REPLY
+        except TTransport.TTransportException:
+            raise
+        except TApplicationException as ex:
+            logging.exception('TApplication exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = ex
+        except Exception:
+            logging.exception('Unexpected exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
+        oprot.writeMessageBegin("set_proposed_producers", msg_type, seqid)
+        result.write(oprot)
+        oprot.writeMessageEnd()
+        oprot.trans.flush()
+
+    def process_set_proposed_producers_ex(self, seqid, iprot, oprot):
+        args = set_proposed_producers_ex_args()
+        args.read(iprot)
+        iprot.readMessageEnd()
+        result = set_proposed_producers_ex_result()
+        try:
+            result.success = self._handler.set_proposed_producers_ex(args.producer_data_format, args.producer_data)
+            msg_type = TMessageType.REPLY
+        except TTransport.TTransportException:
+            raise
+        except TApplicationException as ex:
+            logging.exception('TApplication exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = ex
+        except Exception:
+            logging.exception('Unexpected exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
+        oprot.writeMessageBegin("set_proposed_producers_ex", msg_type, seqid)
+        result.write(oprot)
+        oprot.writeMessageEnd()
+        oprot.trans.flush()
+
+    def process_is_privileged(self, seqid, iprot, oprot):
+        args = is_privileged_args()
+        args.read(iprot)
+        iprot.readMessageEnd()
+        result = is_privileged_result()
+        try:
+            result.success = self._handler.is_privileged(args.account)
+            msg_type = TMessageType.REPLY
+        except TTransport.TTransportException:
+            raise
+        except TApplicationException as ex:
+            logging.exception('TApplication exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = ex
+        except Exception:
+            logging.exception('Unexpected exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
+        oprot.writeMessageBegin("is_privileged", msg_type, seqid)
+        result.write(oprot)
+        oprot.writeMessageEnd()
+        oprot.trans.flush()
+
+    def process_set_privileged(self, seqid, iprot, oprot):
+        args = set_privileged_args()
+        args.read(iprot)
+        iprot.readMessageEnd()
+        result = set_privileged_result()
+        try:
+            self._handler.set_privileged(args.account, args.is_priv)
+            msg_type = TMessageType.REPLY
+        except TTransport.TTransportException:
+            raise
+        except TApplicationException as ex:
+            logging.exception('TApplication exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = ex
+        except Exception:
+            logging.exception('Unexpected exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
+        oprot.writeMessageBegin("set_privileged", msg_type, seqid)
+        result.write(oprot)
+        oprot.writeMessageEnd()
+        oprot.trans.flush()
+
+    def process_set_blockchain_parameters_packed(self, seqid, iprot, oprot):
+        args = set_blockchain_parameters_packed_args()
+        args.read(iprot)
+        iprot.readMessageEnd()
+        result = set_blockchain_parameters_packed_result()
+        try:
+            self._handler.set_blockchain_parameters_packed(args.data)
+            msg_type = TMessageType.REPLY
+        except TTransport.TTransportException:
+            raise
+        except TApplicationException as ex:
+            logging.exception('TApplication exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = ex
+        except Exception:
+            logging.exception('Unexpected exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
+        oprot.writeMessageBegin("set_blockchain_parameters_packed", msg_type, seqid)
+        result.write(oprot)
+        oprot.writeMessageEnd()
+        oprot.trans.flush()
+
+    def process_get_blockchain_parameters_packed(self, seqid, iprot, oprot):
+        args = get_blockchain_parameters_packed_args()
+        args.read(iprot)
+        iprot.readMessageEnd()
+        result = get_blockchain_parameters_packed_result()
+        try:
+            result.success = self._handler.get_blockchain_parameters_packed()
+            msg_type = TMessageType.REPLY
+        except TTransport.TTransportException:
+            raise
+        except TApplicationException as ex:
+            logging.exception('TApplication exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = ex
+        except Exception:
+            logging.exception('Unexpected exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
+        oprot.writeMessageBegin("get_blockchain_parameters_packed", msg_type, seqid)
+        result.write(oprot)
+        oprot.writeMessageEnd()
+        oprot.trans.flush()
+
+    def process_preactivate_feature(self, seqid, iprot, oprot):
+        args = preactivate_feature_args()
+        args.read(iprot)
+        iprot.readMessageEnd()
+        result = preactivate_feature_result()
+        try:
+            self._handler.preactivate_feature(args.feature_digest)
+            msg_type = TMessageType.REPLY
+        except TTransport.TTransportException:
+            raise
+        except TApplicationException as ex:
+            logging.exception('TApplication exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = ex
+        except Exception:
+            logging.exception('Unexpected exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
+        oprot.writeMessageBegin("preactivate_feature", msg_type, seqid)
+        result.write(oprot)
+        oprot.writeMessageEnd()
+        oprot.trans.flush()
+
+    def process_check_transaction_authorization(self, seqid, iprot, oprot):
+        args = check_transaction_authorization_args()
+        args.read(iprot)
+        iprot.readMessageEnd()
+        result = check_transaction_authorization_result()
+        try:
+            result.success = self._handler.check_transaction_authorization(args.trx_data, args.pubkeys_data, args.perms_data)
+            msg_type = TMessageType.REPLY
+        except TTransport.TTransportException:
+            raise
+        except TApplicationException as ex:
+            logging.exception('TApplication exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = ex
+        except Exception:
+            logging.exception('Unexpected exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
+        oprot.writeMessageBegin("check_transaction_authorization", msg_type, seqid)
+        result.write(oprot)
+        oprot.writeMessageEnd()
+        oprot.trans.flush()
+
+    def process_check_permission_authorization(self, seqid, iprot, oprot):
+        args = check_permission_authorization_args()
+        args.read(iprot)
+        iprot.readMessageEnd()
+        result = check_permission_authorization_result()
+        try:
+            result.success = self._handler.check_permission_authorization(args.account, args.permission, args.pubkeys_data, args.perms_data, args.delay_us)
+            msg_type = TMessageType.REPLY
+        except TTransport.TTransportException:
+            raise
+        except TApplicationException as ex:
+            logging.exception('TApplication exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = ex
+        except Exception:
+            logging.exception('Unexpected exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
+        oprot.writeMessageBegin("check_permission_authorization", msg_type, seqid)
+        result.write(oprot)
+        oprot.writeMessageEnd()
+        oprot.trans.flush()
+
+    def process_get_permission_last_used(self, seqid, iprot, oprot):
+        args = get_permission_last_used_args()
+        args.read(iprot)
+        iprot.readMessageEnd()
+        result = get_permission_last_used_result()
+        try:
+            result.success = self._handler.get_permission_last_used(args.account, args.permission)
+            msg_type = TMessageType.REPLY
+        except TTransport.TTransportException:
+            raise
+        except TApplicationException as ex:
+            logging.exception('TApplication exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = ex
+        except Exception:
+            logging.exception('Unexpected exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
+        oprot.writeMessageBegin("get_permission_last_used", msg_type, seqid)
+        result.write(oprot)
+        oprot.writeMessageEnd()
+        oprot.trans.flush()
+
+    def process_get_account_creation_time(self, seqid, iprot, oprot):
+        args = get_account_creation_time_args()
+        args.read(iprot)
+        iprot.readMessageEnd()
+        result = get_account_creation_time_result()
+        try:
+            result.success = self._handler.get_account_creation_time(args.account)
+            msg_type = TMessageType.REPLY
+        except TTransport.TTransportException:
+            raise
+        except TApplicationException as ex:
+            logging.exception('TApplication exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = ex
+        except Exception:
+            logging.exception('Unexpected exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
+        oprot.writeMessageBegin("get_account_creation_time", msg_type, seqid)
         result.write(oprot)
         oprot.writeMessageEnd()
         oprot.trans.flush()
@@ -7352,6 +8254,1775 @@ class end_apply_result(object):
 all_structs.append(end_apply_result)
 end_apply_result.thrift_spec = (
     (0, TType.I32, 'success', None, None, ),  # 0
+)
+
+
+class get_active_producers_args(object):
+
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('get_active_producers_args')
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(get_active_producers_args)
+get_active_producers_args.thrift_spec = (
+)
+
+
+class get_active_producers_result(object):
+    """
+    Attributes:
+     - success
+
+    """
+
+
+    def __init__(self, success=None,):
+        self.success = success
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 0:
+                if ftype == TType.STRING:
+                    self.success = iprot.readBinary()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('get_active_producers_result')
+        if self.success is not None:
+            oprot.writeFieldBegin('success', TType.STRING, 0)
+            oprot.writeBinary(self.success)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(get_active_producers_result)
+get_active_producers_result.thrift_spec = (
+    (0, TType.STRING, 'success', 'BINARY', None, ),  # 0
+)
+
+
+class get_resource_limits_args(object):
+    """
+    Attributes:
+     - account
+
+    """
+
+
+    def __init__(self, account=None,):
+        self.account = account
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRUCT:
+                    self.account = Uint64()
+                    self.account.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('get_resource_limits_args')
+        if self.account is not None:
+            oprot.writeFieldBegin('account', TType.STRUCT, 1)
+            self.account.write(oprot)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(get_resource_limits_args)
+get_resource_limits_args.thrift_spec = (
+    None,  # 0
+    (1, TType.STRUCT, 'account', [Uint64, None], None, ),  # 1
+)
+
+
+class get_resource_limits_result(object):
+    """
+    Attributes:
+     - success
+
+    """
+
+
+    def __init__(self, success=None,):
+        self.success = success
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 0:
+                if ftype == TType.STRUCT:
+                    self.success = GetResourceLimitsReturn()
+                    self.success.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('get_resource_limits_result')
+        if self.success is not None:
+            oprot.writeFieldBegin('success', TType.STRUCT, 0)
+            self.success.write(oprot)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(get_resource_limits_result)
+get_resource_limits_result.thrift_spec = (
+    (0, TType.STRUCT, 'success', [GetResourceLimitsReturn, None], None, ),  # 0
+)
+
+
+class set_resource_limits_args(object):
+    """
+    Attributes:
+     - account
+     - ram_bytes
+     - net_weight
+     - cpu_weight
+
+    """
+
+
+    def __init__(self, account=None, ram_bytes=None, net_weight=None, cpu_weight=None,):
+        self.account = account
+        self.ram_bytes = ram_bytes
+        self.net_weight = net_weight
+        self.cpu_weight = cpu_weight
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRUCT:
+                    self.account = Uint64()
+                    self.account.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.I64:
+                    self.ram_bytes = iprot.readI64()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.I64:
+                    self.net_weight = iprot.readI64()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 4:
+                if ftype == TType.I64:
+                    self.cpu_weight = iprot.readI64()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('set_resource_limits_args')
+        if self.account is not None:
+            oprot.writeFieldBegin('account', TType.STRUCT, 1)
+            self.account.write(oprot)
+            oprot.writeFieldEnd()
+        if self.ram_bytes is not None:
+            oprot.writeFieldBegin('ram_bytes', TType.I64, 2)
+            oprot.writeI64(self.ram_bytes)
+            oprot.writeFieldEnd()
+        if self.net_weight is not None:
+            oprot.writeFieldBegin('net_weight', TType.I64, 3)
+            oprot.writeI64(self.net_weight)
+            oprot.writeFieldEnd()
+        if self.cpu_weight is not None:
+            oprot.writeFieldBegin('cpu_weight', TType.I64, 4)
+            oprot.writeI64(self.cpu_weight)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(set_resource_limits_args)
+set_resource_limits_args.thrift_spec = (
+    None,  # 0
+    (1, TType.STRUCT, 'account', [Uint64, None], None, ),  # 1
+    (2, TType.I64, 'ram_bytes', None, None, ),  # 2
+    (3, TType.I64, 'net_weight', None, None, ),  # 3
+    (4, TType.I64, 'cpu_weight', None, None, ),  # 4
+)
+
+
+class set_resource_limits_result(object):
+
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('set_resource_limits_result')
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(set_resource_limits_result)
+set_resource_limits_result.thrift_spec = (
+)
+
+
+class set_proposed_producers_args(object):
+    """
+    Attributes:
+     - producer_data
+
+    """
+
+
+    def __init__(self, producer_data=None,):
+        self.producer_data = producer_data
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRING:
+                    self.producer_data = iprot.readBinary()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('set_proposed_producers_args')
+        if self.producer_data is not None:
+            oprot.writeFieldBegin('producer_data', TType.STRING, 1)
+            oprot.writeBinary(self.producer_data)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(set_proposed_producers_args)
+set_proposed_producers_args.thrift_spec = (
+    None,  # 0
+    (1, TType.STRING, 'producer_data', 'BINARY', None, ),  # 1
+)
+
+
+class set_proposed_producers_result(object):
+    """
+    Attributes:
+     - success
+
+    """
+
+
+    def __init__(self, success=None,):
+        self.success = success
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 0:
+                if ftype == TType.I64:
+                    self.success = iprot.readI64()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('set_proposed_producers_result')
+        if self.success is not None:
+            oprot.writeFieldBegin('success', TType.I64, 0)
+            oprot.writeI64(self.success)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(set_proposed_producers_result)
+set_proposed_producers_result.thrift_spec = (
+    (0, TType.I64, 'success', None, None, ),  # 0
+)
+
+
+class set_proposed_producers_ex_args(object):
+    """
+    Attributes:
+     - producer_data_format
+     - producer_data
+
+    """
+
+
+    def __init__(self, producer_data_format=None, producer_data=None,):
+        self.producer_data_format = producer_data_format
+        self.producer_data = producer_data
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRUCT:
+                    self.producer_data_format = Uint64()
+                    self.producer_data_format.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.STRUCT:
+                    self.producer_data = Uint64()
+                    self.producer_data.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('set_proposed_producers_ex_args')
+        if self.producer_data_format is not None:
+            oprot.writeFieldBegin('producer_data_format', TType.STRUCT, 1)
+            self.producer_data_format.write(oprot)
+            oprot.writeFieldEnd()
+        if self.producer_data is not None:
+            oprot.writeFieldBegin('producer_data', TType.STRUCT, 2)
+            self.producer_data.write(oprot)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(set_proposed_producers_ex_args)
+set_proposed_producers_ex_args.thrift_spec = (
+    None,  # 0
+    (1, TType.STRUCT, 'producer_data_format', [Uint64, None], None, ),  # 1
+    (2, TType.STRUCT, 'producer_data', [Uint64, None], None, ),  # 2
+)
+
+
+class set_proposed_producers_ex_result(object):
+    """
+    Attributes:
+     - success
+
+    """
+
+
+    def __init__(self, success=None,):
+        self.success = success
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 0:
+                if ftype == TType.I64:
+                    self.success = iprot.readI64()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('set_proposed_producers_ex_result')
+        if self.success is not None:
+            oprot.writeFieldBegin('success', TType.I64, 0)
+            oprot.writeI64(self.success)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(set_proposed_producers_ex_result)
+set_proposed_producers_ex_result.thrift_spec = (
+    (0, TType.I64, 'success', None, None, ),  # 0
+)
+
+
+class is_privileged_args(object):
+    """
+    Attributes:
+     - account
+
+    """
+
+
+    def __init__(self, account=None,):
+        self.account = account
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRUCT:
+                    self.account = Uint64()
+                    self.account.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('is_privileged_args')
+        if self.account is not None:
+            oprot.writeFieldBegin('account', TType.STRUCT, 1)
+            self.account.write(oprot)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(is_privileged_args)
+is_privileged_args.thrift_spec = (
+    None,  # 0
+    (1, TType.STRUCT, 'account', [Uint64, None], None, ),  # 1
+)
+
+
+class is_privileged_result(object):
+    """
+    Attributes:
+     - success
+
+    """
+
+
+    def __init__(self, success=None,):
+        self.success = success
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 0:
+                if ftype == TType.BOOL:
+                    self.success = iprot.readBool()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('is_privileged_result')
+        if self.success is not None:
+            oprot.writeFieldBegin('success', TType.BOOL, 0)
+            oprot.writeBool(self.success)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(is_privileged_result)
+is_privileged_result.thrift_spec = (
+    (0, TType.BOOL, 'success', None, None, ),  # 0
+)
+
+
+class set_privileged_args(object):
+    """
+    Attributes:
+     - account
+     - is_priv
+
+    """
+
+
+    def __init__(self, account=None, is_priv=None,):
+        self.account = account
+        self.is_priv = is_priv
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRUCT:
+                    self.account = Uint64()
+                    self.account.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.BOOL:
+                    self.is_priv = iprot.readBool()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('set_privileged_args')
+        if self.account is not None:
+            oprot.writeFieldBegin('account', TType.STRUCT, 1)
+            self.account.write(oprot)
+            oprot.writeFieldEnd()
+        if self.is_priv is not None:
+            oprot.writeFieldBegin('is_priv', TType.BOOL, 2)
+            oprot.writeBool(self.is_priv)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(set_privileged_args)
+set_privileged_args.thrift_spec = (
+    None,  # 0
+    (1, TType.STRUCT, 'account', [Uint64, None], None, ),  # 1
+    (2, TType.BOOL, 'is_priv', None, None, ),  # 2
+)
+
+
+class set_privileged_result(object):
+
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('set_privileged_result')
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(set_privileged_result)
+set_privileged_result.thrift_spec = (
+)
+
+
+class set_blockchain_parameters_packed_args(object):
+    """
+    Attributes:
+     - data
+
+    """
+
+
+    def __init__(self, data=None,):
+        self.data = data
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRING:
+                    self.data = iprot.readBinary()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('set_blockchain_parameters_packed_args')
+        if self.data is not None:
+            oprot.writeFieldBegin('data', TType.STRING, 1)
+            oprot.writeBinary(self.data)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(set_blockchain_parameters_packed_args)
+set_blockchain_parameters_packed_args.thrift_spec = (
+    None,  # 0
+    (1, TType.STRING, 'data', 'BINARY', None, ),  # 1
+)
+
+
+class set_blockchain_parameters_packed_result(object):
+
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('set_blockchain_parameters_packed_result')
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(set_blockchain_parameters_packed_result)
+set_blockchain_parameters_packed_result.thrift_spec = (
+)
+
+
+class get_blockchain_parameters_packed_args(object):
+
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('get_blockchain_parameters_packed_args')
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(get_blockchain_parameters_packed_args)
+get_blockchain_parameters_packed_args.thrift_spec = (
+)
+
+
+class get_blockchain_parameters_packed_result(object):
+    """
+    Attributes:
+     - success
+
+    """
+
+
+    def __init__(self, success=None,):
+        self.success = success
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 0:
+                if ftype == TType.I32:
+                    self.success = iprot.readI32()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('get_blockchain_parameters_packed_result')
+        if self.success is not None:
+            oprot.writeFieldBegin('success', TType.I32, 0)
+            oprot.writeI32(self.success)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(get_blockchain_parameters_packed_result)
+get_blockchain_parameters_packed_result.thrift_spec = (
+    (0, TType.I32, 'success', None, None, ),  # 0
+)
+
+
+class preactivate_feature_args(object):
+    """
+    Attributes:
+     - feature_digest
+
+    """
+
+
+    def __init__(self, feature_digest=None,):
+        self.feature_digest = feature_digest
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRING:
+                    self.feature_digest = iprot.readBinary()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('preactivate_feature_args')
+        if self.feature_digest is not None:
+            oprot.writeFieldBegin('feature_digest', TType.STRING, 1)
+            oprot.writeBinary(self.feature_digest)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(preactivate_feature_args)
+preactivate_feature_args.thrift_spec = (
+    None,  # 0
+    (1, TType.STRING, 'feature_digest', 'BINARY', None, ),  # 1
+)
+
+
+class preactivate_feature_result(object):
+
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('preactivate_feature_result')
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(preactivate_feature_result)
+preactivate_feature_result.thrift_spec = (
+)
+
+
+class check_transaction_authorization_args(object):
+    """
+    Attributes:
+     - trx_data
+     - pubkeys_data
+     - perms_data
+
+    """
+
+
+    def __init__(self, trx_data=None, pubkeys_data=None, perms_data=None,):
+        self.trx_data = trx_data
+        self.pubkeys_data = pubkeys_data
+        self.perms_data = perms_data
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRING:
+                    self.trx_data = iprot.readBinary()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.STRING:
+                    self.pubkeys_data = iprot.readBinary()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.STRING:
+                    self.perms_data = iprot.readBinary()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('check_transaction_authorization_args')
+        if self.trx_data is not None:
+            oprot.writeFieldBegin('trx_data', TType.STRING, 1)
+            oprot.writeBinary(self.trx_data)
+            oprot.writeFieldEnd()
+        if self.pubkeys_data is not None:
+            oprot.writeFieldBegin('pubkeys_data', TType.STRING, 2)
+            oprot.writeBinary(self.pubkeys_data)
+            oprot.writeFieldEnd()
+        if self.perms_data is not None:
+            oprot.writeFieldBegin('perms_data', TType.STRING, 3)
+            oprot.writeBinary(self.perms_data)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(check_transaction_authorization_args)
+check_transaction_authorization_args.thrift_spec = (
+    None,  # 0
+    (1, TType.STRING, 'trx_data', 'BINARY', None, ),  # 1
+    (2, TType.STRING, 'pubkeys_data', 'BINARY', None, ),  # 2
+    (3, TType.STRING, 'perms_data', 'BINARY', None, ),  # 3
+)
+
+
+class check_transaction_authorization_result(object):
+    """
+    Attributes:
+     - success
+
+    """
+
+
+    def __init__(self, success=None,):
+        self.success = success
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 0:
+                if ftype == TType.I32:
+                    self.success = iprot.readI32()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('check_transaction_authorization_result')
+        if self.success is not None:
+            oprot.writeFieldBegin('success', TType.I32, 0)
+            oprot.writeI32(self.success)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(check_transaction_authorization_result)
+check_transaction_authorization_result.thrift_spec = (
+    (0, TType.I32, 'success', None, None, ),  # 0
+)
+
+
+class check_permission_authorization_args(object):
+    """
+    Attributes:
+     - account
+     - permission
+     - pubkeys_data
+     - perms_data
+     - delay_us
+
+    """
+
+
+    def __init__(self, account=None, permission=None, pubkeys_data=None, perms_data=None, delay_us=None,):
+        self.account = account
+        self.permission = permission
+        self.pubkeys_data = pubkeys_data
+        self.perms_data = perms_data
+        self.delay_us = delay_us
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRUCT:
+                    self.account = Uint64()
+                    self.account.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.STRUCT:
+                    self.permission = Uint64()
+                    self.permission.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.STRING:
+                    self.pubkeys_data = iprot.readBinary()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 4:
+                if ftype == TType.STRING:
+                    self.perms_data = iprot.readBinary()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 5:
+                if ftype == TType.STRUCT:
+                    self.delay_us = Uint64()
+                    self.delay_us.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('check_permission_authorization_args')
+        if self.account is not None:
+            oprot.writeFieldBegin('account', TType.STRUCT, 1)
+            self.account.write(oprot)
+            oprot.writeFieldEnd()
+        if self.permission is not None:
+            oprot.writeFieldBegin('permission', TType.STRUCT, 2)
+            self.permission.write(oprot)
+            oprot.writeFieldEnd()
+        if self.pubkeys_data is not None:
+            oprot.writeFieldBegin('pubkeys_data', TType.STRING, 3)
+            oprot.writeBinary(self.pubkeys_data)
+            oprot.writeFieldEnd()
+        if self.perms_data is not None:
+            oprot.writeFieldBegin('perms_data', TType.STRING, 4)
+            oprot.writeBinary(self.perms_data)
+            oprot.writeFieldEnd()
+        if self.delay_us is not None:
+            oprot.writeFieldBegin('delay_us', TType.STRUCT, 5)
+            self.delay_us.write(oprot)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(check_permission_authorization_args)
+check_permission_authorization_args.thrift_spec = (
+    None,  # 0
+    (1, TType.STRUCT, 'account', [Uint64, None], None, ),  # 1
+    (2, TType.STRUCT, 'permission', [Uint64, None], None, ),  # 2
+    (3, TType.STRING, 'pubkeys_data', 'BINARY', None, ),  # 3
+    (4, TType.STRING, 'perms_data', 'BINARY', None, ),  # 4
+    (5, TType.STRUCT, 'delay_us', [Uint64, None], None, ),  # 5
+)
+
+
+class check_permission_authorization_result(object):
+    """
+    Attributes:
+     - success
+
+    """
+
+
+    def __init__(self, success=None,):
+        self.success = success
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 0:
+                if ftype == TType.I32:
+                    self.success = iprot.readI32()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('check_permission_authorization_result')
+        if self.success is not None:
+            oprot.writeFieldBegin('success', TType.I32, 0)
+            oprot.writeI32(self.success)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(check_permission_authorization_result)
+check_permission_authorization_result.thrift_spec = (
+    (0, TType.I32, 'success', None, None, ),  # 0
+)
+
+
+class get_permission_last_used_args(object):
+    """
+    Attributes:
+     - account
+     - permission
+
+    """
+
+
+    def __init__(self, account=None, permission=None,):
+        self.account = account
+        self.permission = permission
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRUCT:
+                    self.account = Uint64()
+                    self.account.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.STRUCT:
+                    self.permission = Uint64()
+                    self.permission.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('get_permission_last_used_args')
+        if self.account is not None:
+            oprot.writeFieldBegin('account', TType.STRUCT, 1)
+            self.account.write(oprot)
+            oprot.writeFieldEnd()
+        if self.permission is not None:
+            oprot.writeFieldBegin('permission', TType.STRUCT, 2)
+            self.permission.write(oprot)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(get_permission_last_used_args)
+get_permission_last_used_args.thrift_spec = (
+    None,  # 0
+    (1, TType.STRUCT, 'account', [Uint64, None], None, ),  # 1
+    (2, TType.STRUCT, 'permission', [Uint64, None], None, ),  # 2
+)
+
+
+class get_permission_last_used_result(object):
+    """
+    Attributes:
+     - success
+
+    """
+
+
+    def __init__(self, success=None,):
+        self.success = success
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 0:
+                if ftype == TType.I64:
+                    self.success = iprot.readI64()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('get_permission_last_used_result')
+        if self.success is not None:
+            oprot.writeFieldBegin('success', TType.I64, 0)
+            oprot.writeI64(self.success)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(get_permission_last_used_result)
+get_permission_last_used_result.thrift_spec = (
+    (0, TType.I64, 'success', None, None, ),  # 0
+)
+
+
+class get_account_creation_time_args(object):
+    """
+    Attributes:
+     - account
+
+    """
+
+
+    def __init__(self, account=None,):
+        self.account = account
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRUCT:
+                    self.account = Uint64()
+                    self.account.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('get_account_creation_time_args')
+        if self.account is not None:
+            oprot.writeFieldBegin('account', TType.STRUCT, 1)
+            self.account.write(oprot)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(get_account_creation_time_args)
+get_account_creation_time_args.thrift_spec = (
+    None,  # 0
+    (1, TType.STRUCT, 'account', [Uint64, None], None, ),  # 1
+)
+
+
+class get_account_creation_time_result(object):
+    """
+    Attributes:
+     - success
+
+    """
+
+
+    def __init__(self, success=None,):
+        self.success = success
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 0:
+                if ftype == TType.I64:
+                    self.success = iprot.readI64()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('get_account_creation_time_result')
+        if self.success is not None:
+            oprot.writeFieldBegin('success', TType.I64, 0)
+            oprot.writeI64(self.success)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(get_account_creation_time_result)
+get_account_creation_time_result.thrift_spec = (
+    (0, TType.I64, 'success', None, None, ),  # 0
 )
 
 
