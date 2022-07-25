@@ -15,7 +15,8 @@ Iterator = NewType('Iterator', i32)
 
 from .interfaces import IPCChainTester, ApplyRequest, Apply
 
-from .interfaces.ttypes import Uint64, DataBuffer, NextPreviousReturn,FindPrimaryReturn, FindSecondaryReturn, LowerBoundUpperBoundReturn
+from .interfaces.ttypes import Uint64, NextPreviousReturn,FindPrimaryReturn, FindSecondaryReturn, LowerBoundUpperBoundReturn
+from .interfaces.ttypes import GetResourceLimitsReturn
 
 from thrift.transport import TSocket
 from thrift.transport import TTransport
@@ -46,6 +47,76 @@ class EndApplyException(Exception):
 class VMAPIHandler:
     def end_apply(self):
         return 1
+
+    #chain.h
+    # uint32_t get_active_producers( uint64_t* producers, uint32_t datalen );
+    def get_active_producers(self):
+        return _vm_api.get_active_producers()
+
+    #privileged.h
+    # void get_resource_limits( uint64_t account, int64_t* ram_bytes, int64_t* net_weight, int64_t* cpu_weight );
+    def get_resource_limits(self, account: Uint64):
+        ram_bytes, net_weight, cpu_weight = _vm_api.get_resource_limits(account.into())
+        return GetResourceLimitsReturn(ram_bytes, net_weight, cpu_weight)
+
+    # void set_resource_limits( uint64_t account, int64_t ram_bytes, int64_t net_weight, int64_t cpu_weight );
+    def set_resource_limits(self, account: Uint64, ram_bytes: i64, net_weight: i64, cpu_weight: i64):
+        _vm_api.set_resource_limits(account.into(), ram_bytes, net_weight, cpu_weight)
+
+    # int64_t set_proposed_producers( const char *producer_data, uint32_t producer_data_size );
+    def set_proposed_producers(self, producer_data: bytes):
+        return _vm_api.set_proposed_producers(producer_data)
+
+    # int64_t set_proposed_producers_ex( uint64_t producer_data_format, const char *producer_data, uint32_t producer_data_size );
+    def set_proposed_producers_ex(self, producer_data_format: Uint64, producer_data: bytes):
+        return _vm_api.set_proposed_producers_ex(producer_data_format.into(), producer_data)
+
+    # bool is_privileged( uint64_t account );
+    def is_privileged(self, account: Uint64):
+        return _vm_api.is_privileged(account.into())
+
+    # void set_privileged( uint64_t account, bool is_priv );
+    def set_privileged(self, account: Uint64, is_priv: bool):
+        _vm_api.set_privileged(account.into(), is_priv)
+
+    # void set_blockchain_parameters_packed( const char* data, uint32_t datalen );
+    def set_blockchain_parameters_packed(self, data: bytes):
+        _vm_api.set_blockchain_parameters_packed(self, data)
+
+    # uint32_t get_blockchain_parameters_packed( char* data, uint32_t datalen );
+    def get_blockchain_parameters_packed(self):
+        return _vm_api.get_blockchain_parameters_packed()
+
+    # void preactivate_feature( const capi_checksum256* feature_digest );
+    def preactivate_feature(self, feature_digest: bytes):
+        return _vm_api.preactivate_feature(feature_digest)
+
+    #permission.h
+    # int32_t check_transaction_authorization( const char* trx_data, uint32_t trx_size,
+    #                                 const char* pubkeys_data, uint32_t pubkeys_size,
+    #                                 const char* perms_data,   uint32_t perms_size
+    #                             );
+
+    def check_transaction_authorization(self, trx_data: bytes, pubkeys_data: bytes, perms_data: bytes):
+        return _vm_api.check_transaction_authorization(trx_data, pubkeys_data, perms_data)
+
+    # int32_t check_permission_authorization( uint64_t account,
+    #                                 uint64_t permission,
+    #                                 const char* pubkeys_data, uint32_t pubkeys_size,
+    #                                 const char* perms_data,   uint32_t perms_size,
+    #                                 uint64_t delay_us
+    #                             );
+
+    def check_permission_authorization(self, account: Uint64, permission: Uint64, pubkeys_data: bytes, perms_data: bytes, delay_us: Uint64):
+        return _vm_api.check_permission_authorization(account.into(), permission.into(), pubkeys_data, perms_data, delay_us.into())
+
+    # int64_t get_permission_last_used( uint64_t account, uint64_t permission );
+    def get_permission_last_used(self, account: Uint64, permission: Uint64):
+        return _vm_api.get_permission_last_used(account.into(), permission.into())
+
+    # int64_t get_account_creation_time( uint64_t account );
+    def get_account_creation_time(self, account: Uint64):
+        return _vm_api.get_account_creation_time(account.into())
 
     def prints(self, msg):
         _vm_api.prints(msg)
@@ -794,7 +865,7 @@ class ChainTesterServer(object):
     def serve(self):
         self.serverTransport.listen()
         while True:
-            print('+++++++listening for new connection...')
+            print('Listening for new connection...')
             client = self.serverTransport.accept()
             if not client:
                 continue
@@ -819,8 +890,6 @@ class ChainTesterServer(object):
                 pass
             except Exception as x:
                 logger.exception(x)
-
-            print('+++++++client connection end')
 
             self.handler.close_apply_client()
             self.handler.server.close_vm_api_call_connection()
@@ -881,7 +950,7 @@ def start_debug_server(addr='127.0.0.1', server_port=9090, vm_api_port=9092, app
 
     server = ChainTesterServer(processor, transport, tfactory, pfactory, handler=handler)
 
-    print('Starting the eos debugger server...')
+    print('Starting the EOS debugger server...')
     server.serve()
     print('done.')
 
