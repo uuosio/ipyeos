@@ -671,7 +671,14 @@ class ChainTesterHandler:
         try:
             arguments = json.loads(arguments)
         except json.JSONDecodeError:
-            arguments = bytes.fromhex(arguments)
+            try:
+                arguments = bytes.fromhex(arguments)
+            except ValueError as e:
+                err = {
+                    'except': str(e)
+                }
+                self.get_apply_client().apply_end()
+                return json.dumps(err).encode()
 
         permissions = json.loads(permissions)
         # print(account, action, arguments, permissions)
