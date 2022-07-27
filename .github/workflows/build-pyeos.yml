@@ -12,13 +12,14 @@ jobs:
   run:
     runs-on: ${{ matrix.os }}
     env:
-      IPYEOS_VERSION: 0.2.2
+      IPYEOS_VERSION: 0.2.3
+      SYSTEM_VERSION_COMPAT: 0
     strategy:
       matrix:
         python-version: [3.7, 3.8, 3.9, "3.10"]
         # os: ['windows-latest', 'ubuntu-latest', 'macos-latest']
         # os: ['ubuntu-18.04', 'macos-latest']
-        os: ['macos-10.15']
+        os: ['macos-12']
       fail-fast: false
     steps:
       - name: Install Go
