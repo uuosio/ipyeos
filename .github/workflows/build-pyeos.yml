@@ -54,7 +54,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install flake8 pytest scikit-build cython auditwheel
-      - name: Build pyeos
+      - name: Build ipyeos
         run: |
           ./release.sh
           python setup.py sdist bdist_wheel
@@ -62,10 +62,10 @@ jobs:
         id: whlfile
         run: |
           echo "::set-output name=value::$(python scripts/get_whl_file.py)"
-      - name: Install pyeos
+      - name: Install ipyeos
         run: |
-          python -m pip uninstall pyeos -y;python -m pip install ./dist/${{ steps.whlfile.outputs.value }}
-      - name: release-pyeos
+          python -m pip uninstall ipyeos -y;python -m pip install ./dist/${{ steps.whlfile.outputs.value }}
+      - name: release-ipyeos
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
