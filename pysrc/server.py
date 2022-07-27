@@ -729,6 +729,25 @@ class ChainTesterHandler:
             self.current_tester = None
             self.get_apply_client().apply_end()
 
+#    string get_table_rows(1:bool json, 2:string code, 3:string scope, 4:string table,
+#                                     5:string lower_bound, 6:string upper_bound,
+#                                     7:i64 limit,
+#                                     8:string key_type,
+#                                     9:string index_position,
+#                                     10:bool reverse,
+#                                     11:bool show_payer),
+
+    def get_table_rows(self, id, _json: bool, code: str, scope: str, table: str, lower_bound: str, upper_bound: str, limit: i64, key_type: str, index_position: str, reverse: bool, show_payer: bool):
+        tester: ChainTester = self.testers[id]
+        self.current_tester = tester
+        print(_json, code, scope, table, lower_bound, upper_bound, limit, key_type, index_position, reverse, show_payer)
+        try:
+            r = tester.get_table_rows(_json, code, scope, table, lower_bound, upper_bound, limit, key_type, index_position, reverse, show_payer)
+            return json.dumps(r)
+        except Exception as e:
+            print(e)
+            return str(e)
+
     def init_vm_api(self):
         self.server.init_vm_api_call()
 

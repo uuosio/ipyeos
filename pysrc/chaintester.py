@@ -745,8 +745,8 @@ class ChainTester(object):
                 limit=limit,
                 key_type=key_type,
                 index_position=index_position,
-                reverse = False,
-                show_payer = False
+                reverse = reverse,
+                show_payer = show_payer
         )
         return self.api.get_table_rows(params)
 

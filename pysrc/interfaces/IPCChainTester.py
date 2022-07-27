@@ -114,6 +114,25 @@ class Iface(object):
         """
         pass
 
+    def get_table_rows(self, id, json, code, scope, table, lower_bound, upper_bound, limit, key_type, index_position, reverse, show_payer):
+        """
+        Parameters:
+         - id
+         - json
+         - code
+         - scope
+         - table
+         - lower_bound
+         - upper_bound
+         - limit
+         - key_type
+         - index_position
+         - reverse
+         - show_payer
+
+        """
+        pass
+
 
 class Client(Iface):
     def __init__(self, iprot, oprot=None):
@@ -480,6 +499,60 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "push_actions failed: unknown result")
 
+    def get_table_rows(self, id, json, code, scope, table, lower_bound, upper_bound, limit, key_type, index_position, reverse, show_payer):
+        """
+        Parameters:
+         - id
+         - json
+         - code
+         - scope
+         - table
+         - lower_bound
+         - upper_bound
+         - limit
+         - key_type
+         - index_position
+         - reverse
+         - show_payer
+
+        """
+        self.send_get_table_rows(id, json, code, scope, table, lower_bound, upper_bound, limit, key_type, index_position, reverse, show_payer)
+        return self.recv_get_table_rows()
+
+    def send_get_table_rows(self, id, json, code, scope, table, lower_bound, upper_bound, limit, key_type, index_position, reverse, show_payer):
+        self._oprot.writeMessageBegin('get_table_rows', TMessageType.CALL, self._seqid)
+        args = get_table_rows_args()
+        args.id = id
+        args.json = json
+        args.code = code
+        args.scope = scope
+        args.table = table
+        args.lower_bound = lower_bound
+        args.upper_bound = upper_bound
+        args.limit = limit
+        args.key_type = key_type
+        args.index_position = index_position
+        args.reverse = reverse
+        args.show_payer = show_payer
+        args.write(self._oprot)
+        self._oprot.writeMessageEnd()
+        self._oprot.trans.flush()
+
+    def recv_get_table_rows(self):
+        iprot = self._iprot
+        (fname, mtype, rseqid) = iprot.readMessageBegin()
+        if mtype == TMessageType.EXCEPTION:
+            x = TApplicationException()
+            x.read(iprot)
+            iprot.readMessageEnd()
+            raise x
+        result = get_table_rows_result()
+        result.read(iprot)
+        iprot.readMessageEnd()
+        if result.success is not None:
+            return result.success
+        raise TApplicationException(TApplicationException.MISSING_RESULT, "get_table_rows failed: unknown result")
+
 
 class Processor(Iface, TProcessor):
     def __init__(self, handler):
@@ -497,6 +570,7 @@ class Processor(Iface, TProcessor):
         self._processMap["produce_block"] = Processor.process_produce_block
         self._processMap["push_action"] = Processor.process_push_action
         self._processMap["push_actions"] = Processor.process_push_actions
+        self._processMap["get_table_rows"] = Processor.process_get_table_rows
         self._on_message_begin = None
 
     def on_message_begin(self, func):
@@ -767,6 +841,29 @@ class Processor(Iface, TProcessor):
             msg_type = TMessageType.EXCEPTION
             result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
         oprot.writeMessageBegin("push_actions", msg_type, seqid)
+        result.write(oprot)
+        oprot.writeMessageEnd()
+        oprot.trans.flush()
+
+    def process_get_table_rows(self, seqid, iprot, oprot):
+        args = get_table_rows_args()
+        args.read(iprot)
+        iprot.readMessageEnd()
+        result = get_table_rows_result()
+        try:
+            result.success = self._handler.get_table_rows(args.id, args.json, args.code, args.scope, args.table, args.lower_bound, args.upper_bound, args.limit, args.key_type, args.index_position, args.reverse, args.show_payer)
+            msg_type = TMessageType.REPLY
+        except TTransport.TTransportException:
+            raise
+        except TApplicationException as ex:
+            logging.exception('TApplication exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = ex
+        except Exception:
+            logging.exception('Unexpected exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
+        oprot.writeMessageBegin("get_table_rows", msg_type, seqid)
         result.write(oprot)
         oprot.writeMessageEnd()
         oprot.trans.flush()
@@ -2209,6 +2306,261 @@ class push_actions_result(object):
 all_structs.append(push_actions_result)
 push_actions_result.thrift_spec = (
     (0, TType.STRING, 'success', 'BINARY', None, ),  # 0
+)
+
+
+class get_table_rows_args(object):
+    """
+    Attributes:
+     - id
+     - json
+     - code
+     - scope
+     - table
+     - lower_bound
+     - upper_bound
+     - limit
+     - key_type
+     - index_position
+     - reverse
+     - show_payer
+
+    """
+
+
+    def __init__(self, id=None, json=None, code=None, scope=None, table=None, lower_bound=None, upper_bound=None, limit=None, key_type=None, index_position=None, reverse=None, show_payer=None,):
+        self.id = id
+        self.json = json
+        self.code = code
+        self.scope = scope
+        self.table = table
+        self.lower_bound = lower_bound
+        self.upper_bound = upper_bound
+        self.limit = limit
+        self.key_type = key_type
+        self.index_position = index_position
+        self.reverse = reverse
+        self.show_payer = show_payer
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.I32:
+                    self.id = iprot.readI32()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.BOOL:
+                    self.json = iprot.readBool()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.STRING:
+                    self.code = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 4:
+                if ftype == TType.STRING:
+                    self.scope = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 5:
+                if ftype == TType.STRING:
+                    self.table = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 6:
+                if ftype == TType.STRING:
+                    self.lower_bound = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 7:
+                if ftype == TType.STRING:
+                    self.upper_bound = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 8:
+                if ftype == TType.I64:
+                    self.limit = iprot.readI64()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 9:
+                if ftype == TType.STRING:
+                    self.key_type = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 10:
+                if ftype == TType.STRING:
+                    self.index_position = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 11:
+                if ftype == TType.BOOL:
+                    self.reverse = iprot.readBool()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 12:
+                if ftype == TType.BOOL:
+                    self.show_payer = iprot.readBool()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('get_table_rows_args')
+        if self.id is not None:
+            oprot.writeFieldBegin('id', TType.I32, 1)
+            oprot.writeI32(self.id)
+            oprot.writeFieldEnd()
+        if self.json is not None:
+            oprot.writeFieldBegin('json', TType.BOOL, 2)
+            oprot.writeBool(self.json)
+            oprot.writeFieldEnd()
+        if self.code is not None:
+            oprot.writeFieldBegin('code', TType.STRING, 3)
+            oprot.writeString(self.code.encode('utf-8') if sys.version_info[0] == 2 else self.code)
+            oprot.writeFieldEnd()
+        if self.scope is not None:
+            oprot.writeFieldBegin('scope', TType.STRING, 4)
+            oprot.writeString(self.scope.encode('utf-8') if sys.version_info[0] == 2 else self.scope)
+            oprot.writeFieldEnd()
+        if self.table is not None:
+            oprot.writeFieldBegin('table', TType.STRING, 5)
+            oprot.writeString(self.table.encode('utf-8') if sys.version_info[0] == 2 else self.table)
+            oprot.writeFieldEnd()
+        if self.lower_bound is not None:
+            oprot.writeFieldBegin('lower_bound', TType.STRING, 6)
+            oprot.writeString(self.lower_bound.encode('utf-8') if sys.version_info[0] == 2 else self.lower_bound)
+            oprot.writeFieldEnd()
+        if self.upper_bound is not None:
+            oprot.writeFieldBegin('upper_bound', TType.STRING, 7)
+            oprot.writeString(self.upper_bound.encode('utf-8') if sys.version_info[0] == 2 else self.upper_bound)
+            oprot.writeFieldEnd()
+        if self.limit is not None:
+            oprot.writeFieldBegin('limit', TType.I64, 8)
+            oprot.writeI64(self.limit)
+            oprot.writeFieldEnd()
+        if self.key_type is not None:
+            oprot.writeFieldBegin('key_type', TType.STRING, 9)
+            oprot.writeString(self.key_type.encode('utf-8') if sys.version_info[0] == 2 else self.key_type)
+            oprot.writeFieldEnd()
+        if self.index_position is not None:
+            oprot.writeFieldBegin('index_position', TType.STRING, 10)
+            oprot.writeString(self.index_position.encode('utf-8') if sys.version_info[0] == 2 else self.index_position)
+            oprot.writeFieldEnd()
+        if self.reverse is not None:
+            oprot.writeFieldBegin('reverse', TType.BOOL, 11)
+            oprot.writeBool(self.reverse)
+            oprot.writeFieldEnd()
+        if self.show_payer is not None:
+            oprot.writeFieldBegin('show_payer', TType.BOOL, 12)
+            oprot.writeBool(self.show_payer)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(get_table_rows_args)
+get_table_rows_args.thrift_spec = (
+    None,  # 0
+    (1, TType.I32, 'id', None, None, ),  # 1
+    (2, TType.BOOL, 'json', None, None, ),  # 2
+    (3, TType.STRING, 'code', 'UTF8', None, ),  # 3
+    (4, TType.STRING, 'scope', 'UTF8', None, ),  # 4
+    (5, TType.STRING, 'table', 'UTF8', None, ),  # 5
+    (6, TType.STRING, 'lower_bound', 'UTF8', None, ),  # 6
+    (7, TType.STRING, 'upper_bound', 'UTF8', None, ),  # 7
+    (8, TType.I64, 'limit', None, None, ),  # 8
+    (9, TType.STRING, 'key_type', 'UTF8', None, ),  # 9
+    (10, TType.STRING, 'index_position', 'UTF8', None, ),  # 10
+    (11, TType.BOOL, 'reverse', None, None, ),  # 11
+    (12, TType.BOOL, 'show_payer', None, None, ),  # 12
+)
+
+
+class get_table_rows_result(object):
+    """
+    Attributes:
+     - success
+
+    """
+
+
+    def __init__(self, success=None,):
+        self.success = success
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 0:
+                if ftype == TType.STRING:
+                    self.success = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('get_table_rows_result')
+        if self.success is not None:
+            oprot.writeFieldBegin('success', TType.STRING, 0)
+            oprot.writeString(self.success.encode('utf-8') if sys.version_info[0] == 2 else self.success)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(get_table_rows_result)
+get_table_rows_result.thrift_spec = (
+    (0, TType.STRING, 'success', 'UTF8', None, ),  # 0
 )
 fix_spec(all_structs)
 del all_structs

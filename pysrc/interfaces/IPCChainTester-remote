@@ -36,6 +36,7 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
     print('  void produce_block(i32 id)')
     print('  string push_action(i32 id, string account, string action, string arguments, string permissions)')
     print('  string push_actions(i32 id,  actions)')
+    print('  string get_table_rows(i32 id, bool json, string code, string scope, string table, string lower_bound, string upper_bound, i64 limit, string key_type, string index_position, bool reverse, bool show_payer)')
     print('')
     sys.exit(0)
 
@@ -186,6 +187,12 @@ elif cmd == 'push_actions':
         print('push_actions requires 2 args')
         sys.exit(1)
     pp.pprint(client.push_actions(eval(args[0]), eval(args[1]),))
+
+elif cmd == 'get_table_rows':
+    if len(args) != 12:
+        print('get_table_rows requires 12 args')
+        sys.exit(1)
+    pp.pprint(client.get_table_rows(eval(args[0]), eval(args[1]), args[2], args[3], args[4], args[5], args[6], eval(args[7]), args[8], args[9], eval(args[10]), eval(args[11]),))
 
 else:
     print('Unrecognized method %s' % cmd)
