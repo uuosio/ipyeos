@@ -1,8 +1,7 @@
-v0.2.2 release
+v0.2.3 release
 
-1. Add support for debugging
-2. Export native_apply
-3. Export PyInit__vm_api
+1. Implemented get_table_row interface
+2. Fix get_last_error
 
 
 
