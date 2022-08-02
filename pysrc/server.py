@@ -28,6 +28,8 @@ from thrift.Thrift import TType, TMessageType, TApplicationException
 from . import chaintester 
 from . import eos, _vm_api, log
 from .chaintester import ChainTester
+from .chainapi import ChainApi
+from . import _chainapi
 
 chaintester.chain_config['contracts_console'] = True
 
@@ -81,7 +83,7 @@ class VMAPIHandler:
 
     # void set_blockchain_parameters_packed( const char* data, uint32_t datalen );
     def set_blockchain_parameters_packed(self, data: bytes):
-        _vm_api.set_blockchain_parameters_packed(self, data)
+        _vm_api.set_blockchain_parameters_packed(data)
 
     # uint32_t get_blockchain_parameters_packed( char* data, uint32_t datalen );
     def get_blockchain_parameters_packed(self):
@@ -189,7 +191,7 @@ class VMAPIHandler:
         _vm_api.send_inline(serialized_data)
 
     def send_context_free_inline(self, serialized_data: bytes):
-        _vm_api.send_inline(serialized_data)
+        _vm_api.send_context_free_inline(serialized_data)
 
     # uint64_t  publication_time();
     def publication_time(self):
@@ -597,7 +599,7 @@ class DebugChainTester(ChainTester):
 
 class ChainTesterHandler:
     def __init__(self, addr, vm_api_port, apply_request_addr, apply_request_port):
-        self.testers: Dict[DebugChainTester] = {}
+        self.testers: dict[DebugChainTester] = {}
         self.tester_seq = 0
         _vm_api.set_apply_callback(self.on_apply)
         handler = VMAPIHandler()
@@ -782,6 +784,34 @@ class ChainTesterHandler:
         # self.close_apply_client()
         # self.server.close_vm_api_call_connection()
         return 1
+
+    def get_info(self, id: i32):
+        chain = self.testers[id].chain
+        success, ret = _chainapi.get_info(chain.ptr)
+        if not success:
+            return chain.get_last_error()
+        return ret
+
+    def get_account(self, id: i32, account: str):
+        chain = self.testers[id].chain
+        args = {'account_name': account}
+        args = json.dumps(args)
+        success, ret = _chainapi.get_account(chain.ptr, args)
+        if not success:
+            return chain.get_last_error()
+        return ret
+
+    def get_required_keys(self, id: i32, transaction: str, available_keys: list[str]):
+        chain = self.testers[id].chain
+        params = dict(
+            transaction = transaction,
+            available_keys = available_keys,
+        )
+        params = json.dumps(params)
+        success, ret = _chainapi.get_required_keys(chain.ptr, params)
+        if not success:
+            return chain.get_last_error()
+        return ret
 
 class VMAPIServer(TServer.TServer):
     """Simple single-threaded server that just pumps around one transport."""

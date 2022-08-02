@@ -374,7 +374,7 @@ def send_inline(serialized_data: bytes):
     api().send_inline(serialized_data, len(serialized_data))
 
 def send_context_free_inline(serialized_data: bytes):
-    api().send_inline(serialized_data, len(serialized_data))
+    api().send_context_free_inline(serialized_data, len(serialized_data))
 
 # uint64_t  publication_time();
 def publication_time():
