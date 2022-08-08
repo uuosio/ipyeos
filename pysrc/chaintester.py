@@ -378,6 +378,10 @@ class ChainTester(object):
                         keys.append(priv_key)
         return keys
 
+    def import_key(self, pubkey, priv_key):
+        key_map[pubkey] = priv_key
+        return True
+
     def push_action(self, account: Name, action: Name, args: Dict, permissions: Dict={}, explicit_cpu_bill=False):
         auth = []
         for actor in permissions:

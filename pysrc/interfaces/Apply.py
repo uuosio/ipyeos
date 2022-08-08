@@ -8780,9 +8780,8 @@ class set_proposed_producers_ex_args(object):
                 else:
                     iprot.skip(ftype)
             elif fid == 2:
-                if ftype == TType.STRUCT:
-                    self.producer_data = Uint64()
-                    self.producer_data.read(iprot)
+                if ftype == TType.STRING:
+                    self.producer_data = iprot.readBinary()
                 else:
                     iprot.skip(ftype)
             else:
@@ -8800,8 +8799,8 @@ class set_proposed_producers_ex_args(object):
             self.producer_data_format.write(oprot)
             oprot.writeFieldEnd()
         if self.producer_data is not None:
-            oprot.writeFieldBegin('producer_data', TType.STRUCT, 2)
-            self.producer_data.write(oprot)
+            oprot.writeFieldBegin('producer_data', TType.STRING, 2)
+            oprot.writeBinary(self.producer_data)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
@@ -8823,7 +8822,7 @@ all_structs.append(set_proposed_producers_ex_args)
 set_proposed_producers_ex_args.thrift_spec = (
     None,  # 0
     (1, TType.STRUCT, 'producer_data_format', [Uint64, None], None, ),  # 1
-    (2, TType.STRUCT, 'producer_data', [Uint64, None], None, ),  # 2
+    (2, TType.STRING, 'producer_data', 'BINARY', None, ),  # 2
 )
 
 
@@ -9299,8 +9298,8 @@ class get_blockchain_parameters_packed_result(object):
             if ftype == TType.STOP:
                 break
             if fid == 0:
-                if ftype == TType.I32:
-                    self.success = iprot.readI32()
+                if ftype == TType.STRING:
+                    self.success = iprot.readBinary()
                 else:
                     iprot.skip(ftype)
             else:
@@ -9314,8 +9313,8 @@ class get_blockchain_parameters_packed_result(object):
             return
         oprot.writeStructBegin('get_blockchain_parameters_packed_result')
         if self.success is not None:
-            oprot.writeFieldBegin('success', TType.I32, 0)
-            oprot.writeI32(self.success)
+            oprot.writeFieldBegin('success', TType.STRING, 0)
+            oprot.writeBinary(self.success)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
@@ -9335,7 +9334,7 @@ class get_blockchain_parameters_packed_result(object):
         return not (self == other)
 all_structs.append(get_blockchain_parameters_packed_result)
 get_blockchain_parameters_packed_result.thrift_spec = (
-    (0, TType.I32, 'success', None, None, ),  # 0
+    (0, TType.STRING, 'success', 'BINARY', None, ),  # 0
 )
 
 

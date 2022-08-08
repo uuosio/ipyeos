@@ -144,11 +144,11 @@ class push_actions_args(object):
             if fid == 1:
                 if ftype == TType.LIST:
                     self.actions = []
-                    (_etype10, _size7) = iprot.readListBegin()
-                    for _i11 in range(_size7):
-                        _elem12 = Action()
-                        _elem12.read(iprot)
-                        self.actions.append(_elem12)
+                    (_etype17, _size14) = iprot.readListBegin()
+                    for _i18 in range(_size14):
+                        _elem19 = Action()
+                        _elem19.read(iprot)
+                        self.actions.append(_elem19)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
@@ -165,8 +165,8 @@ class push_actions_args(object):
         if self.actions is not None:
             oprot.writeFieldBegin('actions', TType.LIST, 1)
             oprot.writeListBegin(TType.STRUCT, len(self.actions))
-            for iter13 in self.actions:
-                iter13.write(oprot)
+            for iter20 in self.actions:
+                iter20.write(oprot)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()

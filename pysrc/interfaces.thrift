@@ -16,22 +16,35 @@ exception AssertException {
 }
 
 service IPCChainTester {
-   oneway void init_vm_api(),
-   oneway void init_apply_request(),
+   oneway void init_vm_api()
+   oneway void init_apply_request()
 
-   void enable_debug_contract(1:i32 id, 2:string contract, 3:bool enable),
-   bool is_debug_contract_enabled(1:i32 id, 2:string contract),
+   void enable_debug_contract(1:i32 id, 2:string contract, 3:bool enable)
+   bool is_debug_contract_enabled(1:i32 id, 2:string contract)
 
-   binary pack_abi(1:string abi),
+   binary pack_abi(1:string abi)
 
-   binary pack_action_args(1:i32 id, 2:string contract, 3:string action, 4:string action_args),
-   binary unpack_action_args(1:i32 id, 2:string contract, 3:string action, 4:binary raw_args),
+   binary pack_action_args(1:i32 id, 2:string contract, 3:string action, 4:string action_args)
+   binary unpack_action_args(1:i32 id, 2:string contract, 3:string action, 4:binary raw_args)
 
-   i32 new_chain(),
-   i32 free_chain(1:i32 id),
+   i32 new_chain()
+   i32 free_chain(1:i32 id)
+
+   string get_info(1:i32 id)
+   string get_account(1:i32 id, 2:string account)
+   bool import_key(1:i32 id, 2:string pub_key, 3:string priv_key)
+   string get_required_keys(1:i32 id, 2:string transaction, 3:list<string> available_keys)
+
    void produce_block(1:i32 id),
-   binary push_action(1:i32 id, 2:string account, 3:string action, 4:string arguments, 5: string permissions),
-   binary push_actions(1:i32 id, 2:list<Action> actions),
+   binary push_action(1:i32 id, 2:string account, 3:string action, 4:string arguments, 5: string permissions)
+   binary push_actions(1:i32 id, 2:list<Action> actions)
+   string get_table_rows(1:i32 id, 2:bool json, 3:string code, 4:string scope, 5:string table,
+                                    6:string lower_bound, 7:string upper_bound,
+                                    8:i64 limit,
+                                    9:string key_type,
+                                    10:string index_position,
+                                    11:bool reverse,
+                                    12:bool show_payer)
 }
 
 struct Action {
@@ -105,7 +118,7 @@ service Apply {
 # int64_t set_proposed_producers( const char *producer_data, uint32_t producer_data_size );
    i64 set_proposed_producers(1:binary producer_data),
 # int64_t set_proposed_producers_ex( uint64_t producer_data_format, const char *producer_data, uint32_t producer_data_size );
-   i64 set_proposed_producers_ex(1:Uint64 producer_data_format, 2:Uint64 producer_data),
+   i64 set_proposed_producers_ex(1:Uint64 producer_data_format, 2:binary producer_data),
 # bool is_privileged( uint64_t account );
    bool is_privileged(1:Uint64 account),
 # void set_privileged( uint64_t account, bool is_priv );
@@ -113,7 +126,7 @@ service Apply {
 # void set_blockchain_parameters_packed( const char* data, uint32_t datalen );
    void set_blockchain_parameters_packed(1:binary data),
 # uint32_t get_blockchain_parameters_packed( char* data, uint32_t datalen );
-   i32 get_blockchain_parameters_packed(),
+   binary get_blockchain_parameters_packed(),
 # void preactivate_feature( const capi_checksum256* feature_digest );
    void preactivate_feature(1:binary feature_digest),
 #permission.h

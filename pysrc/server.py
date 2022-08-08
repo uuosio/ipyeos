@@ -801,6 +801,10 @@ class ChainTesterHandler:
             return chain.get_last_error()
         return ret
 
+    def import_key(self, id: i32, pub_key: str, priv_key: str):
+        chain: ChainTester = self.testers[id]
+        return chain.import_key(pub_key, priv_key)
+
     def get_required_keys(self, id: i32, transaction: str, available_keys: list[str]):
         chain = self.testers[id].chain
         params = dict(
