@@ -1,7 +1,3 @@
-v0.2.3 release
+v0.2.4 release
 
-1. Implemented get_table_row interface
-2. Fix get_last_error
-
-
-
+1. Improve IPCChainTester
