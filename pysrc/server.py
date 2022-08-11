@@ -31,6 +31,12 @@ from .chaintester import ChainTester
 from .chainapi import ChainApi
 from . import _chainapi
 
+import asyncio as aio
+from concurrent.futures import ThreadPoolExecutor
+from flask import Flask, request, jsonify
+from waitress import serve
+from . import rpc_server
+
 chaintester.chain_config['contracts_console'] = True
 
 logger = log.get_logger(__name__)
@@ -618,14 +624,11 @@ class ChainTesterHandler:
         self.apply_request_addr = apply_request_addr
         self.apply_request_port = apply_request_port
 
-    def get_apply_client(self):
+    def init_apply_client(self):
         if not self.apply_request_client:
             self.apply_request_transport = TSocket.TSocket(self.apply_request_addr, self.apply_request_port)
-            # Buffering is critical. Raw sockets are very slow
             self.apply_request_transport = TTransport.TBufferedTransport(self.apply_request_transport)
-            # Wrap in a protocol
             protocol = TBinaryProtocol.TBinaryProtocol(self.apply_request_transport)
-            # Create a client to use the protocol encoder
             self.apply_request_client = ApplyRequestClient(protocol)
 
             # Connect!
@@ -640,6 +643,7 @@ class ChainTesterHandler:
             else:
                 raise Exception("connect to 9091 refused!")
 
+    def get_apply_client(self):
         return self.apply_request_client
 
     def close_apply_client(self):
@@ -679,7 +683,9 @@ class ChainTesterHandler:
                 err = {
                     'except': str(e)
                 }
-                self.get_apply_client().apply_end()
+                client = self.get_apply_client()
+                if client:
+                    client.apply_end()
                 return json.dumps(err).encode()
 
         permissions = json.loads(permissions)
@@ -702,7 +708,9 @@ class ChainTesterHandler:
             return err.encode()
         finally:
             self.current_tester = None
-            self.get_apply_client().apply_end()
+            client = self.get_apply_client()
+            if client:
+                client.apply_end()
 
     def push_actions(self, id, actions):
         tester = self.testers[id]
@@ -731,6 +739,10 @@ class ChainTesterHandler:
             self.current_tester = None
             self.get_apply_client().apply_end()
 
+    def deploy_contract(self, id, account: str, wasm: str, abi: str):
+        tester: ChainTester = self.testers[id]
+        return tester.deploy_contract(account, bytes.fromhex(wasm), abi)
+
 #    string get_table_rows(1:bool json, 2:string code, 3:string scope, 4:string table,
 #                                     5:string lower_bound, 6:string upper_bound,
 #                                     7:i64 limit,
@@ -754,7 +766,7 @@ class ChainTesterHandler:
         self.server.init_vm_api_call()
 
     def init_apply_request(self):
-        self.get_apply_client()
+        self.init_apply_client()
 
     def enable_debug_contract(self, id, contract, enable):
         self.testers[id].enable_debug_contract(contract, enable)
@@ -767,7 +779,7 @@ class ChainTesterHandler:
 
     def pack_action_args(self, id, contract, action, action_args):
         action_args = json.loads(action_args)
-        return self.testers[id].chain.pack_action_args(contract, action, action_args)
+        return self.testers[id].pack_action_args(contract, action, action_args)
 
     def unpack_action_args(self, id, contract, action, raw_args):
         return self.testers[id].chain.unpack_action_args(contract, action, raw_args)
@@ -999,7 +1011,7 @@ class IPCChainTesterProcessor(IPCChainTester.Processor):
         return True
 
 # result.addr, result.server_port, result.vm_api_port, result.apply_request_addr, result.apply_request_port
-def start_debug_server(addr='127.0.0.1', server_port=9090, vm_api_port=9092, apply_request_addr='127.0.0.1', apply_request_port=9091):
+def start_debug_server(addr='127.0.0.1', server_port=9090, vm_api_port=9092, apply_request_addr='127.0.0.1', apply_request_port=9091, rpc_server_addr='127.0.0.1', rpc_server_port=9093):
     eos.enable_debug(True)
     eos.enable_native_contracts(True)
     handler = ChainTesterHandler(addr, vm_api_port, apply_request_addr, apply_request_port)
@@ -1010,9 +1022,33 @@ def start_debug_server(addr='127.0.0.1', server_port=9090, vm_api_port=9092, app
 
     server = ChainTesterServer(processor, transport, tfactory, pfactory, handler=handler)
 
-    print('Starting the EOS debugger server...')
-    server.serve()
-    print('done.')
+
+    loop = aio.get_event_loop()
+    _ex = ThreadPoolExecutor(10)
+
+    def run_server():
+        print('Starting the EOS debugger server...')
+        server.serve()
+        print('done.')
+
+    def run_rpc_server():
+        print('run rpc server')
+        rpc_server.start(rpc_server_addr, rpc_server_port, handler)
+
+    async def run_task():
+        await loop.run_in_executor(_ex, run_rpc_server)
+
+    async def run_task2():
+        await loop.run_in_executor(_ex, run_server)
+        # await aio.sleep(0.1)
+
+    async def main():
+        task1 = aio.create_task(run_task())
+        await aio.sleep(0.1)
+        task2 = aio.create_task(run_task2())
+        aio.gather(task1, task2)
+
+    loop.run_until_complete(main())
 
 if __name__ == '__main__':
     start_debug_server()

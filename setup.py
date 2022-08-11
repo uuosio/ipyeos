@@ -44,7 +44,9 @@ setup(
 
     install_requires=[
         'thrift>=0.16.0',
-        'pytest>=6.2.5'
+        'pytest>=6.2.5',
+        'waitress>=2.1.2',
+        'flask>=2.2.2'
     ],
     tests_require=[],
     include_package_data=True

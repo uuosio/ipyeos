@@ -18,6 +18,8 @@ def main():
         debug_sub_parser.add_argument('--vm-api-port', default="9092", help="eos debugger vm api port")
         debug_sub_parser.add_argument('--apply-request-addr', default="127.0.0.1", help="client side apply request server address")
         debug_sub_parser.add_argument('--apply-request-port', default="9091", help="client side apply request server port")
+        debug_sub_parser.add_argument('--rpc-server-addr', default="127.0.0.1", help="rpc server address")
+        debug_sub_parser.add_argument('--rpc-server-port', default="9093", help="rpc server port")
 
         start_eos_parser = subparser.add_parser('eos-node', help='run a eos node')
 
@@ -32,7 +34,7 @@ def main():
         else:
             result, unknown = parser.parse_known_args()
             if result.subparser == 'eos-debugger':
-                server.start_debug_server(result.addr, result.server_port, result.vm_api_port, result.apply_request_addr, result.apply_request_port)
+                server.start_debug_server(result.addr, result.server_port, result.vm_api_port, result.apply_request_addr, result.apply_request_port, result.rpc_server_addr,result.rpc_server_port)
             else:
                 parser.print_help()
     else:

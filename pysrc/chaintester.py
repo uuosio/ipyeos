@@ -425,7 +425,7 @@ class ChainTester(object):
 
         for a in actions:
             if isinstance(a['data'], dict):
-                data = self.chain.pack_args(a['account'], a['name'], a['data'])
+                data = self.chain.pack_action_args(a['account'], a['name'], a['data'])
                 a['data'] = data.hex()
         for act in actions:
             for author in act['authorization']:
@@ -532,7 +532,7 @@ class ChainTester(object):
                         'waits': []
                     }
         }
-        newaccount_args = self.pack_args('eosio', 'newaccount', args)
+        newaccount_args = self.pack_action_args('eosio', 'newaccount', args)
         if not newaccount_args:
             raise Exception('bad args')
         newaccount_action = {
@@ -570,7 +570,7 @@ class ChainTester(object):
             auth.append({'actor': account, 'permission': 'active'})
 
         if isinstance(args, dict):
-            args = self.pack_args(account, action, args)
+            args = self.pack_action_args(account, action, args)
         assert type(args) is bytes
         return {
             'account': account,
@@ -675,16 +675,18 @@ class ChainTester(object):
         args = {"from":_from, "to":_to, "quantity":'%.4f %s'%(_amount,token_name), "memo":_memo}
         return self.push_action(token_account, 'transfer', args, {_from:permission})
 
-    def pack_args(self, account: Name, action: Name , args: dict):
+    def pack_action_args(self, account: Name, action: Name , args: dict):
         ret = self.chain.pack_action_args(account, action, args)
         if not ret:
-            raise Exception('pack error')
+            error = self.chain.get_last_error()
+            raise Exception(f'{error}')
         return ret
 
-    def unpack_args(self, account: Name, action: Name, raw_args: bytes):
+    def unpack_action_args(self, account: Name, action: Name, raw_args: bytes):
         ret = self.chain.unpack_action_args(account, action, raw_args)
         if not ret:
-            raise Exception('unpack error')
+            error = self.chain.get_last_error()
+            raise Exception(f'{error}')
         return ret
 
     def mp_compile(self, file_name: str, src: str):
