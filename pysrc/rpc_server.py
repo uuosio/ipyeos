@@ -91,13 +91,16 @@ class ChainTesterProxy(object):
         return self.handler.get_table_rows(id, _json, code, scope, table, lower_bound, upper_bound, limit, key_type, index_position, reverse, show_payer)
 
     def enable_debug_contract(self, id, contract, enable):
-        pass
+        self.handler.enable_debug_contract(id, contract, enable)
+        return {"data": "ok"}
 
     def is_debug_contract_enabled(self, id, contract):
-        pass
+        ret = self.handler.is_debug_contract_enabled(id, contract)
+        return {"data": ret}
 
     def pack_abi(self, abi):
-        pass
+        ret = self.pack_abi(abi)
+        return {"data": ret.hex()}
 
     def pack_action_args(self, id, contract, action, action_args):
         try:
@@ -107,13 +110,16 @@ class ChainTesterProxy(object):
             return {'error': e.args[0]}
 
     def unpack_action_args(self, id, contract, action, raw_args):
-        pass
+        ret = self.handler.unpack_action_args(id, contract, action, raw_args)
+        return {"data": ret}
 
     def import_key(self, id: i32, pub_key: str, priv_key: str):
-        pass
+        ret = self.handler.import_key(id, pub_key, priv_key)
+        return {"data": "ok"}
 
     def get_required_keys(self, id: i32, transaction: str, available_keys: list[str]):
-        pass
+        ret = self.handler.get_required_keys(id, transaction, available_keys)
+        return {"data": ret}
 
 proxy = None
 app = Flask(__name__)
