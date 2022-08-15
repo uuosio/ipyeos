@@ -72,12 +72,10 @@ jobs:
           python3.8 -m auditwheel repair --plat manylinux_2_17_x86_64 ipyeos-${{ env.IPYEOS_VERSION }}-cp38-cp38-linux_x86_64.whl
           python3.9 -m auditwheel repair --plat manylinux_2_17_x86_64 ipyeos-${{ env.IPYEOS_VERSION }}-cp39-cp39-linux_x86_64.whl
           python3.10 -m auditwheel repair --plat manylinux_2_17_x86_64 ipyeos-${{ env.IPYEOS_VERSION }}-cp310-cp310-linux_x86_64.whl
-
-      - name: run auditwheel
-        working-directory: dist
+      - name: run tests
         run: |
           python3.9 -m pip install ./dist/wheelhouse/ipyeos-${{ env.IPYEOS_VERSION }}-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
-          python3.9 -m ipyeos eos-debugger &
+          ipyeos -m pytest -s -x tests/test.py
       - name: release-pyeos
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
