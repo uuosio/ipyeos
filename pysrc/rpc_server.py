@@ -72,6 +72,10 @@ class ChainTesterProxy(object):
     def create_key(self, key_type):
         return eos.create_key(key_type)
 
+    def get_public_key(self, priv_key):
+        ret = eos.get_public_key(priv_key)
+        return {'data': ret}
+
     def get_info(self, id: i32):
         ret = self.handler.get_info(id)
         return ret

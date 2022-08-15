@@ -95,6 +95,9 @@ def is_debug_enabled() -> bool:
 def create_key(key_type: str = "K1") -> str:
     return _eos.create_key(key_type)
 
+def get_public_key(priv_key: str) -> str:
+    return _eos.get_public_key(priv_key)
+
 def init(argv=None) -> bool:
     if argv:
         return _eos.init(argv)

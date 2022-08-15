@@ -51,6 +51,7 @@ cdef extern from "_ipyeos.hpp":
         bool is_debug_enabled();
 
         string create_key(string& key_type);
+        string get_public_key(string &priv_key);
 
         int eos_init(int argc, char** argv);
         int eos_exec();
@@ -112,6 +113,9 @@ def is_debug_enabled():
 
 def create_key(key_type: str):
     return get_ipyeos_proxy().create_key(key_type)
+
+def get_public_key(priv_key: str):
+    return get_ipyeos_proxy().get_public_key(priv_key)
 
 def init(args):
     cdef int argc;

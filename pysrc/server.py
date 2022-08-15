@@ -819,7 +819,7 @@ class ChainTesterHandler:
     def get_required_keys(self, id: i32, transaction: str, available_keys: list[str]):
         chain = self.testers[id].chain
         params = dict(
-            transaction = transaction,
+            transaction = json.loads(transaction),
             available_keys = available_keys,
         )
         params = json.dumps(params)
