@@ -280,7 +280,7 @@ class ChainApi(object):
         ret = _chainapi.abi_bin_to_json(self.ptr, params)
         return self.parse_return_value(ret)
 
-    def get_required_keys(self, params: dict):
+    def get_required_keys(self, transaction: dict, available_keys: list[str]):
         '''
             struct get_required_keys_params {
                 fc::variant transaction;
@@ -290,6 +290,11 @@ class ChainApi(object):
                 flat_set<public_key_type> required_keys;
             };
         '''
+        params = dict(
+            transaction = transaction,
+            available_keys = available_keys,
+        )
+        params = json.dumps(params)
         ret = _chainapi.get_required_keys(self.ptr, params)
         return self.parse_return_value(ret)
 

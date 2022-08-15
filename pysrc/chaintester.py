@@ -418,25 +418,49 @@ class ChainTester(object):
             _actions.append(self.gen_action(*a))
         return self.gen_transaction_ex(_actions, json_str)
 
+    def get_required_keys(self, actions):
+        fake_tx = {
+            "expiration": "2021-09-01T16:15:16",
+            "ref_block_num": 20676,
+            "ref_block_prefix": 4052960473,
+            "max_net_usage_words": 0,
+            "max_cpu_usage_ms": 0,
+            "delay_sec": 0,
+            "context_free_actions": [],
+            "actions": [
+            ],
+            "transaction_extensions": [],
+            "signatures": [],
+            "context_free_data": []
+        }
+        for a in actions:
+            action = {
+                "account": a['account'],
+                "name": a['name'],
+                "authorization": a['authorization'],
+                "data": ''
+            }
+            fake_tx['actions'].append(action)
+        ret = self.api.get_required_keys(fake_tx, list(key_map.keys()))
+        return ret['required_keys']
+
+    def get_required_private_keys(self, actions):
+        required_keys = self.get_required_keys(actions)
+        priv_keys = []
+        for key in required_keys:
+            priv_keys.append(key_map[key])
+        return priv_keys
+
     def gen_transaction_ex(self, actions: List, json_str=False):
         chain_id = self.chain.id()
         ref_block_id = self.chain.last_irreversible_block_id()
-        priv_keys = []
+
+        priv_keys = self.get_required_private_keys(actions)
 
         for a in actions:
             if isinstance(a['data'], dict):
                 data = self.chain.pack_action_args(a['account'], a['name'], a['data'])
                 a['data'] = data.hex()
-        for act in actions:
-            for author in act['authorization']:
-                keys = self.find_private_key(author['actor'], author['permission'])
-                if not keys:
-                    actor = author['actor']
-                    perm = author['permission']
-                    raise Exception(f'private key not found: {actor} {perm}')
-                for key in keys:
-                    if not key in priv_keys:
-                        priv_keys.append(key)
         assert len(priv_keys) >= 1
 
         priv_keys = json.dumps(priv_keys)
