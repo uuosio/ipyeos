@@ -22,7 +22,7 @@ cdef extern from "<Python.h>":
     object PyBytes_FromStringAndSize(const char* str, int size)
     int _PyLong_AsByteArray(PyLongObject* v, unsigned char* bytes, size_t n, int little_endian, int is_signed)
 
-cdef extern from "<uuos.hpp>":
+cdef extern from "_ipyeos.hpp":
     void uuosext_init()
 
     ctypedef struct chain_rpc_api_proxy:

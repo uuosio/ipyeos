@@ -743,13 +743,12 @@ class ChainTesterHandler:
         tester: ChainTester = self.testers[id]
         return tester.deploy_contract(account, bytes.fromhex(wasm), abi)
 
-#    string get_table_rows(1:bool json, 2:string code, 3:string scope, 4:string table,
-#                                     5:string lower_bound, 6:string upper_bound,
-#                                     7:i64 limit,
-#                                     8:string key_type,
-#                                     9:string index_position,
-#                                     10:bool reverse,
-#                                     11:bool show_payer),
+    def create_account(self, id: int, creator: str, account: str, owner_key: str, active_key: str, ram_bytes: int=0, stake_net: float=0.0, stake_cpu: float=0.0):
+        tester: ChainTester = self.testers[id]
+        return tester.create_account(creator, account, owner_key, active_key, ram_bytes, stake_net, stake_cpu)
+
+    def create_key(self, key_type):
+        return eos.create_key(key_type)
 
     def get_table_rows(self, id, _json: bool, code: str, scope: str, table: str, lower_bound: str, upper_bound: str, limit: i64, key_type: str, index_position: str, reverse: bool, show_payer: bool):
         tester: ChainTester = self.testers[id]

@@ -1,11 +1,11 @@
 #include <dlfcn.h>
 #include <stacktrace.h>
 
-#include "uuos.hpp"
+#include "_ipyeos.hpp"
 
 using namespace std;
 
-static fn_get_uuos_proxy s_get_uuos_proxy = nullptr;
+static fn_get_ipyeos_proxy s_get_ipyeos_proxy = nullptr;
 
 void uuosext_init() {
     const char * chain_api_lib = getenv("CHAIN_API_LIB");
@@ -23,8 +23,8 @@ void uuosext_init() {
         return;
     }
 
-    s_get_uuos_proxy = (fn_get_uuos_proxy)dlsym(handle, "get_uuos_proxy");
-    if (s_get_uuos_proxy == nullptr) {
+    s_get_ipyeos_proxy = (fn_get_ipyeos_proxy)dlsym(handle, "get_ipyeos_proxy");
+    if (s_get_ipyeos_proxy == nullptr) {
         printf("++++loading chain_new failed! error: %s\n", dlerror());
         exit(-1);
         return;
@@ -32,12 +32,12 @@ void uuosext_init() {
 
 }
 
-uuos_proxy* get_uuos_proxy() {
-    if (s_get_uuos_proxy == nullptr) {
-        printf("++++get_uuos_proxy not initialized\n");
+ipyeos_proxy* get_ipyeos_proxy() {
+    if (s_get_ipyeos_proxy == nullptr) {
+        printf("++++get_ipyeos_proxy not initialized\n");
         print_stacktrace();
         exit(-1);
         return nullptr;
     }
-    return s_get_uuos_proxy();
+    return s_get_ipyeos_proxy();
 }

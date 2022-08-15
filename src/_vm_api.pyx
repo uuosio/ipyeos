@@ -30,7 +30,7 @@ cdef extern from "<Python.h>":
     object PyBytes_FromStringAndSize(const char* str, int size)
     int _PyLong_AsByteArray(PyLongObject* v, unsigned char* bytes, size_t n, int little_endian, int is_signed)
 
-cdef extern from "<uuos.hpp>":
+cdef extern from "<ipyeos.hpp>":
     ctypedef struct vm_api_proxy:
         void prints( const char* cstr );
         void prints_l( const char* cstr, uint32_t len);

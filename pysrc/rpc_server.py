@@ -4,6 +4,8 @@ from concurrent.futures import ThreadPoolExecutor
 from flask import Flask, request, jsonify
 from waitress import serve
 
+from . import eos
+
 from typing import NewType, Dict, Optional
 i32 = NewType('i32', int)
 i64 = NewType('i64', int)
@@ -67,12 +69,18 @@ class ChainTesterProxy(object):
         self.handler.free_chain(id)
         return {}
 
+    def create_key(self, key_type):
+        return eos.create_key(key_type)
+
     def get_info(self, id: i32):
         ret = self.handler.get_info(id)
         return ret
 
     def get_account(self, id: i32, account: str):
         return self.handler.get_account(id, account)
+
+    def create_account(self, id: int, creator: str, account: str, owner_key: str, active_key: str, ram_bytes: int=0, stake_net: float=0.0, stake_cpu: float=0.0):
+        return self.handler.create_account(id, creator, account, owner_key, active_key, ram_bytes, stake_net, stake_cpu)
 
     def produce_block(self, id):
         self.handler.produce_block(id)

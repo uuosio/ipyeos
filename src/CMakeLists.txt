@@ -9,7 +9,7 @@ add_library(_eos MODULE
     ${_chainapi}
     ${_vm_api}
     main.cpp
-    uuos.cpp
+    _ipyeos.cpp
 )
 
 python_extension_module(_eos)

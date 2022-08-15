@@ -23,7 +23,7 @@ cdef extern from "<Python.h>":
     object PyBytes_FromStringAndSize(const char* str, int size)
     int _PyLong_AsByteArray(PyLongObject* v, unsigned char* bytes, size_t n, int little_endian, int is_signed)
 
-cdef extern from "<uuos.hpp>":
+cdef extern from "_ipyeos.hpp":
     chain_proxy *chain(uint64_t ptr)
     void uuosext_init()
 
@@ -125,18 +125,18 @@ cdef extern from "<uuos.hpp>":
         string& get_last_error()
         void set_last_error(string& error)
 
-    ctypedef struct uuos_proxy:
+    ctypedef struct ipyeos_proxy:
         chain_proxy* chain_new(string& config, string& _genesis, string& protocol_features_dir, string& snapshot_dir)
         void chain_free(chain_proxy* api)
 
-    uuos_proxy *get_uuos_proxy()
+    ipyeos_proxy *get_ipyeos_proxy()
 
 
 def chain_new(string& config, string& _genesis, string& protocol_features_dir, string& snapshot_dir):
-    return <uint64_t>get_uuos_proxy().chain_new(config, _genesis, protocol_features_dir, snapshot_dir)
+    return <uint64_t>get_ipyeos_proxy().chain_new(config, _genesis, protocol_features_dir, snapshot_dir)
 
 def chain_free(uint64_t ptr):
-    get_uuos_proxy().chain_free(<chain_proxy*>ptr)
+    get_ipyeos_proxy().chain_free(<chain_proxy*>ptr)
 
 def chain_say_hello(uint64_t ptr):
     chain(ptr).say_hello()

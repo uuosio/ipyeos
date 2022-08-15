@@ -23,10 +23,10 @@ cdef extern from "<Python.h>":
     object PyBytes_FromStringAndSize(const char* str, int size)
     int _PyLong_AsByteArray(PyLongObject* v, unsigned char* bytes, size_t n, int little_endian, int is_signed)
 
-cdef extern from "<uuos.hpp>":
+cdef extern from "_ipyeos.hpp":
     void uuosext_init()
 
-    ctypedef struct uuos_proxy:
+    ctypedef struct ipyeos_proxy:
         void set_log_level(string& logger_name, int level)
         void set_block_interval_ms(int ms)
 
@@ -50,63 +50,68 @@ cdef extern from "<uuos.hpp>":
         void enable_debug(bool debug);
         bool is_debug_enabled();
 
+        string create_key(string& key_type);
+
         int eos_init(int argc, char** argv);
         int eos_exec();
 
-    uuos_proxy *get_uuos_proxy()
+    ipyeos_proxy *get_ipyeos_proxy()
 
 uuosext_init()
 
 def set_log_level(string& logger_name, int level):
-    get_uuos_proxy().set_log_level(logger_name, level)
+    get_ipyeos_proxy().set_log_level(logger_name, level)
 
 def set_block_interval_ms(int ms):
-    get_uuos_proxy().set_block_interval_ms(ms)
+    get_ipyeos_proxy().set_block_interval_ms(ms)
 
 def get_last_error():
-    return get_uuos_proxy().get_last_error()
+    return get_ipyeos_proxy().get_last_error()
 
 def set_last_error(string& error):
-    get_uuos_proxy().set_last_error(error)
+    get_ipyeos_proxy().set_last_error(error)
 
 def pack_abi(string& abi):
     cdef vector[char] packed_abi
-    get_uuos_proxy().pack_abi(abi, packed_abi)
+    get_ipyeos_proxy().pack_abi(abi, packed_abi)
     return PyBytes_FromStringAndSize(packed_abi.data(), packed_abi.size())
 
 def pack_native_object(int _type, string& msg):
     cdef vector[char] result
-    get_uuos_proxy().pack_native_object(_type, msg, result)
+    get_ipyeos_proxy().pack_native_object(_type, msg, result)
     return PyBytes_FromStringAndSize(result.data(), result.size())
 
 def unpack_native_object(int _type, string& packed_message):
     cdef string result
-    get_uuos_proxy().unpack_native_object(_type, packed_message, result)
+    get_ipyeos_proxy().unpack_native_object(_type, packed_message, result)
     return result
 
 def s2n(string& s):
-    return get_uuos_proxy().s2n(s)
+    return get_ipyeos_proxy().s2n(s)
 
 def n2s(uint64_t n):
-    return get_uuos_proxy().n2s(n)
+    return get_ipyeos_proxy().n2s(n)
 
 def set_native_contract(uint64_t contract, const string& native_contract_lib):
-    return get_uuos_proxy().set_native_contract(contract, native_contract_lib)
+    return get_ipyeos_proxy().set_native_contract(contract, native_contract_lib)
 
 def get_native_contract(uint64_t contract):
-    return get_uuos_proxy().get_native_contract(contract)
+    return get_ipyeos_proxy().get_native_contract(contract)
 
 def enable_native_contracts(bool debug):
-    get_uuos_proxy().enable_native_contracts(debug)
+    get_ipyeos_proxy().enable_native_contracts(debug)
 
 def is_native_contracts_enabled():
-    return get_uuos_proxy().is_native_contracts_enabled()
+    return get_ipyeos_proxy().is_native_contracts_enabled()
 
 def enable_debug(bool debug):
-    get_uuos_proxy().enable_debug(debug)
+    get_ipyeos_proxy().enable_debug(debug)
 
 def is_debug_enabled():
-    return get_uuos_proxy().is_debug_enabled()
+    return get_ipyeos_proxy().is_debug_enabled()
+
+def create_key(key_type: str):
+    return get_ipyeos_proxy().create_key(key_type)
 
 def init(args):
     cdef int argc;
@@ -117,7 +122,7 @@ def init(args):
     for i in range(argc):
         argv[i] = args[i]
 
-    return get_uuos_proxy().eos_init(argc, argv)
+    return get_ipyeos_proxy().eos_init(argc, argv)
 
 def exec():
-    return get_uuos_proxy().eos_exec()
+    return get_ipyeos_proxy().eos_exec()
