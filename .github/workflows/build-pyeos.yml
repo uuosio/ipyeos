@@ -16,7 +16,7 @@ jobs:
   run:
     runs-on: ${{ matrix.os }}
     env:
-      IPYEOS_VERSION: 0.2.5
+      IPYEOS_VERSION: 0.2.6
       SYSTEM_VERSION_COMPAT: 0
     strategy:
       matrix:
