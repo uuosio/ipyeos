@@ -75,7 +75,7 @@ jobs:
       - name: run tests
         run: |
           python3.9 -m pip install ./dist/wheelhouse/ipyeos-${{ env.IPYEOS_VERSION }}-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
-          ipyeos -m pytest -s -x tests/test.py
+          python3.9 -m ipyeos -m pytest -s -x tests/test.py
       - name: release-pyeos
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
