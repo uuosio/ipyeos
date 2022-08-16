@@ -21,13 +21,13 @@ cd ..
 ./build.sh
 ```
 
-## Running a Node
+## Run a Node
 
 ```
 eos-node
 ```
 
-## Running a Debugging Server
+## Run a Debugging Server
 
 ```
 eos-debugger
@@ -36,13 +36,19 @@ eos-debugger
 ## Testing
 
 ```
-ipyeos -m pytest -x -s pysrc/tests/test_micropython.py -k test_hello
+ipyeos -m pytest -x -s tests/test.py
 ```
 
-## Running a Testnet
+## Run a Testnet
 
 ```
-ipyeos -m ipyeos.main --data-dir dd --config-dir cd -p eosio --plugin eosio::producer_plugin --plugin eosio::chain_api_plugin --plugin eosio::producer_api_plugin --plugin eosio::history_api_plugin -e --resource-monitor-space-threshold 99 --http-server-address 127.0.0.1:8889 --contracts-console --access-control-allow-origin="*" --backing-store rocksdb --wasm-runtime eos-vm-jit
+ipyeos -m ipyeos eos-node --data-dir dd --config-dir cd -p eosio --plugin eosio::producer_plugin --plugin eosio::chain_api_plugin --plugin eosio::producer_api_plugin --plugin eosio::history_api_plugin -e --resource-monitor-space-threshold 99 --http-server-address 127.0.0.1:8889 --contracts-console --access-control-allow-origin="*" --backing-store rocksdb --wasm-runtime eos-vm-jit
+```
+
+Also, you can run a test node with `eos-node` command directly.
+
+```
+eos-node --data-dir dd --config-dir cd -p eosio --plugin eosio::producer_plugin --plugin eosio::chain_api_plugin --plugin eosio::producer_api_plugin --plugin eosio::history_api_plugin -e --resource-monitor-space-threshold 99 --http-server-address 127.0.0.1:8889 --contracts-console --access-control-allow-origin="*" --backing-store rocksdb --wasm-runtime eos-vm-jit
 ```
 
 # License
