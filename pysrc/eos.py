@@ -92,15 +92,25 @@ def enable_debug(debug) -> None:
 def is_debug_enabled() -> bool:
     return _eos.is_debug_enabled()
 
+def get_last_error() -> str:
+    return _eos.get_last_error()
+
 def create_key(key_type: str = "K1") -> dict:
     ret = _eos.create_key(key_type)
     return json.loads(ret)
 
+def check_ret(ret):
+    if not ret:
+        raise Exception(get_last_error())
+    return ret
+
 def get_public_key(priv_key: str) -> str:
-    return _eos.get_public_key(priv_key)
+    ret = _eos.get_public_key(priv_key)
+    return check_ret(ret)
 
 def sign_digest(priv_key: str, digest: str):
-    return _eos.sign_digest(priv_key, digest)
+    ret = _eos.sign_digest(priv_key, digest)
+    return check_ret(ret)
 
 def init(argv=None) -> bool:
     if argv:
