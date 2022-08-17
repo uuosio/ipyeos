@@ -5,6 +5,7 @@ import json
 import time
 import traceback
 import logging
+from datetime import datetime, timedelta
 
 from typing import NewType, Dict, Optional
 i32 = NewType('i32', int)
@@ -667,8 +668,14 @@ class ChainTesterHandler:
     def vm_api_handler(self):
         self.server.handle_vm_api_call()
 
-    def produce_block(self, id):
-        self.testers[id].produce_block()
+    def produce_block(self, id, next_block_skip_seconds: int = 0):
+        tester: ChainTester = self.testers[id]
+        if next_block_skip_seconds == 0:
+            tester.produce_block()
+        else:
+            pending_block_time = tester.chain.pending_block_time()
+            next_block_time = pending_block_time + timedelta(seconds=next_block_skip_seconds)
+            tester.produce_block(next_block_time)
 
     def push_action(self, id: int, account: str, action: str, arguments: str, permissions: str):
         tester: DebugChainTester = self.testers[id]
