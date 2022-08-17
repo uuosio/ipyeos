@@ -122,9 +122,6 @@ cdef extern from "_ipyeos.hpp":
 
         void clear_abi_cache(string& account)
 
-        string& get_last_error()
-        void set_last_error(string& error)
-
     ctypedef struct ipyeos_proxy:
         chain_proxy* chain_new(string& config, string& _genesis, string& protocol_features_dir, string& snapshot_dir)
         void chain_free(chain_proxy* api)
@@ -160,14 +157,6 @@ def finalize_block(uint64_t ptr, string& _priv_keys):
 
 def commit_block(uint64_t ptr):
     chain(ptr).commit_block()
-
-def get_last_error(uint64_t ptr):
-    cdef string error
-    error = chain(ptr).get_last_error()
-    return error
-
-def set_last_error(uint64_t ptr, string& error):
-    chain(ptr).set_last_error(error)
 
 def get_block_id_for_num(uint64_t ptr, uint32_t block_num):
     return chain(ptr).get_block_id_for_num(block_num)

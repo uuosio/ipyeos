@@ -92,11 +92,15 @@ def enable_debug(debug) -> None:
 def is_debug_enabled() -> bool:
     return _eos.is_debug_enabled()
 
-def create_key(key_type: str = "K1") -> str:
-    return _eos.create_key(key_type)
+def create_key(key_type: str = "K1") -> dict:
+    ret = _eos.create_key(key_type)
+    return json.loads(ret)
 
 def get_public_key(priv_key: str) -> str:
     return _eos.get_public_key(priv_key)
+
+def sign_digest(priv_key: str, digest: str):
+    return _eos.sign_digest(priv_key, digest)
 
 def init(argv=None) -> bool:
     if argv:

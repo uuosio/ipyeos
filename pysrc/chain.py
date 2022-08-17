@@ -50,7 +50,7 @@ class Chain(object):
 
         self.ptr = _chain.chain_new(config, genesis, protocol_features_dir, snapshot_dir)
         if not self.ptr:
-            error = _chain.get_last_error()
+            error = _eos.get_last_error()
             raise Exception(error)
 
     def startup(self, initdb: bool) -> bool:
@@ -395,7 +395,7 @@ class Chain(object):
             deadline = deadline.isoformat(timespec='milliseconds')
         result = _chain.push_transaction(self.ptr, packed_trx, deadline, billed_cpu_time_us, explicit_cpu_bill, subjective_cpu_bill_us)
         if not result:
-            result = _chain.get_last_error(self.ptr)
+            result = _eos.get_last_error(self.ptr)
         result = json.loads(result)
         if 'except' in result:
             raise Exception(result)
@@ -472,9 +472,6 @@ class Chain(object):
         return _chain.gen_transaction(self.ptr, json_str, _actions, expiration, reference_block_id, _id, compress, _private_keys)
 
     def get_last_error(self) -> str:
-        err = _chain.get_last_error(self.ptr)
+        err = _eos.get_last_error(self.ptr)
         return f'{{"except": {err}}}'
-
-    def set_last_error(self, error: str):
-        _chain.set_last_error(self.ptr, error)
 

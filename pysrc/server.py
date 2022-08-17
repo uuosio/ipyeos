@@ -31,6 +31,7 @@ from . import eos, _vm_api, log
 from .chaintester import ChainTester
 from .chainapi import ChainApi
 from . import _chainapi
+from . import _eos
 
 import asyncio as aio
 from concurrent.futures import ThreadPoolExecutor
@@ -755,7 +756,7 @@ class ChainTesterHandler:
         return tester.create_account(creator, account, owner_key, active_key, ram_bytes, stake_net, stake_cpu)
 
     def create_key(self, key_type):
-        return eos.create_key(key_type)
+        return _eos.create_key(key_type)
 
     def get_table_rows(self, id, _json: bool, code: str, scope: str, table: str, lower_bound: str, upper_bound: str, limit: i64, key_type: str, index_position: str, reverse: bool, show_payer: bool):
         tester: ChainTester = self.testers[id]

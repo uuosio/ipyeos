@@ -53,6 +53,8 @@ cdef extern from "_ipyeos.hpp":
         string create_key(string& key_type);
         string get_public_key(string &priv_key);
 
+        string sign_digest(string &priv_key, string &digest);
+
         int eos_init(int argc, char** argv);
         int eos_exec();
 
@@ -68,9 +70,6 @@ def set_block_interval_ms(int ms):
 
 def get_last_error():
     return get_ipyeos_proxy().get_last_error()
-
-def set_last_error(string& error):
-    get_ipyeos_proxy().set_last_error(error)
 
 def pack_abi(string& abi):
     cdef vector[char] packed_abi
@@ -116,6 +115,9 @@ def create_key(key_type: str):
 
 def get_public_key(priv_key: str):
     return get_ipyeos_proxy().get_public_key(priv_key)
+
+def sign_digest(priv_key, digest: str) -> str:
+    return get_ipyeos_proxy().sign_digest(priv_key, digest)
 
 def init(args):
     cdef int argc;
