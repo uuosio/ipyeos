@@ -30,7 +30,7 @@ jobs:
         uses: actions/cache@v2
         id: cache-eosio-build
         with:
-          key: eosio-build-v2.1.0-manylinux
+          key: eosio-build-v2.1.0-manylinux-1
           path: eos/build
       - name: Build eos
         if: steps.cache-eosio-build.outputs.cache-hit != 'true'

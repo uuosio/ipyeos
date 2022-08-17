@@ -35,7 +35,7 @@ service IPCChainTester {
    bool import_key(1:i32 id, 2:string pub_key, 3:string priv_key)
    string get_required_keys(1:i32 id, 2:string transaction, 3:list<string> available_keys)
 
-   void produce_block(1:i32 id),
+   void produce_block(1:i32 id, 2:i64 next_block_skip_seconds),
    binary push_action(1:i32 id, 2:string account, 3:string action, 4:string arguments, 5: string permissions)
    binary push_actions(1:i32 id, 2:list<Action> actions)
    string get_table_rows(1:i32 id, 2:bool json, 3:string code, 4:string scope, 5:string table,
