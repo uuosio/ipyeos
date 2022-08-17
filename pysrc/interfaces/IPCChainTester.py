@@ -2751,8 +2751,8 @@ class produce_block_args(object):
                 else:
                     iprot.skip(ftype)
             elif fid == 2:
-                if ftype == TType.I32:
-                    self.next_block_skip_seconds = iprot.readI32()
+                if ftype == TType.I64:
+                    self.next_block_skip_seconds = iprot.readI64()
                 else:
                     iprot.skip(ftype)
             else:
@@ -2770,8 +2770,8 @@ class produce_block_args(object):
             oprot.writeI32(self.id)
             oprot.writeFieldEnd()
         if self.next_block_skip_seconds is not None:
-            oprot.writeFieldBegin('next_block_skip_seconds', TType.I32, 2)
-            oprot.writeI32(self.next_block_skip_seconds)
+            oprot.writeFieldBegin('next_block_skip_seconds', TType.I64, 2)
+            oprot.writeI64(self.next_block_skip_seconds)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
@@ -2793,7 +2793,7 @@ all_structs.append(produce_block_args)
 produce_block_args.thrift_spec = (
     None,  # 0
     (1, TType.I32, 'id', None, None, ),  # 1
-    (2, TType.I32, 'next_block_skip_seconds', None, None, ),  # 2
+    (2, TType.I64, 'next_block_skip_seconds', None, None, ),  # 2
 )
 
 

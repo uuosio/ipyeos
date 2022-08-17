@@ -37,7 +37,7 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
     print('  string get_account(i32 id, string account)')
     print('  bool import_key(i32 id, string pub_key, string priv_key)')
     print('  string get_required_keys(i32 id, string transaction,  available_keys)')
-    print('  void produce_block(i32 id, i32 next_block_skip_seconds)')
+    print('  void produce_block(i32 id, i64 next_block_skip_seconds)')
     print('  string push_action(i32 id, string account, string action, string arguments, string permissions)')
     print('  string push_actions(i32 id,  actions)')
     print('  string get_table_rows(i32 id, bool json, string code, string scope, string table, string lower_bound, string upper_bound, i64 limit, string key_type, string index_position, bool reverse, bool show_payer)')
