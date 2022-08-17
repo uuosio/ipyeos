@@ -122,10 +122,11 @@ class Iface(object):
         """
         pass
 
-    def produce_block(self, id):
+    def produce_block(self, id, next_block_skip_seconds):
         """
         Parameters:
          - id
+         - next_block_skip_seconds
 
         """
         pass
@@ -570,19 +571,21 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "get_required_keys failed: unknown result")
 
-    def produce_block(self, id):
+    def produce_block(self, id, next_block_skip_seconds):
         """
         Parameters:
          - id
+         - next_block_skip_seconds
 
         """
-        self.send_produce_block(id)
+        self.send_produce_block(id, next_block_skip_seconds)
         self.recv_produce_block()
 
-    def send_produce_block(self, id):
+    def send_produce_block(self, id, next_block_skip_seconds):
         self._oprot.writeMessageBegin('produce_block', TMessageType.CALL, self._seqid)
         args = produce_block_args()
         args.id = id
+        args.next_block_skip_seconds = next_block_skip_seconds
         args.write(self._oprot)
         self._oprot.writeMessageEnd()
         self._oprot.trans.flush()
@@ -1053,7 +1056,7 @@ class Processor(Iface, TProcessor):
         iprot.readMessageEnd()
         result = produce_block_result()
         try:
-            self._handler.produce_block(args.id)
+            self._handler.produce_block(args.id, args.next_block_skip_seconds)
             msg_type = TMessageType.REPLY
         except TTransport.TTransportException:
             raise
@@ -2724,12 +2727,14 @@ class produce_block_args(object):
     """
     Attributes:
      - id
+     - next_block_skip_seconds
 
     """
 
 
-    def __init__(self, id=None,):
+    def __init__(self, id=None, next_block_skip_seconds=None,):
         self.id = id
+        self.next_block_skip_seconds = next_block_skip_seconds
 
     def read(self, iprot):
         if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
@@ -2745,6 +2750,11 @@ class produce_block_args(object):
                     self.id = iprot.readI32()
                 else:
                     iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.I32:
+                    self.next_block_skip_seconds = iprot.readI32()
+                else:
+                    iprot.skip(ftype)
             else:
                 iprot.skip(ftype)
             iprot.readFieldEnd()
@@ -2758,6 +2768,10 @@ class produce_block_args(object):
         if self.id is not None:
             oprot.writeFieldBegin('id', TType.I32, 1)
             oprot.writeI32(self.id)
+            oprot.writeFieldEnd()
+        if self.next_block_skip_seconds is not None:
+            oprot.writeFieldBegin('next_block_skip_seconds', TType.I32, 2)
+            oprot.writeI32(self.next_block_skip_seconds)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
@@ -2779,6 +2793,7 @@ all_structs.append(produce_block_args)
 produce_block_args.thrift_spec = (
     None,  # 0
     (1, TType.I32, 'id', None, None, ),  # 1
+    (2, TType.I32, 'next_block_skip_seconds', None, None, ),  # 2
 )
 
 
