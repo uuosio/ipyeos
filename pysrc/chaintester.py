@@ -539,7 +539,7 @@ class ChainTester(object):
         if start_block:
             self.start_block(next_block_time)
 
-    def create_account(self, creator: Name, account: Name, owner_key: Name, active_key: Name, ram_bytes: int=0, stake_net: float=0.0, stake_cpu: float=0.0):
+    def create_account(self, creator: Name, account: Name, owner_key: Name, active_key: Name, ram_bytes: int=0, stake_net: int=0, stake_cpu: int=0):
         actions = []
         # logger.info(f'{creator} {account}')
         args = {
@@ -576,8 +576,8 @@ class ChainTester(object):
             args = {
                 'from': creator,
                 'receiver': account,
-                'stake_net_quantity': '%0.4f %s'%(stake_net, self.main_token),
-                'stake_cpu_quantity': '%0.4f %s'%(stake_cpu, self.main_token),
+                'stake_net_quantity': '%0.4f %s'%(stake_net/10000, self.main_token),
+                'stake_cpu_quantity': '%0.4f %s'%(stake_cpu/10000, self.main_token),
                 'transfer': 1
             }
             act = self.gen_action('eosio', 'delegatebw', args, {creator:'active'})

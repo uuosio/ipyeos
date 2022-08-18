@@ -83,7 +83,7 @@ class ChainTesterProxy(object):
     def get_account(self, id: i32, account: str):
         return self.handler.get_account(id, account)
 
-    def create_account(self, id: int, creator: str, account: str, owner_key: str, active_key: str, ram_bytes: int=0, stake_net: float=0.0, stake_cpu: float=0.0):
+    def create_account(self, id: int, creator: str, account: str, owner_key: str, active_key: str, ram_bytes: int=0, stake_net: int=0, stake_cpu: int=0):
         return self.handler.create_account(id, creator, account, owner_key, active_key, ram_bytes, stake_net, stake_cpu)
 
     def produce_block(self, id, next_block_skip_seconds: int=0):

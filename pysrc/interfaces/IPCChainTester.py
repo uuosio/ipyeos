@@ -93,11 +93,34 @@ class Iface(object):
         """
         pass
 
+    def create_key(self, key_type):
+        """
+        Parameters:
+         - key_type
+
+        """
+        pass
+
     def get_account(self, id, account):
         """
         Parameters:
          - id
          - account
+
+        """
+        pass
+
+    def create_account(self, id, creator, account, owner_key, active_key, ram_bytes, stake_net, stake_cpu):
+        """
+        Parameters:
+         - id
+         - creator
+         - account
+         - owner_key
+         - active_key
+         - ram_bytes
+         - stake_net
+         - stake_cpu
 
         """
         pass
@@ -465,6 +488,38 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "get_info failed: unknown result")
 
+    def create_key(self, key_type):
+        """
+        Parameters:
+         - key_type
+
+        """
+        self.send_create_key(key_type)
+        return self.recv_create_key()
+
+    def send_create_key(self, key_type):
+        self._oprot.writeMessageBegin('create_key', TMessageType.CALL, self._seqid)
+        args = create_key_args()
+        args.key_type = key_type
+        args.write(self._oprot)
+        self._oprot.writeMessageEnd()
+        self._oprot.trans.flush()
+
+    def recv_create_key(self):
+        iprot = self._iprot
+        (fname, mtype, rseqid) = iprot.readMessageBegin()
+        if mtype == TMessageType.EXCEPTION:
+            x = TApplicationException()
+            x.read(iprot)
+            iprot.readMessageEnd()
+            raise x
+        result = create_key_result()
+        result.read(iprot)
+        iprot.readMessageEnd()
+        if result.success is not None:
+            return result.success
+        raise TApplicationException(TApplicationException.MISSING_RESULT, "create_key failed: unknown result")
+
     def get_account(self, id, account):
         """
         Parameters:
@@ -498,6 +553,52 @@ class Client(Iface):
         if result.success is not None:
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "get_account failed: unknown result")
+
+    def create_account(self, id, creator, account, owner_key, active_key, ram_bytes, stake_net, stake_cpu):
+        """
+        Parameters:
+         - id
+         - creator
+         - account
+         - owner_key
+         - active_key
+         - ram_bytes
+         - stake_net
+         - stake_cpu
+
+        """
+        self.send_create_account(id, creator, account, owner_key, active_key, ram_bytes, stake_net, stake_cpu)
+        return self.recv_create_account()
+
+    def send_create_account(self, id, creator, account, owner_key, active_key, ram_bytes, stake_net, stake_cpu):
+        self._oprot.writeMessageBegin('create_account', TMessageType.CALL, self._seqid)
+        args = create_account_args()
+        args.id = id
+        args.creator = creator
+        args.account = account
+        args.owner_key = owner_key
+        args.active_key = active_key
+        args.ram_bytes = ram_bytes
+        args.stake_net = stake_net
+        args.stake_cpu = stake_cpu
+        args.write(self._oprot)
+        self._oprot.writeMessageEnd()
+        self._oprot.trans.flush()
+
+    def recv_create_account(self):
+        iprot = self._iprot
+        (fname, mtype, rseqid) = iprot.readMessageBegin()
+        if mtype == TMessageType.EXCEPTION:
+            x = TApplicationException()
+            x.read(iprot)
+            iprot.readMessageEnd()
+            raise x
+        result = create_account_result()
+        result.read(iprot)
+        iprot.readMessageEnd()
+        if result.success is not None:
+            return result.success
+        raise TApplicationException(TApplicationException.MISSING_RESULT, "create_account failed: unknown result")
 
     def import_key(self, id, pub_key, priv_key):
         """
@@ -746,7 +847,9 @@ class Processor(Iface, TProcessor):
         self._processMap["new_chain"] = Processor.process_new_chain
         self._processMap["free_chain"] = Processor.process_free_chain
         self._processMap["get_info"] = Processor.process_get_info
+        self._processMap["create_key"] = Processor.process_create_key
         self._processMap["get_account"] = Processor.process_get_account
+        self._processMap["create_account"] = Processor.process_create_account
         self._processMap["import_key"] = Processor.process_import_key
         self._processMap["get_required_keys"] = Processor.process_get_required_keys
         self._processMap["produce_block"] = Processor.process_produce_block
@@ -981,6 +1084,29 @@ class Processor(Iface, TProcessor):
         oprot.writeMessageEnd()
         oprot.trans.flush()
 
+    def process_create_key(self, seqid, iprot, oprot):
+        args = create_key_args()
+        args.read(iprot)
+        iprot.readMessageEnd()
+        result = create_key_result()
+        try:
+            result.success = self._handler.create_key(args.key_type)
+            msg_type = TMessageType.REPLY
+        except TTransport.TTransportException:
+            raise
+        except TApplicationException as ex:
+            logging.exception('TApplication exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = ex
+        except Exception:
+            logging.exception('Unexpected exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
+        oprot.writeMessageBegin("create_key", msg_type, seqid)
+        result.write(oprot)
+        oprot.writeMessageEnd()
+        oprot.trans.flush()
+
     def process_get_account(self, seqid, iprot, oprot):
         args = get_account_args()
         args.read(iprot)
@@ -1000,6 +1126,29 @@ class Processor(Iface, TProcessor):
             msg_type = TMessageType.EXCEPTION
             result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
         oprot.writeMessageBegin("get_account", msg_type, seqid)
+        result.write(oprot)
+        oprot.writeMessageEnd()
+        oprot.trans.flush()
+
+    def process_create_account(self, seqid, iprot, oprot):
+        args = create_account_args()
+        args.read(iprot)
+        iprot.readMessageEnd()
+        result = create_account_result()
+        try:
+            result.success = self._handler.create_account(args.id, args.creator, args.account, args.owner_key, args.active_key, args.ram_bytes, args.stake_net, args.stake_cpu)
+            msg_type = TMessageType.REPLY
+        except TTransport.TTransportException:
+            raise
+        except TApplicationException as ex:
+            logging.exception('TApplication exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = ex
+        except Exception:
+            logging.exception('Unexpected exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
+        oprot.writeMessageBegin("create_account", msg_type, seqid)
         result.write(oprot)
         oprot.writeMessageEnd()
         oprot.trans.flush()
@@ -2286,6 +2435,129 @@ get_info_result.thrift_spec = (
 )
 
 
+class create_key_args(object):
+    """
+    Attributes:
+     - key_type
+
+    """
+
+
+    def __init__(self, key_type=None,):
+        self.key_type = key_type
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRING:
+                    self.key_type = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('create_key_args')
+        if self.key_type is not None:
+            oprot.writeFieldBegin('key_type', TType.STRING, 1)
+            oprot.writeString(self.key_type.encode('utf-8') if sys.version_info[0] == 2 else self.key_type)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(create_key_args)
+create_key_args.thrift_spec = (
+    None,  # 0
+    (1, TType.STRING, 'key_type', 'UTF8', None, ),  # 1
+)
+
+
+class create_key_result(object):
+    """
+    Attributes:
+     - success
+
+    """
+
+
+    def __init__(self, success=None,):
+        self.success = success
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 0:
+                if ftype == TType.STRING:
+                    self.success = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('create_key_result')
+        if self.success is not None:
+            oprot.writeFieldBegin('success', TType.STRING, 0)
+            oprot.writeString(self.success.encode('utf-8') if sys.version_info[0] == 2 else self.success)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(create_key_result)
+create_key_result.thrift_spec = (
+    (0, TType.STRING, 'success', 'UTF8', None, ),  # 0
+)
+
+
 class get_account_args(object):
     """
     Attributes:
@@ -2417,6 +2689,213 @@ class get_account_result(object):
         return not (self == other)
 all_structs.append(get_account_result)
 get_account_result.thrift_spec = (
+    (0, TType.STRING, 'success', 'UTF8', None, ),  # 0
+)
+
+
+class create_account_args(object):
+    """
+    Attributes:
+     - id
+     - creator
+     - account
+     - owner_key
+     - active_key
+     - ram_bytes
+     - stake_net
+     - stake_cpu
+
+    """
+
+
+    def __init__(self, id=None, creator=None, account=None, owner_key=None, active_key=None, ram_bytes=None, stake_net=None, stake_cpu=None,):
+        self.id = id
+        self.creator = creator
+        self.account = account
+        self.owner_key = owner_key
+        self.active_key = active_key
+        self.ram_bytes = ram_bytes
+        self.stake_net = stake_net
+        self.stake_cpu = stake_cpu
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.I32:
+                    self.id = iprot.readI32()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.STRING:
+                    self.creator = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.STRING:
+                    self.account = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 4:
+                if ftype == TType.STRING:
+                    self.owner_key = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 5:
+                if ftype == TType.STRING:
+                    self.active_key = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 6:
+                if ftype == TType.I64:
+                    self.ram_bytes = iprot.readI64()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 7:
+                if ftype == TType.I64:
+                    self.stake_net = iprot.readI64()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 8:
+                if ftype == TType.I64:
+                    self.stake_cpu = iprot.readI64()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('create_account_args')
+        if self.id is not None:
+            oprot.writeFieldBegin('id', TType.I32, 1)
+            oprot.writeI32(self.id)
+            oprot.writeFieldEnd()
+        if self.creator is not None:
+            oprot.writeFieldBegin('creator', TType.STRING, 2)
+            oprot.writeString(self.creator.encode('utf-8') if sys.version_info[0] == 2 else self.creator)
+            oprot.writeFieldEnd()
+        if self.account is not None:
+            oprot.writeFieldBegin('account', TType.STRING, 3)
+            oprot.writeString(self.account.encode('utf-8') if sys.version_info[0] == 2 else self.account)
+            oprot.writeFieldEnd()
+        if self.owner_key is not None:
+            oprot.writeFieldBegin('owner_key', TType.STRING, 4)
+            oprot.writeString(self.owner_key.encode('utf-8') if sys.version_info[0] == 2 else self.owner_key)
+            oprot.writeFieldEnd()
+        if self.active_key is not None:
+            oprot.writeFieldBegin('active_key', TType.STRING, 5)
+            oprot.writeString(self.active_key.encode('utf-8') if sys.version_info[0] == 2 else self.active_key)
+            oprot.writeFieldEnd()
+        if self.ram_bytes is not None:
+            oprot.writeFieldBegin('ram_bytes', TType.I64, 6)
+            oprot.writeI64(self.ram_bytes)
+            oprot.writeFieldEnd()
+        if self.stake_net is not None:
+            oprot.writeFieldBegin('stake_net', TType.I64, 7)
+            oprot.writeI64(self.stake_net)
+            oprot.writeFieldEnd()
+        if self.stake_cpu is not None:
+            oprot.writeFieldBegin('stake_cpu', TType.I64, 8)
+            oprot.writeI64(self.stake_cpu)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(create_account_args)
+create_account_args.thrift_spec = (
+    None,  # 0
+    (1, TType.I32, 'id', None, None, ),  # 1
+    (2, TType.STRING, 'creator', 'UTF8', None, ),  # 2
+    (3, TType.STRING, 'account', 'UTF8', None, ),  # 3
+    (4, TType.STRING, 'owner_key', 'UTF8', None, ),  # 4
+    (5, TType.STRING, 'active_key', 'UTF8', None, ),  # 5
+    (6, TType.I64, 'ram_bytes', None, None, ),  # 6
+    (7, TType.I64, 'stake_net', None, None, ),  # 7
+    (8, TType.I64, 'stake_cpu', None, None, ),  # 8
+)
+
+
+class create_account_result(object):
+    """
+    Attributes:
+     - success
+
+    """
+
+
+    def __init__(self, success=None,):
+        self.success = success
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 0:
+                if ftype == TType.STRING:
+                    self.success = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('create_account_result')
+        if self.success is not None:
+            oprot.writeFieldBegin('success', TType.STRING, 0)
+            oprot.writeString(self.success.encode('utf-8') if sys.version_info[0] == 2 else self.success)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(create_account_result)
+create_account_result.thrift_spec = (
     (0, TType.STRING, 'success', 'UTF8', None, ),  # 0
 )
 

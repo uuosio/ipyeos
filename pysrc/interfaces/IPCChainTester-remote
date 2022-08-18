@@ -34,7 +34,9 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
     print('  i32 new_chain()')
     print('  i32 free_chain(i32 id)')
     print('  string get_info(i32 id)')
+    print('  string create_key(string key_type)')
     print('  string get_account(i32 id, string account)')
+    print('  string create_account(i32 id, string creator, string account, string owner_key, string active_key, i64 ram_bytes, i64 stake_net, i64 stake_cpu)')
     print('  bool import_key(i32 id, string pub_key, string priv_key)')
     print('  string get_required_keys(i32 id, string transaction,  available_keys)')
     print('  void produce_block(i32 id, i64 next_block_skip_seconds)')
@@ -180,11 +182,23 @@ elif cmd == 'get_info':
         sys.exit(1)
     pp.pprint(client.get_info(eval(args[0]),))
 
+elif cmd == 'create_key':
+    if len(args) != 1:
+        print('create_key requires 1 args')
+        sys.exit(1)
+    pp.pprint(client.create_key(args[0],))
+
 elif cmd == 'get_account':
     if len(args) != 2:
         print('get_account requires 2 args')
         sys.exit(1)
     pp.pprint(client.get_account(eval(args[0]), args[1],))
+
+elif cmd == 'create_account':
+    if len(args) != 8:
+        print('create_account requires 8 args')
+        sys.exit(1)
+    pp.pprint(client.create_account(eval(args[0]), args[1], args[2], args[3], args[4], eval(args[5]), eval(args[6]), eval(args[7]),))
 
 elif cmd == 'import_key':
     if len(args) != 3:

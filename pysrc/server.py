@@ -751,9 +751,10 @@ class ChainTesterHandler:
         tester: ChainTester = self.testers[id]
         return tester.deploy_contract(account, bytes.fromhex(wasm), abi)
 
-    def create_account(self, id: int, creator: str, account: str, owner_key: str, active_key: str, ram_bytes: int=0, stake_net: float=0.0, stake_cpu: float=0.0):
+    def create_account(self, id: int, creator: str, account: str, owner_key: str, active_key: str, ram_bytes: int=0, stake_net: i64=0, stake_cpu: i64=0):
         tester: ChainTester = self.testers[id]
-        return tester.create_account(creator, account, owner_key, active_key, ram_bytes, stake_net, stake_cpu)
+        ret = tester.create_account(creator, account, owner_key, active_key, ram_bytes, stake_net, stake_cpu)
+        return json.dumps(ret)
 
     def create_key(self, key_type):
         return _eos.create_key(key_type)
