@@ -762,7 +762,7 @@ class ChainTesterHandler:
     def get_table_rows(self, id, _json: bool, code: str, scope: str, table: str, lower_bound: str, upper_bound: str, limit: i64, key_type: str, index_position: str, reverse: bool, show_payer: bool):
         tester: ChainTester = self.testers[id]
         self.current_tester = tester
-        print(_json, code, scope, table, lower_bound, upper_bound, limit, key_type, index_position, reverse, show_payer)
+        # print(_json, code, scope, table, lower_bound, upper_bound, limit, key_type, index_position, reverse, show_payer)
         try:
             r = tester.get_table_rows(_json, code, scope, table, lower_bound, upper_bound, limit, key_type, index_position, reverse, show_payer)
             return json.dumps(r)
