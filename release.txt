@@ -1,4 +1,3 @@
-v0.2.11 release
+v0.2.12 release
 
-1. Add eos.sign_digest
-2. Update produce_block interface
+1. Vairous fixes
