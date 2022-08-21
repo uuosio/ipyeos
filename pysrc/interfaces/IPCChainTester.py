@@ -175,6 +175,17 @@ class Iface(object):
         """
         pass
 
+    def deploy_contract(self, id, account, wasm, abi):
+        """
+        Parameters:
+         - id
+         - account
+         - wasm
+         - abi
+
+        """
+        pass
+
     def get_table_rows(self, id, json, code, scope, table, lower_bound, upper_bound, limit, key_type, index_position, reverse, show_payer):
         """
         Parameters:
@@ -778,6 +789,44 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "push_actions failed: unknown result")
 
+    def deploy_contract(self, id, account, wasm, abi):
+        """
+        Parameters:
+         - id
+         - account
+         - wasm
+         - abi
+
+        """
+        self.send_deploy_contract(id, account, wasm, abi)
+        return self.recv_deploy_contract()
+
+    def send_deploy_contract(self, id, account, wasm, abi):
+        self._oprot.writeMessageBegin('deploy_contract', TMessageType.CALL, self._seqid)
+        args = deploy_contract_args()
+        args.id = id
+        args.account = account
+        args.wasm = wasm
+        args.abi = abi
+        args.write(self._oprot)
+        self._oprot.writeMessageEnd()
+        self._oprot.trans.flush()
+
+    def recv_deploy_contract(self):
+        iprot = self._iprot
+        (fname, mtype, rseqid) = iprot.readMessageBegin()
+        if mtype == TMessageType.EXCEPTION:
+            x = TApplicationException()
+            x.read(iprot)
+            iprot.readMessageEnd()
+            raise x
+        result = deploy_contract_result()
+        result.read(iprot)
+        iprot.readMessageEnd()
+        if result.success is not None:
+            return result.success
+        raise TApplicationException(TApplicationException.MISSING_RESULT, "deploy_contract failed: unknown result")
+
     def get_table_rows(self, id, json, code, scope, table, lower_bound, upper_bound, limit, key_type, index_position, reverse, show_payer):
         """
         Parameters:
@@ -855,6 +904,7 @@ class Processor(Iface, TProcessor):
         self._processMap["produce_block"] = Processor.process_produce_block
         self._processMap["push_action"] = Processor.process_push_action
         self._processMap["push_actions"] = Processor.process_push_actions
+        self._processMap["deploy_contract"] = Processor.process_deploy_contract
         self._processMap["get_table_rows"] = Processor.process_get_table_rows
         self._on_message_begin = None
 
@@ -1264,6 +1314,29 @@ class Processor(Iface, TProcessor):
             msg_type = TMessageType.EXCEPTION
             result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
         oprot.writeMessageBegin("push_actions", msg_type, seqid)
+        result.write(oprot)
+        oprot.writeMessageEnd()
+        oprot.trans.flush()
+
+    def process_deploy_contract(self, seqid, iprot, oprot):
+        args = deploy_contract_args()
+        args.read(iprot)
+        iprot.readMessageEnd()
+        result = deploy_contract_result()
+        try:
+            result.success = self._handler.deploy_contract(args.id, args.account, args.wasm, args.abi)
+            msg_type = TMessageType.REPLY
+        except TTransport.TTransportException:
+            raise
+        except TApplicationException as ex:
+            logging.exception('TApplication exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = ex
+        except Exception:
+            logging.exception('Unexpected exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
+        oprot.writeMessageBegin("deploy_contract", msg_type, seqid)
         result.write(oprot)
         oprot.writeMessageEnd()
         oprot.trans.flush()
@@ -3630,6 +3703,165 @@ class push_actions_result(object):
         return not (self == other)
 all_structs.append(push_actions_result)
 push_actions_result.thrift_spec = (
+    (0, TType.STRING, 'success', 'BINARY', None, ),  # 0
+)
+
+
+class deploy_contract_args(object):
+    """
+    Attributes:
+     - id
+     - account
+     - wasm
+     - abi
+
+    """
+
+
+    def __init__(self, id=None, account=None, wasm=None, abi=None,):
+        self.id = id
+        self.account = account
+        self.wasm = wasm
+        self.abi = abi
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.I32:
+                    self.id = iprot.readI32()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.STRING:
+                    self.account = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.STRING:
+                    self.wasm = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 4:
+                if ftype == TType.STRING:
+                    self.abi = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('deploy_contract_args')
+        if self.id is not None:
+            oprot.writeFieldBegin('id', TType.I32, 1)
+            oprot.writeI32(self.id)
+            oprot.writeFieldEnd()
+        if self.account is not None:
+            oprot.writeFieldBegin('account', TType.STRING, 2)
+            oprot.writeString(self.account.encode('utf-8') if sys.version_info[0] == 2 else self.account)
+            oprot.writeFieldEnd()
+        if self.wasm is not None:
+            oprot.writeFieldBegin('wasm', TType.STRING, 3)
+            oprot.writeString(self.wasm.encode('utf-8') if sys.version_info[0] == 2 else self.wasm)
+            oprot.writeFieldEnd()
+        if self.abi is not None:
+            oprot.writeFieldBegin('abi', TType.STRING, 4)
+            oprot.writeString(self.abi.encode('utf-8') if sys.version_info[0] == 2 else self.abi)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(deploy_contract_args)
+deploy_contract_args.thrift_spec = (
+    None,  # 0
+    (1, TType.I32, 'id', None, None, ),  # 1
+    (2, TType.STRING, 'account', 'UTF8', None, ),  # 2
+    (3, TType.STRING, 'wasm', 'UTF8', None, ),  # 3
+    (4, TType.STRING, 'abi', 'UTF8', None, ),  # 4
+)
+
+
+class deploy_contract_result(object):
+    """
+    Attributes:
+     - success
+
+    """
+
+
+    def __init__(self, success=None,):
+        self.success = success
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 0:
+                if ftype == TType.STRING:
+                    self.success = iprot.readBinary()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('deploy_contract_result')
+        if self.success is not None:
+            oprot.writeFieldBegin('success', TType.STRING, 0)
+            oprot.writeBinary(self.success)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(deploy_contract_result)
+deploy_contract_result.thrift_spec = (
     (0, TType.STRING, 'success', 'BINARY', None, ),  # 0
 )
 

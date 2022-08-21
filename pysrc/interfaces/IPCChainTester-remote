@@ -42,6 +42,7 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
     print('  void produce_block(i32 id, i64 next_block_skip_seconds)')
     print('  string push_action(i32 id, string account, string action, string arguments, string permissions)')
     print('  string push_actions(i32 id,  actions)')
+    print('  string deploy_contract(i32 id, string account, string wasm, string abi)')
     print('  string get_table_rows(i32 id, bool json, string code, string scope, string table, string lower_bound, string upper_bound, i64 limit, string key_type, string index_position, bool reverse, bool show_payer)')
     print('')
     sys.exit(0)
@@ -229,6 +230,12 @@ elif cmd == 'push_actions':
         print('push_actions requires 2 args')
         sys.exit(1)
     pp.pprint(client.push_actions(eval(args[0]), eval(args[1]),))
+
+elif cmd == 'deploy_contract':
+    if len(args) != 4:
+        print('deploy_contract requires 4 args')
+        sys.exit(1)
+    pp.pprint(client.deploy_contract(eval(args[0]), args[1], args[2], args[3],))
 
 elif cmd == 'get_table_rows':
     if len(args) != 12:

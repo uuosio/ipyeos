@@ -31,13 +31,17 @@ service IPCChainTester {
    i32 free_chain(1:i32 id)
 
    string get_info(1:i32 id)
+   string create_key(1:string key_type)
    string get_account(1:i32 id, 2:string account)
+   string create_account(1:i32 id, 2:string creator, 3:string account, 4:string owner_key, 5:string active_key, 6:i64 ram_bytes, 7:i64 stake_net, 8:i64 stake_cpu)
    bool import_key(1:i32 id, 2:string pub_key, 3:string priv_key)
    string get_required_keys(1:i32 id, 2:string transaction, 3:list<string> available_keys)
 
    void produce_block(1:i32 id, 2:i64 next_block_skip_seconds),
    binary push_action(1:i32 id, 2:string account, 3:string action, 4:string arguments, 5: string permissions)
    binary push_actions(1:i32 id, 2:list<Action> actions)
+   binary deploy_contract(1:i32 id, 2:string account, 3:string wasm, 4:string abi)
+
    string get_table_rows(1:i32 id, 2:bool json, 3:string code, 4:string scope, 5:string table,
                                     6:string lower_bound, 7:string upper_bound,
                                     8:i64 limit,

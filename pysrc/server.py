@@ -645,7 +645,7 @@ class ChainTesterHandler:
             else:
                 raise Exception("connect to 9091 refused!")
 
-    def get_apply_client(self):
+    def get_apply_request_client(self):
         return self.apply_request_client
 
     def close_apply_client(self):
@@ -663,7 +663,7 @@ class ChainTesterHandler:
         _a = to_uint64(receiver)
         _b = to_uint64(first_receiver)
         _c = to_uint64(action)
-        ret = self.get_apply_client().apply_request(_a, _b, _c, self.vm_api_handler)
+        ret = self.get_apply_request_client().apply_request(_a, _b, _c, self.vm_api_handler)
         return 1
 
     def vm_api_handler(self):
@@ -691,14 +691,14 @@ class ChainTesterHandler:
                 err = {
                     'except': str(e)
                 }
-                client = self.get_apply_client()
+                client = self.get_apply_request_client()
                 if client:
                     client.apply_end()
                 return json.dumps(err).encode()
 
         permissions = json.loads(permissions)
         # print(account, action, arguments, permissions)
-        # self.get_apply_client() # connect to apply request server
+        # self.get_apply_request_client() # connect to apply request server
         try:
             r = tester.push_action(account, action, arguments, permissions)
             # r = tester.push_action(account, action, arguments, permissions, explicit_cpu_bill = True)
@@ -716,7 +716,7 @@ class ChainTesterHandler:
             return err.encode()
         finally:
             self.current_tester = None
-            client = self.get_apply_client()
+            client = self.get_apply_request_client()
             if client:
                 client.apply_end()
 
@@ -745,11 +745,12 @@ class ChainTesterHandler:
             return err.encode()
         finally:
             self.current_tester = None
-            self.get_apply_client().apply_end()
+            self.get_apply_request_client().apply_end()
 
     def deploy_contract(self, id, account: str, wasm: str, abi: str):
         tester: ChainTester = self.testers[id]
-        return tester.deploy_contract(account, bytes.fromhex(wasm), abi)
+        ret = tester.deploy_contract(account, bytes.fromhex(wasm), abi)
+        return json.dumps(ret).encode()
 
     def create_account(self, id: int, creator: str, account: str, owner_key: str, active_key: str, ram_bytes: int=0, stake_net: i64=0, stake_cpu: i64=0):
         tester: ChainTester = self.testers[id]
@@ -1024,11 +1025,6 @@ def start_debug_server(addr='127.0.0.1', server_port=9090, vm_api_port=9092, app
     eos.enable_native_contracts(True)
     handler = ChainTesterHandler(addr, vm_api_port, apply_request_addr, apply_request_port)
     processor = IPCChainTesterProcessor(handler)
-    transport = TSocket.TServerSocket(host=addr, port=server_port)
-    tfactory = TTransport.TBufferedTransportFactory()
-    pfactory = TBinaryProtocol.TBinaryProtocolFactory()
-
-    server = ChainTesterServer(processor, transport, tfactory, pfactory, handler=handler)
 
 
     loop = aio.get_event_loop()
@@ -1036,12 +1032,29 @@ def start_debug_server(addr='127.0.0.1', server_port=9090, vm_api_port=9092, app
 
     def run_server():
         print('Starting the EOS debugger server...')
+        transport = TSocket.TServerSocket(host=addr, port=server_port)
+        tfactory = TTransport.TBufferedTransportFactory()
+        pfactory = TBinaryProtocol.TBinaryProtocolFactory()
+
+        server = ChainTesterServer(processor, transport, tfactory, pfactory, handler=handler)
         server.serve()
         print('done.')
 
     def run_rpc_server():
         print('run rpc server')
         rpc_server.start(rpc_server_addr, rpc_server_port, handler)
+
+    def run_http_server():
+        from thrift.protocol import TBinaryProtocol
+        from thrift.server import THttpServer
+        pfactory = TBinaryProtocol.TBinaryProtocolFactory()
+        server = THttpServer.THttpServer(
+            processor,
+            ('', 9094),
+            pfactory
+        )
+        print('Starting the http server...')
+        server.serve()
 
     async def run_task():
         await loop.run_in_executor(_ex, run_rpc_server)
@@ -1050,13 +1063,20 @@ def start_debug_server(addr='127.0.0.1', server_port=9090, vm_api_port=9092, app
         await loop.run_in_executor(_ex, run_server)
         # await aio.sleep(0.1)
 
+    async def run_http_task():
+        await loop.run_in_executor(_ex, run_http_server)
+        # await aio.sleep(0.1)
+
     async def main():
         task1 = aio.create_task(run_task())
         await aio.sleep(0.1)
         task2 = aio.create_task(run_task2())
         aio.gather(task1, task2)
-
+        # task3 = aio.create_task(run_http_task())
+        # aio.gather(task1, task2, task3)
+    run_server()
     loop.run_until_complete(main())
 
 if __name__ == '__main__':
     start_debug_server()
+
