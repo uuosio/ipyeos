@@ -74,7 +74,12 @@ class Iface(object):
         """
         pass
 
-    def new_chain(self):
+    def new_chain(self, initialize):
+        """
+        Parameters:
+         - initialize
+
+        """
         pass
 
     def free_chain(self, id):
@@ -409,13 +414,19 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "unpack_action_args failed: unknown result")
 
-    def new_chain(self):
-        self.send_new_chain()
+    def new_chain(self, initialize):
+        """
+        Parameters:
+         - initialize
+
+        """
+        self.send_new_chain(initialize)
         return self.recv_new_chain()
 
-    def send_new_chain(self):
+    def send_new_chain(self, initialize):
         self._oprot.writeMessageBegin('new_chain', TMessageType.CALL, self._seqid)
         args = new_chain_args()
+        args.initialize = initialize
         args.write(self._oprot)
         self._oprot.writeMessageEnd()
         self._oprot.trans.flush()
@@ -1071,7 +1082,7 @@ class Processor(Iface, TProcessor):
         iprot.readMessageEnd()
         result = new_chain_result()
         try:
-            result.success = self._handler.new_chain()
+            result.success = self._handler.new_chain(args.initialize)
             msg_type = TMessageType.REPLY
         except TTransport.TTransportException:
             raise
@@ -2159,7 +2170,15 @@ unpack_action_args_result.thrift_spec = (
 
 
 class new_chain_args(object):
+    """
+    Attributes:
+     - initialize
 
+    """
+
+
+    def __init__(self, initialize=None,):
+        self.initialize = initialize
 
     def read(self, iprot):
         if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
@@ -2170,6 +2189,11 @@ class new_chain_args(object):
             (fname, ftype, fid) = iprot.readFieldBegin()
             if ftype == TType.STOP:
                 break
+            if fid == 1:
+                if ftype == TType.BOOL:
+                    self.initialize = iprot.readBool()
+                else:
+                    iprot.skip(ftype)
             else:
                 iprot.skip(ftype)
             iprot.readFieldEnd()
@@ -2180,6 +2204,10 @@ class new_chain_args(object):
             oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
             return
         oprot.writeStructBegin('new_chain_args')
+        if self.initialize is not None:
+            oprot.writeFieldBegin('initialize', TType.BOOL, 1)
+            oprot.writeBool(self.initialize)
+            oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
 
@@ -2198,6 +2226,8 @@ class new_chain_args(object):
         return not (self == other)
 all_structs.append(new_chain_args)
 new_chain_args.thrift_spec = (
+    None,  # 0
+    (1, TType.BOOL, 'initialize', None, None, ),  # 1
 )
 
 

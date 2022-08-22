@@ -582,8 +582,8 @@ class ApplyProcessor(Apply.Processor):
 
 class DebugChainTester(ChainTester):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, initialize: bool):
+        super().__init__(initialize)
         self.debug_contracts = {}
         ipyeos_dir = os.path.dirname(__file__)
         self.so_file = None
@@ -820,12 +820,12 @@ class ChainTesterHandler:
     def unpack_action_args(self, id, contract, action, raw_args):
         return self.testers[id].chain.unpack_action_args(contract, action, raw_args)
 
-    def new_chain(self):
+    def new_chain(self, initialize: bool=True):
         # max 5 test chain per connection
         if len(self.current_connection.get_chain_seq_nums()) >= 5:
             return 0
         self.tester_seq += 1
-        tester = DebugChainTester()
+        tester = DebugChainTester(initialize)
         self.testers[self.tester_seq] = tester
         self.current_connection.add_chain_seq_num(self.tester_seq)
         return self.tester_seq

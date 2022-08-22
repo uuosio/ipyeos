@@ -27,7 +27,7 @@ service IPCChainTester {
    binary pack_action_args(1:i32 id, 2:string contract, 3:string action, 4:string action_args)
    binary unpack_action_args(1:i32 id, 2:string contract, 3:string action, 4:binary raw_args)
 
-   i32 new_chain()
+   i32 new_chain(1:bool initialize)
    i32 free_chain(1:i32 id)
 
    string get_info(1:i32 id)

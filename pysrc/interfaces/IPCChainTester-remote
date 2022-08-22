@@ -31,7 +31,7 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
     print('  string pack_abi(string abi)')
     print('  string pack_action_args(i32 id, string contract, string action, string action_args)')
     print('  string unpack_action_args(i32 id, string contract, string action, string raw_args)')
-    print('  i32 new_chain()')
+    print('  i32 new_chain(bool initialize)')
     print('  i32 free_chain(i32 id)')
     print('  string get_info(i32 id)')
     print('  string create_key(string key_type)')
@@ -166,10 +166,10 @@ elif cmd == 'unpack_action_args':
     pp.pprint(client.unpack_action_args(eval(args[0]), args[1], args[2], args[3],))
 
 elif cmd == 'new_chain':
-    if len(args) != 0:
-        print('new_chain requires 0 args')
+    if len(args) != 1:
+        print('new_chain requires 1 args')
         sys.exit(1)
-    pp.pprint(client.new_chain())
+    pp.pprint(client.new_chain(eval(args[0]),))
 
 elif cmd == 'free_chain':
     if len(args) != 1:

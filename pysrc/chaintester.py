@@ -163,7 +163,7 @@ producer_key_map = {
 
 class ChainTester(object):
 
-    def __init__(self):
+    def __init__(self, initialize=True):
         atexit.register(self.free)
 
         self.data_dir = tempfile.mkdtemp()
@@ -193,6 +193,10 @@ class ChainTester(object):
 
         self.feature_digests = ['0ec7e080177b2c02b278d5088611686b49d739925a92d9bfcacd7fc6b74053bd']
         self.start_block()
+        self.code_cache = {}
+
+        if not initialize:
+            return
 
         key = 'EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV'
         systemAccounts = [
@@ -286,8 +290,6 @@ class ChainTester(object):
         # logger.info(r['action_traces'][0]['console'])
         # self.buy_ram_bytes('eosio', 'eosio', 10*1024*1024)
         # self.delegatebw('eosio', 'eosio', 1.0, 1.0, transfer=0)
-
-        self.code_cache = {}
 
     def __enter__(self):
         if not self.chain.is_producing_block():
