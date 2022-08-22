@@ -605,6 +605,21 @@ class DebugChainTester(ChainTester):
         except KeyError:
             return False
 
+class CurrentConnection(object):
+    def __init__(self, addr):
+        self.addr = addr
+        self.chain_seq_nums = set()
+
+    def add_chain_seq_num(self, seq_num):
+        self.chain_seq_nums.add(seq_num)
+
+    def get_chain_seq_nums(self):
+        return self.chain_seq_nums
+
+    def remove_chain_seq_num(self, seq_num):
+        if seq_num in self.chain_seq_nums:
+            self.chain_seq_nums.remove(seq_num)
+
 class ChainTesterHandler:
     def __init__(self, addr, vm_api_port, apply_request_addr, apply_request_port):
         self.testers: dict[DebugChainTester] = {}
@@ -625,6 +640,18 @@ class ChainTesterHandler:
 
         self.apply_request_addr = apply_request_addr
         self.apply_request_port = apply_request_port
+
+        self.current_connection: CurrentConnection = None
+
+    def on_close_client(self):
+        for seq_num in list(self.current_connection.get_chain_seq_nums()):
+            self.free_chain(seq_num)
+        self.set_current_connection(None)
+        self.close_apply_client()
+        self.server.close_vm_api_call_connection()
+
+    def set_current_connection(self, addr):
+        self.current_connection = CurrentConnection(addr)
 
     def init_apply_client(self):
         if not self.apply_request_client:
@@ -794,17 +821,25 @@ class ChainTesterHandler:
         return self.testers[id].chain.unpack_action_args(contract, action, raw_args)
 
     def new_chain(self):
+        # max 5 test chain per connection
+        if len(self.current_connection.get_chain_seq_nums()) >= 5:
+            return 0
         self.tester_seq += 1
         tester = DebugChainTester()
         self.testers[self.tester_seq] = tester
+        self.current_connection.add_chain_seq_num(self.tester_seq)
         return self.tester_seq
 
     def free_chain(self, id):
-        self.testers[id].free()
-        del self.testers[id]
+        self.current_connection.remove_chain_seq_num(id)
+        if id in self.testers:
+            self.testers[id].free()
+            del self.testers[id]
         # self.close_apply_client()
         # self.server.close_vm_api_call_connection()
-        return 1
+            return 1
+        else:
+            return 0
 
     def get_info(self, id: i32):
         chain = self.testers[id].chain
@@ -916,7 +951,7 @@ class VMAPIServer(TServer.TServer):
 
 class ChainTesterServer(object):
     def __init__(self, *args, **kwargs):
-        self.handler = kwargs['handler']
+        self.handler: ChainTesterHandler = kwargs['handler']
         if (len(args) == 2):
             self.__initArgs__(args[0], args[1],
                               TTransport.TTransportFactoryBase(),
@@ -932,7 +967,7 @@ class ChainTesterServer(object):
                      inputTransportFactory, outputTransportFactory,
                      inputProtocolFactory, outputProtocolFactory):
         self.processor = processor
-        self.serverTransport = serverTransport
+        self.serverTransport: TSocket.TServerSocket = serverTransport
         self.inputTransportFactory = inputTransportFactory
         self.outputTransportFactory = outputTransportFactory
         self.inputProtocolFactory = inputProtocolFactory
@@ -950,6 +985,7 @@ class ChainTesterServer(object):
             client = self.serverTransport.accept()
             if not client:
                 continue
+            self.handler.set_current_connection('%s:%d'%client.handle.getpeername())
 
             itrans = self.inputTransportFactory.getTransport(client)
             iprot = self.inputProtocolFactory.getProtocol(itrans)
@@ -972,8 +1008,7 @@ class ChainTesterServer(object):
             except Exception as x:
                 logger.exception(x)
 
-            self.handler.close_apply_client()
-            self.handler.server.close_vm_api_call_connection()
+            self.handler.on_close_client()
 
             itrans.close()
             if otrans:
