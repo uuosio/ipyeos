@@ -653,20 +653,21 @@ class ChainTesterHandler:
     def set_current_connection(self, addr):
         self.current_connection = CurrentConnection(addr)
 
-    def init_apply_client(self):
+    def init_apply_request_client(self):
         if not self.apply_request_client:
             self.apply_request_transport = TSocket.TSocket(self.apply_request_addr, self.apply_request_port)
             self.apply_request_transport = TTransport.TBufferedTransport(self.apply_request_transport)
             protocol = TBinaryProtocol.TBinaryProtocol(self.apply_request_transport)
             self.apply_request_client = ApplyRequestClient(protocol)
 
+            time.sleep(0.1)
             # Connect!
             for i in range(10):
                 try:
                     self.apply_request_transport.open()
+                    print('connected to apply request server!')
                     break
                 except Exception as e:
-                    time.sleep(0.001)
                     exc_info = sys.exc_info()
                     traceback.print_exception(*exc_info)
             else:
@@ -802,7 +803,7 @@ class ChainTesterHandler:
         self.server.init_vm_api_call()
 
     def init_apply_request(self):
-        self.init_apply_client()
+        self.init_apply_request_client()
 
     def enable_debug_contract(self, id, contract, enable):
         self.testers[id].enable_debug_contract(contract, enable)
