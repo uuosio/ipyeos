@@ -735,7 +735,7 @@ class ChainTesterHandler:
             # logger.exception(e)
             err = e.args[0]
             if isinstance(err, dict):
-                error_message = err['except']['stack']
+                error_message = err['except']
                 error_message = json.dumps(error_message)
                 err = json.dumps(err)
             else:
@@ -986,10 +986,13 @@ class ChainTesterServer(object):
             client = self.serverTransport.accept()
             if not client:
                 continue
-            self.handler.set_current_connection('%s:%d'%client.handle.getpeername())
-
-            itrans = self.inputTransportFactory.getTransport(client)
-            iprot = self.inputProtocolFactory.getProtocol(itrans)
+            try:
+                self.handler.set_current_connection('%s:%d'%client.handle.getpeername())
+                itrans = self.inputTransportFactory.getTransport(client)
+                iprot = self.inputProtocolFactory.getProtocol(itrans)
+            except Exception as e:
+                logger.exception(x)
+                continue
 
             # for THeaderProtocol, we must use the same protocol instance for
             # input and output so that the response is in the same dialect that

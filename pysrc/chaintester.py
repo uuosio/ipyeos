@@ -639,8 +639,8 @@ class ChainTester(object):
         }
         actions.append(setcode)
         if abi:
-            abi = eos.pack_abi(abi)
-        setabi = self.chain.pack_action_args('eosio', 'setabi', {'account':account, 'abi':abi.hex()})
+            abi = eos.pack_abi(abi).hex()
+        setabi = self.chain.pack_action_args('eosio', 'setabi', {'account':account, 'abi':abi})
         setabi = {
             'account': 'eosio',
             'name': 'setabi',
