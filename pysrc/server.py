@@ -3,6 +3,7 @@ import glob
 import sys
 import json
 import time
+import string
 import traceback
 import logging
 from datetime import datetime, timedelta
@@ -50,6 +51,9 @@ def to_uint64(value):
 def from_uint64(value):
     assert len(value.rawValue) == 8, 'bad Uint64'
     return int.from_bytes(value.rawValue, 'little')
+
+def is_hex_string(s):
+    return all(c in string.hexdigits for c in s)
 
 class EndApplyException(Exception):
     pass
@@ -709,13 +713,13 @@ class ChainTesterHandler:
     def push_action(self, id: int, account: str, action: str, arguments: str, permissions: str):
         tester: DebugChainTester = self.testers[id]
         self.current_tester = tester
-        # print('arguments:', arguments)
-        try:
-            arguments = json.loads(arguments)
-        except json.JSONDecodeError:
+        # print('arguments:', arguments
+        if is_hex_string(arguments):
+            arguments = bytes.fromhex(arguments)
+        else:
             try:
-                arguments = bytes.fromhex(arguments)
-            except ValueError as e:
+                arguments = json.loads(arguments)
+            except json.JSONDecodeError as e:
                 err = {
                     'except': str(e)
                 }
@@ -764,7 +768,7 @@ class ChainTesterHandler:
         except Exception as e:
             err = e.args[0]
             if isinstance(err, dict):
-                error_message = err['except']['stack']
+                error_message = err['except']
                 error_message = json.dumps(error_message)
                 err = json.dumps(err)
             else:
