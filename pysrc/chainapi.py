@@ -1,3 +1,4 @@
+from typing import List, Dict
 import json
 from . import _chainapi
 from . import _chain, _eos
@@ -280,7 +281,7 @@ class ChainApi(object):
         ret = _chainapi.abi_bin_to_json(self.ptr, params)
         return self.parse_return_value(ret)
 
-    def get_required_keys(self, transaction: dict, available_keys: list[str]):
+    def get_required_keys(self, transaction: Dict, available_keys: List[str]):
         '''
             struct get_required_keys_params {
                 fc::variant transaction;
