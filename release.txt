@@ -1,4 +1,4 @@
-v0.2.13 release
+v0.2.14 release
 
-1. export deploy_contract interface
+1. Handle C++ exceptions throw from vm apis
 
