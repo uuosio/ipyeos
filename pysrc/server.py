@@ -58,50 +58,68 @@ def is_hex_string(s):
 class EndApplyException(Exception):
     pass
 
+def check_cpp_exception(f):
+    def wrapper(*args):
+        ret = f(*args)
+        if _vm_api.is_cpp_exception_occur():
+            raise TApplicationException(TApplicationException.INTERNAL_ERROR, f.__name__)
+        return ret
+    return wrapper
+
 class VMAPIHandler:
     def end_apply(self):
         return 1
 
     #chain.h
     # uint32_t get_active_producers( uint64_t* producers, uint32_t datalen );
+    @check_cpp_exception
     def get_active_producers(self):
         return _vm_api.get_active_producers()
 
     #privileged.h
     # void get_resource_limits( uint64_t account, int64_t* ram_bytes, int64_t* net_weight, int64_t* cpu_weight );
+    @check_cpp_exception
     def get_resource_limits(self, account: Uint64):
         ram_bytes, net_weight, cpu_weight = _vm_api.get_resource_limits(account.into())
         return GetResourceLimitsReturn(ram_bytes, net_weight, cpu_weight)
 
     # void set_resource_limits( uint64_t account, int64_t ram_bytes, int64_t net_weight, int64_t cpu_weight );
+    @check_cpp_exception
     def set_resource_limits(self, account: Uint64, ram_bytes: i64, net_weight: i64, cpu_weight: i64):
         _vm_api.set_resource_limits(account.into(), ram_bytes, net_weight, cpu_weight)
 
     # int64_t set_proposed_producers( const char *producer_data, uint32_t producer_data_size );
+    @check_cpp_exception
     def set_proposed_producers(self, producer_data: bytes):
         return _vm_api.set_proposed_producers(producer_data)
 
     # int64_t set_proposed_producers_ex( uint64_t producer_data_format, const char *producer_data, uint32_t producer_data_size );
+    @check_cpp_exception
     def set_proposed_producers_ex(self, producer_data_format: Uint64, producer_data: bytes):
         return _vm_api.set_proposed_producers_ex(producer_data_format.into(), producer_data)
 
     # bool is_privileged( uint64_t account );
+    @check_cpp_exception
     def is_privileged(self, account: Uint64):
         return _vm_api.is_privileged(account.into())
 
     # void set_privileged( uint64_t account, bool is_priv );
+    @check_cpp_exception
     def set_privileged(self, account: Uint64, is_priv: bool):
         _vm_api.set_privileged(account.into(), is_priv)
 
     # void set_blockchain_parameters_packed( const char* data, uint32_t datalen );
+    @check_cpp_exception
     def set_blockchain_parameters_packed(self, data: bytes):
         _vm_api.set_blockchain_parameters_packed(data)
 
     # uint32_t get_blockchain_parameters_packed( char* data, uint32_t datalen );
+    @check_cpp_exception
     def get_blockchain_parameters_packed(self):
         return _vm_api.get_blockchain_parameters_packed()
 
     # void preactivate_feature( const capi_checksum256* feature_digest );
+    @check_cpp_exception
     def preactivate_feature(self, feature_digest: bytes):
         return _vm_api.preactivate_feature(feature_digest)
 
@@ -110,7 +128,7 @@ class VMAPIHandler:
     #                                 const char* pubkeys_data, uint32_t pubkeys_size,
     #                                 const char* perms_data,   uint32_t perms_size
     #                             );
-
+    @check_cpp_exception
     def check_transaction_authorization(self, trx_data: bytes, pubkeys_data: bytes, perms_data: bytes):
         return _vm_api.check_transaction_authorization(trx_data, pubkeys_data, perms_data)
 
@@ -120,418 +138,529 @@ class VMAPIHandler:
     #                                 const char* perms_data,   uint32_t perms_size,
     #                                 uint64_t delay_us
     #                             );
-
+    @check_cpp_exception
     def check_permission_authorization(self, account: Uint64, permission: Uint64, pubkeys_data: bytes, perms_data: bytes, delay_us: Uint64):
         return _vm_api.check_permission_authorization(account.into(), permission.into(), pubkeys_data, perms_data, delay_us.into())
 
     # int64_t get_permission_last_used( uint64_t account, uint64_t permission );
+    @check_cpp_exception
     def get_permission_last_used(self, account: Uint64, permission: Uint64):
         return _vm_api.get_permission_last_used(account.into(), permission.into())
 
     # int64_t get_account_creation_time( uint64_t account );
+    @check_cpp_exception
     def get_account_creation_time(self, account: Uint64):
         return _vm_api.get_account_creation_time(account.into())
 
+    @check_cpp_exception
     def prints(self, msg):
         _vm_api.prints(msg)
 
 #void prints_l( const char* cstr, uint32_t len);
+    @check_cpp_exception
     def prints_l(self, cstr: bytes):
         _vm_api.prints_l(cstr)
 
+    @check_cpp_exception
     def printi(self, n: i64):
         _vm_api.printi(n)
 
+    @check_cpp_exception
     def printui(self, n: Uint64):
         _vm_api.printui(n.into())
 
     # void printi128( const int128_t* value );
+    @check_cpp_exception
     def printi128(self, value: bytes):
         _vm_api.printi128(value)
 
     # void printui128( const uint128_t* value );
+    @check_cpp_exception
     def printui128(self, value: bytes):
         _vm_api.printui128(value)
 
     # void printsf(float value);
+    @check_cpp_exception
     def printsf(self, value: bytes):
         _vm_api.printsf(value)
 
     # void printdf(double value);
+    @check_cpp_exception
     def printdf(self, value: bytes):
         _vm_api.printdf(value)
 
     # void printqf(const long double* value);
+    @check_cpp_exception
     def printqf(self, value: bytes):
         _vm_api.printqf(value)
 
     # void printn( uint64_t name );
+    @check_cpp_exception
     def printn(self, name: Uint64):
         _vm_api.printn(name.into())
 
     # void printhex( const void* data, uint32_t datalen );
+    @check_cpp_exception
     def printhex(self, data: bytes):
         _vm_api.printhex(data)
 
+    @check_cpp_exception
     def action_data_size(self):
         return _vm_api.action_data_size()
 
+    @check_cpp_exception
     def read_action_data(self):
         return _vm_api.read_action_data()
 
     # void require_recipient( uint64_t name );
+    @check_cpp_exception
     def require_recipient(self, name: Uint64):
         _vm_api.require_recipient(name.into())
 
     # void require_auth( uint64_t name );
+    @check_cpp_exception
     def require_auth(self, name: Uint64):
         _vm_api.require_auth(name.into())
 
     # bool has_auth( uint64_t name );
+    @check_cpp_exception
     def has_auth(self, name: Uint64):
         return _vm_api.has_auth(name.into())
 
     # void require_auth2( uint64_t name, uint64_t permission );
+    @check_cpp_exception
     def require_auth2(self, name: Uint64, permission: Uint64):
         _vm_api.require_auth2(name.into(), permission.into())
 
     # bool is_account( uint64_t name );
+    @check_cpp_exception
     def is_account(self, name: Uint64):
         return _vm_api.is_account(name.into())
 
+    @check_cpp_exception
     def send_inline(self, serialized_data):
         _vm_api.send_inline(serialized_data)
 
+    @check_cpp_exception
     def send_context_free_inline(self, serialized_data: bytes):
         _vm_api.send_context_free_inline(serialized_data)
 
     # uint64_t  publication_time();
+    @check_cpp_exception
     def publication_time(self):
         ret = _vm_api.publication_time()
         return to_uint64(ret)
 
     # uint64_t current_receiver();
+    @check_cpp_exception
     def current_receiver(self, ):
         ret = _vm_api.current_receiver()
         return to_uint64(ret)
 
     # void  eosio_assert( uint32_t test, const char* msg );
+    @check_cpp_exception
+    @check_cpp_exception
     def eosio_assert(self, test, msg: bytes):
         _vm_api.eosio_assert(test, msg)
 
     # void  eosio_assert_message( uint32_t test, const char* msg, uint32_t msg_len );
+    @check_cpp_exception
     def eosio_assert_message(self, test, msg: bytes):
         _vm_api.eosio_assert_message(test, msg)
 
     # void  eosio_assert_code( uint32_t test, uint64_t code );
+    @check_cpp_exception
     def eosio_assert_code(self, test, code):
         _vm_api.eosio_assert_code(test, code.into())
 
     # void eosio_exit( int32_t code );
+    @check_cpp_exception
     def eosio_exit(self, code: i32):
         _vm_api.eosio_exit(code)
 
     # uint64_t  current_time();
+    @check_cpp_exception
     def current_time(self):
         ret = _vm_api.current_time()
         return to_uint64(ret)
 
     # bool is_feature_activated( const capi_checksum256* feature_digest );
+    @check_cpp_exception
     def is_feature_activated(self, feature_digest: bytes):
         return _vm_api.is_feature_activated(feature_digest)
 
     # uint64_t get_sender();
+    @check_cpp_exception
     def get_sender(self):
         ret = _vm_api.get_sender()
         return to_uint64(ret)
 
     # void assert_sha256( const char* data, uint32_t length, const capi_checksum256* hash );
+    @check_cpp_exception
     def assert_sha256(self, data: bytes, hash: bytes):
         _vm_api.assert_sha256(data, hash)
 
     # void assert_sha1( const char* data, uint32_t length, const capi_checksum160* hash );
+    @check_cpp_exception
     def assert_sha1(self, data: bytes, hash: bytes):
         _vm_api.assert_sha1(data, hash)
 
     # void assert_sha512( const char* data, uint32_t length, const capi_checksum512* hash );
+    @check_cpp_exception
     def assert_sha512(self, data: bytes, hash: bytes):
         _vm_api.assert_sha512(data, hash)
 
     # void assert_ripemd160( const char* data, uint32_t length, const capi_checksum160* hash );
+    @check_cpp_exception
     def assert_ripemd160(self, data: bytes, hash: bytes):
         _vm_api.assert_ripemd160(data, hash)
 
     # void sha256( const char* data, uint32_t length, capi_checksum256* hash );
+    @check_cpp_exception
     def sha256(self, data: bytes):
         return _vm_api.sha256(data)
 
     # void sha1( const char* data, uint32_t length, capi_checksum160* hash );
+    @check_cpp_exception
     def sha1(self, data: bytes):
         return _vm_api.sha1(data)
 
     # void sha512( const char* data, uint32_t length, capi_checksum512* hash );
+    @check_cpp_exception
     def sha512(self, data: bytes):
         return _vm_api.sha512(data)
 
     # void ripemd160( const char* data, uint32_t length, capi_checksum160* hash );
+    @check_cpp_exception
     def ripemd160(self, data: bytes):
         return _vm_api.ripemd160(data)
 
     # int32_t recover_key( const capi_checksum256* digest, const char* sig, uint32_t siglen, char* pub, uint32_t publen );
+    @check_cpp_exception
     def recover_key(self, digest: bytes, sig: bytes):
         return _vm_api.recover_key(digest, sig)
 
     # void assert_recover_key( const capi_checksum256* digest, const char* sig, uint32_t siglen, const char* pub, uint32_t publen );
+    @check_cpp_exception
     def assert_recover_key(self, digest: bytes, sig: bytes, pub: bytes):
         _vm_api.assert_recover_key(digest, sig, pub)
 
 
     #transaction.h
     # void send_deferred(const uint128_t sender_id, uint64_t payer, const char *serialized_transaction, uint32_t size, uint32_t replace_existing = 0);
+    @check_cpp_exception
     def send_deferred(self, sender_id: bytes, payer: Uint64, serialized_transaction: bytes, replace_existing: i32):
         _vm_api.send_deferred(sender_id, payer.into(), serialized_transaction, replace_existing)
 
     # int32_t cancel_deferred(const uint128_t sender_id);
+    @check_cpp_exception
     def cancel_deferred(self, sender_id: bytes):
         return _vm_api.cancel_deferred(sender_id)
 
     # uint32_t read_transaction(char *buffer, uint32_t size);
+    @check_cpp_exception
     def read_transaction(self):
         return _vm_api.read_transaction()
 
     # uint32_t transaction_size();
+    @check_cpp_exception
     def transaction_size(self):
         return _vm_api.transaction_size()
 
     # int32_t tapos_block_num();
+    @check_cpp_exception
     def tapos_block_num(self):
         return _vm_api.tapos_block_num()
 
     # int32_t tapos_block_prefix();
+    @check_cpp_exception
     def tapos_block_prefix(self):
         return _vm_api.tapos_block_prefix()
 
     # uint32_t expiration();
+    @check_cpp_exception
     def expiration(self):
         return _vm_api.expiration()
 
     # int32_t get_action( uint32_t type, uint32_t index, char* buff, uint32_t size );
+    @check_cpp_exception
     def get_action(self, _type: i32, index: i32):
         return _vm_api.get_action(_type, index)
 
     # int32_t get_context_free_data( uint32_t index, char* buff, uint32_t size );
+    @check_cpp_exception
     def get_context_free_data(self, index: i32):
         return _vm_api.get_action(index)
 
+    @check_cpp_exception
     def db_store_i64(self, scope: Uint64, table: Uint64, payer: Uint64, id: Uint64, data: bytes):
         return _vm_api.db_store_i64(scope.into(), table.into(), payer.into(), id.into(), data)
 
+    @check_cpp_exception
     def db_update_i64(self, iterator: i32, payer: Uint64, data: bytes):
         return _vm_api.db_update_i64(iterator, payer.into(), data)
 
+    @check_cpp_exception
     def db_remove_i64(self, iterator: i32):
         return _vm_api.db_remove_i64(iterator)
 
+    @check_cpp_exception
     def db_get_i64(self, iterator: i32):
         return _vm_api.db_get_i64(iterator)
 
+    @check_cpp_exception
     def db_next_i64(self, iterator: i32):
         it, primary = _vm_api.db_next_i64(iterator)
         return NextPreviousReturn(it, to_uint64(primary))
 
+    @check_cpp_exception
     def db_previous_i64(self, iterator: i32):
         it, primary = _vm_api.db_previous_i64(iterator)
         return NextPreviousReturn(it, to_uint64(primary))
 
+    @check_cpp_exception
     def db_find_i64(self, code: Uint64, scope: Uint64, table: Uint64, id: Uint64):
         return _vm_api.db_find_i64(code.into(), scope.into(), table.into(), id.into())
 
+    @check_cpp_exception
     def db_lowerbound_i64(self, code: Uint64, scope: Uint64, table: Uint64, id: Uint64):
         return _vm_api.db_lowerbound_i64(code.into(), scope.into(), table.into(), id.into())
 
+    @check_cpp_exception
     def db_upperbound_i64(self, code: Uint64, scope: Uint64, table: Uint64, id: Uint64):
         return _vm_api.db_upperbound_i64(code.into(), scope.into(), table.into(), id.into())
 
+    @check_cpp_exception
     def db_end_i64(self, code: Uint64, scope: Uint64, table: Uint64):
         return _vm_api.db_end_i64(code.into(), scope.into(), table.into())
 
+    @check_cpp_exception
     def db_idx64_store(self, scope: Uint64, table: Uint64, payer: Uint64, id: Uint64, secondary: Uint64) -> i32:
         return _vm_api.db_idx64_store(scope.into(), table.into(), payer.into(), id.into(), secondary.into())
 
+    @check_cpp_exception
     def db_idx64_update(self, iterator: i32, payer: Uint64, secondary: Uint64):
         _vm_api.db_idx64_update(iterator, payer.into(), secondary.into())
 
+    @check_cpp_exception
     def db_idx64_remove(self, iterator: i32) -> i32:
         _vm_api.db_idx64_remove(iterator)
 
+    @check_cpp_exception
     def db_idx64_next(self, iterator: i32) -> NextPreviousReturn:
         it, primary = _vm_api.db_idx64_next(iterator)
         return NextPreviousReturn(it, to_uint64(primary))
 
+    @check_cpp_exception
     def db_idx64_previous(self, iterator: i32) -> NextPreviousReturn:
         it, primary = _vm_api.db_idx64_previous(iterator)
         return NextPreviousReturn(it, to_uint64(primary))
 
+    @check_cpp_exception
     def db_idx64_find_primary(self, code: Uint64, scope: Uint64, table: Uint64, primary: Uint64) -> FindPrimaryReturn:
         it, secondary = _vm_api.db_idx64_find_primary(code.into(), scope.into(), table.into(), primary.into())
         return FindPrimaryReturn(it, secondary)
 
+    @check_cpp_exception
     def db_idx64_find_secondary(self, code: Uint64, scope: Uint64, table: Uint64, secondary: Uint64) -> FindSecondaryReturn:
         it, primary = _vm_api.db_idx64_find_secondary(code.into(), scope.into(), table.into(), secondary.into())
         return FindSecondaryReturn(it, to_uint64(primary))
 
+    @check_cpp_exception
     def db_idx64_lowerbound(self, code: Uint64, scope: Uint64, table: Uint64, secondary: Uint64, primary: Uint64):
         it, secondary, primary = _vm_api.db_idx64_lowerbound(code.into(), scope.into(), table.into(), secondary.into(), primary.into())
         return LowerBoundUpperBoundReturn(it, secondary, to_uint64(primary))
 
+    @check_cpp_exception
     def db_idx64_upperbound(self, code: Uint64, scope: Uint64, table: Uint64, secondary, primary):
         it, secondary, primary = _vm_api.db_idx64_upperbound(code.into(), scope.into(), table.into(), secondary.into(), primary.into())
         return LowerBoundUpperBoundReturn(it, secondary, to_uint64(primary))
 
+    @check_cpp_exception
     def db_idx64_end(self, code: Uint64, scope: Uint64, table: Uint64):
         return _vm_api.db_idx64_end(code.into(), scope.into(), table.into())
 
+    @check_cpp_exception
     def db_idx128_store(self, scope: Uint64, table: Uint64, payer: Uint64, id, secondary: bytes):
         return _vm_api.db_idx128_store(scope.into(), table.into(), payer.into(), id.into(), secondary)
 
+    @check_cpp_exception
     def db_idx128_update(self, iterator: i32, payer: Uint64, secondary: bytes):
         return _vm_api.db_idx128_update(iterator, payer.into(), secondary)
 
+    @check_cpp_exception
     def db_idx128_remove(self, iterator: i32):
         _vm_api.db_idx128_remove(iterator)
 
+    @check_cpp_exception
     def db_idx128_next(self, iterator: i32) -> NextPreviousReturn:
         it, primary = _vm_api.db_idx128_next(iterator)
         return NextPreviousReturn(it, to_uint64(primary))
 
+    @check_cpp_exception
     def db_idx128_previous(self, iterator: i32) -> NextPreviousReturn:
         it, primary = _vm_api.db_idx128_previous(iterator)
         return NextPreviousReturn(it, to_uint64(primary))
 
+    @check_cpp_exception
     def db_idx128_find_primary(self, code: Uint64, scope: Uint64, table: Uint64, primary: Uint64):
         it, secondary = _vm_api.db_idx128_find_primary(code.into(), scope.into(), table.into(), primary.into())
         return FindPrimaryReturn(it, secondary)
 
+    @check_cpp_exception
     def db_idx128_find_secondary(self, code: Uint64, scope: Uint64, table: Uint64, secondary: bytes) -> FindSecondaryReturn:
         it, primary = _vm_api.db_idx128_find_secondary(code.into(), scope.into(), table.into(), secondary)
         return FindSecondaryReturn(it, to_uint64(primary))
 
+    @check_cpp_exception
     def db_idx128_lowerbound(self, code: Uint64, scope: Uint64, table: Uint64, secondary: bytes, primary: Uint64):
         it, secondary, primary = _vm_api.db_idx128_lowerbound(code.into(), scope.into(), table.into(), secondary, primary.into())
         return LowerBoundUpperBoundReturn(it, secondary, to_uint64(primary))
 
+    @check_cpp_exception
     def db_idx128_upperbound(self, code: Uint64, scope: Uint64, table: Uint64, secondary: bytes, primary: Uint64):
         it, secondary, primary = _vm_api.db_idx128_upperbound(code.into(), scope.into(), table.into(), secondary, primary.into())
         return LowerBoundUpperBoundReturn(it, secondary, to_uint64(primary))
 
+    @check_cpp_exception
     def db_idx128_end(self, code: Uint64, scope: Uint64, table: Uint64):
         return _vm_api.db_idx128_end(code.into(), scope.into(), table.into())
 
+    @check_cpp_exception
     def db_idx256_store(self, scope: Uint64, table: Uint64, payer: Uint64, id: Uint64, data: bytes) -> i32:
         return _vm_api.db_idx256_store(scope.into(), table.into(), payer.into(), id.into(), data)
 
+    @check_cpp_exception
     def db_idx256_update(self, iterator: i32, payer: Uint64, data: bytes):
         return _vm_api.db_idx256_update(iterator, payer.into(), data)
 
+    @check_cpp_exception
     def db_idx256_remove(self, iterator: i32):
         _vm_api.db_idx256_remove(iterator)
 
+    @check_cpp_exception
     def db_idx256_next(self, iterator: i32) -> NextPreviousReturn:
         it, primary = _vm_api.db_idx256_next(iterator)
         return NextPreviousReturn(it, to_uint64(primary))
 
+    @check_cpp_exception
     def db_idx256_previous(self, iterator: i32) -> NextPreviousReturn:
         it, primary = _vm_api.db_idx256_previous(iterator)
         return NextPreviousReturn(it, to_uint64(primary))
 
+    @check_cpp_exception
     def db_idx256_find_primary(self, code: Uint64, scope: Uint64, table: Uint64, primary: Uint64):
         it, secondary = _vm_api.db_idx256_find_primary(code.into(), scope.into(), table.into(), primary.into())
         return FindPrimaryReturn(it, secondary)
 
+    @check_cpp_exception
     def db_idx256_find_secondary(self, code: Uint64, scope: Uint64, table: Uint64, data: bytes) -> FindSecondaryReturn:
         it, primary = _vm_api.db_idx256_find_secondary(code.into(), scope.into(), table.into(), data)
         return FindSecondaryReturn(it, to_uint64(primary))
 
+    @check_cpp_exception
     def db_idx256_lowerbound(self, code: Uint64, scope: Uint64, table: Uint64, data: bytes, primary: Uint64):
         it, secondary, primary = _vm_api.db_idx256_lowerbound(code.into(), scope.into(), table.into(), data, primary.into())
         return LowerBoundUpperBoundReturn(it, secondary, to_uint64(primary))
 
+    @check_cpp_exception
     def db_idx256_upperbound(self, code: Uint64, scope: Uint64, table: Uint64, data, primary):
         it, secondary, primary = _vm_api.db_idx256_upperbound(code.into(), scope.into(), table.into(), data, primary.into())
         return LowerBoundUpperBoundReturn(it, secondary, to_uint64(primary))
 
+    @check_cpp_exception
     def db_idx256_end(self, code: Uint64, scope: Uint64, table: Uint64):
         return _vm_api.db_idx256_end(code.into(), scope.into(), table.into())
 
+    @check_cpp_exception
     def db_idx_double_store(self, scope: Uint64, table: Uint64, payer: Uint64, id: Uint64, secondary: bytes):
         return _vm_api.db_idx_double_store(scope.into(), table.into(), payer.into(), id.into(), secondary)
 
+    @check_cpp_exception
     def db_idx_double_update(self, iterator: i32, payer: Uint64, secondary: bytes):
         return _vm_api.db_idx_double_update(iterator, payer.into(), secondary)
 
+    @check_cpp_exception
     def db_idx_double_remove(self, iterator: i32):
         _vm_api.db_idx_double_remove(iterator)
 
+    @check_cpp_exception
     def db_idx_double_next(self, iterator: i32) -> NextPreviousReturn:
         it, primary = _vm_api.db_idx_double_next(iterator)
         return NextPreviousReturn(it, to_uint64(primary))
 
+    @check_cpp_exception
     def db_idx_double_previous(self, iterator: i32) -> NextPreviousReturn:
         it, primary = _vm_api.db_idx_double_previous(iterator)
         return NextPreviousReturn(it, to_uint64(primary))
 
+    @check_cpp_exception
     def db_idx_double_find_primary(self, code: Uint64, scope: Uint64, table: Uint64, primary: Uint64):
         it, secondary = _vm_api.db_idx_double_find_primary(code.into(), scope.into(), table.into(), primary.into())
         return FindPrimaryReturn(it, secondary)
 
+    @check_cpp_exception
     def db_idx_double_find_secondary(self, code: Uint64, scope: Uint64, table: Uint64, secondary: bytes) -> FindSecondaryReturn:
         it, primary = _vm_api.db_idx_double_find_secondary(code.into(), scope.into(), table.into(), secondary)
         return FindSecondaryReturn(it, to_uint64(primary))
 
+    @check_cpp_exception
     def db_idx_double_lowerbound(self, code: Uint64, scope: Uint64, table: Uint64, secondary: bytes, primary: Uint64):
         it, secondary, primary = _vm_api.db_idx_double_lowerbound(code.into(), scope.into(), table.into(), secondary, primary.into())
         return LowerBoundUpperBoundReturn(it, secondary, to_uint64(primary))
 
+    @check_cpp_exception
     def db_idx_double_upperbound(self, code: Uint64, scope: Uint64, table: Uint64, secondary, primary: Uint64):
         it, secondary, primary = _vm_api.db_idx_double_upperbound(code.into(), scope.into(), table.into(), secondary, primary.into())
         return LowerBoundUpperBoundReturn(it, secondary, to_uint64(primary))
 
+    @check_cpp_exception
     def db_idx_double_end(self, code: Uint64, scope: Uint64, table: Uint64):
         return _vm_api.db_idx_double_end(code.into(), scope.into(), table.into())
 
+    @check_cpp_exception
     def db_idx_long_double_store(self, scope: Uint64, table: Uint64, payer: Uint64, id: Uint64, secondary: bytes):
         return _vm_api.db_idx_long_double_store(scope.into(), table.into(), payer.into(), id.into(), secondary)
 
+    @check_cpp_exception
     def db_idx_long_double_update(self, iterator: i32, payer: Uint64, secondary: bytes):
         return _vm_api.db_idx_long_double_update(iterator, payer.into(), secondary)
 
+    @check_cpp_exception
     def db_idx_long_double_remove(self, iterator: i32):
         _vm_api.db_idx_long_double_remove(iterator)
 
+    @check_cpp_exception
     def db_idx_long_double_next(self, iterator: i32) -> NextPreviousReturn:
         it, primary = _vm_api.db_idx_long_double_next(iterator)
         return NextPreviousReturn(it, to_uint64(primary))
 
+    @check_cpp_exception
     def db_idx_long_double_previous(self, iterator: i32) -> NextPreviousReturn:
         it, primary = _vm_api.db_idx_long_double_previous(iterator)
         return NextPreviousReturn(it, to_uint64(primary))
 
+    @check_cpp_exception
     def db_idx_long_double_find_primary(self, code: Uint64, scope: Uint64, table: Uint64, primary: Uint64):
         it, secondary = _vm_api.db_idx_long_double_find_primary(code.into(), scope.into(), table.into(), primary.into())
         return FindPrimaryReturn(it, secondary)
 
+    @check_cpp_exception
     def db_idx_long_double_find_secondary(self, code: Uint64, scope: Uint64, table: Uint64, secondary: bytes) -> FindSecondaryReturn:
         it, primary = _vm_api.db_idx_long_double_find_secondary(code.into(), scope.into(), table.into(), secondary)
         return FindSecondaryReturn(it, to_uint64(primary))
 
+    @check_cpp_exception
     def db_idx_long_double_lowerbound(self, code: Uint64, scope: Uint64, table: Uint64, secondary: bytes, primary: Uint64):
         it, secondary, primary = _vm_api.db_idx_long_double_lowerbound(code.into(), scope.into(), table.into(), secondary, primary.into())
         return LowerBoundUpperBoundReturn(it, secondary, to_uint64(primary))
 
+    @check_cpp_exception
     def db_idx_long_double_upperbound(self, code: Uint64, scope: Uint64, table: Uint64, secondary: bytes, primary: Uint64):
         it, secondary, primary = _vm_api.db_idx_long_double_upperbound(code.into(), scope.into(), table.into(), secondary, primary.into())
         return LowerBoundUpperBoundReturn(it, secondary, to_uint64(primary))
 
+    @check_cpp_exception
     def db_idx_long_double_end(self, code: Uint64, scope: Uint64, table: Uint64):
         return _vm_api.db_idx_long_double_end(code.into(), scope.into(), table.into())
 
@@ -744,7 +873,7 @@ class ChainTesterHandler:
                 err = json.dumps(err)
             else:
                 error_message = err
-            self.server.handle_vm_api_exception(error_message)
+            # self.server.handle_vm_api_exception(error_message)
             return err.encode()
         finally:
             self.current_tester = None
@@ -757,11 +886,23 @@ class ChainTesterHandler:
         self.current_tester = tester
         _actions = []
         for a in actions:
+            arguments = a.arguments
+            permissions = a.permissions
             try:
-                arguments = json.loads(a.arguments)
-            except json.JSONDecodeError:
-                arguments = bytes.fromhex(a.arguments)
-            _actions.append([a.account, a.action, arguments, json.loads(a.permissions)])
+                if is_hex_string(arguments):
+                    arguments = bytes.fromhex(arguments)
+                else:
+                    arguments = json.loads(arguments)
+                permissions = json.loads(permissions)
+            except json.JSONDecodeError as e:
+                err = {
+                    'except': str(e)
+                }
+                client = self.get_apply_request_client()
+                if client:
+                    client.apply_end()
+                return json.dumps(err).encode()
+            _actions.append([a.account, a.action, arguments, permissions])
         try:
             r = tester.push_actions(_actions)
             return json.dumps(r).encode()

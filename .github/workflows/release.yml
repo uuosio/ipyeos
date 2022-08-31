@@ -66,3 +66,4 @@ jobs:
         run: |
           docker build . --tag ghcr.io/uuosio/ipyeos:latest --tag ghcr.io/uuosio/ipyeos:v0.2.13
           docker push ghcr.io/uuosio/ipyeos:latest
+          docker push ghcr.io/uuosio/ipyeos:v0.2.13

@@ -10,6 +10,7 @@ add_library(_eos MODULE
     ${_vm_api}
     main.cpp
     _ipyeos.cpp
+    _vm_api.cpp
 )
 
 python_extension_module(_eos)

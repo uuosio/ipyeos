@@ -17,3 +17,10 @@ void uuosext_init();
 #define get_vm_api_proxy get_ipyeos_proxy()->get_vm_api_proxy
 
 extern "C" int native_apply(uint64_t a, uint64_t b, uint64_t c);
+int python_native_apply(uint64_t a, uint64_t b, uint64_t c);
+
+void save_last_exception();
+void clear_last_exception();
+bool has_last_exception();
+std::exception_ptr get_last_exception();
+

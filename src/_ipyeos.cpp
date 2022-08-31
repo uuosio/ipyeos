@@ -41,3 +41,31 @@ ipyeos_proxy* get_ipyeos_proxy() {
     }
     return s_get_ipyeos_proxy();
 }
+
+static std::exception_ptr last_exception;
+
+void save_last_exception() {
+    last_exception = std::current_exception();
+}
+
+void clear_last_exception() {
+    last_exception = nullptr;
+}
+
+bool has_last_exception() {
+    return last_exception != nullptr;
+}
+
+std::exception_ptr get_last_exception() {
+    return last_exception;
+}
+
+extern "C" int native_apply(uint64_t a, uint64_t b, uint64_t c) {
+    int ret = python_native_apply(a, b, c);
+    auto eptr = get_last_exception();
+    if (eptr) {
+        clear_last_exception();
+        std::rethrow_exception(eptr);
+    }
+    return ret;
+}
