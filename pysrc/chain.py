@@ -473,6 +473,8 @@ class Chain(object):
 
     def get_last_error(self) -> str:
         err = _eos.get_last_error()
-        err = json.dumps(err)
-        return f'{{"except": {err}}}'
-
+        try:
+            return {'except': json.loads(err)}
+        except json.JSONDecodeError:        
+            err = json.dumps(err)
+            return f'{{"except": {err}}}'

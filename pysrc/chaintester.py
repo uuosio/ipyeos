@@ -398,7 +398,7 @@ class ChainTester(object):
                 args = self.chain.pack_action_args(account, action, args)
                 if not args:
                     error = self.chain.get_last_error()
-                    raise Exception(f'{error}')
+                    raise Exception(error)
             else:
                 args = b''
             # logger.error(f'++++{args}')
