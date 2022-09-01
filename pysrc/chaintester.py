@@ -638,8 +638,7 @@ class ChainTester(object):
             'authorization':[{'actor': account, 'permission':'active'}]
         }
         actions.append(setcode)
-        if abi:
-            abi = eos.pack_abi(abi).hex()
+        abi = eos.pack_abi(abi).hex()
         setabi = self.chain.pack_action_args('eosio', 'setabi', {'account':account, 'abi':abi})
         setabi = {
             'account': 'eosio',

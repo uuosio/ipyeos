@@ -50,6 +50,8 @@ def unpack_transaction(packed_obj: bytes) -> dict:
     return _eos.unpack_native_object(NativeType.packed_transaction_v0, packed_obj)
 
 def pack_abi(abi: str) -> bytes:
+    if not abi:
+        return b''
     return pack_native_object(NativeType.abi_def, abi)
 
 def s2n(s: str) -> int:
