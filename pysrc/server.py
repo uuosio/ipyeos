@@ -922,8 +922,15 @@ class ChainTesterHandler:
 
     def deploy_contract(self, id, account: str, wasm: str, abi: str):
         tester: ChainTester = self.testers[id]
-        ret = tester.deploy_contract(account, bytes.fromhex(wasm), abi)
-        return json.dumps(ret).encode()
+        try:
+            ret = tester.deploy_contract(account, bytes.fromhex(wasm), abi)
+            return json.dumps(ret).encode()
+        except Exception as e:
+            # logger.exception(e)
+            err = e.args[0]
+            if isinstance(err, dict):
+                err = json.dumps(err)
+            return err.encode()
 
     def create_account(self, id: int, creator: str, account: str, owner_key: str, active_key: str, ram_bytes: int=0, stake_net: i64=0, stake_cpu: i64=0):
         tester: ChainTester = self.testers[id]
