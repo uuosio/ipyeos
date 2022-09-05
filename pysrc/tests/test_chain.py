@@ -170,8 +170,6 @@ class TestSystem(object):
         logger.info(r)
 
     def test_chain(self):
-        _eos.set_block_interval_ms(1000)
-
         _chain_config = json.dumps(chain_config)
         _genesis_test = json.dumps(genesis_test)
 

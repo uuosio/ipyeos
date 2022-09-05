@@ -176,7 +176,6 @@ class ChainTester(object):
 
 
         eos.set_log_level('default', 0)
-        eos.set_block_interval_ms(500)
 
         self.chain_config = json.dumps(chain_config)
         self.genesis_test = json.dumps(genesis_test)

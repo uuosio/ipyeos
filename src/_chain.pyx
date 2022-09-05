@@ -62,7 +62,6 @@ cdef extern from "_ipyeos.hpp":
         string pending_block_time()
         string pending_block_producer()
         string pending_producer_block_id()
-        string get_pending_trx_receipts()
         string active_producers()
         string pending_producers()
         string proposed_producers()
@@ -89,7 +88,6 @@ cdef extern from "_ipyeos.hpp":
         bool validate_expiration(string& param)
         bool validate_tapos(string& param)
         bool validate_db_available_size()
-        bool validate_reversible_available_size()
         bool is_protocol_feature_activated(string& param)
         bool is_builtin_activated(int feature)
         bool is_known_unexpired_transaction(string& param)
@@ -105,7 +103,7 @@ cdef extern from "_ipyeos.hpp":
         void set_subjective_cpu_leeway(uint64_t leeway)
         void set_greylist_limit(uint32_t limit)
         uint32_t get_greylist_limit()
-        void add_to_ram_correction(string& account, uint64_t ram_bytes, uint32_t action_id, const char* event_id)
+        void add_to_ram_correction(string& account, uint64_t ram_bytes)
         bool all_subjective_mitigations_disabled()
         string get_scheduled_producer(string& _block_time)
 
@@ -284,12 +282,6 @@ def pending_producer_block_id(uint64_t ptr):
     '''
     return chain(ptr).pending_producer_block_id()
 
-def get_pending_trx_receipts(uint64_t ptr):
-    '''
-    returns: str
-    '''
-    return chain(ptr).get_pending_trx_receipts()
-
 def active_producers(uint64_t ptr):
     '''
     returns: str
@@ -440,12 +432,6 @@ def validate_db_available_size(uint64_t ptr):
     '''
     return chain(ptr).validate_db_available_size()
 
-def validate_reversible_available_size(uint64_t ptr):
-    '''
-    returns: bool
-    '''
-    return chain(ptr).validate_reversible_available_size()
-
 def is_protocol_feature_activated(uint64_t ptr, string& param):
     '''
     returns: bool
@@ -524,8 +510,8 @@ def get_greylist_limit(uint64_t ptr):
     '''
     return chain(ptr).get_greylist_limit()
 
-def add_to_ram_correction(uint64_t ptr, string& account, uint64_t ram_bytes, uint32_t action_id, const char* event_id):
-    return chain(ptr).add_to_ram_correction(account, ram_bytes, action_id, event_id)
+def add_to_ram_correction(uint64_t ptr, string& account, uint64_t ram_bytes):
+    return chain(ptr).add_to_ram_correction(account, ram_bytes)
 
 def all_subjective_mitigations_disabled(uint64_t ptr):
     '''

@@ -23,9 +23,6 @@ class NativeType:
 def set_log_level(logger_name: str, level: int) -> None:
     _eos.set_log_level(logger_name, level)
 
-def set_block_interval_ms(ms: int) -> None:
-    _eos.set_block_interval_ms(ms)
-
 def pack_native_object(_type: int, obj: Union[dict, str]) -> bytes:
     if isinstance(obj, dict):
         obj = json.dumps(obj)

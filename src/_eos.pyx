@@ -28,7 +28,6 @@ cdef extern from "_ipyeos.hpp":
 
     ctypedef struct ipyeos_proxy:
         void set_log_level(string& logger_name, int level)
-        void set_block_interval_ms(int ms)
 
         string& get_last_error()
         void set_last_error(string& error)
@@ -64,9 +63,6 @@ uuosext_init()
 
 def set_log_level(string& logger_name, int level):
     get_ipyeos_proxy().set_log_level(logger_name, level)
-
-def set_block_interval_ms(int ms):
-    get_ipyeos_proxy().set_block_interval_ms(ms)
 
 def get_last_error():
     return get_ipyeos_proxy().get_last_error()
