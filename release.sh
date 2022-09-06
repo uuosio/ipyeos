@@ -6,10 +6,12 @@ else
         exit -1
 fi
 
+BUILD_DIR=build
+
 rm -r pysrc/release
 mkdir -p pysrc/release/bin
 mkdir -p pysrc/release/lib
 
-cp leap/build/programs/ipyeos/ipyeos pysrc/release/bin/ipyeos || exit 1
-cp leap/build/libraries/chain_api/libchain_api.$EXT pysrc/release/lib/libchain_api.$EXT || exit 1
-cp leap/build/libraries/vm_api/libvm_api.$EXT pysrc/release/lib/libvm_api.$EXT || exit 1
+cp leap/$BUILD_DIR/programs/ipyeos/ipyeos pysrc/release/bin/ipyeos || exit 1
+cp leap/$BUILD_DIR/libraries/chain_api/libchain_api.$EXT pysrc/release/lib/libchain_api.$EXT || exit 1
+cp leap/$BUILD_DIR/libraries/vm_api/libvm_api.$EXT pysrc/release/lib/libvm_api.$EXT || exit 1

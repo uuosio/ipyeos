@@ -23,57 +23,45 @@ test_dir = os.path.dirname(__file__)
 default_time = datetime.utcfromtimestamp(946684800000/1e3)
 
 chain_config = {
-    'sender_bypass_whiteblacklist': [],
-    'actor_whitelist': [],
-    'actor_blacklist': [],
-    'contract_whitelist': [],
-    'contract_blacklist': [],
-    'action_blacklist': [],
-    'key_blacklist': [],
-    'blog': {
-      'log_dir': 'dd/blocks',
-      'retained_dir': '',
-      'archive_dir': 'archive',
-      'stride': 4294967295,
-      'max_retained_files': 10,
-      'fix_irreversible_blocks': True
+    "sender_bypass_whiteblacklist":[],
+    "actor_whitelist":[],
+    "actor_blacklist":[],
+    "contract_whitelist":[],
+    "contract_blacklist":[],
+    "action_blacklist":[],
+    "key_blacklist":[],
+    "blocks_dir":"dd/blocks",
+    "state_dir":"dd/state",
+    "state_size":1073741824,
+    "state_guard_size":134217728,
+    "sig_cpu_bill_pct":5000,
+    "thread_pool_size":2,
+    "max_nonprivileged_inline_action_size":4096,
+    "read_only":False,
+    "force_all_checks":False,
+    "disable_replay_opts":False,
+    "contracts_console":False,
+    "allow_ram_billing_in_notify":False,
+    "maximum_variable_signature_length":16384,
+    "disable_all_subjective_mitigations":False,
+    "terminate_at_block":0,
+    "integrity_hash_on_start":False,
+    "integrity_hash_on_stop":False,
+    "wasm_runtime":"eos_vm_jit",
+    "eosvmoc_config":
+    {
+        "cache_size":1073741824,
+        "threads":1
     },
-    'state_dir': 'dd/state',
-    'state_size': 2147483648,
-    'state_guard_size': 134217728,
-    'reversible_cache_size': 356515840,
-    'reversible_guard_size': 2097152,
-    'sig_cpu_bill_pct': 5000,
-    'thread_pool_size': 2,
-    'max_retained_block_files': 10,
-    'blocks_log_stride': 4294967295,
-    'backing_store': 0,
-    'persistent_storage_num_threads': 1,
-    'persistent_storage_max_num_files': -1,
-    'persistent_storage_write_buffer_size': 134217728,
-    'persistent_storage_bytes_per_sync': 1048576,
-    'persistent_storage_mbytes_batch': 50,
-    'abi_serializer_max_time_us': 15000000,
-    'max_nonprivileged_inline_action_size': 4096,
-    'read_only': False,
-    'force_all_checks': False,
-    'disable_replay_opts': False,
-    'contracts_console': True,
-    'allow_ram_billing_in_notify': False,
-    'maximum_variable_signature_length': 16384,
-    'disable_all_subjective_mitigations': False,
-    'terminate_at_block': 0,
-    'wasm_runtime': 'eos_vm_jit',
-    # 'wasm_runtime': 'eos_vm',
-    'eosvmoc_config': {'cache_size': 1073741824, 'threads': 1},
-    'eosvmoc_tierup': False,
-    'read_mode': 'SPECULATIVE',
-    'block_validation_mode': 'FULL',
-    'db_map_mode': 'mapped',
-    'resource_greylist': [],
-    'trusted_producers': [],
-    'greylist_limit': 1000
- }
+    "eosvmoc_tierup":False,
+    "read_mode":"SPECULATIVE",
+    "block_validation_mode":"FULL",
+    "db_map_mode":"mapped",
+    "resource_greylist":[],
+    "trusted_producers":[],
+    "greylist_limit":1000,
+    "profile_accounts":[]
+}
 
 genesis_test = {
   "initial_timestamp": "2019-10-24T00:00:00.888",
@@ -171,7 +159,7 @@ class ChainTester(object):
         logger.info('++++data_dir %s', self.data_dir)
         logger.info('++++config_dir %s', self.config_dir)
 
-        chain_config['blog']['log_dir'] = os.path.join(self.data_dir, 'blocks')
+        chain_config['blocks_dir'] = os.path.join(self.data_dir, 'blocks')
         chain_config['state_dir'] = os.path.join(self.data_dir, 'state')
 
 
@@ -228,21 +216,25 @@ class ChainTester(object):
         self.deploy_eosio_bios()
         self.produce_block()
 
+
+# 'PREACTIVATE_FEATURE' (with digest of '0ec7e080177b2c02b278d5088611686b49d739925a92d9bfcacd7fc6b74053bd')
         feature_digests = [
-            '1a99a59d87e06e09ec5b028a9cbb7749b4a5ad8819004365d02dc4379a8b7241', #'ONLY_LINK_TO_EXISTING_PERMISSION' 
-            '2652f5f96006294109b3dd0bbde63693f55324af452b799ee137a81a905eed25', #'FORWARD_SETCODE' 
-            '299dcb6af692324b899b39f16d5a530a33062804e41f09dc97e9f156b4476707', #'WTMSIG_BLOCK_SIGNATURES' 
-            'ef43112c6543b88db2283a2e077278c315ae2c84719a8b25f25cc88565fbea99', #'REPLACE_DEFERRED' 
-            '4a90c00d55454dc5b059055ca213579c6ea856967712a56017487886a4d4cc0f', #'NO_DUPLICATE_DEFERRED_ID' 
-            '4e7bf348da00a945489b2a681749eb56f5de00b900014e137ddae39f48f69d67', #'RAM_RESTRICTIONS' 
+            '1a99a59d87e06e09ec5b028a9cbb7749b4a5ad8819004365d02dc4379a8b7241', #ONLY_LINK_TO_EXISTING_PERMISSION' 
+            '2652f5f96006294109b3dd0bbde63693f55324af452b799ee137a81a905eed25', #'FORWARD_SETCODE'
+            '299dcb6af692324b899b39f16d5a530a33062804e41f09dc97e9f156b4476707', #'WTMSIG_BLOCK_SIGNATURES'
+            '35c2186cc36f7bb4aeaf4487b36e57039ccf45a9136aa856a5d569ecca55ef2b', #'GET_BLOCK_NUM'
+            'ef43112c6543b88db2283a2e077278c315ae2c84719a8b25f25cc88565fbea99', #'REPLACE_DEFERRED'
+            '4a90c00d55454dc5b059055ca213579c6ea856967712a56017487886a4d4cc0f', #'NO_DUPLICATE_DEFERRED_ID'
+            '4e7bf348da00a945489b2a681749eb56f5de00b900014e137ddae39f48f69d67', #'RAM_RESTRICTIONS'
             '4fca8bd82bbd181e714e283f83e1b45d95ca5af40fb89ad3977b653c448f78c2', #'WEBAUTHN_KEY'
             '5443fcf88330c586bc0e5f3dee10e7f63c76c00249c87fe4fbf7f38c082006b4', #'BLOCKCHAIN_PARAMETERS'
             '68dcaa34c0517d19666e6b33add67351d8c5f69e999ca1e37931bc410a297428', #'DISALLOW_EMPTY_PRODUCER_SCHEDULE'
-            '825ee6288fb1373eab1b5187ec2f04f6eacb39cb3a97f356a07c91622dd61d16', #'KV_DATABASE'
+            '6bcb40a24e49c26d0a60513b6aeb8551d264e4717f306b81a37a5afb3b47cedc', #'CRYPTO_PRIMITIVES'
             '8ba52fe7a3956c5cd3a656a3174b931d3bb2abb45578befc59f283ecd816a405', #'ONLY_BILL_FIRST_AUTHORIZER'
             'ad9e3d8f650687709fd68f4b90b41f7d825a365b02c23a636cef88ac2ac00c43', #'RESTRICT_ACTION_TO_SELF'
-            'bf61537fd21c61a60e542a5d66c3f6a78da0589336868307f94a82bccea84e88', #'CONFIGURABLE_WASM_LIMITS'
+            'bcd2a26394b36614fd4894241d3c451ab0f6fd110958c3423073621a70826e99', #'GET_CODE_HASH'
             'c3a6138c5061cf291310887c0b5c71fcaffeab90d5deb50d3b9e687cead45071', #'ACTION_RETURN_VALUE'
+            'd528b9f6e9693f45ed277af93474fd473ce7d831dae2180cca35d907bd10cb40', #'CONFIGURABLE_WASM_LIMITS2'
             'e0fb64b1085cc5538970158d05a009c24e276fb94e1a0bf6a528b48fbc4ff526', #'FIX_LINKAUTH_RESTRICTION'
             'f0af56d2c5a48d60a4a5b5c903edfb7db3a736a94ed589d0b797df33ff9d3e1d', #'GET_SENDER'
         ]
@@ -282,8 +274,8 @@ class ChainTester(object):
 
         self.push_action('eosio', 'init', args, {'eosio':'active'})
 
-        logger.info('+++++++++deploy micropython')
-        self.deploy_micropython()
+        # logger.info('+++++++++deploy micropython')
+        # self.deploy_micropython()
         self.produce_block()
         # r = self.push_action('eosio.mpy', 'hellompy', b'', {'hello':'active'})
         # logger.info(r['action_traces'][0]['console'])
