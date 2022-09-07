@@ -158,6 +158,19 @@ cdef extern from "_vm_api.hpp":
     int _get_context_free_data( uint32_t index, char* buff, size_t size );
     void _eosio_exit( int32_t code );
 
+    void _set_action_return_value(const char *data, uint32_t data_size);
+    uint32_t _get_code_hash(capi_name account, uint32_t struct_version, char* packed_result, uint32_t packed_result_len);
+    uint32_t _get_block_num();
+
+    void _sha3( const char* data, uint32_t data_len, char* hash, uint32_t hash_len, int32_t keccak );
+    int32_t _blake2_f( uint32_t rounds, const char* state, uint32_t state_len, const char* msg, uint32_t msg_len, 
+                    const char* t0_offset, uint32_t t0_len, const char* t1_offset, uint32_t t1_len, int32_t final, char* result, uint32_t result_len);
+    int32_t _k1_recover( const char* sig, uint32_t sig_len, const char* dig, uint32_t dig_len, char* pub, uint32_t pub_len);
+    int32_t _alt_bn128_add( const char* op1, uint32_t op1_len, const char* op2, uint32_t op2_len, char* result, uint32_t result_len);
+    int32_t _alt_bn128_mul( const char* g1, uint32_t g1_len, const char* scalar, uint32_t scalar_len, char* result, uint32_t result_len);
+    int32_t _alt_bn128_pair( const char* pairs, uint32_t pairs_len);
+    int32_t _mod_exp( const char* base, uint32_t base_len, const char* exp, uint32_t exp_len, const char* mod, uint32_t mod_len, char* result, uint32_t result_len);
+
 
 def is_cpp_exception_occur():
     return has_last_exception()
@@ -509,6 +522,74 @@ def get_context_free_data(uint32_t index):
     ret = PyBytes_FromStringAndSize(buff, size)
     free(buff)
     return ret
+
+# void _set_action_return_value(const char *data, uint32_t data_size);
+def set_action_return_value(data: bytes):
+    return _set_action_return_value(data, len(data))
+
+# uint32_t _get_code_hash(capi_name account, uint32_t struct_version, char* packed_result, uint32_t packed_result_len);
+def get_code_hash(account: uint64_t, struct_version: int):
+    cdef char* packed_result
+    cdef uint32_t packed_result_size
+    packed_result_size = _get_code_hash(account, struct_version, <char *>0, 0)
+    packed_result = <char*>malloc(packed_result_size)
+    _get_code_hash(account, struct_version, packed_result, packed_result_size)
+    ret = PyBytes_FromStringAndSize(packed_result, packed_result_size)
+    free(packed_result)
+    return ret
+
+# uint32_t _get_block_num();
+def get_block_num():
+    return _get_block_num()
+
+# void _sha3( const char* data, uint32_t data_len, char* hash, uint32_t hash_len, int32_t keccak );
+def sha3(data: bytes, int32_t keccak ):
+    cdef char hash[32]
+    _sha3(data, len(data), <char *>hash, 32, keccak)
+    return PyBytes_FromStringAndSize(<char *>hash, 32)
+
+# int32_t _blake2_f( uint32_t rounds, const char* state, uint32_t state_len, const char* msg, uint32_t msg_len, 
+#                 const char* t0_offset, uint32_t t0_len, const char* t1_offset, uint32_t t1_len, int32_t final, char* result, uint32_t result_len);
+def blake2_f(rounds: uint32_t, state: bytes, msg: bytes, t0_offset: bytes, t1_offset: bytes, final: int32_t) -> bytes:
+    cdef char result[64]
+    if 0 == _blake2_f(rounds, state, len(state), msg, len(msg), t0_offset, len(t0_offset), t1_offset, len(t1_offset), final, result, 64):
+        return PyBytes_FromStringAndSize(<char *>result, 64)
+    return b''
+# int32_t _k1_recover( const char* sig, uint32_t sig_len, const char* dig, uint32_t dig_len, char* pub, uint32_t pub_len);
+def k1_recover(sig: bytes, dig: bytes):
+    cdef char pub[65]
+    if 0 == _k1_recover(sig, len(sig), dig, len(dig), pub, 65):
+        return PyBytes_FromStringAndSize(<char *>pub, 65)
+    return b''
+
+# int32_t _alt_bn128_add( const char* op1, uint32_t op1_len, const char* op2, uint32_t op2_len, char* result, uint32_t result_len);
+def alt_bn128_add(op1: bytes, op2: bytes):
+    cdef char result[64]
+    if 0 == _alt_bn128_add(op1, len(op1), op2, len(op2), result, 64):
+        return PyBytes_FromStringAndSize(<char *>result, 64)
+    return b''
+
+# int32_t _alt_bn128_mul( const char* g1, uint32_t g1_len, const char* scalar, uint32_t scalar_len, char* result, uint32_t result_len);
+def alt_bn128_mul(g1: bytes, scalar: bytes):
+    cdef char result[64]
+    if 0 == _alt_bn128_mul(g1, len(g1), scalar, len(scalar), result, 64):
+        return PyBytes_FromStringAndSize(<char *>result, 64)
+    return b''
+
+# int32_t _alt_bn128_pair( const char* pairs, uint32_t pairs_len);
+def alt_bn128_pair(pairs: bytes):
+    return _alt_bn128_pair(pairs, len(pairs))
+
+# int32_t _mod_exp( const char* base, uint32_t base_len, const char* exp, uint32_t exp_len, const char* mod, uint32_t mod_len, char* result, uint32_t result_len);
+def mod_exp(base: bytes, exp: bytes, mod: bytes):
+    cdef char* result
+    cdef uint32_t result_size
+    result_size = len(mod)
+    result = <char *>malloc(result_size)
+    _mod_exp(base, len(base), exp, len(exp), mod, len(mod), result, result_size)
+    ret = PyBytes_FromStringAndSize(<char *>result, result_size)
+    free(result)
+    return ret 
 
 def db_store_i64(scope: uint64_t, table: uint64_t, payer: uint64_t, id: uint64_t,  data: bytes):
     return _db_store_i64(scope, table, payer, id,  <void *><const unsigned char *>data, len(data))

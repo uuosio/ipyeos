@@ -393,6 +393,46 @@ class VMAPIHandler:
         return _vm_api.get_action(index)
 
     @check_cpp_exception
+    def set_action_return_value(self, data: bytes):
+        _vm_api.set_action_return_value(data)
+
+    @check_cpp_exception
+    def get_code_hash(self, account, struct_version):
+        return _vm_api.get_code_hash(account, struct_version)
+
+    @check_cpp_exception
+    def get_block_num(self):
+        return _vm_api.get_block_num()
+
+    @check_cpp_exception
+    def sha3(self, data, keccak):
+        return _vm_api.sha3(data, keccak)
+
+    @check_cpp_exception
+    def blake2_f(self, rounds, state, msg, t0_offset, t1_offset, final):
+        return _vm_api.blake2_f(rounds, state, msg, t0_offset, t1_offset, final)
+
+    @check_cpp_exception
+    def k1_recover(self, sig, dig):
+        return _vm_api.k1_recover(sig, dig)
+
+    @check_cpp_exception
+    def alt_bn128_add(self, op1, op2):
+        return _vm_api.alt_bn128_add(op1, op2)
+
+    @check_cpp_exception
+    def alt_bn128_mul(self, g1, scalar):
+        return _vm_api.alt_bn128_mul(g1, scalar)
+
+    @check_cpp_exception
+    def alt_bn128_pair(self, pairs):
+        return _vm_api.alt_bn128_pair(pairs)
+
+    @check_cpp_exception
+    def mod_exp(self, base, exp, mod):
+        return _vm_api.mod_exp(base, exp, mod)
+
+    @check_cpp_exception
     def db_store_i64(self, scope: Uint64, table: Uint64, payer: Uint64, id: Uint64, data: bytes):
         return _vm_api.db_store_i64(scope.into(), table.into(), payer.into(), id.into(), data)
 
@@ -1143,7 +1183,7 @@ class ChainTesterServer(object):
                 itrans = self.inputTransportFactory.getTransport(client)
                 iprot = self.inputProtocolFactory.getProtocol(itrans)
             except Exception as e:
-                logger.exception(x)
+                logger.exception(e)
                 continue
 
             # for THeaderProtocol, we must use the same protocol instance for

@@ -816,3 +816,73 @@ void _eosio_exit( int32_t code ) {
         api()->eosio_exit(code);
     } CATCH_AND_SAVE_EXCEPTION();
 }
+
+
+void _set_action_return_value(const char *data, uint32_t data_size) {
+    try {
+        api()->set_action_return_value(data, data_size);
+    } CATCH_AND_SAVE_EXCEPTION();
+}
+
+uint32_t _get_code_hash(capi_name account, uint32_t struct_version, char* packed_result, uint32_t packed_result_len) {
+    try {
+        return api()->get_code_hash(account, struct_version, packed_result, packed_result_len);
+    } CATCH_AND_SAVE_EXCEPTION();
+    return 0;
+}
+
+uint32_t _get_block_num() {
+    try {
+        return api()->get_block_num();
+    } CATCH_AND_SAVE_EXCEPTION();
+    return 0;
+}
+
+void _sha3( const char* data, uint32_t data_len, char* hash, uint32_t hash_len, int32_t keccak ) {
+    try {
+        api()->sha3(data, data_len, hash, hash_len, keccak);
+    } CATCH_AND_SAVE_EXCEPTION();
+}
+
+int32_t _blake2_f( uint32_t rounds, const char* state, uint32_t state_len, const char* msg, uint32_t msg_len, 
+                const char* t0_offset, uint32_t t0_len, const char* t1_offset, uint32_t t1_len, int32_t final, char* result, uint32_t result_len) {
+    try {
+        return api()->blake2_f(rounds, state, state_len, msg, msg_len, t0_offset, t0_len, t1_offset, t1_len, final, result, result_len);
+    } CATCH_AND_SAVE_EXCEPTION();
+    return 0;
+}
+
+int32_t _k1_recover( const char* sig, uint32_t sig_len, const char* dig, uint32_t dig_len, char* pub, uint32_t pub_len) {
+    try {
+        return api()->k1_recover(sig, sig_len, dig, dig_len, pub, pub_len);
+    } CATCH_AND_SAVE_EXCEPTION();
+    return 0;
+}
+
+int32_t _alt_bn128_add( const char* op1, uint32_t op1_len, const char* op2, uint32_t op2_len, char* result, uint32_t result_len) {
+    try {
+        return api()->alt_bn128_add(op1, op1_len, op2, op2_len, result, result_len);
+    } CATCH_AND_SAVE_EXCEPTION();
+    return 0;
+}
+
+int32_t _alt_bn128_mul( const char* g1, uint32_t g1_len, const char* scalar, uint32_t scalar_len, char* result, uint32_t result_len) {
+    try {
+        return api()->alt_bn128_mul(g1, g1_len, scalar, scalar_len, result, result_len);
+    } CATCH_AND_SAVE_EXCEPTION();
+    return 0;
+}
+
+int32_t _alt_bn128_pair( const char* pairs, uint32_t pairs_len) {
+    try {
+        return api()->alt_bn128_pair(pairs, pairs_len);
+    } CATCH_AND_SAVE_EXCEPTION();
+    return 0;
+}
+
+int32_t _mod_exp( const char* base, uint32_t base_len, const char* exp, uint32_t exp_len, const char* mod, uint32_t mod_len, char* result, uint32_t result_len) {
+    try {
+        return api()->mod_exp(base, base_len, exp, exp_len, mod, mod_len, result, result_len);
+    } CATCH_AND_SAVE_EXCEPTION();
+    return 0;
+}
