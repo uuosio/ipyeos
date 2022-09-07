@@ -398,7 +398,7 @@ class VMAPIHandler:
 
     @check_cpp_exception
     def get_code_hash(self, account, struct_version):
-        return _vm_api.get_code_hash(account, struct_version)
+        return _vm_api.get_code_hash(account.into(), struct_version)
 
     @check_cpp_exception
     def get_block_num(self):
