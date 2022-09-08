@@ -1,3 +1,7 @@
+python3.8 -m pip install scikit-build cython auditwheel
+python3.9 -m pip install scikit-build cython auditwheel
+python3.10 -m pip install scikit-build cython auditwheel
+
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
     EXT=so
 elif [[ "$OSTYPE" == "darwin"* ]]; then
@@ -6,7 +10,7 @@ else
         exit -1
 fi
 
-BUILD_DIR=build-mac
+BUILD_DIR=build
 
 rm -r pysrc/release
 mkdir -p pysrc/release/bin

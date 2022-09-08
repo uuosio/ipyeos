@@ -20,7 +20,7 @@ def run_ipyeos(custom_cmds=None):
 
     dir_name = os.path.dirname(os.path.realpath(__file__))
     dir_name = os.path.join(dir_name, "release")
-    uuos_program = os.path.join(dir_name, "bin/ipyeos")
+    ipyeos_program = os.path.join(dir_name, "bin/ipyeos")
 
     libdir, py_version_short, abiflags = sysconfig.get_config_vars('LIBDIR', 'py_version_short', 'abiflags')
 
@@ -39,9 +39,9 @@ def run_ipyeos(custom_cmds=None):
 
     os.environ['CHAIN_API_LIB'] = os.path.join(dir_name, 'lib/libchain_api.' + lib_suffix)
     os.environ['VM_API_LIB'] = os.path.join(dir_name, 'lib/libvm_api.' + lib_suffix)
-    os.environ['RUN_IPYEOS']=uuos_program
+    os.environ['RUN_IPYEOS']=ipyeos_program
 
-    cmds = [uuos_program]
+    cmds = [ipyeos_program]
     if not custom_cmds:
         cmds.extend(sys.argv[1:])
     else:

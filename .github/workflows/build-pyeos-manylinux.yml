@@ -2,7 +2,7 @@ name: build ipyeos manylinux
 
 on:
   push:
-    # branches: [ main ]
+    branches: [ debug ]
     tags:
       - "v*.*.*"
   # pull_request:
@@ -14,66 +14,44 @@ concurrency:
 
 jobs:
   run:
-    runs-on: ubuntu-latest
-    container:
-      image: quay.io/pypa/manylinux2014_x86_64
+    runs-on: ubuntu-20.04
+    # container:
+    #   image: quay.io/pypa/manylinux2014_x86_64
     env:
       IPYEOS_VERSION: 0.2.14
     steps:
       - name: Checkout
         uses: actions/checkout@v2
         with:
-          # token: ${{ secrets.MY_REPO_PAT }}
           submodules: recursive
           fetch-depth: 0
       - name: Cache eos build
         uses: actions/cache@v2
-        id: cache-eosio-build
+        id: cache-leap-build
         with:
-          key: eosio-build-v2.1.0-manylinux-1
-          path: eos/build
-      - name: Build eos
-        if: steps.cache-eosio-build.outputs.cache-hit != 'true'
-        working-directory: eos
-        run: ./scripts/eosio_build.sh -y
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python-version }}
-      - name: Install dependencies
+          key: leap-build-v2.1.0-manylinux-1
+          path: leap/build
+      - name: install build dependencies
         run: |
-          python3.7 -m pip install scikit-build cython auditwheel
-          python3.8 -m pip install scikit-build cython auditwheel
-          python3.9 -m pip install scikit-build cython auditwheel
-          python3.10 -m pip install scikit-build cython auditwheel
-      - name: call release.sh
+          sudo apt-get update
+          sudo apt-get install build-essential cmake curl git libboost-all-dev libgmp-dev libssl-dev llvm-11-dev
+      - name: Build leap
+        if: steps.cache-leap-build.outputs.cache-hit != 'true'
+        working-directory: leap
         run: |
-          ./release.sh
-      - name: Build pyeos with python3.7
+          mkdir build
+          cd build
+          cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=/usr/lib/llvm-11 ..
+          make -j $(nproc)
+      - name: pull manylinux2014_x86_64
         run: |
-          ln -sf /opt/python/cp37-cp37m/bin/cython /usr/local/bin/cython
-          python3.7 setup.py sdist bdist_wheel
-      - name: Build pyeos with python3.8
+          docker pull quay.io/pypa/manylinux2014_x86_64
+      - name: build wheel in container
         run: |
-          ln -sf /opt/python/cp38-cp38/bin/cython /usr/local/bin/cython
-          python3.8 setup.py sdist bdist_wheel
-      - name: Build pyeos with python3.9
-        run: |
-          ln -sf /opt/python/cp39-cp39/bin/cython /usr/local/bin/cython
-          python3.9 setup.py sdist bdist_wheel
-      - name: Build pyeos with python3.10
-        run: |
-          ln -sf /opt/python/cp310-cp310/bin/cython /usr/local/bin/cython
-          python3.10 setup.py sdist bdist_wheel
-      - name: run auditwheel
-        working-directory: dist
-        run: |
-          python3.7 -m auditwheel repair --plat manylinux_2_17_x86_64 ipyeos-${{ env.IPYEOS_VERSION }}-cp37-cp37m-linux_x86_64.whl
-          python3.8 -m auditwheel repair --plat manylinux_2_17_x86_64 ipyeos-${{ env.IPYEOS_VERSION }}-cp38-cp38-linux_x86_64.whl
-          python3.9 -m auditwheel repair --plat manylinux_2_17_x86_64 ipyeos-${{ env.IPYEOS_VERSION }}-cp39-cp39-linux_x86_64.whl
-          python3.10 -m auditwheel repair --plat manylinux_2_17_x86_64 ipyeos-${{ env.IPYEOS_VERSION }}-cp310-cp310-linux_x86_64.whl
+          docker run -it -v $(pwd):/root/dev -w /root/dev quay.io/pypa/manylinux2014_x86_64 ./scripts/build-wheel-linux.sh
       - name: run tests
         run: |
+          ls ./dist/wheelhouse
           python3.9 -m pip install ./dist/wheelhouse/ipyeos-${{ env.IPYEOS_VERSION }}-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
           python3.9 -m ipyeos -m pytest -s -x tests/test.py
       - name: release-pyeos
@@ -81,7 +59,6 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            ./dist/wheelhouse/ipyeos-${{ env.IPYEOS_VERSION }}-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
             ./dist/wheelhouse/ipyeos-${{ env.IPYEOS_VERSION }}-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
             ./dist/wheelhouse/ipyeos-${{ env.IPYEOS_VERSION }}-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
             ./dist/wheelhouse/ipyeos-${{ env.IPYEOS_VERSION }}-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
