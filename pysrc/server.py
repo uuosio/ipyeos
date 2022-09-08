@@ -1302,10 +1302,10 @@ def start_debug_server(addr='127.0.0.1', server_port=9090, vm_api_port=9092, app
         task1 = aio.create_task(run_task())
         await aio.sleep(0.1)
         task2 = aio.create_task(run_task2())
-        # aio.gather(task1, task2)
-        task3 = aio.create_task(run_http_task())
-        aio.gather(task1, task2, task3)
-    run_server()
+        aio.gather(task1, task2)
+        # task3 = aio.create_task(run_http_task())
+        # aio.gather(task1, task2, task3)
+    # run_server()
     loop.run_until_complete(main())
 
 if __name__ == '__main__':
