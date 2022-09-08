@@ -48,7 +48,7 @@ jobs:
           docker pull quay.io/pypa/manylinux2014_x86_64
       - name: build wheel in container
         run: |
-          docker run -it -v $(pwd):/root/dev -w /root/dev quay.io/pypa/manylinux2014_x86_64 ./scripts/build-wheel-linux.sh
+          docker run --rm -v $(pwd):/root/dev -w /root/dev quay.io/pypa/manylinux2014_x86_64 ./scripts/build-wheel-linux.sh
       - name: run tests
         run: |
           ls ./dist/wheelhouse
