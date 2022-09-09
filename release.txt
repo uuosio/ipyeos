@@ -1,4 +1,4 @@
-v0.2.14 release
+v0.3.0 release
 
-1. Handle C++ exceptions throw from vm apis
+1. Replace eos repository with leap
 

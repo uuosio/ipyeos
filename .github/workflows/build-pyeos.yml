@@ -16,7 +16,7 @@ jobs:
   run:
     runs-on: 'macos-12'
     env:
-      IPYEOS_VERSION: 0.2.14
+      IPYEOS_VERSION: 0.3.0
       SYSTEM_VERSION_COMPAT: 0
       PREBUILD_BINARY_VERSION: v1.0.0
     steps:
@@ -30,6 +30,7 @@ jobs:
         run: |
           wget https://github.com/uuosio/leap/releases/download/${{ env.PREBUILD_BINARY_VERSION }}/release-macos.tar.gz
           tar -C pysrc -xf release-macos.tar.gz
+          brew install llvm@11
       - name: Set up Python 3.8
         uses: actions/setup-python@v2
         with:
@@ -37,7 +38,7 @@ jobs:
       - name: build python3.8 wheel package
         run: |
           python3.8 -m pip install scikit-build cython
-          python3.8 setup.py sdist bdist_wheel --plat-name macosx-10.15-x86_64
+          CC=clang CXX=clang++ python3.8 setup.py sdist bdist_wheel --plat-name macosx-10.15-x86_64
       - name: Set up Python 3.9
         uses: actions/setup-python@v2
         with:
@@ -45,7 +46,7 @@ jobs:
       - name: build python3.9 wheel package
         run: |
           python3.9 -m pip install scikit-build cython
-          python3.9 setup.py sdist bdist_wheel --plat-name macosx-10.15-x86_64
+          CC=clang CXX=clang++ python3.9 setup.py sdist bdist_wheel --plat-name macosx-10.15-x86_64
       - name: Set up Python 3.10
         uses: actions/setup-python@v2
         with:
@@ -53,7 +54,7 @@ jobs:
       - name: build python3.10 wheel package
         run: |
           python3.10 -m pip install scikit-build cython
-          python3.10 setup.py sdist bdist_wheel --plat-name macosx-10.15-x86_64
+          CC=clang CXX=clang++ python3.10 setup.py sdist bdist_wheel --plat-name macosx-10.15-x86_64
       - name: get whl file
         id: whlfile
         run: |
