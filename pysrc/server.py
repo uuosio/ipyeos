@@ -768,6 +768,7 @@ class DebugChainTester(ChainTester):
     def enable_debug_contract(self, contract, enable):
         self.debug_contracts[contract] = enable 
         if enable:
+            eos.enable_debug(True)
             eos.set_native_contract(contract, self.so_file)
         else:
             eos.set_native_contract(contract, "")
@@ -796,7 +797,7 @@ class CurrentConnection(object):
 class ChainTesterHandler:
     def __init__(self, addr, vm_api_port, apply_request_addr, apply_request_port):
         self.testers: dict[DebugChainTester] = {}
-        self.tester_seq = 0
+        self.tester_seq = 1
         _vm_api.set_apply_callback(self.on_apply)
         handler = VMAPIHandler()
         self.processor = ApplyProcessor(handler)
@@ -833,7 +834,6 @@ class ChainTesterHandler:
             protocol = TBinaryProtocol.TBinaryProtocol(self.apply_request_transport)
             self.apply_request_client = ApplyRequestClient(protocol)
 
-            time.sleep(0.1)
             # Connect!
             for i in range(10):
                 try:
@@ -843,6 +843,7 @@ class ChainTesterHandler:
                 except Exception as e:
                     exc_info = sys.exc_info()
                     traceback.print_exception(*exc_info)
+                    time.sleep(0.1)
             else:
                 raise Exception("connect to 9091 refused!")
 
@@ -857,10 +858,12 @@ class ChainTesterHandler:
         # self.server.close_vm_api_call_connection()
 
     def on_apply(self, receiver: u64, first_receiver: u64, action: u64):
+        print('++++++on_apply:', eos.n2s(receiver), eos.n2s(first_receiver), eos.n2s(action))
         contract: str = eos.n2s(receiver)
+        if not self.current_tester:
+            return 0
         if not contract in self.current_tester.debug_contracts:
             return 0
-        print('++++++on_apply:', eos.n2s(receiver), eos.n2s(first_receiver), eos.n2s(action))
         _a = to_uint64(receiver)
         _b = to_uint64(first_receiver)
         _c = to_uint64(action)
@@ -1015,7 +1018,7 @@ class ChainTesterHandler:
 
     def new_chain(self, initialize: bool=True):
         # max 5 test chain per connection
-        if len(self.current_connection.get_chain_seq_nums()) >= 5:
+        if len(self.current_connection.get_chain_seq_nums()) >= 100:
             return 0
         self.tester_seq += 1
         tester = DebugChainTester(initialize)
