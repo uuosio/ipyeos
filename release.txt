@@ -1,4 +1,4 @@
-v0.3.0 release
+v0.3.1 release
 
-1. Replace eos repository with leap
-
+1. disable checktime in debug mode
+2. various fixes for debugging
