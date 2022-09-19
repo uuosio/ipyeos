@@ -62,7 +62,7 @@ def check_cpp_exception(f):
     def wrapper(*args):
         ret = f(*args)
         if _vm_api.is_cpp_exception_occur():
-            raise TApplicationException(TApplicationException.INTERNAL_ERROR, f.__name__)
+            raise TApplicationException(TApplicationException.INTERNAL_ERROR, f"{f.__name__}: {args[1:]}")
         return ret
     return wrapper
 
@@ -820,7 +820,7 @@ class ChainTesterHandler:
     def on_close_client(self):
         for seq_num in list(self.current_connection.get_chain_seq_nums()):
             self.free_chain(seq_num)
-        self.set_current_connection(None)
+        self.current_connection = None
         self.close_apply_client()
         self.server.close_vm_api_call_connection()
 
@@ -1017,17 +1017,19 @@ class ChainTesterHandler:
         return self.testers[id].chain.unpack_action_args(contract, action, raw_args)
 
     def new_chain(self, initialize: bool=True):
-        # max 5 test chain per connection
-        if len(self.current_connection.get_chain_seq_nums()) >= 100:
+        # max 100 test chain per connection
+        if self.current_connection and len(self.current_connection.get_chain_seq_nums()) >= 100:
             return 0
         self.tester_seq += 1
         tester = DebugChainTester(initialize)
         self.testers[self.tester_seq] = tester
-        self.current_connection.add_chain_seq_num(self.tester_seq)
+        if self.current_connection:
+            self.current_connection.add_chain_seq_num(self.tester_seq)
         return self.tester_seq
 
     def free_chain(self, id):
-        self.current_connection.remove_chain_seq_num(id)
+        if self.current_connection:
+            self.current_connection.remove_chain_seq_num(id)
         if id in self.testers:
             self.testers[id].free()
             del self.testers[id]
