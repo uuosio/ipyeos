@@ -1,4 +1,3 @@
-v0.3.1 release
+v0.3.3 release
 
-1. disable checktime in debug mode
-2. various fixes for debugging
+1. Add support for debugging deferred transaction
