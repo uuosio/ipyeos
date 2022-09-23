@@ -834,6 +834,7 @@ class ChainTesterHandler:
             protocol = TBinaryProtocol.TBinaryProtocol(self.apply_request_transport)
             self.apply_request_client = ApplyRequestClient(protocol)
 
+            time.sleep(0.1)
             # Connect!
             for i in range(10):
                 try:
@@ -875,12 +876,18 @@ class ChainTesterHandler:
 
     def produce_block(self, id, next_block_skip_seconds: int = 0):
         tester: ChainTester = self.testers[id]
+        self.current_tester = tester
         if next_block_skip_seconds == 0:
             tester.produce_block()
         else:
             pending_block_time = tester.chain.pending_block_time()
             next_block_time = pending_block_time + timedelta(seconds=next_block_skip_seconds)
             tester.produce_block(next_block_time)
+
+        self.current_tester = None
+        client = self.get_apply_request_client()
+        if client:
+            client.apply_end()
 
     def push_action(self, id: int, account: str, action: str, arguments: str, permissions: str):
         tester: DebugChainTester = self.testers[id]
@@ -969,7 +976,7 @@ class ChainTesterHandler:
             ret = tester.deploy_contract(account, bytes.fromhex(wasm), abi)
             return json.dumps(ret).encode()
         except Exception as e:
-            # logger.exception(e)
+            logger.exception(e)
             err = e.args[0]
             if isinstance(err, dict):
                 err = json.dumps(err)
