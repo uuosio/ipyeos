@@ -36,7 +36,7 @@ jobs:
           python-version: "3.8"
       - name: build python3.8 wheel package
         run: |
-          python3.8 -m pip install scikit-build cython auditwheel
+          python3.8 -m pip install scikit-build cython auditwheel==5.1.2
           python3.8 setup.py sdist bdist_wheel
           python3.8 -m auditwheel repair --plat manylinux_2_31_x86_64 dist/ipyeos-${{ env.IPYEOS_VERSION }}-cp38-cp38-linux_x86_64.whl
       - name: Set up Python 3.9
@@ -45,7 +45,7 @@ jobs:
           python-version: "3.9"
       - name: build python3.9 wheel package
         run: |
-          python3.9 -m pip install scikit-build cython auditwheel
+          python3.9 -m pip install scikit-build cython auditwheel==5.1.2
           python3.9 setup.py sdist bdist_wheel
           python3.9 -m auditwheel repair --plat manylinux_2_31_x86_64 dist/ipyeos-${{ env.IPYEOS_VERSION }}-cp39-cp39-linux_x86_64.whl
       - name: Set up Python 3.10
@@ -54,7 +54,7 @@ jobs:
           python-version: "3.10"
       - name: build python3.10 wheel package
         run: |
-          python3.10 -m pip install scikit-build cython auditwheel
+          python3.10 -m pip install scikit-build cython auditwheel==5.1.2
           python3.10 setup.py sdist bdist_wheel
           python3.10 -m auditwheel repair --plat manylinux_2_31_x86_64 dist/ipyeos-${{ env.IPYEOS_VERSION }}-cp310-cp310-linux_x86_64.whl
       - name: run tests
@@ -68,6 +68,9 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
+            ./dist/ipyeos-${{ env.IPYEOS_VERSION }}-cp38-cp38-linux_x86_64.whl
+            ./dist/ipyeos-${{ env.IPYEOS_VERSION }}-cp39-cp39-linux_x86_64.whl
+            ./dist/ipyeos-${{ env.IPYEOS_VERSION }}-cp310-cp310-linux_x86_64.whl
             ./wheelhouse/ipyeos-${{ env.IPYEOS_VERSION }}-cp38-cp38-manylinux_2_31_x86_64.whl
             ./wheelhouse/ipyeos-${{ env.IPYEOS_VERSION }}-cp39-cp39-manylinux_2_31_x86_64.whl
             ./wheelhouse/ipyeos-${{ env.IPYEOS_VERSION }}-cp310-cp310-manylinux_2_31_x86_64.whl
