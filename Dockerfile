@@ -10,6 +10,6 @@ RUN apt install -y python3-pip
 RUN python3.9 -m pip install --upgrade pip
 ARG DEBIAN_FRONTEND=noninteractive
 #RUN apt install -y --no-install-recommends postgresql
-RUN python3.9 -m pip install ipyeos==0.3.4
+RUN python3.9 -m pip install ipyeos==0.3.5
 ENTRYPOINT ["eos-debugger", "--addr", "0.0.0.0", "--apply-request-addr", "host.docker.internal", "--rpc-server-addr", "0.0.0.0"]
 
