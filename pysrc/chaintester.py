@@ -352,7 +352,7 @@ class ChainTester(object):
         key_map[pubkey] = priv_key
         return True
 
-    def push_action(self, account: Name, action: Name, args: Dict, permissions: Dict={}, explicit_cpu_bill=False):
+    def push_action(self, account: Name, action: Name, args: Union[Dict, bytes], permissions: Dict={}, explicit_cpu_bill=False):
         auth = []
         for actor in permissions:
             perm = permissions[actor]
@@ -563,7 +563,7 @@ class ChainTester(object):
         if not auth:
             auth.append({'actor': account, 'permission': 'active'})
 
-        if isinstance(args, dict):
+        if isinstance(args, (dict, str)):
             args = self.pack_action_args(account, action, args)
         assert type(args) is bytes
         return {
@@ -668,7 +668,7 @@ class ChainTester(object):
         args = {"from":_from, "to":_to, "quantity":'%.4f %s'%(_amount,token_name), "memo":_memo}
         return self.push_action(token_account, 'transfer', args, {_from:permission})
 
-    def pack_action_args(self, account: Name, action: Name , args: dict):
+    def pack_action_args(self, account: Name, action: Name , args: Union[dict, str]):
         ret = self.chain.pack_action_args(account, action, args)
         if not ret:
             error = self.chain.get_last_error()

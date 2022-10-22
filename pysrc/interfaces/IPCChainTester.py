@@ -3466,8 +3466,9 @@ class push_action_args(object):
                 else:
                     iprot.skip(ftype)
             elif fid == 4:
-                if ftype == TType.STRING:
-                    self.arguments = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                if ftype == TType.STRUCT:
+                    self.arguments = ActionArguments()
+                    self.arguments.read(iprot)
                 else:
                     iprot.skip(ftype)
             elif fid == 5:
@@ -3498,8 +3499,8 @@ class push_action_args(object):
             oprot.writeString(self.action.encode('utf-8') if sys.version_info[0] == 2 else self.action)
             oprot.writeFieldEnd()
         if self.arguments is not None:
-            oprot.writeFieldBegin('arguments', TType.STRING, 4)
-            oprot.writeString(self.arguments.encode('utf-8') if sys.version_info[0] == 2 else self.arguments)
+            oprot.writeFieldBegin('arguments', TType.STRUCT, 4)
+            self.arguments.write(oprot)
             oprot.writeFieldEnd()
         if self.permissions is not None:
             oprot.writeFieldBegin('permissions', TType.STRING, 5)
@@ -3527,7 +3528,7 @@ push_action_args.thrift_spec = (
     (1, TType.I32, 'id', None, None, ),  # 1
     (2, TType.STRING, 'account', 'UTF8', None, ),  # 2
     (3, TType.STRING, 'action', 'UTF8', None, ),  # 3
-    (4, TType.STRING, 'arguments', 'UTF8', None, ),  # 4
+    (4, TType.STRUCT, 'arguments', [ActionArguments, None], None, ),  # 4
     (5, TType.STRING, 'permissions', 'UTF8', None, ),  # 5
 )
 

@@ -15,6 +15,11 @@ exception AssertException {
   1: string error_message
 }
 
+union ActionArguments {
+   1: binary raw_args
+   2: string json_args
+}
+
 service IPCChainTester {
    oneway void init_vm_api()
    oneway void init_apply_request()
@@ -29,7 +34,6 @@ service IPCChainTester {
 
    i32 new_chain(1:bool initialize)
    i32 free_chain(1:i32 id)
-
    string get_info(1:i32 id)
    string create_key(1:string key_type)
    string get_account(1:i32 id, 2:string account)
@@ -38,7 +42,7 @@ service IPCChainTester {
    string get_required_keys(1:i32 id, 2:string transaction, 3:list<string> available_keys)
 
    void produce_block(1:i32 id, 2:i64 next_block_skip_seconds),
-   binary push_action(1:i32 id, 2:string account, 3:string action, 4:string arguments, 5: string permissions)
+   binary push_action(1:i32 id, 2:string account, 3:string action, 4:ActionArguments arguments, 5: string permissions)
    binary push_actions(1:i32 id, 2:list<Action> actions)
    binary deploy_contract(1:i32 id, 2:string account, 3:string wasm, 4:string abi)
 
@@ -55,7 +59,7 @@ struct Action {
   1: string account
   2: string action
   3: string permissions
-  4: string arguments
+  4: ActionArguments arguments
 }
 
 struct Uint64 {
@@ -174,7 +178,6 @@ service Apply {
    Uint64 publication_time(),
    Uint64 current_receiver(),
 
-
   # void  eosio_assert( uint32_t test, const char* msg );
    void eosio_assert(1:bool test, 2:binary msg),
   # void  eosio_assert_message( uint32_t test, const char* msg, uint32_t msg_len );
@@ -186,7 +189,7 @@ service Apply {
   # uint64_t  current_time();
    Uint64 current_time(),
   # bool is_feature_activated( const capi_checksum256* feature_digest );
-    bool is_feature_activated(1:binary feature_digest),
+   bool is_feature_activated(1:binary feature_digest),
   # uint64_t get_sender();
    Uint64 get_sender(),
 
@@ -298,4 +301,24 @@ service Apply {
    LowerBoundUpperBoundReturn db_idx_long_double_lowerbound(1:Uint64 code, 2:Uint64 scope, 3:Uint64 table, 4:binary secondary, 5:Uint64 primary),
    LowerBoundUpperBoundReturn db_idx_long_double_upperbound(1:Uint64 code, 2:Uint64 scope, 3:Uint64 table, 4:binary secondary, 5:Uint64 primary),
    i32 db_idx_long_double_end(1:Uint64 code, 2:Uint64 scope, 3:Uint64 table),
+
+   // void set_action_return_value(const char *data, uint32_t data_size);
+   void set_action_return_value(1:binary data),
+   // uint32_t get_code_hash(capi_name account, uint32_t struct_version, char* packed_result, uint32_t packed_result_len);
+   binary get_code_hash(1:Uint64 account, 2:i64 struct_version),
+   // uint32_t get_block_num();
+   i64 get_block_num(),
+   // void sha3( const char* data, uint32_t data_len, char* hash, uint32_t hash_len, int32_t keccak );
+   binary sha3(1:binary data, 2:i32 keccak),
+   binary blake2_f(1:i64 rounds, 2:binary state, 3:binary msg, 4:binary t0_offset, 5:binary t1_offset, 6:i32 final),
+   // int32_t k1_recover( const char* sig, uint32_t sig_len, const char* dig, uint32_t dig_len, char* pub, uint32_t pub_len);
+   binary k1_recover(1:binary sig, 2:binary dig,),
+   // int32_t alt_bn128_add( const char* op1, uint32_t op1_len, const char* op2, uint32_t op2_len, char* result, uint32_t result_len);
+   binary alt_bn128_add(1:binary op1, 2:binary op2),
+   // int32_t alt_bn128_mul( const char* g1, uint32_t g1_len, const char* scalar, uint32_t scalar_len, char* result, uint32_t result_len);
+   binary alt_bn128_mul(1:binary g1, 2:binary scalar),
+   // int32_t alt_bn128_pair( const char* pairs, uint32_t pairs_len);
+   i32 alt_bn128_pair(1:binary pairs),
+   // int32_t mod_exp( const char* base, uint32_t base_len, const char* exp, uint32_t exp_len, const char* mod, uint32_t mod_len, char* result, uint32_t result_len);
+   binary mod_exp(1:binary base, 2:binary exp, 3:binary mod),
 }

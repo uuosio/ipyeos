@@ -6,7 +6,7 @@ else
         exit -1
 fi
 
-BUILD_DIR=build-mac
+BUILD_DIR=build
 
 rm -r pysrc/release
 mkdir -p pysrc/release/bin

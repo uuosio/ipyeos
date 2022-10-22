@@ -19,6 +19,7 @@ from .interfaces import IPCChainTester, ApplyRequest, Apply
 
 from .interfaces.ttypes import Uint64, NextPreviousReturn,FindPrimaryReturn, FindSecondaryReturn, LowerBoundUpperBoundReturn
 from .interfaces.ttypes import GetResourceLimitsReturn
+from .interfaces.ttypes import Action, ActionArguments
 
 from thrift.transport import TSocket
 from thrift.transport import TTransport
@@ -889,28 +890,16 @@ class ChainTesterHandler:
         if client:
             client.apply_end()
 
-    def push_action(self, id: int, account: str, action: str, arguments: str, permissions: str):
+    def push_action(self, id: int, account: str, action: str, arguments: ActionArguments, permissions: str):
         tester: DebugChainTester = self.testers[id]
         self.current_tester = tester
         # print('arguments:', arguments
-        if is_hex_string(arguments):
-            arguments = bytes.fromhex(arguments)
+        if not arguments.raw_args is None:
+            arguments = arguments.raw_args
         else:
-            try:
-                arguments = json.loads(arguments)
-            except json.JSONDecodeError as e:
-                err = {
-                    'except': str(e)
-                }
-                client = self.get_apply_request_client()
-                if client:
-                    client.apply_end()
-                return json.dumps(err).encode()
-
-        permissions = json.loads(permissions)
-        # print(account, action, arguments, permissions)
-        # self.get_apply_request_client() # connect to apply request server
+            arguments = arguments.json_args
         try:
+            permissions = json.loads(permissions)
             r = tester.push_action(account, action, arguments, permissions)
             # r = tester.push_action(account, action, arguments, permissions, explicit_cpu_bill = True)
             return json.dumps(r).encode()
@@ -931,7 +920,7 @@ class ChainTesterHandler:
             if client:
                 client.apply_end()
 
-    def push_actions(self, id, actions):
+    def push_actions(self, id, actions: Action):
         tester = self.testers[id]
         self.current_tester = tester
         _actions = []
@@ -939,10 +928,10 @@ class ChainTesterHandler:
             arguments = a.arguments
             permissions = a.permissions
             try:
-                if is_hex_string(arguments):
-                    arguments = bytes.fromhex(arguments)
+                if not arguments.raw_args is None:
+                    arguments = arguments.raw_args
                 else:
-                    arguments = json.loads(arguments)
+                    arguments = arguments.json_args
                 permissions = json.loads(permissions)
             except json.JSONDecodeError as e:
                 err = {
@@ -957,6 +946,7 @@ class ChainTesterHandler:
             r = tester.push_actions(_actions)
             return json.dumps(r).encode()
         except Exception as e:
+            # logger.exception(e)
             err = e.args[0]
             if isinstance(err, dict):
                 error_message = err['except']
@@ -992,7 +982,6 @@ class ChainTesterHandler:
 
     def get_table_rows(self, id, _json: bool, code: str, scope: str, table: str, lower_bound: str, upper_bound: str, limit: i64, key_type: str, index_position: str, reverse: bool, show_payer: bool):
         tester: ChainTester = self.testers[id]
-        self.current_tester = tester
         # print(_json, code, scope, table, lower_bound, upper_bound, limit, key_type, index_position, reverse, show_payer)
         try:
             r = tester.get_table_rows(_json, code, scope, table, lower_bound, upper_bound, limit, key_type, index_position, reverse, show_payer)
