@@ -1,3 +1,4 @@
-v0.3.3 release
+v0.3.4 release
 
-1. Add support for debugging deferred transaction
+1. Refactor push_action & push_actions
+
