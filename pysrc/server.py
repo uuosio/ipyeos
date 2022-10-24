@@ -893,7 +893,7 @@ class ChainTesterHandler:
     def push_action(self, id: int, account: str, action: str, arguments: ActionArguments, permissions: str):
         tester: DebugChainTester = self.testers[id]
         self.current_tester = tester
-        # print('arguments:', arguments
+        # print('++++++++++++arguments:', arguments)
         if not arguments.raw_args is None:
             arguments = arguments.raw_args
         else:

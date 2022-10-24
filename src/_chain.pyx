@@ -6,7 +6,7 @@ from libcpp.vector cimport vector
 from libcpp.map cimport map
 from libcpp cimport bool
 from libc.stdlib cimport malloc
-
+from typing import Union
 
 cdef extern from * :
     ctypedef long long int64_t
@@ -547,9 +547,10 @@ def get_scheduled_transaction(uint64_t ptr, object _sender_id, string& sender):
 def push_scheduled_transaction(uint64_t ptr, string& scheduled_tx_id, string& deadline, uint32_t billed_cpu_time_us):
     return chain(ptr).push_scheduled_transaction(scheduled_tx_id, deadline, billed_cpu_time_us)
 
-def pack_action_args(uint64_t ptr, string& name, string& action, string& _args):
+def pack_action_args(uint64_t ptr, string& name, string& action, string& _args) -> Union[bytes, None]:
     cdef vector[char] result
-    chain(ptr).pack_action_args(name, action, _args, result)
+    if not chain(ptr).pack_action_args(name, action, _args, result):
+        return None
     return PyBytes_FromStringAndSize(result.data(), result.size())
 
 def unpack_action_args(uint64_t ptr, name, action, _binargs):

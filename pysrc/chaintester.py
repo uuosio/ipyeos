@@ -352,23 +352,25 @@ class ChainTester(object):
         key_map[pubkey] = priv_key
         return True
 
-    def push_action(self, account: Name, action: Name, args: Union[Dict, bytes], permissions: Dict={}, explicit_cpu_bill=False):
+    def push_action(self, account: Name, action: Name, args: Union[Dict, str, bytes], permissions: Dict={}, explicit_cpu_bill=False):
         auth = []
         for actor in permissions:
             perm = permissions[actor]
             auth.append({'actor': actor, 'permission': perm})
         if not auth:
             auth.append({'actor': account, 'permission': 'active'})
-
+        if not isinstance(args, (dict, str, bytes)):
+            raise Exception("push_action: args type not in (dict, str, bytes)")
         # logger.debug(f'{account}, {action}, {args}')
+        if isinstance(args, dict):
+            args = json.dumps(args)
+        if not args:
+            args = b''
         if not isinstance(args, bytes):
-            if args:
-                args = self.chain.pack_action_args(account, action, args)
-                if not args:
-                    error = self.chain.get_last_error()
-                    raise Exception(error)
-            else:
-                args = b''
+            args = self.chain.pack_action_args(account, action, args)
+            if args is None:
+                error = self.chain.get_last_error()
+                raise Exception(error)
             # logger.error(f'++++{args}')
         a = {
             'account': account,
@@ -377,7 +379,7 @@ class ChainTester(object):
             'authorization': auth
         }
         ret = self.push_actions_ex([a], explicit_cpu_bill)
-        elapsed = ret['elapsed']
+        # elapsed = ret['elapsed']
         # if not action == 'activate':
         #     logger.info(f'+++++{account} {action} {elapsed}')
         return ret

@@ -65,7 +65,11 @@ def set_log_level(string& logger_name, int level):
     get_ipyeos_proxy().set_log_level(logger_name, level)
 
 def get_last_error():
-    return get_ipyeos_proxy().get_last_error()
+    ret = get_ipyeos_proxy().get_last_error()
+    return ret
+
+def set_last_error(err: str):
+    get_ipyeos_proxy().set_last_error(err)
 
 def pack_abi(string& abi):
     cdef vector[char] packed_abi
