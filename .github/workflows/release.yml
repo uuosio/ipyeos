@@ -64,7 +64,7 @@ jobs:
 
       - name: Build the ipyeos Docker image
         run: |
-          sleep 60
+          sleep 120
           docker build . --tag ghcr.io/uuosio/ipyeos:latest --tag ghcr.io/uuosio/ipyeos:v0.3.7
           docker push ghcr.io/uuosio/ipyeos:latest
           docker push ghcr.io/uuosio/ipyeos:v0.3.7
