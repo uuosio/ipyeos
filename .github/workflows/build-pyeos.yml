@@ -55,6 +55,14 @@ jobs:
         run: |
           python3.10 -m pip install scikit-build cython
           CC=clang CXX=clang++ python3.10 setup.py sdist bdist_wheel --plat-name macosx-10.15-x86_64
+      # - name: Set up Python 3.11
+      #   uses: actions/setup-python@v2
+      #   with:
+      #     python-version: "3.11"
+      # - name: build python3.11 wheel package
+      #   run: |
+      #     python3.11 -m pip install scikit-build cython
+      #     CC=clang CXX=clang++ python3.11 setup.py sdist bdist_wheel --plat-name macosx-10.15-x86_64
       - name: get whl file
         id: whlfile
         run: |
@@ -73,3 +81,4 @@ jobs:
             ./dist/ipyeos-${{ env.IPYEOS_VERSION }}-cp310-cp310-macosx_10_15_x86_64.whl
             ./dist/ipyeos-${{ env.IPYEOS_VERSION }}-cp38-cp38-macosx_10_15_x86_64.whl
             ./dist/ipyeos-${{ env.IPYEOS_VERSION }}-cp39-cp39-macosx_10_15_x86_64.whl
+#            ./dist/ipyeos-${{ env.IPYEOS_VERSION }}-cp311-cp311-macosx_10_15_x86_64.whl

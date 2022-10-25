@@ -189,6 +189,7 @@ cdef extern int python_native_apply(uint64_t a, uint64_t b, uint64_t c):
     try:
         return apply(a, b, c)
     except Exception as e:
+        print('++++++apply return exception:', e)
         import traceback
         traceback.print_exc()
         _eosio_assert(0, str(e))
