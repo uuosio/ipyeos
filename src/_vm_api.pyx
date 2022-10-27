@@ -475,7 +475,7 @@ def cancel_deferred(sender_id: bytes):
     cdef uint128_t _sender_id
     assert len(sender_id) == 16, "send_defered: bad sender_id size"
     memcpy(&_sender_id, <char *>sender_id, 16)
-    _cancel_deferred(_sender_id)
+    return _cancel_deferred(_sender_id)
 
 # uint32_t read_transaction(char *buffer, uint32_t size);
 def read_transaction():
