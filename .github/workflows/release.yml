@@ -19,7 +19,7 @@ jobs:
       run:
         shell: bash
     env:
-      IPYEOS_VERSION: 0.3.8
+      IPYEOS_VERSION: 0.3.9
     strategy:
       matrix:
         python-version: [3.9]
@@ -65,6 +65,6 @@ jobs:
       - name: Build the ipyeos Docker image
         run: |
           sleep 120
-          docker build . --tag ghcr.io/uuosio/ipyeos:latest --tag ghcr.io/uuosio/ipyeos:v0.3.8
+          docker build . --tag ghcr.io/uuosio/ipyeos:latest --tag ghcr.io/uuosio/ipyeos:v0.3.9
           docker push ghcr.io/uuosio/ipyeos:latest
-          docker push ghcr.io/uuosio/ipyeos:v0.3.8
+          docker push ghcr.io/uuosio/ipyeos:v0.3.9

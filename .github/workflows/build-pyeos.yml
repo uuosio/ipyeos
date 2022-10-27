@@ -16,7 +16,7 @@ jobs:
   run:
     runs-on: 'macos-12'
     env:
-      IPYEOS_VERSION: 0.3.8
+      IPYEOS_VERSION: 0.3.9
       SYSTEM_VERSION_COMPAT: 0
       PREBUILD_BINARY_VERSION: v1.0.2
     steps:
