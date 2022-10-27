@@ -766,7 +766,7 @@ class DebugChainTester(ChainTester):
                 self.so_file = os.path.join(ipyeos_dir, f)
         assert self.so_file
 
-    def enable_debug_contract(self, contract, enable):
+    def enable_debug_contract(self, contract: str, enable: bool):
         self.debug_contracts[contract] = enable 
         if enable:
             eos.enable_debug(True)
@@ -995,6 +995,18 @@ class ChainTesterHandler:
 
     def init_apply_request(self):
         self.init_apply_request_client()
+
+    def enable_debugging(self, enable: bool):
+        eos.enable_debug(enable)
+
+    def set_native_contract(self, contract: str, dylib: str):
+        """Loading a shared library for debugging
+
+        Args:
+            contract (str): contract for debugging
+            dylib (str): shared library path
+        """
+        return eos.set_native_contract(contract, dylib)
 
     def enable_debug_contract(self, id, contract, enable):
         self.testers[id].enable_debug_contract(contract, enable)

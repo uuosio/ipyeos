@@ -26,6 +26,8 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
     print('Functions:')
     print('  void init_vm_api()')
     print('  void init_apply_request()')
+    print('  bool set_native_contract(string contract, string dylib)')
+    print('  void enable_debugging(bool enable)')
     print('  void enable_debug_contract(i32 id, string contract, bool enable)')
     print('  bool is_debug_contract_enabled(i32 id, string contract)')
     print('  string pack_abi(string abi)')
@@ -134,6 +136,18 @@ elif cmd == 'init_apply_request':
         print('init_apply_request requires 0 args')
         sys.exit(1)
     pp.pprint(client.init_apply_request())
+
+elif cmd == 'set_native_contract':
+    if len(args) != 2:
+        print('set_native_contract requires 2 args')
+        sys.exit(1)
+    pp.pprint(client.set_native_contract(args[0], args[1],))
+
+elif cmd == 'enable_debugging':
+    if len(args) != 1:
+        print('enable_debugging requires 1 args')
+        sys.exit(1)
+    pp.pprint(client.enable_debugging(eval(args[0]),))
 
 elif cmd == 'enable_debug_contract':
     if len(args) != 3:

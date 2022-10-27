@@ -5,6 +5,7 @@ import subprocess
 
 version = sys.argv[1]
 files = [
+    f'ipyeos-{version}-cp311-cp311-manylinux_2_31_x86_64.whl',
     f'ipyeos-{version}-cp310-cp310-manylinux_2_31_x86_64.whl',
     f'ipyeos-{version}-cp39-cp39-manylinux_2_31_x86_64.whl',
     f'ipyeos-{version}-cp38-cp38-manylinux_2_31_x86_64.whl',

@@ -25,6 +25,23 @@ class Iface(object):
     def init_apply_request(self):
         pass
 
+    def set_native_contract(self, contract, dylib):
+        """
+        Parameters:
+         - contract
+         - dylib
+
+        """
+        pass
+
+    def enable_debugging(self, enable):
+        """
+        Parameters:
+         - enable
+
+        """
+        pass
+
     def enable_debug_contract(self, id, contract, enable):
         """
         Parameters:
@@ -237,6 +254,70 @@ class Client(Iface):
         args.write(self._oprot)
         self._oprot.writeMessageEnd()
         self._oprot.trans.flush()
+
+    def set_native_contract(self, contract, dylib):
+        """
+        Parameters:
+         - contract
+         - dylib
+
+        """
+        self.send_set_native_contract(contract, dylib)
+        return self.recv_set_native_contract()
+
+    def send_set_native_contract(self, contract, dylib):
+        self._oprot.writeMessageBegin('set_native_contract', TMessageType.CALL, self._seqid)
+        args = set_native_contract_args()
+        args.contract = contract
+        args.dylib = dylib
+        args.write(self._oprot)
+        self._oprot.writeMessageEnd()
+        self._oprot.trans.flush()
+
+    def recv_set_native_contract(self):
+        iprot = self._iprot
+        (fname, mtype, rseqid) = iprot.readMessageBegin()
+        if mtype == TMessageType.EXCEPTION:
+            x = TApplicationException()
+            x.read(iprot)
+            iprot.readMessageEnd()
+            raise x
+        result = set_native_contract_result()
+        result.read(iprot)
+        iprot.readMessageEnd()
+        if result.success is not None:
+            return result.success
+        raise TApplicationException(TApplicationException.MISSING_RESULT, "set_native_contract failed: unknown result")
+
+    def enable_debugging(self, enable):
+        """
+        Parameters:
+         - enable
+
+        """
+        self.send_enable_debugging(enable)
+        self.recv_enable_debugging()
+
+    def send_enable_debugging(self, enable):
+        self._oprot.writeMessageBegin('enable_debugging', TMessageType.CALL, self._seqid)
+        args = enable_debugging_args()
+        args.enable = enable
+        args.write(self._oprot)
+        self._oprot.writeMessageEnd()
+        self._oprot.trans.flush()
+
+    def recv_enable_debugging(self):
+        iprot = self._iprot
+        (fname, mtype, rseqid) = iprot.readMessageBegin()
+        if mtype == TMessageType.EXCEPTION:
+            x = TApplicationException()
+            x.read(iprot)
+            iprot.readMessageEnd()
+            raise x
+        result = enable_debugging_result()
+        result.read(iprot)
+        iprot.readMessageEnd()
+        return
 
     def enable_debug_contract(self, id, contract, enable):
         """
@@ -899,6 +980,8 @@ class Processor(Iface, TProcessor):
         self._processMap = {}
         self._processMap["init_vm_api"] = Processor.process_init_vm_api
         self._processMap["init_apply_request"] = Processor.process_init_apply_request
+        self._processMap["set_native_contract"] = Processor.process_set_native_contract
+        self._processMap["enable_debugging"] = Processor.process_enable_debugging
         self._processMap["enable_debug_contract"] = Processor.process_enable_debug_contract
         self._processMap["is_debug_contract_enabled"] = Processor.process_is_debug_contract_enabled
         self._processMap["pack_abi"] = Processor.process_pack_abi
@@ -960,6 +1043,52 @@ class Processor(Iface, TProcessor):
             raise
         except Exception:
             logging.exception('Exception in oneway handler')
+
+    def process_set_native_contract(self, seqid, iprot, oprot):
+        args = set_native_contract_args()
+        args.read(iprot)
+        iprot.readMessageEnd()
+        result = set_native_contract_result()
+        try:
+            result.success = self._handler.set_native_contract(args.contract, args.dylib)
+            msg_type = TMessageType.REPLY
+        except TTransport.TTransportException:
+            raise
+        except TApplicationException as ex:
+            logging.exception('TApplication exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = ex
+        except Exception:
+            logging.exception('Unexpected exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
+        oprot.writeMessageBegin("set_native_contract", msg_type, seqid)
+        result.write(oprot)
+        oprot.writeMessageEnd()
+        oprot.trans.flush()
+
+    def process_enable_debugging(self, seqid, iprot, oprot):
+        args = enable_debugging_args()
+        args.read(iprot)
+        iprot.readMessageEnd()
+        result = enable_debugging_result()
+        try:
+            self._handler.enable_debugging(args.enable)
+            msg_type = TMessageType.REPLY
+        except TTransport.TTransportException:
+            raise
+        except TApplicationException as ex:
+            logging.exception('TApplication exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = ex
+        except Exception:
+            logging.exception('Unexpected exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
+        oprot.writeMessageBegin("enable_debugging", msg_type, seqid)
+        result.write(oprot)
+        oprot.writeMessageEnd()
+        oprot.trans.flush()
 
     def process_enable_debug_contract(self, seqid, iprot, oprot):
         args = enable_debug_contract_args()
@@ -1461,6 +1590,246 @@ class init_apply_request_args(object):
         return not (self == other)
 all_structs.append(init_apply_request_args)
 init_apply_request_args.thrift_spec = (
+)
+
+
+class set_native_contract_args(object):
+    """
+    Attributes:
+     - contract
+     - dylib
+
+    """
+
+
+    def __init__(self, contract=None, dylib=None,):
+        self.contract = contract
+        self.dylib = dylib
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRING:
+                    self.contract = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.STRING:
+                    self.dylib = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('set_native_contract_args')
+        if self.contract is not None:
+            oprot.writeFieldBegin('contract', TType.STRING, 1)
+            oprot.writeString(self.contract.encode('utf-8') if sys.version_info[0] == 2 else self.contract)
+            oprot.writeFieldEnd()
+        if self.dylib is not None:
+            oprot.writeFieldBegin('dylib', TType.STRING, 2)
+            oprot.writeString(self.dylib.encode('utf-8') if sys.version_info[0] == 2 else self.dylib)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(set_native_contract_args)
+set_native_contract_args.thrift_spec = (
+    None,  # 0
+    (1, TType.STRING, 'contract', 'UTF8', None, ),  # 1
+    (2, TType.STRING, 'dylib', 'UTF8', None, ),  # 2
+)
+
+
+class set_native_contract_result(object):
+    """
+    Attributes:
+     - success
+
+    """
+
+
+    def __init__(self, success=None,):
+        self.success = success
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 0:
+                if ftype == TType.BOOL:
+                    self.success = iprot.readBool()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('set_native_contract_result')
+        if self.success is not None:
+            oprot.writeFieldBegin('success', TType.BOOL, 0)
+            oprot.writeBool(self.success)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(set_native_contract_result)
+set_native_contract_result.thrift_spec = (
+    (0, TType.BOOL, 'success', None, None, ),  # 0
+)
+
+
+class enable_debugging_args(object):
+    """
+    Attributes:
+     - enable
+
+    """
+
+
+    def __init__(self, enable=None,):
+        self.enable = enable
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.BOOL:
+                    self.enable = iprot.readBool()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('enable_debugging_args')
+        if self.enable is not None:
+            oprot.writeFieldBegin('enable', TType.BOOL, 1)
+            oprot.writeBool(self.enable)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(enable_debugging_args)
+enable_debugging_args.thrift_spec = (
+    None,  # 0
+    (1, TType.BOOL, 'enable', None, None, ),  # 1
+)
+
+
+class enable_debugging_result(object):
+
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('enable_debugging_result')
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(enable_debugging_result)
+enable_debugging_result.thrift_spec = (
 )
 
 
