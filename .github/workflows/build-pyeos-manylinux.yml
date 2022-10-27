@@ -18,7 +18,7 @@ jobs:
     # container:
     #   image: quay.io/pypa/manylinux2014_x86_64
     env:
-      IPYEOS_VERSION: 0.3.7
+      IPYEOS_VERSION: 0.3.8
       PREBUILD_BINARY_VERSION: v1.0.1
     steps:
       - name: Checkout

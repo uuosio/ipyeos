@@ -1,3 +1,4 @@
-v0.3.7 release
+v0.3.8 release
 
-1. Improve push_action
+1. Fix cancel_deferred in debug mode
+
