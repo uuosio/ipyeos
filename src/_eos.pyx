@@ -92,18 +92,6 @@ def s2n(string& s):
 def n2s(uint64_t n):
     return get_ipyeos_proxy().n2s(n)
 
-def set_native_contract(uint64_t contract, const string& native_contract_lib):
-    return get_ipyeos_proxy().set_native_contract(contract, native_contract_lib)
-
-def get_native_contract(uint64_t contract):
-    return get_ipyeos_proxy().get_native_contract(contract)
-
-def enable_native_contracts(bool debug):
-    get_ipyeos_proxy().enable_native_contracts(debug)
-
-def is_native_contracts_enabled():
-    return get_ipyeos_proxy().is_native_contracts_enabled()
-
 def enable_debug(bool debug):
     get_ipyeos_proxy().enable_debug(debug)
 

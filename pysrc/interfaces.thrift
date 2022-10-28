@@ -24,7 +24,7 @@ service IPCChainTester {
    oneway void init_vm_api()
    oneway void init_apply_request()
 
-   bool set_native_contract(1:string contract, 2:string dylib)
+   bool set_native_contract(1:i32 id, 2:string contract, 3:string dylib)
    void enable_debugging(1:bool enable)
    void enable_debug_contract(1:i32 id, 2:string contract, 3:bool enable)
    bool is_debug_contract_enabled(1:i32 id, 2:string contract)

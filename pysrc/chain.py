@@ -478,3 +478,9 @@ class Chain(object):
         except json.JSONDecodeError:        
             err = json.dumps(err)
             return f'{{"except": {err}}}'
+
+    def get_native_contract(self, contract: str) -> str:
+        return _chain.get_native_contract(self.ptr, contract)
+
+    def set_native_contract(self, contract: str, native_contract_lib: str) -> bool:
+        return _chain.set_native_contract(self.ptr, contract, native_contract_lib)

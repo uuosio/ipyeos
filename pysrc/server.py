@@ -771,9 +771,9 @@ class DebugChainTester(ChainTester):
         self.debug_contracts[contract] = enable 
         if enable:
             eos.enable_debug(True)
-            eos.set_native_contract(contract, self.so_file)
+            self.chain.set_native_contract(contract, self.so_file)
         else:
-            eos.set_native_contract(contract, "")
+            self.chain.set_native_contract(contract, "")
 
     def is_debug_contract_enabled(self, contract) -> bool:
         try:
@@ -1000,15 +1000,15 @@ class ChainTesterHandler:
     def enable_debugging(self, enable: bool):
         eos.enable_debug(enable)
 
-    def set_native_contract(self, contract: str, dylib: str):
+    def set_native_contract(self, id: int, contract: str, dylib: str):
         """Loading a shared library for debugging
 
         Args:
             contract (str): contract for debugging
             dylib (str): shared library path
         """
-        return eos.set_native_contract(contract, dylib)
-
+        tester: ChainTester = self.testers[id]
+        return tester.chain.set_native_contract(contract, dylib)
     def enable_debug_contract(self, id, contract, enable):
         self.testers[id].enable_debug_contract(contract, enable)
 
@@ -1267,7 +1267,6 @@ class IPCChainTesterProcessor(IPCChainTester.Processor):
 # result.addr, result.server_port, result.vm_api_port, result.apply_request_addr, result.apply_request_port
 def start_debug_server(addr='127.0.0.1', server_port=9090, vm_api_port=9092, apply_request_addr='127.0.0.1', apply_request_port=9091, rpc_server_addr='127.0.0.1', rpc_server_port=9093):
     eos.enable_debug(True)
-    eos.enable_native_contracts(True)
     handler = ChainTesterHandler(addr, vm_api_port, apply_request_addr, apply_request_port)
     processor = IPCChainTesterProcessor(handler)
 

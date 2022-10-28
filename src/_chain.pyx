@@ -120,6 +120,9 @@ cdef extern from "_ipyeos.hpp":
 
         void clear_abi_cache(string& account)
 
+        string get_native_contract(const string& contract)
+        bool set_native_contract(const string& contract, const string& native_contract_lib)
+
     ctypedef struct ipyeos_proxy:
         chain_proxy* chain_new(string& config, string& _genesis, string& protocol_features_dir, string& snapshot_dir)
         void chain_free(chain_proxy* api)
@@ -561,3 +564,11 @@ def clear_abi_cache(uint64_t ptr, string& account):
 
 def get_producer_public_keys(uint64_t ptr):
     return chain(ptr).get_producer_public_keys()
+
+#string get_native_contract(uint64_t contract)
+def get_native_contract(uint64_t ptr, contract: str) -> str:
+    return chain(ptr).get_native_contract(contract)
+
+#bool set_native_contract(uint64_t contract, const string& native_contract_lib)
+def set_native_contract(uint64_t ptr, contract: str, const string& native_contract_lib) -> bool:
+    return chain(ptr).set_native_contract(contract, native_contract_lib)

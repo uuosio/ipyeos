@@ -25,9 +25,10 @@ class Iface(object):
     def init_apply_request(self):
         pass
 
-    def set_native_contract(self, contract, dylib):
+    def set_native_contract(self, id, contract, dylib):
         """
         Parameters:
+         - id
          - contract
          - dylib
 
@@ -255,19 +256,21 @@ class Client(Iface):
         self._oprot.writeMessageEnd()
         self._oprot.trans.flush()
 
-    def set_native_contract(self, contract, dylib):
+    def set_native_contract(self, id, contract, dylib):
         """
         Parameters:
+         - id
          - contract
          - dylib
 
         """
-        self.send_set_native_contract(contract, dylib)
+        self.send_set_native_contract(id, contract, dylib)
         return self.recv_set_native_contract()
 
-    def send_set_native_contract(self, contract, dylib):
+    def send_set_native_contract(self, id, contract, dylib):
         self._oprot.writeMessageBegin('set_native_contract', TMessageType.CALL, self._seqid)
         args = set_native_contract_args()
+        args.id = id
         args.contract = contract
         args.dylib = dylib
         args.write(self._oprot)
@@ -1050,7 +1053,7 @@ class Processor(Iface, TProcessor):
         iprot.readMessageEnd()
         result = set_native_contract_result()
         try:
-            result.success = self._handler.set_native_contract(args.contract, args.dylib)
+            result.success = self._handler.set_native_contract(args.id, args.contract, args.dylib)
             msg_type = TMessageType.REPLY
         except TTransport.TTransportException:
             raise
@@ -1596,13 +1599,15 @@ init_apply_request_args.thrift_spec = (
 class set_native_contract_args(object):
     """
     Attributes:
+     - id
      - contract
      - dylib
 
     """
 
 
-    def __init__(self, contract=None, dylib=None,):
+    def __init__(self, id=None, contract=None, dylib=None,):
+        self.id = id
         self.contract = contract
         self.dylib = dylib
 
@@ -1616,11 +1621,16 @@ class set_native_contract_args(object):
             if ftype == TType.STOP:
                 break
             if fid == 1:
+                if ftype == TType.I32:
+                    self.id = iprot.readI32()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
                 if ftype == TType.STRING:
                     self.contract = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
                 else:
                     iprot.skip(ftype)
-            elif fid == 2:
+            elif fid == 3:
                 if ftype == TType.STRING:
                     self.dylib = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
                 else:
@@ -1635,12 +1645,16 @@ class set_native_contract_args(object):
             oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
             return
         oprot.writeStructBegin('set_native_contract_args')
+        if self.id is not None:
+            oprot.writeFieldBegin('id', TType.I32, 1)
+            oprot.writeI32(self.id)
+            oprot.writeFieldEnd()
         if self.contract is not None:
-            oprot.writeFieldBegin('contract', TType.STRING, 1)
+            oprot.writeFieldBegin('contract', TType.STRING, 2)
             oprot.writeString(self.contract.encode('utf-8') if sys.version_info[0] == 2 else self.contract)
             oprot.writeFieldEnd()
         if self.dylib is not None:
-            oprot.writeFieldBegin('dylib', TType.STRING, 2)
+            oprot.writeFieldBegin('dylib', TType.STRING, 3)
             oprot.writeString(self.dylib.encode('utf-8') if sys.version_info[0] == 2 else self.dylib)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -1662,8 +1676,9 @@ class set_native_contract_args(object):
 all_structs.append(set_native_contract_args)
 set_native_contract_args.thrift_spec = (
     None,  # 0
-    (1, TType.STRING, 'contract', 'UTF8', None, ),  # 1
-    (2, TType.STRING, 'dylib', 'UTF8', None, ),  # 2
+    (1, TType.I32, 'id', None, None, ),  # 1
+    (2, TType.STRING, 'contract', 'UTF8', None, ),  # 2
+    (3, TType.STRING, 'dylib', 'UTF8', None, ),  # 3
 )
 
 
