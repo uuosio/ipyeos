@@ -71,10 +71,6 @@ def b2s(s: bytes) -> str:
     s = int.from_bytes(s, 'little')
     return n2s(s)
 
-def set_native_contract(contract: Name, native_contract_lib) -> bool:
-    contract = _eos.s2n(contract)
-    return _eos.set_native_contract(contract, native_contract_lib)
-
 def get_native_contract(contract) -> str:
     contract = _eos.s2n(contract)
     return _eos.get_native_contract(contract)

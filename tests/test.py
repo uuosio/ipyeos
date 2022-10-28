@@ -2,6 +2,7 @@ import os
 import hashlib
 import pytest
 from ipyeos import eos
+from ipyeos.chaintester import ChainTester
 import platform
 
 def test_basic():
@@ -19,13 +20,15 @@ def test_load_native_lib():
         so_file = 'native/build/libnative.dylib'
     else:
         so_file = 'native/build/libnative.so'
+    t = ChainTester(False)
     os.system('cd native;./build.sh')
-    assert eos.set_native_contract("hello", so_file)
-    assert not eos.set_native_contract("hello", so_file + 'xx')
-    assert eos.set_native_contract("alice", so_file)
+    assert t.chain.set_native_contract("hello", so_file)
+    assert not t.chain.set_native_contract("hello", so_file + 'xx')
+    assert t.chain.set_native_contract("alice", so_file)
     os.system('cd native;touch native.c;./build.sh')
     # trigger reloading
-    assert eos.set_native_contract("hello", so_file)
+    assert t.chain.set_native_contract("hello", so_file)
+    assert t.chain.set_native_contract("hello", "")
 
 
 # def test_http_client():

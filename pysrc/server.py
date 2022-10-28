@@ -706,7 +706,7 @@ class VMAPIHandler:
         return _vm_api.db_idx_long_double_end(code.into(), scope.into(), table.into())
 
 class ApplyRequestClient(ApplyRequest.Client):
-    def apply_request(self, receiver, firstReceiver, action, handler):
+    def apply_request(self, receiver, firstReceiver, action, handler, chain_tester_id):
         """
         Parameters:
          - receiver
@@ -714,7 +714,7 @@ class ApplyRequestClient(ApplyRequest.Client):
          - action
 
         """
-        self.send_apply_request(receiver, firstReceiver, action)
+        self.send_apply_request(receiver, firstReceiver, action, chain_tester_id)
         handler()
         return self.recv_apply_request()
 
@@ -756,8 +756,9 @@ class ApplyProcessor(Apply.Processor):
 
 class DebugChainTester(ChainTester):
 
-    def __init__(self, initialize: bool):
+    def __init__(self, id: int, initialize: bool):
         super().__init__(initialize)
+        self.id = id
         self.debug_contracts = {}
         ipyeos_dir = os.path.dirname(__file__)
         self.so_file = None
@@ -870,7 +871,7 @@ class ChainTesterHandler:
         _a = to_uint64(receiver)
         _b = to_uint64(first_receiver)
         _c = to_uint64(action)
-        ret = self.get_apply_request_client().apply_request(_a, _b, _c, self.vm_api_handler)
+        ret = self.get_apply_request_client().apply_request(_a, _b, _c, self.vm_api_handler, self.current_tester.id)
         return 1
 
     def vm_api_handler(self):
@@ -889,7 +890,7 @@ class ChainTesterHandler:
         self.current_tester = None
         client = self.get_apply_request_client()
         if client:
-            client.apply_end()
+            client.apply_end(tester.id)
 
     def push_action(self, id: int, account: str, action: str, arguments: ActionArguments, permissions: str):
         tester: DebugChainTester = self.testers[id]
@@ -919,7 +920,7 @@ class ChainTesterHandler:
             self.current_tester = None
             client = self.get_apply_request_client()
             if client:
-                client.apply_end()
+                client.apply_end(tester.id)
 
     def push_actions(self, id, actions: Action):
         tester = self.testers[id]
@@ -940,7 +941,7 @@ class ChainTesterHandler:
                 }
                 client = self.get_apply_request_client()
                 if client:
-                    client.apply_end()
+                    client.apply_end(tester.id)
                 return json.dumps(err).encode()
             _actions.append([a.account, a.action, arguments, permissions])
         try:
@@ -959,7 +960,7 @@ class ChainTesterHandler:
             return err.encode()
         finally:
             self.current_tester = None
-            self.get_apply_request_client().apply_end()
+            self.get_apply_request_client().apply_end(tester.id)
 
     def deploy_contract(self, id, account: str, wasm: str, abi: str):
         tester: ChainTester = self.testers[id]
@@ -1030,7 +1031,7 @@ class ChainTesterHandler:
         if self.current_connection and len(self.current_connection.get_chain_seq_nums()) >= 100:
             return 0
         self.tester_seq += 1
-        tester = DebugChainTester(initialize)
+        tester = DebugChainTester(self.tester_seq, initialize)
         self.testers[self.tester_seq] = tester
         if self.current_connection:
             self.current_connection.add_chain_seq_num(self.tester_seq)

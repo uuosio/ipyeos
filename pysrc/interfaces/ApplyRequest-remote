@@ -24,8 +24,8 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
     print('Usage: ' + sys.argv[0] + ' [-h host[:port]] [-u url] [-f[ramed]] [-s[sl]] [-novalidate] [-ca_certs certs] [-keyfile keyfile] [-certfile certfile] function [arg1 [arg2...]]')
     print('')
     print('Functions:')
-    print('  i32 apply_request(Uint64 receiver, Uint64 firstReceiver, Uint64 action)')
-    print('  i32 apply_end()')
+    print('  i32 apply_request(Uint64 receiver, Uint64 firstReceiver, Uint64 action, i32 chainTesterId)')
+    print('  i32 apply_end(i32 chainTesterId)')
     print('')
     sys.exit(0)
 
@@ -106,16 +106,16 @@ client = ApplyRequest.Client(protocol)
 transport.open()
 
 if cmd == 'apply_request':
-    if len(args) != 3:
-        print('apply_request requires 3 args')
+    if len(args) != 4:
+        print('apply_request requires 4 args')
         sys.exit(1)
-    pp.pprint(client.apply_request(eval(args[0]), eval(args[1]), eval(args[2]),))
+    pp.pprint(client.apply_request(eval(args[0]), eval(args[1]), eval(args[2]), eval(args[3]),))
 
 elif cmd == 'apply_end':
-    if len(args) != 0:
-        print('apply_end requires 0 args')
+    if len(args) != 1:
+        print('apply_end requires 1 args')
         sys.exit(1)
-    pp.pprint(client.apply_end())
+    pp.pprint(client.apply_end(eval(args[0]),))
 
 else:
     print('Unrecognized method %s' % cmd)

@@ -40,7 +40,6 @@ cdef extern from "_ipyeos.hpp":
         uint64_t s2n(string& s)
         string n2s(uint64_t n)
 
-        bool set_native_contract(uint64_t contract, const string& native_contract_lib);
         string get_native_contract(uint64_t contract);
 
         void enable_native_contracts(bool debug);

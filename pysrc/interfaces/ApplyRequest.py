@@ -19,17 +19,23 @@ all_structs = []
 
 
 class Iface(object):
-    def apply_request(self, receiver, firstReceiver, action):
+    def apply_request(self, receiver, firstReceiver, action, chainTesterId):
         """
         Parameters:
          - receiver
          - firstReceiver
          - action
+         - chainTesterId
 
         """
         pass
 
-    def apply_end(self):
+    def apply_end(self, chainTesterId):
+        """
+        Parameters:
+         - chainTesterId
+
+        """
         pass
 
 
@@ -40,23 +46,25 @@ class Client(Iface):
             self._oprot = oprot
         self._seqid = 0
 
-    def apply_request(self, receiver, firstReceiver, action):
+    def apply_request(self, receiver, firstReceiver, action, chainTesterId):
         """
         Parameters:
          - receiver
          - firstReceiver
          - action
+         - chainTesterId
 
         """
-        self.send_apply_request(receiver, firstReceiver, action)
+        self.send_apply_request(receiver, firstReceiver, action, chainTesterId)
         return self.recv_apply_request()
 
-    def send_apply_request(self, receiver, firstReceiver, action):
+    def send_apply_request(self, receiver, firstReceiver, action, chainTesterId):
         self._oprot.writeMessageBegin('apply_request', TMessageType.CALL, self._seqid)
         args = apply_request_args()
         args.receiver = receiver
         args.firstReceiver = firstReceiver
         args.action = action
+        args.chainTesterId = chainTesterId
         args.write(self._oprot)
         self._oprot.writeMessageEnd()
         self._oprot.trans.flush()
@@ -76,13 +84,19 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "apply_request failed: unknown result")
 
-    def apply_end(self):
-        self.send_apply_end()
+    def apply_end(self, chainTesterId):
+        """
+        Parameters:
+         - chainTesterId
+
+        """
+        self.send_apply_end(chainTesterId)
         return self.recv_apply_end()
 
-    def send_apply_end(self):
+    def send_apply_end(self, chainTesterId):
         self._oprot.writeMessageBegin('apply_end', TMessageType.CALL, self._seqid)
         args = apply_end_args()
+        args.chainTesterId = chainTesterId
         args.write(self._oprot)
         self._oprot.writeMessageEnd()
         self._oprot.trans.flush()
@@ -137,7 +151,7 @@ class Processor(Iface, TProcessor):
         iprot.readMessageEnd()
         result = apply_request_result()
         try:
-            result.success = self._handler.apply_request(args.receiver, args.firstReceiver, args.action)
+            result.success = self._handler.apply_request(args.receiver, args.firstReceiver, args.action, args.chainTesterId)
             msg_type = TMessageType.REPLY
         except TTransport.TTransportException:
             raise
@@ -160,7 +174,7 @@ class Processor(Iface, TProcessor):
         iprot.readMessageEnd()
         result = apply_end_result()
         try:
-            result.success = self._handler.apply_end()
+            result.success = self._handler.apply_end(args.chainTesterId)
             msg_type = TMessageType.REPLY
         except TTransport.TTransportException:
             raise
@@ -186,14 +200,16 @@ class apply_request_args(object):
      - receiver
      - firstReceiver
      - action
+     - chainTesterId
 
     """
 
 
-    def __init__(self, receiver=None, firstReceiver=None, action=None,):
+    def __init__(self, receiver=None, firstReceiver=None, action=None, chainTesterId=None,):
         self.receiver = receiver
         self.firstReceiver = firstReceiver
         self.action = action
+        self.chainTesterId = chainTesterId
 
     def read(self, iprot):
         if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
@@ -222,6 +238,11 @@ class apply_request_args(object):
                     self.action.read(iprot)
                 else:
                     iprot.skip(ftype)
+            elif fid == 4:
+                if ftype == TType.I32:
+                    self.chainTesterId = iprot.readI32()
+                else:
+                    iprot.skip(ftype)
             else:
                 iprot.skip(ftype)
             iprot.readFieldEnd()
@@ -243,6 +264,10 @@ class apply_request_args(object):
         if self.action is not None:
             oprot.writeFieldBegin('action', TType.STRUCT, 3)
             self.action.write(oprot)
+            oprot.writeFieldEnd()
+        if self.chainTesterId is not None:
+            oprot.writeFieldBegin('chainTesterId', TType.I32, 4)
+            oprot.writeI32(self.chainTesterId)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
@@ -266,6 +291,7 @@ apply_request_args.thrift_spec = (
     (1, TType.STRUCT, 'receiver', [Uint64, None], None, ),  # 1
     (2, TType.STRUCT, 'firstReceiver', [Uint64, None], None, ),  # 2
     (3, TType.STRUCT, 'action', [Uint64, None], None, ),  # 3
+    (4, TType.I32, 'chainTesterId', None, None, ),  # 4
 )
 
 
@@ -331,7 +357,15 @@ apply_request_result.thrift_spec = (
 
 
 class apply_end_args(object):
+    """
+    Attributes:
+     - chainTesterId
 
+    """
+
+
+    def __init__(self, chainTesterId=None,):
+        self.chainTesterId = chainTesterId
 
     def read(self, iprot):
         if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
@@ -342,6 +376,11 @@ class apply_end_args(object):
             (fname, ftype, fid) = iprot.readFieldBegin()
             if ftype == TType.STOP:
                 break
+            if fid == 1:
+                if ftype == TType.I32:
+                    self.chainTesterId = iprot.readI32()
+                else:
+                    iprot.skip(ftype)
             else:
                 iprot.skip(ftype)
             iprot.readFieldEnd()
@@ -352,6 +391,10 @@ class apply_end_args(object):
             oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
             return
         oprot.writeStructBegin('apply_end_args')
+        if self.chainTesterId is not None:
+            oprot.writeFieldBegin('chainTesterId', TType.I32, 1)
+            oprot.writeI32(self.chainTesterId)
+            oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
 
@@ -370,6 +413,8 @@ class apply_end_args(object):
         return not (self == other)
 all_structs.append(apply_end_args)
 apply_end_args.thrift_spec = (
+    None,  # 0
+    (1, TType.I32, 'chainTesterId', None, None, ),  # 1
 )
 
 

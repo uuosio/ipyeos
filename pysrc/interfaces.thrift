@@ -110,8 +110,8 @@ service PushActions {
 }
 
 service ApplyRequest {
-   i32 apply_request(1:Uint64 receiver, 2:Uint64 firstReceiver, 3:Uint64 action),
-   i32 apply_end(),
+   i32 apply_request(1:Uint64 receiver, 2:Uint64 firstReceiver, 3:Uint64 action, 4:i32 chainTesterId),
+   i32 apply_end(1:i32 chainTesterId),
 }
 
 service Apply {
