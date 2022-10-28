@@ -40,12 +40,15 @@ def run_ipyeos(custom_cmds=None):
     os.environ['CHAIN_API_LIB'] = os.path.join(dir_name, 'lib/libchain_api.' + lib_suffix)
     os.environ['VM_API_LIB'] = os.path.join(dir_name, 'lib/libvm_api.' + lib_suffix)
     os.environ['RUN_IPYEOS']=ipyeos_program
-
+    print('export CHAIN_API_LIB=', os.environ['CHAIN_API_LIB'], sep='')
+    print('export VM_API_LIB=', os.environ['VM_API_LIB'], sep='')
+    print('export PYTHON_SHARED_LIB_PATH=', os.environ['PYTHON_SHARED_LIB_PATH'], sep='')
     cmds = [ipyeos_program]
     if not custom_cmds:
         cmds.extend(sys.argv[1:])
     else:
         cmds.extend(custom_cmds)
+    print(' '.join(cmds))
     return subprocess.call(cmds, stdout=sys.stdout, stderr=sys.stderr)
 
 def run_eosnode(custom_cmds=None):

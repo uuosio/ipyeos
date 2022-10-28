@@ -764,6 +764,7 @@ class DebugChainTester(ChainTester):
         for f in os.listdir(ipyeos_dir):
             if f.endswith('.so'):
                 self.so_file = os.path.join(ipyeos_dir, f)
+                break
         assert self.so_file
 
     def enable_debug_contract(self, contract: str, enable: bool):

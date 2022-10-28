@@ -1,6 +1,8 @@
+import os
 import hashlib
 import pytest
 from ipyeos import eos
+import platform
 
 def test_basic():
     key = eos.create_key()
@@ -11,6 +13,20 @@ def test_basic():
     print(digest, priv_key)
     signature = eos.sign_digest(priv_key, digest)
     print(signature)
+
+def test_load_native_lib():
+    if platform.system() == 'Darwin':
+        so_file = 'native/build/libnative.dylib'
+    else:
+        so_file = 'native/build/libnative.so'
+    os.system('cd native;./build.sh')
+    assert eos.set_native_contract("hello", so_file)
+    assert not eos.set_native_contract("hello", so_file + 'xx')
+    assert eos.set_native_contract("alice", so_file)
+    os.system('cd native;touch native.c;./build.sh')
+    # trigger reloading
+    assert eos.set_native_contract("hello", so_file)
+
 
 # def test_http_client():
 #     from ipyeos.interfaces import IPCChainTester
