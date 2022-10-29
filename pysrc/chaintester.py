@@ -40,7 +40,7 @@ chain_config = {
     "read_only":False,
     "force_all_checks":False,
     "disable_replay_opts":False,
-    "contracts_console":False,
+    "contracts_console":True,
     "allow_ram_billing_in_notify":False,
     "maximum_variable_signature_length":16384,
     "disable_all_subjective_mitigations":False,

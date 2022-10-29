@@ -1,7 +1,7 @@
 import os
 import sys
 import argparse
-from ipyeos import run
+from . import run
 
 INIT_SUCCESS = 6
 
@@ -10,13 +10,12 @@ def main():
     subparser = parser.add_subparsers(dest='subparser')
 
     debug_sub_parser = subparser.add_parser('eos-debugger', help='start eos debugger server')
-    debug_sub_parser.add_argument('--addr', default="127.0.0.1", help="eos debugger server address")
-    debug_sub_parser.add_argument('--server-port', default="9090", help="eos debugger server port")
-    debug_sub_parser.add_argument('--vm-api-port', default="9092", help="eos debugger vm api port")
-    debug_sub_parser.add_argument('--apply-request-addr', default="127.0.0.1", help="client side apply request server address")
-    debug_sub_parser.add_argument('--apply-request-port', default="9091", help="client side apply request server port")
-    debug_sub_parser.add_argument('--rpc-server-addr', default="127.0.0.1", help="rpc server address")
-    debug_sub_parser.add_argument('--rpc-server-port', default="9093", help="rpc server port")
+    debug_sub_parser.add_argument('--addr', default="127.0.0.1", help="eos debugger server address, default to 127.0.0.1")
+    debug_sub_parser.add_argument('--server-port', default="9090", help="eos debugger server port, default to 9090")
+    debug_sub_parser.add_argument('--vm-api-port', default="9092", help="eos debugger vm api port, default to 9092")
+    debug_sub_parser.add_argument('--rpc-server-port', default="9093", help="rpc server port, default to 9093")
+    debug_sub_parser.add_argument('--apply-request-addr', default="127.0.0.1", help="client side apply request server address, default to 127.0.0.1")
+    debug_sub_parser.add_argument('--apply-request-port', default="9091", help="client side apply request server port, default to 9091")
 
     start_eos_parser = subparser.add_parser('eos-node', help='run a eos node')
 
@@ -38,7 +37,7 @@ def main():
             print('done!')
         elif sys.argv[1] == 'eos-debugger':
             result, unknown = parser.parse_known_args()
-            server.start_debug_server(result.addr, result.server_port, result.vm_api_port, result.apply_request_addr, result.apply_request_port, result.rpc_server_addr,result.rpc_server_port)                
+            server.start_debug_server(result.addr, result.server_port, result.vm_api_port, result.apply_request_addr, result.apply_request_port, result.addr,result.rpc_server_port)                
         else:
             parser.print_help()
     else:
