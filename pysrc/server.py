@@ -4,6 +4,7 @@ import sys
 import json
 import time
 import string
+import threading
 import traceback
 import logging
 from datetime import datetime, timedelta
@@ -35,10 +36,6 @@ from .chainapi import ChainApi
 from . import _chainapi
 from . import _eos
 
-import asyncio as aio
-from concurrent.futures import ThreadPoolExecutor
-from flask import Flask, request, jsonify
-from waitress import serve
 from . import rpc_server
 
 chaintester.chain_config['contracts_console'] = True
@@ -1272,8 +1269,6 @@ def start_debug_server(addr='127.0.0.1', server_port=9090, vm_api_port=9092, app
     processor = IPCChainTesterProcessor(handler)
 
 
-    loop = aio.get_event_loop()
-    _ex = ThreadPoolExecutor(10)
 
     def run_server():
         print('Starting the EOS debugger server...')
@@ -1289,38 +1284,13 @@ def start_debug_server(addr='127.0.0.1', server_port=9090, vm_api_port=9092, app
         print('run rpc server')
         rpc_server.start(rpc_server_addr, rpc_server_port, handler)
 
-    def run_http_server():
-        from thrift.protocol import TBinaryProtocol
-        from thrift.server import THttpServer
-        pfactory = TBinaryProtocol.TBinaryProtocolFactory()
-        server = THttpServer.THttpServer(
-            processor,
-            ('', 9094),
-            pfactory
-        )
-        print('Starting the http server...')
-        server.serve()
 
-    async def run_task():
-        await loop.run_in_executor(_ex, run_rpc_server)
 
-    async def run_task2():
-        await loop.run_in_executor(_ex, run_server)
-        # await aio.sleep(0.1)
 
-    async def run_http_task():
-        await loop.run_in_executor(_ex, run_http_server)
-        # await aio.sleep(0.1)
 
-    async def main():
-        task1 = aio.create_task(run_task())
-        await aio.sleep(0.1)
-        task2 = aio.create_task(run_task2())
-        aio.gather(task1, task2)
-        # task3 = aio.create_task(run_http_task())
-        # aio.gather(task1, task2, task3)
-    # run_server()
-    loop.run_until_complete(main())
+    t = threading.Thread(target=run_rpc_server)
+    t.start()
+    run_server()
 
 if __name__ == '__main__':
     start_debug_server()
