@@ -8,6 +8,17 @@ from ipyeos.chaintester import ChainTester
 
 chaintester.chain_config['contracts_console'] = True
 
+def test_example():
+    t = ChainTester(True)
+    with open('./hello/build/hello/hello.wasm', 'rb') as f:
+        code = f.read()
+    with open('./hello/build/hello/hello.abi', 'rb') as f:
+        abi = f.read()
+    t.deploy_contract('hello', code, abi)
+    t.produce_block()
+
+    t.push_action('hello', 'hi', {'nm': 'alice'}, {'hello': 'active'})
+    t.produce_block()
 
 def test_basic():
     key = eos.create_key()

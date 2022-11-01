@@ -1268,8 +1268,6 @@ def start_debug_server(addr='127.0.0.1', server_port=9090, vm_api_port=9092, app
     handler = ChainTesterHandler(addr, vm_api_port, apply_request_addr, apply_request_port)
     processor = IPCChainTesterProcessor(handler)
 
-
-
     def run_server():
         print('Starting the EOS debugger server...')
         transport = TSocket.TServerSocket(host=addr, port=server_port)
@@ -1283,10 +1281,6 @@ def start_debug_server(addr='127.0.0.1', server_port=9090, vm_api_port=9092, app
     def run_rpc_server():
         print('run rpc server')
         rpc_server.start(rpc_server_addr, rpc_server_port, handler)
-
-
-
-
 
     t = threading.Thread(target=run_rpc_server)
     t.start()

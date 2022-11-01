@@ -12,6 +12,7 @@ files = [
     f'ipyeos-{version}-cp38-cp38-macosx_10_15_x86_64.whl',
     f'ipyeos-{version}-cp39-cp39-macosx_10_15_x86_64.whl',
     f'ipyeos-{version}-cp310-cp310-macosx_10_15_x86_64.whl',
+    f'ipyeos-{version}-cp311-cp311-macosx_10_15_x86_64.whl'
 ]
 
 # url = f'https://github.com/uuosio/pyeos/archive/refs/tags/v{version}.tar.gz'

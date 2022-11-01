@@ -7,7 +7,7 @@ import sysconfig
 import argparse
 from . import run
 
-__version__ = "0.3.9"
+__version__ = "0.3.10"
 
 class CustomImporter(object):
     def find_module(self, fullname, mpath=None):
@@ -44,7 +44,7 @@ def run_ipyeos(custom_cmds=[]):
     return run.run_ipyeos(custom_cmds)
 
 def run_eosnode():
-    custom_cmds=['-m', 'ipyeos', 'eos-node']
+    custom_cmds=['-m', 'ipyeos', 'eosnode']
     custom_cmds.extend(sys.argv[1:])
     return run.run_eosnode(custom_cmds)
 

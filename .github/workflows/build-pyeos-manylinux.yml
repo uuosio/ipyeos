@@ -18,8 +18,8 @@ jobs:
     # container:
     #   image: quay.io/pypa/manylinux2014_x86_64
     env:
-      IPYEOS_VERSION: 0.3.9
-      PREBUILD_BINARY_VERSION: v1.0.2
+      IPYEOS_VERSION: 0.3.10
+      PREBUILD_BINARY_VERSION: v1.0.3
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -77,7 +77,7 @@ jobs:
           ls ./wheelhouse
           PYTHON_SHARED_LIB_PATH=${{ env.pythonLocation }}/lib/libpython3.8.so python3.8 -m ipyeos -m pytest -s -x tests/test.py
           PYTHON_SHARED_LIB_PATH=${{ env.pythonLocation }}/lib/libpython3.9.so python3.9 -m ipyeos -m pytest -s -x tests/test.py
-          PYTHON_SHARED_LIB_PATH=${{ env.pythonLocation }}/lib/libpython3.10.so eos-debugger &
+          PYTHON_SHARED_LIB_PATH=${{ env.pythonLocation }}/lib/libpython3.10.so eosdebugger &
           PYTHON_SHARED_LIB_PATH=${{ env.pythonLocation }}/lib/libpython3.10.so python3.10 -m ipyeos -m pytest -s -x tests/test.py
           PYTHON_SHARED_LIB_PATH=${{ env.pythonLocation }}/lib/libpython3.11.so python3.11 -m ipyeos -m pytest -s -x tests/test.py
       - name: release-pyeos

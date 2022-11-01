@@ -62,6 +62,6 @@ def start_debug_server():
         print(' '.join(cmd))
         return subprocess.call(cmd, stdout=sys.stdout, stderr=sys.stderr)
 
-    custom_cmds = ['-m', 'ipyeos', 'eos-debugger']
+    custom_cmds = ['-m', 'ipyeos', 'eosdebugger']
     custom_cmds.extend(sys.argv[1:])
     run_ipyeos(custom_cmds)
