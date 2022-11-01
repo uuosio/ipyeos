@@ -117,5 +117,5 @@ def init(args):
 
     return get_ipyeos_proxy().eos_init(argc, argv)
 
-def exec():
+def start():
     return get_ipyeos_proxy().eos_exec()

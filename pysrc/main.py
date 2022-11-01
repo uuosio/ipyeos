@@ -7,7 +7,7 @@ def run():
     ret = eos.init()
     if not ret == INIT_SUCCESS: #exit on not init success
         sys.exit(ret)
-    eos.exec()
+    eos.start()
     print('done!')
 
 if __name__ == "__main__":

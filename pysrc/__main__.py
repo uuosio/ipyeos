@@ -33,7 +33,7 @@ def main():
             ret = eos.init(argv)
             if not ret == INIT_SUCCESS: #exit on not init success
                 sys.exit(ret)
-            eos.exec()
+            eos.start()
             print('done!')
         elif sys.argv[1] == 'eosdebugger':
             result, unknown = parser.parse_known_args()

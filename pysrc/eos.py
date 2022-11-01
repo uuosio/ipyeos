@@ -112,5 +112,5 @@ def init(argv=None) -> bool:
         return _eos.init(argv)
     return _eos.init(sys.argv)
 
-def exec() -> None:
-    _eos.exec()
+def start() -> None:
+    _eos.start()
