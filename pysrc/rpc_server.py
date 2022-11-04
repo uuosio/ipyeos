@@ -4,7 +4,7 @@ from concurrent.futures import ThreadPoolExecutor
 from flask import Flask, request, jsonify
 from waitress import serve
 
-from .interfaces.ttypes import ActionArguments
+from .interfaces.ttypes import Action, ActionArguments
 from . import eos
 
 from typing import NewType, Dict, Optional
@@ -96,7 +96,14 @@ class ChainTesterProxy(object):
         return self.handler.push_action(id, account, action, _arguments, permissions)
 
     def push_actions(self, id, actions):
-        return self.handler.push_actions(id, actions)
+        actions = json.loads(actions)
+        _actions = []
+        for a in actions:
+            _a = Action(**a)
+            _a.arguments = ActionArguments(json_args=json.dumps(_a.arguments))
+            _a.permissions = json.dumps(_a.permissions)
+            _actions.append(_a)
+        return self.handler.push_actions(id, _actions)
 
     def deploy_contract(self, id, account: str, wasm: str, abi: str):
         return self.handler.deploy_contract(id, account, wasm, abi)

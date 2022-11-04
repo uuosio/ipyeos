@@ -9,7 +9,7 @@ import traceback
 import logging
 from datetime import datetime, timedelta
 
-from typing import NewType, Dict, Optional
+from typing import NewType, Dict, Optional, List
 i32 = NewType('i32', int)
 i64 = NewType('i64', int)
 u64 = NewType('u64', int)
@@ -919,7 +919,7 @@ class ChainTesterHandler:
             if client:
                 client.apply_end(tester.id)
 
-    def push_actions(self, id, actions: Action):
+    def push_actions(self, id, actions: List[Action]):
         tester = self.testers[id]
         self.current_tester = tester
         _actions = []
@@ -957,7 +957,9 @@ class ChainTesterHandler:
             return err.encode()
         finally:
             self.current_tester = None
-            self.get_apply_request_client().apply_end(tester.id)
+            client = self.get_apply_request_client()
+            if client:
+                client.apply_end(tester.id)
 
     def deploy_contract(self, id, account: str, wasm: str, abi: str):
         tester: ChainTester = self.testers[id]

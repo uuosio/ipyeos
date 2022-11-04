@@ -672,7 +672,7 @@ class ChainTester(object):
 
     def pack_action_args(self, account: Name, action: Name , args: Union[dict, str]):
         ret = self.chain.pack_action_args(account, action, args)
-        if not ret:
+        if ret is None:
             error = self.chain.get_last_error()
             raise Exception(f'{error}')
         return ret
