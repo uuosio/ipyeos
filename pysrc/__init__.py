@@ -7,7 +7,7 @@ import sysconfig
 import argparse
 from . import run
 
-__version__ = "0.3.10"
+__version__ = "0.3.11"
 
 class CustomImporter(object):
     def find_module(self, fullname, mpath=None):

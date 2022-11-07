@@ -1,3 +1,4 @@
-v0.3.10 release
+v0.3.11 release
 
-1. Add ChainTester.set_native_contract
+1. Fix push_action in ChainTesterProxy 
+2. Fix push_actions
