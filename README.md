@@ -1,5 +1,9 @@
 # Interactive Python for Eos
 
+[![PyPi](https://img.shields.io/pypi/v/ipyeos.svg)](https://pypi.org/project/ipyeos)
+[![PyPi](https://img.shields.io/pypi/dm/ipyeos.svg)](https://pypi.org/project/ipyeos)
+
+
 ## What Is IPyEos
 
 - IPyEos is a Smart Contracts test framework for Eos
