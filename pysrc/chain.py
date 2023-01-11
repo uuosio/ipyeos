@@ -284,8 +284,8 @@ class Chain(object):
     def is_building_block(self) -> bool:
         return _chain.is_building_block(self.ptr)
 
-    def is_producing_block(self) -> bool:
-        return _chain.is_producing_block(self.ptr)
+    def is_speculative_block(self) -> bool:
+        return _chain.is_speculative_block(self.ptr)
 
     def is_ram_billing_in_notify_allowed(self) -> bool:
         return _chain.is_ram_billing_in_notify_allowed(self.ptr)

@@ -54,7 +54,7 @@ chain_config = {
         "threads":1
     },
     "eosvmoc_tierup":False,
-    "read_mode":"SPECULATIVE",
+    "read_mode":"HEAD",
     "block_validation_mode":"FULL",
     "db_map_mode":"mapped",
     "resource_greylist":[],
@@ -125,9 +125,16 @@ producer_key_map = {
     'EOS5fVw435RSwW3YYWAX9qz548JFTWuFiBcHT3PGLryWaAMmxgjp1':'5K9AZWR2wEwtZii52vHigrxcSwCzLhhJbNpdXpVFKHP5fgFG5Tx'
 }
 
+log_level_all = 0
+log_level_debug = 1
+log_level_info = 2
+log_level_warn = 3
+log_level_error = 4
+log_level_off = 5
+
 class ChainTester(object):
 
-    def __init__(self, initialize=True):
+    def __init__(self, initialize=True, log_level=log_level_debug):
         atexit.register(self.free)
 
         self.data_dir = tempfile.mkdtemp()
@@ -139,11 +146,10 @@ class ChainTester(object):
         chain_config['state_dir'] = os.path.join(self.data_dir, 'state')
 
 
-        eos.set_log_level('default', 0)
+        eos.set_log_level('default', log_level)
 
         self.chain_config = json.dumps(chain_config)
         self.genesis_test = json.dumps(genesis_test)
-        eos.set_log_level('default', 10)
         self.chain = chain.Chain(self.chain_config, self.genesis_test, os.path.join(self.config_dir, "protocol_features"), "")
         self.chain.startup(True)
         self.api = chainapi.ChainApi(self.chain)
@@ -152,7 +158,6 @@ class ChainTester(object):
         # logger.info(self.api.get_account('eosio'))
 
         self.feature_digests = []
-        eos.set_log_level('default', 0)
 
         self.feature_digests = ['0ec7e080177b2c02b278d5088611686b49d739925a92d9bfcacd7fc6b74053bd']
         self.start_block()
@@ -260,7 +265,7 @@ class ChainTester(object):
         # self.delegatebw('eosio', 'eosio', 1.0, 1.0, transfer=0)
 
     def __enter__(self):
-        if not self.chain.is_producing_block():
+        if not self.chain.is_speculative_block():
             self.start_block()
 
     def __exit__(self, _type, value, traceback):
@@ -736,6 +741,10 @@ class ChainTester(object):
                                     index_position='', 
                                     reverse = False,
                                     show_payer = False):
+        """ Fetch smart contract data from an account. 
+        key_type: "i64"|"i128"|"i256"|"float64"|"float128"|"sha256"|"ripemd160"
+        index_position: "2"|"3"|"4"|"5"|"6"|"7"|"8"|"9"|"10"
+        """
         params = dict(
                 json=_json,
                 code=code,

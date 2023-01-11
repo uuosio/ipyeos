@@ -78,7 +78,7 @@ cdef extern from "_ipyeos.hpp":
         bool check_action_list(string& code, string& action)
         bool check_key_list(string& param)
         bool is_building_block()
-        bool is_producing_block()
+        bool is_speculative_block()
         bool is_ram_billing_in_notify_allowed()
         void add_resource_greylist(string& param)
         void remove_resource_greylist(string& param)
@@ -381,11 +381,11 @@ def is_building_block(uint64_t ptr):
     '''
     return chain(ptr).is_building_block()
 
-def is_producing_block(uint64_t ptr):
+def is_speculative_block(uint64_t ptr):
     '''
     returns: str
     '''
-    return chain(ptr).is_producing_block()
+    return chain(ptr).is_speculative_block()
 
 def is_ram_billing_in_notify_allowed(uint64_t ptr):
     '''
