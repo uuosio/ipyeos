@@ -16,6 +16,13 @@ python3 -m pip install ipyeos
 cdt-init
 ```
 
+on the macOS platform, you may need to install `gmp` and `zstd` if you don't install them.
+
+```bash
+brew reinstall gmp
+brew reinstall zstd
+```
+
 ## Building
 
 ```
