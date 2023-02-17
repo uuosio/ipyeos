@@ -25,12 +25,27 @@ brew reinstall zstd
 
 ## Building
 
-```
+To build this project, please follow the steps below:
+
+1. Clone the source code from the repository:
+
+```bash
 git clone https://github.com/uuosio/ipyeos --branch main --recursive
-cd eos
+```
+
+2. Build the forked leap source code under the `leap` directory by following the instructions in the [build-and-install-from-source](https://github.com/uuosio/leap/tree/550e092fa980e673f5f6fe5a7c309c088441f09a#build-and-install-from-source) documentation.
+
+3. Build the Python release package:
+
+```bash
+cd ipyeos
 ./build.sh
-cd ..
-./build.sh
+```
+
+4. Install the Python package
+
+```bash
+python3 -m pip install dist/pyeos-0.3.11**.whl
 ```
 
 ## Run a Node
