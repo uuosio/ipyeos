@@ -1068,7 +1068,7 @@ class ChainTesterHandler:
         chain: ChainTester = self.testers[id]
         return chain.import_key(pub_key, priv_key)
 
-    def get_required_keys(self, id: i32, transaction: str, available_keys: list[str]):
+    def get_required_keys(self, id: i32, transaction: str, available_keys: List[str]):
         chain = self.testers[id].chain
         params = dict(
             transaction = json.loads(transaction),

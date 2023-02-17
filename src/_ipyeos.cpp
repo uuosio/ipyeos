@@ -18,14 +18,14 @@ void uuosext_init() {
     void *handle = dlopen(chain_api_lib, RTLD_LAZY | RTLD_GLOBAL);
 //    printf("+++++++++chain_api_lib handle %p\n", handle);
     if (handle == 0) {
-        printf("loading %s failed! error: %s\n", chain_api_lib, dlerror());
+        printf("Failed to load %s! error: %s\n", chain_api_lib, dlerror());
         exit(-1);
         return;
     }
 
     s_get_ipyeos_proxy = (fn_get_ipyeos_proxy)dlsym(handle, "get_ipyeos_proxy");
     if (s_get_ipyeos_proxy == nullptr) {
-        printf("++++loading chain_new failed! error: %s\n", dlerror());
+        printf("++++Failed to load chain_new! error: %s\n", dlerror());
         exit(-1);
         return;
     }

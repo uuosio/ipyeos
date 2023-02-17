@@ -7,7 +7,7 @@ from waitress import serve
 from .interfaces.ttypes import Action, ActionArguments
 from . import eos
 
-from typing import NewType, Dict, Optional
+from typing import NewType, List, Dict, Optional
 i32 = NewType('i32', int)
 i64 = NewType('i64', int)
 u64 = NewType('u64', int)
@@ -55,7 +55,7 @@ class BaseChainTester:
     def import_key(self, id: i32, pub_key: str, priv_key: str):
         pass
 
-    def get_required_keys(self, id: i32, transaction: str, available_keys: list[str]):
+    def get_required_keys(self, id: i32, transaction: str, available_keys: List[str]):
         pass
 
 class ChainTesterProxy(object):
@@ -138,7 +138,7 @@ class ChainTesterProxy(object):
         ret = self.handler.import_key(id, pub_key, priv_key)
         return {"data": "ok"}
 
-    def get_required_keys(self, id: i32, transaction: str, available_keys: list[str]):
+    def get_required_keys(self, id: i32, transaction: str, available_keys: List[str]):
         ret = self.handler.get_required_keys(id, transaction, available_keys)
         return {"data": ret}
 
