@@ -23,6 +23,12 @@ brew reinstall gmp
 brew reinstall zstd
 ```
 
+Also, you can install the `ipyeos` docker image with the following command if your machine does not support install `ipyeos` directly.
+
+```bash
+docker pull ghcr.io/uuosio/ipyeos:latest
+```
+
 ## Building
 
 To build this project, please follow the steps below:
@@ -50,14 +56,20 @@ python3 -m pip install dist/pyeos-0.3.11**.whl
 
 ## Run a Node
 
-```
+```bash
 eosnode
 ```
 
 ## Run a Debugging Server
 
-```
+```bash
 eosdebugger
+```
+
+or use the following command if you have installed `ipyeos` docker image:
+
+```bash
+docker run -it --rm -p 9090:9090 -p 9092:9092 -t ghcr.io/uuosio/ipyeos
 ```
 
 ## Testing
