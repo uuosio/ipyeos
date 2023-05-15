@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import List, Dict, Union, Optional
 import json
 from . import _chainapi
 from . import _chain, _eos
@@ -13,7 +13,7 @@ class ChainApi(object):
         ret = _chainapi.get_info(self.ptr)
         return self.parse_return_value(ret)
 
-    def get_activated_protocol_features(self, params: dict):
+    def get_activated_protocol_features(self, lower_bound=0, upper_bound=0xffffffff, limit=10, search_by_block_num=False, reverse=False):
         '''
             struct get_activated_protocol_features_params {
                 std::optional<uint32_t>  lower_bound;
@@ -28,25 +28,41 @@ class ChainApi(object):
                 std::optional<uint32_t>  more;
             };
         '''
-        ret = _chainapi.get_activated_protocol_features(self.ptr, params)
+        args = json.dumps(
+            {
+                'lower_bound': lower_bound,
+                'upper_bound': upper_bound,
+                'limit': limit, 
+                'search_by_block_num': search_by_block_num,
+                'reverse': reverse
+            }
+        )
+        ret = _chainapi.get_activated_protocol_features(self.ptr, args)
         return self.parse_return_value(ret)
 
-    def get_block(self, params: dict):
+    def get_block(self, block_num_or_id: str):
         '''
             struct get_block_params {
                 string block_num_or_id;
             };
         '''
+        params = dict(block_num_or_id=block_num_or_id)
+        params = json.dumps(params)
         ret = _chainapi.get_block(self.ptr, params)
         return self.parse_return_value(ret)
 
-    def get_block_header_state(self, params: dict):
+    def get_block_header_state(self, block_num_or_id: Union[str, int]):
         '''
             struct get_block_header_state_params {
                 string block_num_or_id;
             };
         '''
-        ret = _chainapi.get_block_header_state(self.ptr, params)
+        args = json.dumps(
+            {
+                'block_num_or_id': str(block_num_or_id)
+            }
+        )
+        ret = _chainapi.get_block_header_state(self.ptr, args)
         return self.parse_return_value(ret)
 
     def get_account(self, account: str):
@@ -56,12 +72,15 @@ class ChainApi(object):
                 std::optional<symbol> expected_core_symbol;
             };
         '''
-        args = {'account_name': account}
-        args = json.dumps(args)
+        args = json.dumps(
+            {
+                'account_name': account
+            }
+        )
         ret = _chainapi.get_account(self.ptr, args)
         return self.parse_return_value(ret)
 
-    def get_code(self, params: dict):
+    def get_code(self, account_name: str, code_as_wasm: bool = True):
         '''
             struct get_code_params {
                 name account_name;
@@ -76,10 +95,16 @@ class ChainApi(object):
                 std::optional<abi_def> abi;
             };
         '''
-        ret = _chainapi.get_code(self.ptr, params)
+        args = json.dumps(
+            {
+                'account_name': account_name,
+                'code_as_wasm': code_as_wasm 
+            }
+        )
+        ret = _chainapi.get_code(self.ptr, args)
         return self.parse_return_value(ret)
 
-    def get_code_hash(self, params: dict):
+    def get_code_hash(self, account_name: str):
         '''
             struct get_code_hash_results {
                 name                   account_name;
@@ -90,7 +115,12 @@ class ChainApi(object):
                 name account_name;
             };
         '''
-        ret = _chainapi.get_code_hash(self.ptr, params)
+        args = json.dumps(
+            {
+                'account_name': account_name
+            }            
+        )
+        ret = _chainapi.get_code_hash(self.ptr, args)
         return self.parse_return_value(ret)
 
     def get_abi(self, account):
@@ -104,12 +134,15 @@ class ChainApi(object):
                 name account_name;
             };
         '''
-        params = dict(account_name=account)
-        params = json.dumps(params)
+        params = json.dumps(
+            {
+                'account_name': account
+            }
+        )
         ret = _chainapi.get_abi(self.ptr, params)
         return self.parse_return_value(ret)
 
-    def get_raw_code_and_abi(self, params: dict):
+    def get_raw_code_and_abi(self, account_name: str):
         '''
             struct get_raw_code_and_abi_results {
                 name                   account_name;
@@ -121,10 +154,15 @@ class ChainApi(object):
                 name                   account_name;
             };
         '''
+        params = json.dumps(
+            {
+                'account_name': account_name
+            }
+        )
         ret = _chainapi.get_raw_code_and_abi(self.ptr, params)
         return self.parse_return_value(ret)
 
-    def get_raw_abi(self, params: dict):
+    def get_raw_abi(self, account_name: str, abi_hash: Optional[str]):
         '''
             struct get_raw_abi_params {
                 name                      account_name;
@@ -138,10 +176,25 @@ class ChainApi(object):
                 std::optional<chain::blob> abi;
             };
         '''
+        if abi_hash:
+            params = json.dumps(
+                {
+                    'account_name': account_name,
+                    'abi_hash': abi_hash
+                }
+            )
+        else:
+            params = json.dumps(
+                {
+                    'account_name': account_name
+                }
+            )
         ret = _chainapi.get_raw_abi(self.ptr, params)
         return self.parse_return_value(ret)
 
-    def get_table_rows(self, params: dict):
+    def get_table_rows(self, _json: bool, code: str, scope: str, table: str, lower_bound: str,
+                       upper_bound: str, limit: int, key_type='', index_position='', encode_type='dec',
+                       reverse = False, show_payer = False):
         '''
             struct get_table_rows_params {
                 bool                 json = false;
@@ -159,11 +212,26 @@ class ChainApi(object):
                 std::optional<bool>  show_payer; // show RAM pyer
                 };
         '''
-        params = json.dumps(params)
+        params = json.dumps(
+            dict(
+                json=_json,
+                code=code,
+                scope=scope,
+                table=table,
+                lower_bound=lower_bound,
+                upper_bound=upper_bound,
+                limit=limit,
+                key_type=key_type,
+                index_position=index_position,
+                encode_type=encode_type,
+                reverse=reverse,
+                show_payer=show_payer
+            )
+        )
         ret = _chainapi.get_table_rows(self.ptr, params)
         return self.parse_return_value(ret)
 
-    def get_table_by_scope(self, params: dict):
+    def get_table_by_scope(self, code: str, table: str, lower_bound: str, upper_bound: str, limit: int, reverse: bool = False):
         '''
             struct get_table_by_scope_params {
                 name                 code; // mandatory
@@ -174,10 +242,20 @@ class ChainApi(object):
                 std::optional<bool>  reverse;
             };
         '''
+        params = json.dumps(
+            dict(
+                code = code,
+                table = table,
+                lower_bound = lower_bound,
+                upper_bound = upper_bound,
+                limit = limit,
+                reverse = reverse,
+            )
+        )
         ret = _chainapi.get_table_by_scope(self.ptr, params)
         return self.parse_return_value(ret)
 
-    def get_currency_balance(self, params: dict):
+    def get_currency_balance(self, code: str, account: str, symbol: Optional[str]=''):
         '''
             struct get_currency_balance_params {
                 name                  code;
@@ -185,10 +263,17 @@ class ChainApi(object):
                 std::optional<string> symbol;
             };
         '''
+        params = json.dumps(
+            dict(
+                code=code,
+                account=account,
+                symbol=symbol
+            )
+        )
         ret = _chainapi.get_currency_balance(self.ptr, params)
         return self.parse_return_value(ret)
 
-    def get_currency_stats(self, params: dict):
+    def get_currency_stats(self, code: str, symbol: str):
         '''
             struct get_currency_stats_params {
                 name           code;
@@ -202,6 +287,12 @@ class ChainApi(object):
                 account_name   issuer;
             };
         '''
+        params = json.dumps(
+            dict(
+                code=code,
+                symbol=symbol
+            )
+        )
         ret = _chainapi.get_currency_stats(self.ptr, params)
         return self.parse_return_value(ret)
 
@@ -237,7 +328,7 @@ class ChainApi(object):
         ret = _chainapi.get_producer_schedule(self.ptr, "{}")
         return self.parse_return_value(ret)
 
-    def get_scheduled_transactions(self, params: dict):
+    def get_scheduled_transactions(self, _json: bool, lower_bound: str, limit: int = 50):
         '''
             struct get_scheduled_transactions_params {
                 bool        json = false;
@@ -250,10 +341,17 @@ class ChainApi(object):
                 string        more; ///< fill lower_bound with this to fetch next set of transactions
             };
         '''
+        params = json.dumps(
+            dict(
+                json=_json,
+                lower_bound=lower_bound,
+                limit=limit
+            )
+        )
         ret = _chainapi.get_scheduled_transactions(self.ptr, params)
         return self.parse_return_value(ret)
 
-    def abi_json_to_bin(self, params: dict):
+    def abi_json_to_bin(self, code: str, action: str, args: Dict):
         '''
             struct abi_json_to_bin_params {
                 name         code;
@@ -264,10 +362,17 @@ class ChainApi(object):
                 vector<char>   binargs;
             };
         '''
+        params = json.dumps(
+            dict(
+                code=code,
+                action=action,
+                args=args
+            )
+        )
         ret = _chainapi.abi_json_to_bin(self.ptr, params)
         return self.parse_return_value(ret)
 
-    def abi_bin_to_json(self, params: dict):
+    def abi_bin_to_json(self, code: str, action: str, binargs: str):
         '''
             struct abi_bin_to_json_params {
                 name         code;
@@ -278,6 +383,13 @@ class ChainApi(object):
                 fc::variant    args;
             };
         '''
+        params = json.dumps(
+            dict(
+                code=code,
+                action=action,
+                binargs=binargs
+            )
+        )
         ret = _chainapi.abi_bin_to_json(self.ptr, params)
         return self.parse_return_value(ret)
 
