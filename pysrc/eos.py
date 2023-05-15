@@ -114,3 +114,22 @@ def init(argv=None) -> bool:
 
 def start() -> None:
     _eos.start()
+
+def sym2n(s: str) -> int:
+    """convert symbol string to int
+
+    Args:
+        s (str): symbol name
+
+    Raises:
+        Exception: invalid symbol
+
+    Returns:
+        _type_: int
+    """
+    for c in s:
+        if not c.isupper():
+            raise Exception('invalid symbol')
+    ss = [c for c in s]
+    ss.reverse()
+    return int.from_bytes(''.join(ss).encode(), 'big')
