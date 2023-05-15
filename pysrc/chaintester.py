@@ -717,17 +717,16 @@ class ChainTester(object):
             os.chdir(cur_dir)
 
     def get_balance(self, account):
-        params = dict(
-            json=True,
-            code='eosio.token',
-            scope=account,
-            table='accounts',
-            lower_bound='',
-            upper_bound='',
-            limit=10,
-        )
         try:
-            ret = self.api.get_table_rows(params)
+            ret = self.api.get_table_rows(
+                True,
+                'eosio.token',
+                account,
+                'accounts',
+                '',
+                '',
+                10
+            )
             balance = ret['rows'][0]['balance'].split(' ')[0]
             return round(float(balance) * 10000) / 10000
         except Exception as e:
@@ -745,20 +744,15 @@ class ChainTester(object):
         key_type: "i64"|"i128"|"i256"|"float64"|"float128"|"sha256"|"ripemd160"
         index_position: "2"|"3"|"4"|"5"|"6"|"7"|"8"|"9"|"10"
         """
-        params = dict(
-                json=_json,
-                code=code,
-                scope=scope,
-                table=table,
-                lower_bound=lower_bound,
-                upper_bound=upper_bound,
-                limit=limit,
-                key_type=key_type,
-                index_position=index_position,
-                reverse = reverse,
-                show_payer = show_payer
+        return self.api.get_table_rows(
+            _json, code, scope, table,
+            lower_bound, upper_bound,
+            limit,
+            '',
+            '', 
+            reverse,
+            show_payer            
         )
-        return self.api.get_table_rows(params)
 
     def s2n(self, s: str) -> int:
         return eos.s2n(s)
