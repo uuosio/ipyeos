@@ -6,15 +6,18 @@ import subprocess
 import sysconfig
 import argparse
 
+def is_macos_arm():
+    return platform.system() == 'Darwin' and platform.processor() == 'arm'
+
 def run_ipyeos(custom_cmds=None):
     if 'RUN_IPYEOS' in os.environ:
-        print('run-ipyeos can only be called by python')
+        print('ipyeos command can only be called by python')
         return
 
-    if platform.system() == 'Windows':
-        cmd = f'docker run --rm -it -w /root/dev -v "{os.getcwd()}:/root/dev" -t gscdk/test'
+    if platform.system() == 'Windows' or is_macos_arm():
+        cmd = f'docker run --entrypoint ipyeos -it -v "{os.getcwd()}:/develop" -w /develop -t ghcr.io/uuosio/ipyeos'
         cmd = shlex.split(cmd)
-        cmd.append(sys.argv[1:])
+        cmd.extend(sys.argv[1:])
         print(' '.join(cmd))
         return subprocess.call(cmd, stdout=sys.stdout, stderr=sys.stderr)
 
