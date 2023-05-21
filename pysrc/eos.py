@@ -110,10 +110,12 @@ def sign_digest(priv_key: str, digest: str):
 def init(argv=None) -> bool:
     if argv:
         return _eos.init(argv)
-    return _eos.init(sys.argv)
+    return _eos.init(sys.argv[1:])
 
-def start() -> None:
-    _eos.start()
+def start(argv) -> None:
+    if argv:
+        return _eos.start(argv)
+    _eos.start(sys.argv[1:])
 
 def sym2n(s: str) -> int:
     """convert symbol string to int

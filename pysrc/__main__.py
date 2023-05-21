@@ -31,9 +31,8 @@ def main():
             argv = sys.argv[1:]
             argv[0] = 'ipyeos'
             ret = eos.init(argv)
-            if not ret == INIT_SUCCESS: #exit on not init success
-                sys.exit(ret)
-            eos.start()
+            if ret == 0: #init successfull
+                eos.start(argv)
             print('done!')
         elif sys.argv[1] == 'eosdebugger':
             result, unknown = parser.parse_known_args()

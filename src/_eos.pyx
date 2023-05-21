@@ -1,4 +1,4 @@
-# cython: c_string_type=str, c_string_encoding=utf8
+# cython: language_level=3, c_string_type=str, c_string_encoding=utf8
 
 from cython.operator cimport dereference as deref, preincrement as inc
 from libcpp.string cimport string
@@ -54,7 +54,7 @@ cdef extern from "_ipyeos.hpp":
         string sign_digest(string &priv_key, string &digest);
 
         int eos_init(int argc, char** argv);
-        int eos_exec();
+        int eos_exec(int argc, char** argv)
 
     ipyeos_proxy *get_ipyeos_proxy()
 
@@ -117,5 +117,13 @@ def init(args):
 
     return get_ipyeos_proxy().eos_init(argc, argv)
 
-def start():
-    return get_ipyeos_proxy().eos_exec()
+def start(args):
+    cdef int argc;
+    cdef char **argv
+
+    argc = len(args)
+    argv = <char **>malloc(argc * sizeof(char *))
+    for i in range(argc):
+        argv[i] = args[i]
+
+    return get_ipyeos_proxy().eos_exec(argc, argv)
