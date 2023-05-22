@@ -23,7 +23,7 @@ jobs:
     strategy:
       matrix:
         python-version: [3.9]
-        os: ['ubuntu-22.04']
+        os: ['ubuntu-20.04']
         # python-version: [3.9]
         # os: ['ubuntu-18.04']
       fail-fast: false
@@ -44,12 +44,12 @@ jobs:
           python -m pip install flake8 pytest scikit-build cython auditwheel
           mkdir dist
       - name: Downloading whl files
-        if: ${{ matrix.os == 'ubuntu-18.04' }}
+        if: ${{ matrix.os == 'ubuntu-20.04' }}
         working-directory: dist
         run: |
           python ../scripts/download.py ${{ env.IPYEOS_VERSION }}
       - name: Publish a Python distribution to PyPI
-        if: ${{ matrix.os == 'ubuntu-18.04' }}
+        if: ${{ matrix.os == 'ubuntu-20.04' }}
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__
