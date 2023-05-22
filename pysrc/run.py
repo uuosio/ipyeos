@@ -15,7 +15,7 @@ def run_ipyeos(custom_cmds=None):
         return
 
     if platform.system() == 'Windows' or is_macos_arm():
-        cmd = f'docker run --entrypoint ipyeos -it -v "{os.getcwd()}:/develop" -w /develop -t ghcr.io/uuosio/ipyeos'
+        cmd = f'docker run --entrypoint ipyeos -it --rm -v "{os.getcwd()}:/develop" -w /develop -t ghcr.io/uuosio/ipyeos'
         cmd = shlex.split(cmd)
         cmd.extend(sys.argv[1:])
         print(' '.join(cmd))
