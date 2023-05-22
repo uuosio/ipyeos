@@ -103,8 +103,8 @@ def create_key(key_type: str):
 def get_public_key(priv_key: str):
     return get_ipyeos_proxy().get_public_key(priv_key)
 
-def sign_digest(priv_key, digest: str) -> str:
-    return get_ipyeos_proxy().sign_digest(priv_key, digest)
+def sign_digest(digest: str, priv_key) -> str:
+    return get_ipyeos_proxy().sign_digest(digest, priv_key)
 
 def init(args):
     cdef int argc;

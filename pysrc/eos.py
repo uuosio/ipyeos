@@ -103,8 +103,8 @@ def get_public_key(priv_key: str) -> str:
     ret = _eos.get_public_key(priv_key)
     return check_ret(ret)
 
-def sign_digest(priv_key: str, digest: str):
-    ret = _eos.sign_digest(priv_key, digest)
+def sign_digest(digest: str, priv_key: str):
+    ret = _eos.sign_digest(digest, priv_key)
     return check_ret(ret)
 
 def init(argv=None) -> bool:
