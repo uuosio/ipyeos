@@ -748,10 +748,10 @@ class ChainTester(object):
             _json, code, scope, table,
             lower_bound, upper_bound,
             limit,
-            '',
-            '', 
-            reverse,
-            show_payer            
+            key_type=key_type,
+            index_position=index_position, 
+            reverse=reverse,
+            show_payer=show_payer
         )
 
     def s2n(self, s: str) -> int:
