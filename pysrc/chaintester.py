@@ -716,21 +716,21 @@ class ChainTester(object):
         finally:
             os.chdir(cur_dir)
 
-    def get_balance(self, account):
+    def get_balance(self, account, token_account: str='eosio.token', symbol: str='EOS'):
         try:
             ret = self.api.get_table_rows(
                 True,
-                'eosio.token',
+                token_account,
                 account,
                 'accounts',
-                '',
-                '',
+                symbol,
+                symbol,
                 10
             )
             balance = ret['rows'][0]['balance'].split(' ')[0]
-            return round(float(balance) * 10000) / 10000
+            return int(balance.replace('.', ''))
         except Exception as e:
-            logger.info(e)
+            logger.exception(e)
             return 0.0
 
     def get_table_rows(self, _json, code, scope, table,
