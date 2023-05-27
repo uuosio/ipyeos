@@ -17,7 +17,10 @@ def run_ipyeos(custom_cmds=None):
     if platform.system() == 'Windows' or is_macos_arm():
         cmd = f'docker run --entrypoint ipyeos -it --rm -v "{os.getcwd()}:/develop" -w /develop -t ghcr.io/uuosio/ipyeos'
         cmd = shlex.split(cmd)
-        cmd.extend(sys.argv[1:])
+        if not custom_cmds:
+            cmd.extend(sys.argv[1:])
+        else:
+            cmd.extend(custom_cmds)
         print(' '.join(cmd))
         return subprocess.call(cmd, stdout=sys.stdout, stderr=sys.stderr)
 
@@ -59,9 +62,9 @@ def run_eosnode(custom_cmds=None):
 
 def start_debug_server():
     if platform.system() == 'Windows':
-        cmd = f'docker run --rm -it -w /root/dev -v "{os.getcwd()}:/root/dev" -t gscdk/test'
+        cmd = f'docker run --rm -it -w /root/dev -v "{os.getcwd()}:/root/dev" -p 9090:9090 -p 9092:9092 -p 9093:9093 -t ghcr.io/uuosio/ipyeos'
         cmd = shlex.split(cmd)
-        cmd.append(sys.argv[1:])
+        cmd.extend(sys.argv[1:])
         print(' '.join(cmd))
         return subprocess.call(cmd, stdout=sys.stdout, stderr=sys.stderr)
 
