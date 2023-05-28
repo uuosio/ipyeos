@@ -13,7 +13,6 @@
 
 ```
 python3 -m pip install ipyeos
-cdt-init
 ```
 
 on the macOS platform, you may need to install `gmp` and `zstd` if you don't install them.
@@ -23,10 +22,42 @@ brew reinstall gmp
 brew reinstall zstd
 ```
 
-Also, you can install the `ipyeos` docker image with the following command if your machine does not support install `ipyeos` directly.
+If your platform is Windows or MacOSX M1/M2, you also need to download an image that includes the ipyeos tool:
 
 ```bash
 docker pull ghcr.io/uuosio/ipyeos:latest
+```
+
+If you have not installed the ipyeos image in Docker, then the ipyeos image will be automatically downloaded the first time you run `ipyeos` or `eosdebugger`.
+
+On macOS, the recommended software for installing and running Docker is [OrbStack](https://orbstack.dev/download). For other platforms, you can use [Docker Desktop](https://www.docker.com/products/docker-desktop).
+
+# Usage
+
+```python
+#test.py
+import os
+from ipyeos.chaintester import ChainTester
+
+chaintester.chain_config['contracts_console'] = True
+
+def test_example():
+    t = ChainTester(True)
+    with open('./hello/build/hello/hello.wasm', 'rb') as f:
+        code = f.read()
+    with open('./hello/build/hello/hello.abi', 'rb') as f:
+        abi = f.read()
+    t.deploy_contract('hello', code, abi)
+    t.produce_block()
+
+    t.push_action('hello', 'hi', {'nm': 'alice'}, {'hello': 'active'})
+    t.produce_block()
+```
+
+Test:
+
+```
+ipyeos -m pytest -x -s tests/test.py
 ```
 
 ## Building
@@ -64,12 +95,6 @@ eosnode
 
 ```bash
 eosdebugger
-```
-
-or use the following command if you have installed `ipyeos` docker image:
-
-```bash
-docker run -it --rm -p 9090:9090 -p 9092:9092 -t ghcr.io/uuosio/ipyeos
 ```
 
 ## Testing
