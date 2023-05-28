@@ -16,9 +16,9 @@ jobs:
   run:
     runs-on: 'macos-12'
     env:
-      IPYEOS_VERSION: 0.4.0
+      IPYEOS_VERSION: 0.4.1
       SYSTEM_VERSION_COMPAT: 0
-      PREBUILD_BINARY_VERSION: v2.0.0
+      PREBUILD_BINARY_VERSION: v2.0.1
     steps:
       - name: Checkout
         uses: actions/checkout@v2
