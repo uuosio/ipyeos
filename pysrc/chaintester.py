@@ -737,12 +737,14 @@ class ChainTester(object):
                                     lower_bound, upper_bound,
                                     limit,
                                     key_type='',
-                                    index_position='', 
+                                    index_position='',
+                                    encode_type='',
                                     reverse = False,
                                     show_payer = False):
         """ Fetch smart contract data from an account. 
-        key_type: "i64"|"i128"|"i256"|"float64"|"float128"|"sha256"|"ripemd160"
+        key_type: "name"|"i64"|"i128"|"i256"|"float64"|"float128"|"sha256"|"ripemd160"
         index_position: "2"|"3"|"4"|"5"|"6"|"7"|"8"|"9"|"10"
+        encode_type: "dec" or "hex", default to "dec"
         """
         return self.api.get_table_rows(
             _json, code, scope, table,
@@ -750,6 +752,7 @@ class ChainTester(object):
             limit,
             key_type=key_type,
             index_position=index_position, 
+            encode_type=encode_type,
             reverse=reverse,
             show_payer=show_payer
         )
