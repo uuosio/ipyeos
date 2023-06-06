@@ -50,3 +50,15 @@ def run_eosnode():
 
 def start_debug_server():
     return run.start_debug_server()
+
+def run_test():
+    if len(sys.argv) == 2:
+        cmd = f'ipyeos -m pytest -s -x -o log_cli=true -o log_cli_level=INFO {sys.argv[1]}'
+    elif len(sys.argv) == 3:
+        cmd = f'ipyeos -m pytest -s -x -o log_cli=true -o log_cli_level=INFO {sys.argv[1]} -k {sys.argv[2]}'
+    else:
+        print('usage: eostest [test script] [test case]')
+        return
+    print(cmd)
+    cmd = shlex.split(cmd)
+    return subprocess.call(cmd, stdout=sys.stdout, stderr=sys.stderr)
