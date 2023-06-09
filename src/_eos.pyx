@@ -53,10 +53,13 @@ cdef extern from "_ipyeos.hpp":
 
         string sign_digest(string &priv_key, string &digest);
 
-        int eos_init(int argc, char** argv);
-        int eos_exec(int argc, char** argv)
+        int eos_init(int argc, char** argv)
+        int eos_exec() nogil
+        int eos_exec_once() nogil
+        void eos_quit()
 
-    ipyeos_proxy *get_ipyeos_proxy()
+    ipyeos_proxy *get_ipyeos_proxy() nogil
+    void app_quit()
 
 uuosext_init()
 
@@ -117,13 +120,17 @@ def init(args):
 
     return get_ipyeos_proxy().eos_init(argc, argv)
 
-def start(args):
-    cdef int argc;
-    cdef char **argv
+def run():
+    cdef int ret
+    with nogil:
+        ret = get_ipyeos_proxy().eos_exec()
+    return ret
 
-    argc = len(args)
-    argv = <char **>malloc(argc * sizeof(char *))
-    for i in range(argc):
-        argv[i] = args[i]
+def run_once():
+    cdef int ret
+    with nogil:
+        ret = get_ipyeos_proxy().eos_exec_once()
+    return ret
 
-    return get_ipyeos_proxy().eos_exec(argc, argv)
+def quit():
+    get_ipyeos_proxy().eos_quit()

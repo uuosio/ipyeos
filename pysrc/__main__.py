@@ -24,16 +24,27 @@ def main():
         sys.exit(-1)
 
     if 'RUN_IPYEOS' in os.environ:
+        import asyncio
         from ipyeos import eos
         from ipyeos import server
 
         if sys.argv[1] == 'eosnode':
-            argv = sys.argv[1:]
-            argv[0] = 'ipyeos'
-            ret = eos.init(argv)
-            if ret == 0: #init successfull
-                eos.start(argv)
-            print('done!')
+            async def run_eos():
+                argv = sys.argv[1:]
+                argv[0] = 'ipyeos'
+                ret = eos.init(argv)
+                if not ret == 0:
+                    print('init return', ret)
+                    return
+                ret = eos.run()
+                # while True:
+                #     ret = eos.run_once()
+                #     if not ret == 0:
+                #         break
+                #     await asyncio.sleep(0.0)
+                print('run return', ret)
+
+            asyncio.run(run_eos())
         elif sys.argv[1] == 'eosdebugger':
             result, unknown = parser.parse_known_args()
             server.start_debug_server(result.addr, result.server_port, result.vm_api_port, result.apply_request_addr, result.apply_request_port, result.addr,result.rpc_server_port)                

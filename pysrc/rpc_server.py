@@ -40,7 +40,7 @@ class BaseChainTester:
     def unpack_action_args(self, id, contract, action, raw_args):
         pass
 
-    def new_chain(self):
+    def new_chain(self, initialize: bool=True):
         pass
 
     def free_chain(self, id):
@@ -62,8 +62,8 @@ class ChainTesterProxy(object):
     def __init__(self, handler: BaseChainTester):
         self.handler = handler
 
-    def new_chain(self):
-        id = self.handler.new_chain()
+    def new_chain(self, initialize: bool=True):
+        id = self.handler.new_chain(initialize)
         return {"id": id}
 
     def free_chain(self, id):

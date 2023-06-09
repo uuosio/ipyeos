@@ -107,15 +107,19 @@ def sign_digest(digest: str, priv_key: str):
     ret = _eos.sign_digest(digest, priv_key)
     return check_ret(ret)
 
-def init(argv=None) -> bool:
+def init(argv=None) -> int:
     if argv:
         return _eos.init(argv)
     return _eos.init(sys.argv[1:])
 
-def start(argv) -> None:
-    if argv:
-        return _eos.start(argv)
-    _eos.start(sys.argv[1:])
+def run() -> int:
+    return _eos.run()
+
+def run_once() -> int:
+    return _eos.run_once()
+
+def quit() -> None:
+    _eos.quit()
 
 def sym2n(s: str) -> int:
     """convert symbol string to int
