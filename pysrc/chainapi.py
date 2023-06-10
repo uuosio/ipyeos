@@ -1,7 +1,8 @@
-from typing import List, Dict, Union, Optional
 import json
-from . import _chainapi
-from . import _chain, _eos
+from typing import Dict, List, Optional, Union
+
+from . import _chain, _chainapi, _eos
+
 
 class ChainApi(object):
 

@@ -1,10 +1,12 @@
-import os
 import json
-import pytest
 import logging
+import os
 import tempfile
-from ipyeos.chaintester import ChainTester
 from datetime import datetime, timedelta
+
+import pytest
+
+from ipyeos.chaintester import ChainTester
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(levelname)s %(module)s %(lineno)d %(message)s')

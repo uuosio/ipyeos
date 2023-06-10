@@ -1,10 +1,11 @@
-import os
-import time
 import json
+import os
 import platform
+import time
 
-from ipyeos.chaintester import ChainTester
 from ipyeos import log
+from ipyeos.chaintester import ChainTester
+
 logger = log.get_logger(__name__)
 
 # print(os.getpid())

@@ -1,7 +1,8 @@
-import os
-import sys
 import argparse
 import concurrent.futures
+import os
+import sys
+
 from . import run
 
 INIT_SUCCESS = 6

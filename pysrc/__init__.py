@@ -1,10 +1,11 @@
-import os
-import sys
-import shlex
-import platform
-import subprocess
-import sysconfig
 import argparse
+import os
+import platform
+import shlex
+import subprocess
+import sys
+import sysconfig
+
 from . import run
 
 __version__ = "0.4.1"
@@ -18,27 +19,27 @@ class CustomImporter(object):
 
     def load_module(self, module_name):
 #        print('+++load_module', module_name)
-        from . import _eos        
         mod = sys.modules.get(module_name)
         if mod is None:
-            uuos_module = sys.modules.get('ipyeos._eos')
-            if not uuos_module:
+            ipyeos_module = sys.modules.get('ipyeos._eos')
+            if not ipyeos_module:
                 return
-            uuos_so = uuos_module.__file__
+            ipyeos_so = ipyeos_module.__file__
             from importlib import util
-            spec = util.spec_from_file_location(module_name, uuos_so)
+            spec = util.spec_from_file_location(module_name, ipyeos_so)
             mod = util.module_from_spec(spec)
             spec.loader.exec_module(mod)
             sys.modules[module_name] = mod
         return mod
 
-sys.meta_path.append(CustomImporter())
-
 if 'RUN_IPYEOS' in os.environ:
     from . import _eos
-    import _chainapi
+    sys.meta_path.append(CustomImporter())
+
     import _chain
+    import _chainapi
     import _vm_api
+
 
 def run_ipyeos(custom_cmds=[]):
     return run.run_ipyeos(custom_cmds)

@@ -1,11 +1,12 @@
-import os
-import sys
-import signal
-import shlex
-import platform
-import subprocess
-import sysconfig
 import argparse
+import os
+import platform
+import shlex
+import signal
+import subprocess
+import sys
+import sysconfig
+
 
 def is_macos_arm():
     return platform.system() == 'Darwin' and platform.processor() == 'arm'

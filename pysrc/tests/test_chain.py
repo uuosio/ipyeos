@@ -1,13 +1,13 @@
-import os
 import json
-import pytest
 import logging
+import os
 import tempfile
-
-from ipyeos.chaintester import ChainTester
-from ipyeos import _chain, _eos
-from ipyeos import eos
 from datetime import datetime, timedelta
+
+import pytest
+
+from ipyeos import _chain, _eos, eos
+from ipyeos.chaintester import ChainTester
 
 eos.set_log_level('default', 0)
 

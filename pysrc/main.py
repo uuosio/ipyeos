@@ -1,13 +1,14 @@
-import sys
 import asyncio
 import atexit
 import concurrent.futures
 import signal
+import sys
 import time
 
 from aiohttp import web
-from ipyeos import eos, server
 from IPython.terminal.embed import InteractiveShellEmbed
+
+from ipyeos import eos, server
 
 executor = concurrent.futures.ThreadPoolExecutor(max_workers=10)
 queue = asyncio.Queue()
@@ -80,8 +81,8 @@ def run():
 
         async def set_warn_level():
             await asyncio.sleep(10.0)
-            print('set default log level to warn')
             eos.post(eos.set_warn_level, 'default')
+            print('set default log level to warn')
 
         async def main():
             asyncio.create_task(start_webserver())

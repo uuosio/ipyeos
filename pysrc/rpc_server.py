@@ -1,13 +1,14 @@
-import json
 import asyncio as aio
+import json
 from concurrent.futures import ThreadPoolExecutor
-from flask import Flask, request, jsonify
+from typing import Dict, List, NewType, Optional
+
+from flask import Flask, jsonify, request
 from waitress import serve
 
-from .interfaces.ttypes import Action, ActionArguments
 from . import eos
+from .interfaces.ttypes import Action, ActionArguments
 
-from typing import NewType, List, Dict, Optional
 i32 = NewType('i32', int)
 i64 = NewType('i64', int)
 u64 = NewType('u64', int)

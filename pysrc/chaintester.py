@@ -1,18 +1,18 @@
-import os
-import json
-import pytest
 import atexit
+import json
 import logging
+import os
 import shutil
-import tempfile
 import subprocess
+import tempfile
+from datetime import datetime, timedelta, timezone
+from typing import Dict, List, Optional, Union
+
+import pytest
 
 from ipyeos import chain, chainapi, config
-from datetime import datetime, timedelta
-from datetime import timezone
 
-from . import log, eos
-from typing import List, Dict, Union, Optional
+from . import eos, log
 from .types import Name
 
 logger = log.get_logger(__name__)

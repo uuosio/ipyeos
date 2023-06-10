@@ -1,9 +1,10 @@
-import sys
 import json
+import sys
+from typing import Union
 
 from . import _eos
-from typing import Union
 from .types import Name
+
 
 class NativeType:
     handshake_message = 0

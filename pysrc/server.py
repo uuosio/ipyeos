@@ -1,42 +1,35 @@
-import os
 import glob
-import sys
 import json
-import time
-import string
-import threading
-import traceback
 import logging
+import os
+import string
+import sys
+import threading
+import time
+import traceback
 from datetime import datetime, timedelta
+from typing import Dict, List, NewType, Optional
 
-from typing import NewType, Dict, Optional, List
 i32 = NewType('i32', int)
 i64 = NewType('i64', int)
 u64 = NewType('u64', int)
 
 Iterator = NewType('Iterator', i32)
 
-from .interfaces import IPCChainTester, ApplyRequest, Apply
-
-from .interfaces.ttypes import Uint64, NextPreviousReturn,FindPrimaryReturn, FindSecondaryReturn, LowerBoundUpperBoundReturn
-from .interfaces.ttypes import GetResourceLimitsReturn
-from .interfaces.ttypes import Action, ActionArguments
-
-from thrift.transport import TSocket
-from thrift.transport import TTransport
 from thrift.protocol import TBinaryProtocol
-from thrift.server import TServer
 from thrift.protocol.THeaderProtocol import THeaderProtocolFactory
-from thrift.Thrift import TType, TMessageType, TApplicationException
+from thrift.server import TServer
+from thrift.Thrift import TApplicationException, TMessageType, TType
+from thrift.transport import TSocket, TTransport
 
-from . import chaintester 
-from . import eos, _vm_api, log
-from .chaintester import ChainTester
+from . import _chainapi, _eos, _vm_api, chaintester, eos, log, rpc_server
 from .chainapi import ChainApi
-from . import _chainapi
-from . import _eos
-
-from . import rpc_server
+from .chaintester import ChainTester
+from .interfaces import Apply, ApplyRequest, IPCChainTester
+from .interfaces.ttypes import (Action, ActionArguments, FindPrimaryReturn,
+                                FindSecondaryReturn, GetResourceLimitsReturn,
+                                LowerBoundUpperBoundReturn, NextPreviousReturn,
+                                Uint64)
 
 chaintester.chain_config['contracts_console'] = True
 

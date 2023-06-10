@@ -1,6 +1,6 @@
+import argparse
 import os
 import sys
-import argparse
 
 default_abi_serializer_max_time_ms = 15*1000
 default_state_guard_size      =    128*1024*1024#

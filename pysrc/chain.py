@@ -1,9 +1,8 @@
 import json
 from datetime import datetime
-from typing import Dict, List, Union, Optional
+from typing import Dict, List, Optional, Union
 
-from . import _chain, _eos
-from . import log
+from . import _chain, _eos, log
 from .types import Name, PublicKey
 
 logger = log.get_logger(__name__)
