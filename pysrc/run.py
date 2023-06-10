@@ -84,3 +84,22 @@ def start_debug_server():
     custom_cmds = ['-m', 'ipyeos', 'eosdebugger']
     custom_cmds.extend(sys.argv[1:])
     run_ipyeos(custom_cmds)
+
+def run_program(program):
+    dir_name = os.path.dirname(os.path.realpath(__file__))
+    dir_name = os.path.join(dir_name, "release")
+    program = os.path.join(dir_name, f"bin/{program}")
+
+    cmds = [program]
+    cmds.extend(sys.argv[1:])
+    print(' '.join(cmds))
+    try:
+        p = subprocess.Popen(cmds, stdout=sys.stdout, stderr=sys.stderr)
+        ret = p.wait()
+        return ret
+    except KeyboardInterrupt:
+        print('KeyboardInterrupt')
+        p.terminate()
+        ret = p.wait()
+        print('wait return:', ret)
+        return ret

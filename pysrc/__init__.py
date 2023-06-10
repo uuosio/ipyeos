@@ -48,6 +48,15 @@ def run_eosnode():
     custom_cmds.extend(sys.argv[1:])
     return run.run_eosnode(custom_cmds)
 
+def run_nodeos():
+    run.run_program('nodeos')
+
+def run_keosd():
+    run.run_program('keosd')
+
+def run_cleos():
+    run.run_program('cleos')
+
 def start_debug_server():
     return run.start_debug_server()
 
