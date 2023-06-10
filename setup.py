@@ -49,6 +49,7 @@ setup(
         'flask>=2.2.2',
         'aiohttp>=3.8.4',
         'ipython>=8.14.0',
+        'ipykernel>=6.19.2'
     ],
     tests_require=[],
     include_package_data=True

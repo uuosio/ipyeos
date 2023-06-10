@@ -3,8 +3,6 @@ import concurrent.futures
 import os
 import sys
 
-from . import run
-
 INIT_SUCCESS = 6
 
 def main():
@@ -29,6 +27,7 @@ def main():
         from . import main
         main.run()
     else:
+        from . import run
         if sys.argv[1] in ['eosnode', 'eosdebugger']:
             custom_cmds = ['-m', 'ipyeos']
             custom_cmds.extend(sys.argv[1:])

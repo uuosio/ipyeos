@@ -7,29 +7,14 @@ import subprocess
 import sys
 import sysconfig
 
+dir_name = os.path.dirname(os.path.realpath(__file__))
+dir_name = os.path.join(dir_name, "release")
+ipyeos_program = os.path.join(dir_name, "bin/ipyeos")
 
 def is_macos_arm():
     return platform.system() == 'Darwin' and platform.processor() == 'arm'
 
-def run_ipyeos(custom_cmds=None):
-    if 'RUN_IPYEOS' in os.environ:
-        print('ipyeos command can only be called by python')
-        return
-
-    if platform.system() == 'Windows' or is_macos_arm():
-        cmd = f'docker run --entrypoint ipyeos -it --rm -v "{os.getcwd()}:/develop" -w /develop -t ghcr.io/uuosio/ipyeos'
-        cmd = shlex.split(cmd)
-        if not custom_cmds:
-            cmd.extend(sys.argv[1:])
-        else:
-            cmd.extend(custom_cmds)
-        print(' '.join(cmd))
-        return subprocess.call(cmd, stdout=sys.stdout, stderr=sys.stderr)
-
-    dir_name = os.path.dirname(os.path.realpath(__file__))
-    dir_name = os.path.join(dir_name, "release")
-    ipyeos_program = os.path.join(dir_name, "bin/ipyeos")
-
+def setup_env():
     libdir, py_version_short, abiflags = sysconfig.get_config_vars('LIBDIR', 'py_version_short', 'abiflags')
 
     _system = platform.system()
@@ -52,6 +37,26 @@ def run_ipyeos(custom_cmds=None):
     print('export CHAIN_API_LIB=', os.environ['CHAIN_API_LIB'], sep='')
     print('export VM_API_LIB=', os.environ['VM_API_LIB'], sep='')
     print('export PYTHON_SHARED_LIB_PATH=', os.environ['PYTHON_SHARED_LIB_PATH'], sep='')
+
+def run_ipyeos_in_docker():
+    cmd = f'docker run --entrypoint ipyeos -it --rm -v "{os.getcwd()}:/develop" -w /develop -t ghcr.io/uuosio/ipyeos'
+    cmd = shlex.split(cmd)
+    if not custom_cmds:
+        cmd.extend(sys.argv[1:])
+    else:
+        cmd.extend(custom_cmds)
+    print(' '.join(cmd))
+    return subprocess.call(cmd, stdout=sys.stdout, stderr=sys.stderr)
+
+def run_ipyeos(custom_cmds=None):
+    if 'RUN_IPYEOS' in os.environ:
+        print('ipyeos command can only be called by python')
+        return
+
+    if platform.system() == 'Windows' or is_macos_arm():
+        return run_ipyeos_in_docker()
+
+    setup_env()
     cmds = [ipyeos_program]
     if not custom_cmds:
         cmds.extend(sys.argv[1:])
