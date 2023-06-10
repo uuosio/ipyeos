@@ -1,5 +1,6 @@
 import os
 import sys
+import signal
 import shlex
 import platform
 import subprocess
@@ -62,7 +63,9 @@ def run_ipyeos(custom_cmds=None):
         print('p.wait return:', ret)
         return ret
     except KeyboardInterrupt:
+        print('KeyboardInterrupt')
         p.terminate()
+        # p.send_signal(signal.SIGINT)
         ret = p.wait()
         print('wait return:', ret)
         return ret

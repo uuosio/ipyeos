@@ -118,6 +118,9 @@ def run() -> int:
 def run_once() -> int:
     return _eos.run_once()
 
+def post(fn, *args, **kwargs):
+    return _eos.post(fn, *args, **kwargs)
+
 def quit() -> None:
     _eos.quit()
 

@@ -57,6 +57,7 @@ cdef extern from "_ipyeos.hpp":
         int eos_exec() nogil
         int eos_exec_once() nogil
         void eos_quit()
+        void* eos_post(void* (*fn)(void *), void *args) nogil
 
     ipyeos_proxy *get_ipyeos_proxy() nogil
     void app_quit()
@@ -134,3 +135,16 @@ def run_once():
 
 def quit():
     get_ipyeos_proxy().eos_quit()
+
+cdef void *call_python_fn(void* fn_info) nogil:
+    with gil:
+        fn, args, kwargs = <object>fn_info
+        ret = fn(*args, **kwargs)
+        return <void *><object>ret
+
+def post(fn, *args, **kwargs):
+    cdef void *ret
+    fn_info = (fn, args, kwargs)
+    with nogil:
+        ret = get_ipyeos_proxy().eos_post(call_python_fn, <void *><object>fn_info)
+    return <object>ret

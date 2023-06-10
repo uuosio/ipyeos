@@ -46,7 +46,8 @@ setup(
         'thrift>=0.16.0',
         'pytest>=6.2.5',
         'waitress>=2.1.2',
-        'flask>=2.2.2'
+        'flask>=2.2.2',
+        'aiohttp>=3.8.4',
     ],
     tests_require=[],
     include_package_data=True
