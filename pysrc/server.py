@@ -1,7 +1,10 @@
+import asyncio as aio
+from concurrent.futures import ThreadPoolExecutor
 import glob
 import json
 import logging
 import os
+import queue
 import string
 import sys
 import threading
@@ -35,6 +38,9 @@ chaintester.chain_config['contracts_console'] = True
 
 logger = log.get_logger(__name__)
 logger.setLevel(logging.DEBUG)
+
+
+thread_queue = queue.Queue()
 
 def to_uint64(value):
     return Uint64(int.to_bytes(value, 8, 'little'))
@@ -1073,6 +1079,10 @@ class ChainTesterHandler:
             return chain.get_last_error()
         return ret
 
+    def quit(self):
+        thread_queue.put('exit')
+        return True
+
 class VMAPIServer(TServer.TServer):
     """Simple single-threaded server that just pumps around one transport."""
 
@@ -1263,7 +1273,7 @@ def start_debug_server(addr='127.0.0.1', server_port=9090, vm_api_port=9092, app
     handler = ChainTesterHandler(addr, vm_api_port, apply_request_addr, apply_request_port)
     processor = IPCChainTesterProcessor(handler)
 
-    def run_server():
+    def start_server():
         print('Starting the EOS debugger server...')
         transport = TSocket.TServerSocket(host=addr, port=server_port)
         tfactory = TTransport.TBufferedTransportFactory()
@@ -1273,13 +1283,29 @@ def start_debug_server(addr='127.0.0.1', server_port=9090, vm_api_port=9092, app
         server.serve()
         print('done.')
 
-    def run_rpc_server():
-        print('run rpc server')
-        rpc_server.start(rpc_server_addr, rpc_server_port, handler)
+    def start_rpc_server():
+        loop = aio.new_event_loop()
+        try:
+            loop.run_until_complete(rpc_server.start(rpc_server_addr, rpc_server_port, handler))
+        except KeyboardInterrupt:
+            loop.stop()
+            loop.close()
 
-    t = threading.Thread(target=run_rpc_server)
+    t = threading.Thread(target=start_rpc_server, daemon=True)
     t.start()
-    run_server()
+
+    t = threading.Thread(target=start_server, daemon=True)
+    t.start()
+
+    while True:
+        try:
+            command = thread_queue.get(block=True)
+            if command == 'exit':
+                time.sleep(1.0)
+                sys.exit(0)
+                break
+        except KeyboardInterrupt:
+            sys.exit(0)
 
 if __name__ == '__main__':
     start_debug_server()

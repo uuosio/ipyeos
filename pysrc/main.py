@@ -1,17 +1,23 @@
+import argparse
 import asyncio
 import atexit
 import concurrent.futures
+import queue
 import signal
 import sys
 import time
+import threading
 
 from aiohttp import web
 from IPython.terminal.embed import InteractiveShellEmbed
 
 from ipyeos import eos, server
+from . import args
 
 executor = concurrent.futures.ThreadPoolExecutor(max_workers=10)
-queue = asyncio.Queue()
+async_queue = asyncio.Queue()
+
+thread_queue = queue.Queue()
 
 async def quit_app(request):
     eos.post(eos.quit)
@@ -25,26 +31,6 @@ commands:
 /quit quit app
     '''
     return web.Response(text=commands)
-
-async def run_ipython(request):
-    await queue.put("ipython")
-    return web.Response(text=f'done! {time.time()}')
-
-def _run_ikernel():
-    new_loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(new_loop)
-
-    from ipykernel.kernelapp import IPKernelApp
-    app = IPKernelApp.instance()
-    app.ip = '0.0.0.0'
-    app.initialize([])
-    # To keep the kernel running
-    app.start()
-
-async def run_ikernel(request):
-    future = asyncio.get_event_loop().run_in_executor(executor, _run_ikernel)
-    # await future
-    return web.Response(text=f'done! {time.time()}')
 
 def _run_eos():
     argv = sys.argv[1:]
@@ -65,14 +51,32 @@ def _run_eos():
 async def run_eos():
     future = asyncio.get_event_loop().run_in_executor(executor, _run_eos)
     await future
-    await queue.put(None)
+    await async_queue.put(None)
+
 
 def _run_ipython():
-    shell = InteractiveShellEmbed(header="Starting IPython console in thread", colors="Neutral", banner1="")
-    shell()
+    from . import ipython_embed
+    shell = ipython_embed.embed()
     atexit.unregister(shell.atexit_operations)
-    shell.history_manager.end_session()
-    shell.history_manager.writeout_cache()
+    shell.atexit_operations()
+
+async def run_ipython(request):
+    # await async_queue.put("ipython")
+    thread_queue.put("ipython")
+    return web.Response(text=f'done! {time.time()}')
+
+def _run_ikernel():
+    new_loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(new_loop)
+
+    from . import ipykernel_embed
+    ipykernel_embed.embed_kernel(ip='0.0.0.0')
+
+async def run_ikernel(request):
+    # await async_queue.put("ikernel")
+    # thread_queue.put("ikernel")
+    future = asyncio.get_event_loop().run_in_executor(executor, _run_ikernel)
+    return web.Response(text=f'done! {time.time()}')
 
 async def set_warn_level():
     await asyncio.sleep(3.0)
@@ -97,27 +101,50 @@ async def start_webserver():
     while True:
         await asyncio.sleep(3600) # serve forever
 
+async def heartbeat():
+    while True:
+        print("beep")
+        await asyncio.sleep(5.0)
+
 async def main():
     asyncio.create_task(start_webserver())
     asyncio.create_task(run_eos())
     asyncio.create_task(set_warn_level())
+    # asyncio.create_task(heartbeat())
 
     while True:
-        command = await queue.get()
+        command = await async_queue.get()
         if not command:
             break
         if command == 'ipython':
+            # _run_ipython()
             future = asyncio.get_event_loop().run_in_executor(executor, _run_ipython)
+        elif command == 'ikernel':
+            _run_ikernel()
+            # future = asyncio.get_event_loop().run_in_executor(executor, _run_ipython)
 
     # result = await future
     # print("Result: ", result)
     print('all done!')
 
 def run():
-    if sys.argv[1] == 'eosnode':
-        asyncio.run(main())
-    elif sys.argv[1] == 'eosdebugger':
-        result, unknown = parser.parse_known_args()
-        server.start_debug_server(result.addr, result.server_port, result.vm_api_port, result.apply_request_addr, result.apply_request_port, result.addr,result.rpc_server_port)                
+    result = args.parse_args()
+    if result.subparser == 'eosnode':
+        def start():
+            asyncio.run(main())
+            thread_queue.put(None)
+        t = threading.Thread(target=start, daemon=True)
+        t.start()
+        while True:
+            cmd = thread_queue.get()
+            if cmd == None:
+                break
+            if cmd == 'ikernel':
+                _run_ikernel()
+            elif cmd == 'ipython':
+                _run_ipython()
+        
+    elif result.subparser == 'eosdebugger':
+        server.start_debug_server(result.addr, result.server_port, result.vm_api_port, result.apply_request_addr, result.apply_request_port, result.addr,result.rpc_server_port)
     else:
         parser.print_help()

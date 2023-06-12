@@ -1,10 +1,10 @@
-import asyncio as aio
+from aiohttp import web
+import asyncio
 import json
 from concurrent.futures import ThreadPoolExecutor
 from typing import Dict, List, NewType, Optional
 
 from flask import Flask, jsonify, request
-from waitress import serve
 
 from . import eos
 from .interfaces.ttypes import Action, ActionArguments
@@ -143,20 +143,39 @@ class ChainTesterProxy(object):
         ret = self.handler.get_required_keys(id, transaction, available_keys)
         return {"data": ret}
 
+    def quit(self):
+        ret = self.handler.quit()
+        return {"data": ret}
+
 proxy = None
-app = Flask(__name__)
 
-@app.route('/api/<method>', methods=['GET', 'POST'])
-def call_method(method):
-    global proxy
-    kwargs = request.json
-    # print(kwargs)
-    ret = getattr(proxy, method)(**kwargs)
-    if isinstance(ret, dict):
-        ret = json.dumps(ret)
-    return ret
+async def call_method(request: web.Request):
+    try:
+        kwargs = await request.json()
+        method = request.match_info.get('method', None)
 
-def start(rpc_server_addr, rpc_server_port, handler: BaseChainTester):
+        ret = getattr(proxy, method)(**kwargs)
+        if isinstance(ret, dict):
+            ret = json.dumps(ret)
+        elif isinstance(ret, bytes):
+            ret = ret.decode()
+        return web.Response(text=ret)
+    except json.JSONDecodeError:
+        return web.HTTPBadRequest(text="Invalid JSON")
+    except Exception as e:
+        print(e)
+        return web.HTTPInternalServerError()
+
+async def start(rpc_server_addr, rpc_server_port, handler: BaseChainTester):
     global proxy
     proxy = ChainTesterProxy(handler)
-    serve(app, listen=f'{rpc_server_addr}:{rpc_server_port}')
+    print('+++++++start rpc server', rpc_server_addr, rpc_server_port)
+    app = web.Application()
+    app.router.add_route('POST', '/api/{method}', call_method)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, rpc_server_addr, rpc_server_port)
+    await site.start()
+    print('rpc server started')
+    while True:
+        await asyncio.sleep(1000.0)

@@ -45,8 +45,6 @@ setup(
     install_requires=[
         'thrift>=0.16.0',
         'pytest>=6.2.5',
-        'waitress>=2.1.2',
-        'flask>=2.2.2',
         'aiohttp>=3.8.4',
         'ipython>=8.14.0',
         'ipykernel>=6.19.2'
