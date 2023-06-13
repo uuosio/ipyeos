@@ -12,6 +12,7 @@ from libc.stdlib cimport free
 cdef extern from * :
     ctypedef long long int64_t
     ctypedef unsigned long long uint64_t
+    ctypedef int int32_t
     ctypedef unsigned int uint32_t
     ctypedef unsigned short uint16_t
     ctypedef unsigned char uint8_t
@@ -21,12 +22,31 @@ cdef extern from "<Python.h>":
     ctypedef long long PyLongObject
 
     object PyBytes_FromStringAndSize(const char* str, int size)
+    int PyBytes_AsStringAndSize(object obj, char **buffer, Py_ssize_t *length)
     int _PyLong_AsByteArray(PyLongObject* v, unsigned char* bytes, size_t n, int little_endian, int is_signed)
 
 cdef extern from "_ipyeos.hpp":
     void uuosext_init()
 
+    ctypedef struct eos_cb:
+        int init(int argc, char** argv) nogil
+        int exec() nogil
+        int exec_once() nogil
+        void quit() nogil
+        void *post(void *(*fn)(void *), void *args) nogil
+        void *get_database()
+
+    ctypedef struct database_proxy:
+        void set_database(void *db)
+        void *get_database()
+        int32_t set_data_handler(int32_t (*)(int32_t tp, int64_t id, char *data, size_t size, void* custom_data), void *custom_data)
+        int32_t walk(int32_t tp, int32_t index_position)
+        int32_t walk_range(int32_t tp, int32_t index_position, char *raw_lower_bound, size_t raw_lower_bound_size, char *raw_upper_bound, size_t raw_upper_bound_size)
+        int32_t find(int32_t tp, int32_t index_position, char *raw_data, size_t size, char *out, size_t out_size)
+
     ctypedef struct ipyeos_proxy:
+        void *get_database()
+
         void set_log_level(string& logger_name, int level)
 
         string& get_last_error()
@@ -40,29 +60,29 @@ cdef extern from "_ipyeos.hpp":
         uint64_t s2n(string& s)
         string n2s(uint64_t n)
 
-        string get_native_contract(uint64_t contract);
+        string get_native_contract(uint64_t contract)
 
-        void enable_native_contracts(bool debug);
-        bool is_native_contracts_enabled();
+        void enable_native_contracts(bool debug)
+        bool is_native_contracts_enabled()
 
-        void enable_debug(bool debug);
-        bool is_debug_enabled();
+        void enable_debug(bool debug)
+        bool is_debug_enabled()
 
-        string create_key(string& key_type);
-        string get_public_key(string &priv_key);
+        string create_key(string& key_type)
+        string get_public_key(string &priv_key)
 
-        string sign_digest(string &priv_key, string &digest);
+        string sign_digest(string &priv_key, string &digest)
 
-        int eos_init(int argc, char** argv)
-        int eos_exec() nogil
-        int eos_exec_once() nogil
-        void eos_quit()
-        void* eos_post(void* (*fn)(void *), void *args) nogil
+        eos_cb *cb
 
     ipyeos_proxy *get_ipyeos_proxy() nogil
+
     void app_quit()
 
-uuosext_init()
+def init_chain():
+    uuosext_init()
+
+init_chain()
 
 def set_log_level(string& logger_name, int level):
     get_ipyeos_proxy().set_log_level(logger_name, level)
@@ -119,22 +139,22 @@ def init(args):
     for i in range(argc):
         argv[i] = args[i]
 
-    return get_ipyeos_proxy().eos_init(argc, argv)
+    return get_ipyeos_proxy().cb.init(argc, argv)
 
 def run():
     cdef int ret
     with nogil:
-        ret = get_ipyeos_proxy().eos_exec()
+        ret = get_ipyeos_proxy().cb.exec()
     return ret
 
 def run_once():
     cdef int ret
     with nogil:
-        ret = get_ipyeos_proxy().eos_exec_once()
+        ret = get_ipyeos_proxy().cb.exec_once()
     return ret
 
 def quit():
-    get_ipyeos_proxy().eos_quit()
+    get_ipyeos_proxy().cb.quit()
 
 cdef void *call_python_fn(void* fn_info) nogil:
     with gil:
@@ -146,5 +166,8 @@ def post(fn, *args, **kwargs):
     cdef void *ret
     fn_info = (fn, args, kwargs)
     with nogil:
-        ret = get_ipyeos_proxy().eos_post(call_python_fn, <void *><object>fn_info)
+        ret = get_ipyeos_proxy().cb.post(call_python_fn, <void *><object>fn_info)
     return <object>ret
+
+def get_database() -> uint64_t:
+    return <uint64_t>get_ipyeos_proxy().cb.get_database()

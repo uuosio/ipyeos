@@ -13,7 +13,7 @@ __version__ = "0.4.1"
 class CustomImporter(object):
     def find_module(self, fullname, mpath=None):
 #        print('+++find_module', fullname)
-        if fullname in ['_chain', '_chainapi', '_vm_api']:
+        if fullname in ['_chain', '_chainapi', '_vm_api', '_database']:
             return self
         return
 
@@ -39,7 +39,7 @@ if 'RUN_IPYEOS' in os.environ:
     import _chain
     import _chainapi
     import _vm_api
-
+    import _database
 
 def run_ipyeos(custom_cmds=[]):
     return run.run_ipyeos(custom_cmds)

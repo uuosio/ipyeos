@@ -136,14 +136,17 @@ def run():
         t = threading.Thread(target=start, daemon=True)
         t.start()
         while True:
-            cmd = thread_queue.get()
-            if cmd == None:
-                break
-            if cmd == 'ikernel':
-                _run_ikernel()
-            elif cmd == 'ipython':
-                _run_ipython()
-        
+            try:
+                cmd = thread_queue.get()
+                if cmd == None:
+                    break
+                if cmd == 'ikernel':
+                    _run_ikernel()
+                elif cmd == 'ipython':
+                    _run_ipython()
+            except KeyboardInterrupt:
+                eos.post(eos.quit)
+
     elif result.subparser == 'eosdebugger':
         server.start_debug_server(result.addr, result.server_port, result.vm_api_port, result.apply_request_addr, result.apply_request_port, result.addr,result.rpc_server_port)
     else:

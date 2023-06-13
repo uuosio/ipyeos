@@ -78,6 +78,9 @@ class Chain(object):
         """
         return _chain.id(self.ptr)
 
+    def get_database(self):
+        return _chain.get_database(self.ptr)
+
     def start_block(self, _time: Union[datetime, str], confirm_block_count: int=0, features: Optional[list]=None) -> None:
         """
         Start a new block

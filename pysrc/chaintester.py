@@ -10,7 +10,7 @@ from typing import Dict, List, Optional, Union
 
 import pytest
 
-from ipyeos import chain, chainapi, config
+from ipyeos import chain, chainapi, database, config
 
 from . import eos, log
 from .types import Name
@@ -153,6 +153,8 @@ class ChainTester(object):
         self.chain = chain.Chain(self.chain_config, self.genesis_test, os.path.join(self.config_dir, "protocol_features"), "")
         self.chain.startup(True)
         self.api = chainapi.ChainApi(self.chain)
+
+        self.db = database.Database(self.chain.get_database())
 
         # logger.info(self.api.get_info())
         # logger.info(self.api.get_account('eosio'))

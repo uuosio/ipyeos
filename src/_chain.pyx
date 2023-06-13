@@ -34,6 +34,7 @@ cdef extern from "_ipyeos.hpp":
         int start_block(string& _time, uint16_t confirm_block_count, string& _new_features)
         int abort_block()
         bool startup(bool initdb)
+        void *get_database()
         void finalize_block(string& _priv_keys)
         void commit_block()
         string get_block_id_for_num(uint32_t block_num)
@@ -149,6 +150,9 @@ def start_block(uint64_t ptr, string& _time, uint16_t confirm_block_count, strin
 
 def startup(uint64_t ptr, initdb):
     return chain(ptr).startup(initdb)
+
+def get_database(uint64_t ptr):
+    return <uint64_t>chain(ptr).get_database()
 
 def abort_block(uint64_t ptr):
     return chain(ptr).abort_block()

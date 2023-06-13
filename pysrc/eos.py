@@ -97,6 +97,25 @@ def b2s(s: bytes) -> str:
     s = int.from_bytes(s, 'little')
     return n2s(s)
 
+def sym2n(s: str) -> int:
+    """convert symbol string to int
+
+    Args:
+        s (str): symbol name
+
+    Raises:
+        Exception: invalid symbol
+
+    Returns:
+        _type_: int
+    """
+    for c in s:
+        if not c.isupper():
+            raise Exception('invalid symbol')
+    ss = [c for c in s]
+    ss.reverse()
+    return int.from_bytes(''.join(ss).encode(), 'big')
+
 def get_native_contract(contract) -> str:
     contract = _eos.s2n(contract)
     return _eos.get_native_contract(contract)
@@ -149,22 +168,3 @@ def post(fn, *args, **kwargs):
 
 def quit() -> None:
     _eos.quit()
-
-def sym2n(s: str) -> int:
-    """convert symbol string to int
-
-    Args:
-        s (str): symbol name
-
-    Raises:
-        Exception: invalid symbol
-
-    Returns:
-        _type_: int
-    """
-    for c in s:
-        if not c.isupper():
-            raise Exception('invalid symbol')
-    ss = [c for c in s]
-    ss.reverse()
-    return int.from_bytes(''.join(ss).encode(), 'big')
