@@ -69,8 +69,45 @@ def deploy_contract(package_name):
     chain.deploy_contract('hello', code, abi)
 
 @chain_test(True)
-def test_database(chain: ChainTester):
+def test_walk(chain: ChainTester):
     def on_data(tp, id, raw_data):
-        print(tp, id, eos.b2s(raw_data[:8]), raw_data)
+        print(tp, id, raw_data)
+        if tp == 1:
+            print(eos.b2s(raw_data[:8]))
         return 1
-    chain.db.walk(1, 0, on_data)
+    object_types = [1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 30, 31, 32, 33, 34, 38, 39, 40, 41]
+
+    for tp in object_types:
+        if tp in [15, 40]: #block_summary_object, code_object
+            continue
+        chain.db.walk(tp, 0, on_data)
+
+@chain_test(True)
+def test_walk_range(chain: ChainTester):
+    def on_data(tp, id, raw_data):
+        print(tp, id, raw_data)
+        if tp == 1:
+            print(eos.b2s(raw_data[:8]))
+        return 1
+    object_types = [1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 30, 31, 32, 33, 34, 38, 39, 40, 41]
+
+    for tp in object_types:
+        if tp in [15, 40]: #block_summary_object, code_object
+            continue
+        chain.db.walk_range(tp, 0, on_data, int.to_bytes(0, 8, 'little'), int.to_bytes(10, 8, 'little'))
+
+@chain_test(True)
+def test_find(chain: ChainTester):
+    def on_data(tp, id, raw_data):
+        print(tp, id, raw_data)
+        if tp == 1:
+            print(eos.b2s(raw_data[:8]))
+        return 1
+    object_types = [1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 30, 31, 32, 33, 34, 38, 39, 40, 41]
+
+    for tp in object_types:
+        if tp in [15, 40]: #block_summary_object, code_object
+            continue
+        print(tp)
+        ret, raw_data = chain.db.find(tp, 0, int.to_bytes(0, 8, 'little'), max_buffer_size=1024)
+        print(ret, raw_data)

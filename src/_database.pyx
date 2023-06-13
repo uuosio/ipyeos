@@ -8,7 +8,6 @@ from libcpp cimport bool
 from libc.stdlib cimport malloc
 from libc.stdlib cimport free
 
-
 cdef extern from * :
     ctypedef long long int64_t
     ctypedef unsigned long long uint64_t
@@ -64,7 +63,8 @@ def walk_range(ptr: uint64_t, db_ptr: uint64_t, tp: int32_t, index_position: int
 
     db(ptr).set_data_handler(database_on_data, <void *>cb)
 
-    return db(ptr).walk_range(<void *>db_ptr, tp, index_position, _raw_lower_bound, _raw_lower_bound_length, _raw_upper_bound, _raw_upper_bound_length)
+    ret = db(ptr).walk_range(<void *>db_ptr, tp, index_position, _raw_lower_bound, _raw_lower_bound_length, _raw_upper_bound, _raw_upper_bound_length)
+    return ret
 
 def find(ptr: uint64_t, db_ptr: uint64_t, tp: int32_t, index_position: int32_t, raw_data: bytes, max_buffer_size):
     cdef char *_raw_data
@@ -74,9 +74,15 @@ def find(ptr: uint64_t, db_ptr: uint64_t, tp: int32_t, index_position: int32_t, 
 
     out = <char *>malloc(max_buffer_size)
     PyBytes_AsStringAndSize(raw_data, &_raw_data, &_raw_data_length)
-    actual_size = db(ptr).find(<void *>db_ptr, tp, index_position, _raw_data, _raw_data_length, out, max_buffer_size)
-    if actual_size > max_buffer_size:
-        actual_size = max_buffer_size
-    ret = PyBytes_FromStringAndSize(out, actual_size)
+    ret = db(ptr).find(<void *>db_ptr, tp, index_position, _raw_data, _raw_data_length, out, max_buffer_size)
+
+    if ret < 0:
+        return (ret, None)
+
+    real_size = ret
+    if real_size > max_buffer_size:
+        real_size = max_buffer_size
+
+    raw_data = PyBytes_FromStringAndSize(out, real_size)
     free(out)
-    return ret
+    return (ret, raw_data)
