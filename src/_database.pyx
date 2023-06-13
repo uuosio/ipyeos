@@ -31,7 +31,11 @@ cdef extern from "_ipyeos.hpp":
         int32_t set_data_handler(int32_t (*)(int32_t tp, int64_t id, char *data, size_t size, void* custom_data), void *custom_data)
         int32_t walk(void *db, int32_t tp, int32_t index_position)
         int32_t walk_range(void *db, int32_t tp, int32_t index_position, char *raw_lower_bound, size_t raw_lower_bound_size, char *raw_upper_bound, size_t raw_upper_bound_size)
-        int32_t find(void *db, int32_t tp, int32_t index_position, char *raw_data, size_t size, char *out, size_t out_size)
+        int32_t find(void *db, int32_t tp, int32_t index_position, char *raw_data, size_t size, char **out, size_t *out_size)
+
+        int32_t lower_bound(void *db, int32_t tp, int32_t index_position, char *raw_data, size_t size, char **out, size_t *out_size)
+        int32_t upper_bound(void *db, int32_t tp, int32_t index_position, char *raw_data, size_t size, char **out, size_t *out_size)
+
 
     ctypedef struct ipyeos_proxy:
         void *new_database_proxy()
@@ -66,23 +70,45 @@ def walk_range(ptr: uint64_t, db_ptr: uint64_t, tp: int32_t, index_position: int
     ret = db(ptr).walk_range(<void *>db_ptr, tp, index_position, _raw_lower_bound, _raw_lower_bound_length, _raw_upper_bound, _raw_upper_bound_length)
     return ret
 
-def find(ptr: uint64_t, db_ptr: uint64_t, tp: int32_t, index_position: int32_t, raw_data: bytes, max_buffer_size):
+def find(ptr: uint64_t, db_ptr: uint64_t, tp: int32_t, index_position: int32_t, raw_data: bytes):
     cdef char *_raw_data
     cdef Py_ssize_t _raw_data_length
     cdef char *out
-    cdef int32_t actual_size
+    cdef size_t out_size
 
-    out = <char *>malloc(max_buffer_size)
     PyBytes_AsStringAndSize(raw_data, &_raw_data, &_raw_data_length)
-    ret = db(ptr).find(<void *>db_ptr, tp, index_position, _raw_data, _raw_data_length, out, max_buffer_size)
-
-    if ret < 0:
+    ret = db(ptr).find(<void *>db_ptr, tp, index_position, _raw_data, _raw_data_length, &out, &out_size)
+    if ret <= 0:
         return (ret, None)
 
-    real_size = ret
-    if real_size > max_buffer_size:
-        real_size = max_buffer_size
+    raw_data = PyBytes_FromStringAndSize(out, out_size)
+    return (ret, raw_data)
 
-    raw_data = PyBytes_FromStringAndSize(out, real_size)
-    free(out)
+
+def lower_bound(ptr: uint64_t, db_ptr: uint64_t, tp: int32_t, index_position: int32_t, raw_data: bytes):
+    cdef char *_raw_data
+    cdef Py_ssize_t _raw_data_length
+    cdef char *out
+    cdef size_t out_size
+
+    PyBytes_AsStringAndSize(raw_data, &_raw_data, &_raw_data_length)
+    ret = db(ptr).lower_bound(<void *>db_ptr, tp, index_position, _raw_data, _raw_data_length, &out, &out_size)
+    if ret <= 0:
+        return (ret, None)
+
+    raw_data = PyBytes_FromStringAndSize(out, out_size)
+    return (ret, raw_data)
+
+def upper_bound(ptr: uint64_t, db_ptr: uint64_t, tp: int32_t, index_position: int32_t, raw_data: bytes):
+    cdef char *_raw_data
+    cdef Py_ssize_t _raw_data_length
+    cdef char *out
+    cdef size_t out_size
+
+    PyBytes_AsStringAndSize(raw_data, &_raw_data, &_raw_data_length)
+    ret = db(ptr).upper_bound(<void *>db_ptr, tp, index_position, _raw_data, _raw_data_length, &out, &out_size)
+    if ret <= 0:
+        return (ret, None)
+
+    raw_data = PyBytes_FromStringAndSize(out, out_size)
     return (ret, raw_data)

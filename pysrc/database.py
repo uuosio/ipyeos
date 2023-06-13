@@ -65,8 +65,26 @@ class Database:
             raise Exception(_eos.get_last_error())
         return ret
 
-    def find(self, tp: int, index_position: int, raw_key: bytes, max_buffer_size: int = 1024):
-        ret, raw_data = _database.find(self.ptr, self.db_ptr, tp, index_position, raw_key, max_buffer_size)
+    def find(self, tp: int, index_position: int, raw_key: bytes):
+        ret, raw_data = _database.find(self.ptr, self.db_ptr, tp, index_position, raw_key)
         if ret == -2:
             raise Exception(_eos.get_last_error())
-        return ret, raw_data
+        if ret == 0:
+            return None
+        return raw_data
+
+    def lower_bound(self, tp: int, index_position: int, raw_key: bytes):
+        ret, raw_data = _database.lower_bound(self.ptr, self.db_ptr, tp, index_position, raw_key)
+        if ret == -2:
+            raise Exception(_eos.get_last_error())
+        if ret == 0:
+            return None
+        return raw_data
+
+    def upper_bound(self, tp: int, index_position: int, raw_key: bytes):
+        ret, raw_data = _database.upper_bound(self.ptr, self.db_ptr, tp, index_position, raw_key)
+        if ret == -2:
+            raise Exception(_eos.get_last_error())
+        if ret == 0:
+            return None
+        return raw_data
