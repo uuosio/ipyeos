@@ -59,7 +59,7 @@ class Database:
             raise Exception(_eos.get_last_error())
         return ret
 
-    def walk_range(self, tp: int, index_position: int, cb, raw_lower_bound: bytes, raw_upper_bound: bytes):
+    def walk_range(self, tp: int, index_position: int, raw_lower_bound: bytes, raw_upper_bound: bytes, cb):
         ret = _database.walk_range(self.ptr, self.db_ptr, tp, index_position, cb, raw_lower_bound, raw_upper_bound)
         if ret == -2:
             raise Exception(_eos.get_last_error())
@@ -88,3 +88,9 @@ class Database:
         if ret == 0:
             return None
         return raw_data
+
+    def row_count(self, tp: int):
+        ret = _database.row_count(self.ptr, self.db_ptr, tp)
+        if ret == -2:
+            raise Exception(f"invalid database object type: {tp}")
+        return ret

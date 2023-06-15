@@ -28,7 +28,7 @@ cdef extern from "_ipyeos.hpp":
     void uuosext_init()
 
     ctypedef struct database_proxy:
-        int32_t set_data_handler(int32_t (*)(int32_t tp, int64_t id, char *data, size_t size, void* custom_data), void *custom_data)
+        int32_t set_data_handler(int32_t (*)(int32_t tp, char *data, size_t size, void* custom_data), void *custom_data)
         int32_t walk(void *db, int32_t tp, int32_t index_position)
         int32_t walk_range(void *db, int32_t tp, int32_t index_position, char *raw_lower_bound, size_t raw_lower_bound_size, char *raw_upper_bound, size_t raw_upper_bound_size)
         int32_t find(void *db, int32_t tp, int32_t index_position, char *raw_data, size_t size, char **out, size_t *out_size)
@@ -36,15 +36,16 @@ cdef extern from "_ipyeos.hpp":
         int32_t lower_bound(void *db, int32_t tp, int32_t index_position, char *raw_data, size_t size, char **out, size_t *out_size)
         int32_t upper_bound(void *db, int32_t tp, int32_t index_position, char *raw_data, size_t size, char **out, size_t *out_size)
 
+        uint64_t row_count(void *db, int32_t tp)
 
     ctypedef struct ipyeos_proxy:
         void *new_database_proxy()
 
     ipyeos_proxy *get_ipyeos_proxy() nogil
 
-cdef int32_t database_on_data(int32_t tp, int64_t id, char *data, size_t size, void* handler):
+cdef int32_t database_on_data(int32_t tp, char *data, size_t size, void* handler):
     _handler = <object>handler
-    return _handler(tp, id, PyBytes_FromStringAndSize(data, size))
+    return _handler(tp, PyBytes_FromStringAndSize(data, size))
 
 cdef database_proxy *db(uint64_t ptr):
     return <database_proxy*>ptr
@@ -112,3 +113,6 @@ def upper_bound(ptr: uint64_t, db_ptr: uint64_t, tp: int32_t, index_position: in
 
     raw_data = PyBytes_FromStringAndSize(out, out_size)
     return (ret, raw_data)
+
+def row_count(ptr: uint64_t, db_ptr: uint64_t, tp: int32_t):
+    return db(ptr).row_count(<void *>db_ptr, tp)
