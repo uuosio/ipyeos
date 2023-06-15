@@ -81,7 +81,14 @@ def s2n(s: str) -> int:
     '''
     Convert a EOSIO name to uint64_t
     '''
-    return _eos.s2n(s)
+    ret = _eos.s2n(s)
+    if not ret == 0:
+        return ret
+    err = _eos.get_last_error()
+    if err:
+        _eos.set_last_error("")
+        raise Exception(err)
+    return ret
 
 def n2s(n: int) -> str:
     '''
