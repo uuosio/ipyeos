@@ -1,4 +1,4 @@
-v0.4.1 release
+v0.4.2 release
 
-1. Update leap to version 4.0.1 
+1. Add support for accessing database object from python
 
