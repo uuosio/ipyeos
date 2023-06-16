@@ -92,10 +92,10 @@ async def start_webserver():
     runner = web.AppRunner(app)
     await runner.setup()
     try:
-        site = web.TCPSite(runner, 'localhost', 7777)
+        site = web.TCPSite(runner, host='127.0.0.1', port=7777)
     except Exception as e:
         print(e)
-        site = web.TCPSite(runner, 'localhost', 7778)
+        site = web.TCPSite(runner, host='127.0.0.1', port=7778)
     await site.start()
     print('++++++++++++server started!!')
     while True:
