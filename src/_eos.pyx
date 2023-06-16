@@ -36,6 +36,9 @@ cdef extern from "_ipyeos.hpp":
         void *post(void *(*fn)(void *), void *args) nogil
         void *get_database()
 
+        void set_log_level(string& logger_name, int level)
+        int get_log_level(string& logger_name)
+
     ctypedef struct database_proxy:
         void set_database(void *db)
         void *get_database()
@@ -46,8 +49,6 @@ cdef extern from "_ipyeos.hpp":
 
     ctypedef struct ipyeos_proxy:
         void *get_database()
-
-        void set_log_level(string& logger_name, int level)
 
         string& get_last_error()
         void set_last_error(string& error)
@@ -85,7 +86,10 @@ def init_chain():
 init_chain()
 
 def set_log_level(string& logger_name, int level):
-    get_ipyeos_proxy().set_log_level(logger_name, level)
+    get_ipyeos_proxy().cb.set_log_level(logger_name, level)
+
+def get_log_level(string& logger_name) -> int:
+    return get_ipyeos_proxy().cb.get_log_level(logger_name)
 
 def get_last_error():
     ret = get_ipyeos_proxy().get_last_error()
@@ -159,7 +163,10 @@ def quit():
 cdef void *call_python_fn(void* fn_info) nogil:
     with gil:
         fn, args, kwargs = <object>fn_info
-        ret = fn(*args, **kwargs)
+        try:
+            ret = fn(*args, **kwargs)
+        except Exception as e:
+            return <void *><object>e
         return <void *><object>ret
 
 def post(fn, *args, **kwargs):
@@ -167,7 +174,10 @@ def post(fn, *args, **kwargs):
     fn_info = (fn, args, kwargs)
     with nogil:
         ret = get_ipyeos_proxy().cb.post(call_python_fn, <void *><object>fn_info)
-    return <object>ret
+    _ret = <object>ret
+    if isinstance(_ret, Exception):
+        raise _ret
+    return _ret
 
 def get_database() -> uint64_t:
     return <uint64_t>get_ipyeos_proxy().cb.get_database()

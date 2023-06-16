@@ -1,6 +1,7 @@
 import json
 import sys
 from typing import Union
+from enum import Enum
 
 from . import _eos
 from .types import Name
@@ -21,33 +22,40 @@ class NativeType:
     genesis_state = 11
     abi_def = 12
 
-LOG_LEVEL_ALL = 0
-LOG_LEVEL_DEBUG = 1
-LOG_LEVEL_INFO = 2
-LOG_LEVEL_WARN = 3
-LOG_LEVEL_ERROR = 4
-LOG_LEVEL_OFF = 5
+class LogLevel(Enum):
+    ALL = 0
+    DEBUG = 1
+    INFO = 2
+    WARN = 3
+    ERROR = 4
+    OFF = 5
 
-def set_log_level(logger_name: str, level: int) -> None:
+def set_log_level(logger_name: str, level: Union[int, LogLevel]) -> None:
+    if isinstance(level, LogLevel):
+        level = level.value
     _eos.set_log_level(logger_name, level)
 
-def set_all_level(logger_name: str) -> None:
-    _eos.set_log_level(logger_name, LOG_LEVEL_ALL)
+def get_log_level(logger_name: str = "default") -> int:
+    value = _eos.get_log_level(logger_name)
+    return LogLevel(value)
 
-def set_debug_level(logger_name: str) -> None:
-    _eos.set_log_level(logger_name, LOG_LEVEL_DEBUG)
+def set_all_level(logger_name: str = 'default') -> None:
+    _eos.set_log_level(logger_name, LogLevel.ALL.value)
 
-def set_info_level(logger_name: str) -> None:
-    _eos.set_log_level(logger_name, LOG_LEVEL_INFO)
+def set_debug_level(logger_name: str = 'default') -> None:
+    _eos.set_log_level(logger_name, LogLevel.DEBUG.value)
 
-def set_warn_level(logger_name: str) -> None:
-    _eos.set_log_level(logger_name, LOG_LEVEL_WARN)
+def set_info_level(logger_name: str = 'default') -> None:
+    _eos.set_log_level(logger_name, LogLevel.INFO.value)
 
-def set_error_level(logger_name: str) -> None:
-    _eos.set_log_level(logger_name, LOG_LEVEL_ERROR)
+def set_warn_level(logger_name: str = 'default') -> None:
+    _eos.set_log_level(logger_name, LogLevel.WARN.value)
 
-def set_off_level(logger_name: str) -> None:
-    _eos.set_log_level(logger_name, LOG_LEVEL_OFF)
+def set_error_level(logger_name: str = 'default') -> None:
+    _eos.set_log_level(logger_name, LogLevel.ERROR.value)
+
+def set_off_level(logger_name: str = 'default') -> None:
+    _eos.set_log_level(logger_name, LogLevel.OFF.value)
 
 def pack_native_object(_type: int, obj: Union[dict, str]) -> bytes:
     if isinstance(obj, dict):
