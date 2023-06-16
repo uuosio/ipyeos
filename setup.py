@@ -46,8 +46,8 @@ setup(
         'thrift>=0.16.0',
         'pytest>=6.2.5',
         'aiohttp>=3.8.4',
-        'ipython>=8.14.0',
-        'ipykernel>=6.19.2'
+        'ipython',
+        'ipykernel'
     ],
     tests_require=[],
     include_package_data=True
