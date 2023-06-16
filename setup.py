@@ -28,7 +28,7 @@ release_files.extend([
 
 setup(
     name="ipyeos",
-    version="0.4.2",
+    version="0.4.3",
     description="IPYEOS project",
     author='The IPYEOS Team',
     license="MIT",
@@ -46,8 +46,8 @@ setup(
         'thrift>=0.16.0',
         'pytest>=6.2.5',
         'aiohttp>=3.8.4',
-        'ipython>=8.13.0',
-        'ipykernel>=6.19.2'
+        'ipython',
+        'ipykernel'
     ],
     tests_require=[],
     include_package_data=True

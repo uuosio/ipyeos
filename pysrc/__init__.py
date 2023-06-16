@@ -8,7 +8,7 @@ import sysconfig
 
 from . import run
 
-__version__ = "0.4.2"
+__version__ = "0.4.3"
 
 class CustomImporter(object):
     def find_module(self, fullname, mpath=None):

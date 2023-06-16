@@ -1,4 +1,4 @@
-v0.4.2 release
+v0.4.3 release
 
 1. Add support for accessing database object from python
 
