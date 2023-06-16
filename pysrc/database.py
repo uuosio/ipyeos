@@ -1,3 +1,5 @@
+from typing import Union
+
 from . import _database
 from . import _eos
 
@@ -8,12 +10,14 @@ permission_object_type = 3
 permission_usage_object_type = 4
 permission_link_object_type = 5
 # UNUSED_action_code_object_type,
+
 key_value_object_type = 7
 index64_object_type = 8
 index128_object_type = 9
 index256_object_type = 10
 index_double_object_type = 11
 index_long_double_object_type = 12
+
 global_property_object_type = 13
 dynamic_global_property_object_type = 14
 block_summary_object_type = 15
@@ -59,35 +63,48 @@ class Database:
             raise Exception(_eos.get_last_error())
         return ret
 
-    def walk_range(self, tp: int, index_position: int, raw_lower_bound: bytes, raw_upper_bound: bytes, cb):
-        ret = _database.walk_range(self.ptr, self.db_ptr, tp, index_position, cb, raw_lower_bound, raw_upper_bound)
+    def walk_range(self, tp: int, index_position: int, lower_bound: Union[int, bytes], upper_bound: Union[int, bytes], cb):
+        if index_position == 0:
+            if isinstance(lower_bound, int):
+                lower_bound = int.to_bytes(lower_bound, 8, 'little')
+            if isinstance(upper_bound, int):
+                upper_bound = int.to_bytes(upper_bound, 8, 'little')
+
+        ret = _database.walk_range(self.ptr, self.db_ptr, tp, index_position, cb, lower_bound, upper_bound)
         if ret == -2:
             raise Exception(_eos.get_last_error())
         return ret
 
-    def find(self, tp: int, index_position: int, raw_key: bytes):
-        ret, raw_data = _database.find(self.ptr, self.db_ptr, tp, index_position, raw_key)
+    def find(self, tp: int, index_position: int, key: Union[int, bytes]):
+        if index_position == 0 and isinstance(key, int):
+            key = int.to_bytes(key, 8, 'little')
+        ret, data = _database.find(self.ptr, self.db_ptr, tp, index_position, key)
         if ret == -2:
             raise Exception(_eos.get_last_error())
         if ret == 0:
             return None
-        return raw_data
+        return data
 
-    def lower_bound(self, tp: int, index_position: int, raw_key: bytes):
-        ret, raw_data = _database.lower_bound(self.ptr, self.db_ptr, tp, index_position, raw_key)
+    def lower_bound(self, tp: int, index_position: int, key: Union[int, bytes]):
+        if index_position == 0 and isinstance(key, int):
+            key = int.to_bytes(key, 8, 'little')
+        ret, data = _database.lower_bound(self.ptr, self.db_ptr, tp, index_position, key)
         if ret == -2:
             raise Exception(_eos.get_last_error())
         if ret == 0:
             return None
-        return raw_data
+        return data
 
-    def upper_bound(self, tp: int, index_position: int, raw_key: bytes):
-        ret, raw_data = _database.upper_bound(self.ptr, self.db_ptr, tp, index_position, raw_key)
+    def upper_bound(self, tp: int, index_position: int, key: Union[int, bytes]):
+        if index_position == 0 and isinstance(key, int):
+            key = int.to_bytes(key, 8, 'little')
+
+        ret, data = _database.upper_bound(self.ptr, self.db_ptr, tp, index_position, key)
         if ret == -2:
             raise Exception(_eos.get_last_error())
         if ret == 0:
             return None
-        return raw_data
+        return data
 
     def row_count(self, tp: int):
         ret = _database.row_count(self.ptr, self.db_ptr, tp)

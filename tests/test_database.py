@@ -106,6 +106,10 @@ class Decoder(object):
         ret = int.from_bytes(self.read_bytes(8), 'little')
         return ret
 
+    def unpack_i64(self):
+        ret = int.from_bytes(self.read_bytes(8), 'little', signed=True)
+        return ret
+
     def unpack_checksum256(self):
         ret = self.read_bytes(32)
         return ret
@@ -126,6 +130,11 @@ class Decoder(object):
         data = self.read_bytes(length)
         return data
     
+    def unpack_string(self):
+        length = self.unpack_length()
+        data = self.read_bytes(length)
+        return data.decode()
+
     def unpack_time_point(self):
         return self.unpack_u64()
 
@@ -150,7 +159,7 @@ def deploy_contract(tester, package_name):
 
 @chain_test(True)
 def test_walk(chain: ChainTester):
-    def on_data(tp, id, raw_data):
+    def on_data(tp, raw_data):
         print(tp, len(raw_data))
         if tp == 1:
             print(eos.b2s(raw_data[8:16]))
@@ -180,7 +189,7 @@ def test_2walk_range(chain: ChainTester):
     for tp in object_types:
         if tp in [15, 40]: #block_summary_object, code_object
             continue
-        chain.db.walk_range(tp, 0, on_data, int.to_bytes(0, 8, 'little'), int.to_bytes(10, 8, 'little'))
+        chain.db.walk_range(tp, 0, int.to_bytes(0, 8, 'little'), int.to_bytes(10, 8, 'little'), on_data)
 
 def parse_code(raw_data: bytes):
     print('+++++++raw_data:', len(raw_data))
@@ -298,9 +307,8 @@ def parse_account_metadata_object(data: bytes):
     #   uint8_t               vm_version = 0;
     # ordered_unique<tag<by_id>, member<account_metadata_object, account_metadata_object::id_type, &account_metadata_object::id>>,
     # ordered_unique<tag<by_name>, member<account_metadata_object, account_name, &account_metadata_object::name>>
-    name = dec.unpack_name()
-
     table_id = dec.unpack_u64()
+    name = dec.unpack_name()
 
     recv_sequence = dec.unpack_u64()
     auth_sequence = dec.unpack_u64()
@@ -327,8 +335,7 @@ def parse_account_metadata_object(data: bytes):
 
 @chain_test(True)
 def test_account_metadata_index(chain: ChainTester):
-    key = int.to_bytes(0, 8, 'little')
-    data = chain.db.find(database.account_metadata_object_type, 0, key)
+    data = chain.db.find(database.account_metadata_object_type, 0, 0)
     ret = parse_account_metadata_object(data)
 
     name = ret[0]
@@ -496,7 +503,6 @@ def test_permission_link_index(chain: ChainTester):
     count = chain.db.row_count(database.permission_link_object_type)
     print('+++++++row count:', count)
     chain.db.walk(database.permission_link_object_type, 0, on_data)
-    return
 
     # ordered_unique<tag<by_action_name>,
     #     BOOST_MULTI_INDEX_MEMBER(permission_link_object, account_name, account),
@@ -506,9 +512,26 @@ def test_permission_link_index(chain: ChainTester):
     #     BOOST_MULTI_INDEX_MEMBER(permission_link_object, account_name, account),
     #     BOOST_MULTI_INDEX_MEMBER(permission_link_object, permission_name, required_permission),
     #     BOOST_MULTI_INDEX_MEMBER(permission_link_object, permission_link_object::id_type, id)
-    lower_bound = int.to_bytes(0, 8, 'little')
-    upper_bound = int.to_bytes(40, 8, 'little')
-    chain.db.walk_range(database.permission_link_object_type, 0, lower_bound, upper_bound, on_data)
+    lower_bound = eos.s2b('') + eos.s2b('') + eos.s2b('')
+    upper_bound = eos.s2b('hello') + eos.s2b('zzzzzzzzzzzzj') + eos.s2b('zzzzzzzzzzzzj')
+    chain.db.walk_range(database.permission_link_object_type, 1, lower_bound, upper_bound, on_data)
+
+    chain.db.walk_range(database.permission_link_object_type, 2, lower_bound, upper_bound, on_data)
+
+
+    ret = chain.db.lower_bound(database.permission_link_object_type, 0, lower_bound)
+    print(ret)
+    ret = chain.db.lower_bound(database.permission_link_object_type, 1, lower_bound)
+    print(ret)
+    ret = chain.db.lower_bound(database.permission_link_object_type, 2, lower_bound)
+    print(ret)
+
+    ret = chain.db.upper_bound(database.permission_link_object_type, 0, lower_bound)
+    print(ret)
+    ret = chain.db.upper_bound(database.permission_link_object_type, 1, lower_bound)
+    print(ret)
+    ret = chain.db.upper_bound(database.permission_link_object_type, 2, lower_bound)
+    print(ret)
 
 @chain_test(True)
 def test_contract_table_objects(tester: ChainTester):
@@ -756,3 +779,852 @@ def test_find_all_table_in_contract(tester: ChainTester):
     lower_bound = eos.s2b('hello') + eos.s2b("") + eos.s2b("")
     upper_bound = eos.s2b('hello') + eos.s2b("zzzzzzzzzzzzj") + eos.s2b("zzzzzzzzzzzzj")
     tester.db.walk_range(database.table_id_object_type, 1, lower_bound, upper_bound, on_table_id_object_data)
+
+@chain_test(True)
+def test_global_property_object(tester: ChainTester):
+    def on_global_property_object_data(tp, data):
+        print(data)
+        obj = eos.unpack_native_object(14, data)
+        print(json.loads(obj))
+        return 1
+
+    tester.db.walk(database.global_property_object_type, 0, on_global_property_object_data)
+    data = tester.db.find(database.global_property_object_type, 0, int.to_bytes(0, 8, 'little'))
+    print(eos.unpack_native_object(14, data))
+
+@chain_test(True)
+def test_dynamic_global_property_object(tester: ChainTester):
+#    class dynamic_global_property_object : public chainbase::object<dynamic_global_property_object_type, dynamic_global_property_object>
+#         id_type    id;
+#         uint64_t   global_action_sequence = 0;
+    def on_dynamic_global_property_object(tp, data):
+        print(data)
+        dec = Decoder(data)
+        table_id = dec.unpack_u64()
+        global_action_sequence = dec.unpack_u64()
+        print(table_id, global_action_sequence)
+        return 1
+
+    tester.db.walk(database.dynamic_global_property_object_type, 0, on_dynamic_global_property_object)
+    data = tester.db.find(database.dynamic_global_property_object_type, 0, int.to_bytes(0, 8, 'little'))
+    print(data)
+
+
+@chain_test(True)
+def test_block_summary_object(tester: ChainTester):
+#    class block_summary_object : public chainbase::object<block_summary_object_type, block_summary_object>
+#    {
+#          id_type        id;
+#          block_id_type  block_id;
+    def on_block_summary_object(tp, data):
+        # print(data)
+        dec = Decoder(data)
+        table_id = dec.unpack_u64()
+        block_id = dec.unpack_checksum256()
+        #print(table_id, block_id)
+        return 1
+
+    count = tester.db.row_count(database.block_summary_object_type)
+    print(count)
+
+    tester.db.walk(database.block_summary_object_type, 0, on_block_summary_object)
+    data = tester.db.find(database.block_summary_object_type, 0, int.to_bytes(0, 8, 'little'))
+    print(data)
+
+@chain_test(True)
+def test_transaction_object(tester: ChainTester):
+#    class transaction_object : public chainbase::object<transaction_object_type, transaction_object>
+#    {
+#          OBJECT_CTOR(transaction_object)
+
+#          id_type             id;
+#          time_point_sec      expiration;
+#          transaction_id_type trx_id; //< trx_id should not be changed within a chainbase modifier lambda
+#    };
+
+#    struct by_expiration;
+#    struct by_trx_id;
+#    using transaction_multi_index = chainbase::shared_multi_index_container<
+#       transaction_object,
+#       indexed_by<
+#          ordered_unique< tag<by_id>, BOOST_MULTI_INDEX_MEMBER(transaction_object, transaction_object::id_type, id)>,
+#          ordered_unique< tag<by_trx_id>, BOOST_MULTI_INDEX_MEMBER(transaction_object, transaction_id_type, trx_id)>,
+#          ordered_unique< tag<by_expiration>,
+#                BOOST_MULTI_INDEX_MEMBER( transaction_object, time_point_sec, expiration ),
+#                BOOST_MULTI_INDEX_MEMBER( transaction_object, transaction_object::id_type, id)
+
+    def parse_transaction_object(data):
+        dec = Decoder(data)
+        table_id = dec.unpack_u64()
+        expiration = dec.unpack_u32()
+        trx_id = dec.unpack_checksum256()
+        return (table_id, expiration, trx_id)
+
+    def on_transaction_object(tp, data):
+        assert tp == database.transaction_object_type
+        ret = parse_transaction_object(data)
+        print(ret)
+        return 1
+
+    tester.produce_block()
+    count = tester.db.row_count(database.transaction_object_type)
+    print(count)
+
+    tester.db.walk(database.transaction_object_type, 0, on_transaction_object)
+    tester.db.walk(database.transaction_object_type, 1, on_transaction_object)
+    tester.db.walk(database.transaction_object_type, 2, on_transaction_object)
+
+    lower_bound = int.to_bytes(0, 8, 'little')
+    upper_bound = int.to_bytes(0x7fffffffffffffff, 8, 'little')
+    tester.db.walk_range(database.transaction_object_type, 0, lower_bound, upper_bound, on_transaction_object)
+
+    lower_bound = int.to_bytes(0, 32, 'little')
+    upper_bound = b'\xff'*32
+    tester.db.walk_range(database.transaction_object_type, 1, lower_bound, upper_bound, on_transaction_object)
+
+    lower_bound = b'\x00'*12
+    upper_bound = b'\xff'*12
+    tester.db.walk(database.transaction_object_type, 2, on_transaction_object)
+
+    lower_bound = b'\x00'*32
+    data = tester.db.lower_bound(database.transaction_object_type, 0, lower_bound)
+    print(data)
+    data = tester.db.lower_bound(database.transaction_object_type, 1, lower_bound)
+    print(data)
+    data = tester.db.lower_bound(database.transaction_object_type, 2, lower_bound)
+    print(data)
+
+    data = tester.db.upper_bound(database.transaction_object_type, 0, lower_bound)
+    print(data)
+    data = tester.db.upper_bound(database.transaction_object_type, 1, lower_bound)
+    print(data)
+    data = tester.db.upper_bound(database.transaction_object_type, 2, lower_bound)
+    print(data)
+
+
+    data1 = tester.db.find(database.transaction_object_type, 0, int.to_bytes(0, 8, 'little'))
+    table_id, expiration, trx_id = parse_transaction_object(data1)
+    print(table_id, expiration, trx_id)
+
+    data2 = tester.db.find(database.transaction_object_type, 1, trx_id)
+    print(data2)
+    assert data1 == data2
+    data3 = tester.db.find(database.transaction_object_type, 2, int.to_bytes(expiration, 4, 'little') + int.to_bytes(table_id, 8, 'little'))
+    print(data3)
+    assert data1 == data3
+
+
+@chain_test(True)
+def test_generated_transaction_object(tester: ChainTester):
+#    class generated_transaction_object : public chainbase::object<generated_transaction_object_type, generated_transaction_object>
+#          id_type                       id;
+#          transaction_id_type           trx_id; //< trx_id should not be changed within a chainbase modifier lambda
+#          account_name                  sender; //< sender should not be changed within a chainbase modifier lambda
+#          uint128_t                     sender_id = 0; /// ID given this transaction by the sender (should not be changed within a chainbase modifier lambda)
+#          account_name                  payer;
+#          time_point                    delay_until; /// this generated transaction will not be applied until the specified time
+#          time_point                    expiration; /// this generated transaction will not be applied after this time
+#          time_point                    published;
+#          shared_blob                   packed_trx;
+
+#    struct by_trx_id;
+#    struct by_expiration;
+#    struct by_delay;
+#    struct by_status;
+#    struct by_sender_id;
+
+#    using generated_transaction_multi_index = chainbase::shared_multi_index_container<
+#       generated_transaction_object,
+#       indexed_by<
+#          ordered_unique< tag<by_id>, BOOST_MULTI_INDEX_MEMBER(generated_transaction_object, generated_transaction_object::id_type, id)>,
+#          ordered_unique< tag<by_trx_id>, BOOST_MULTI_INDEX_MEMBER( generated_transaction_object, transaction_id_type, trx_id)>,
+#          ordered_unique< tag<by_expiration>,
+#                BOOST_MULTI_INDEX_MEMBER( generated_transaction_object, time_point, expiration),
+#                BOOST_MULTI_INDEX_MEMBER( generated_transaction_object, generated_transaction_object::id_type, id)
+#          ordered_unique< tag<by_delay>,
+#                BOOST_MULTI_INDEX_MEMBER( generated_transaction_object, time_point, delay_until),
+#                BOOST_MULTI_INDEX_MEMBER( generated_transaction_object, generated_transaction_object::id_type, id)
+#          ordered_unique< tag<by_sender_id>,
+#                BOOST_MULTI_INDEX_MEMBER( generated_transaction_object, account_name, sender),
+#                BOOST_MULTI_INDEX_MEMBER( generated_transaction_object, uint128_t, sender_id)
+    def parse_generated_transaction_object(data):
+        dec = Decoder(data)
+        table_id = dec.unpack_u64()
+        trx_id = dec.unpack_checksum256()
+        return (table_id, trx_id)
+
+    def on_generated_transaction_object(tp, data):
+        assert tp == database.generated_transaction_object_type
+        ret = parse_generated_transaction_object(data)
+        print(ret)
+        return 1
+
+    tester.produce_block()
+    count = tester.db.row_count(database.generated_transaction_object_type)
+    print(count)
+
+    tester.db.walk(database.generated_transaction_object_type, 0, on_generated_transaction_object)
+    tester.db.walk(database.generated_transaction_object_type, 1, on_generated_transaction_object)
+    tester.db.walk(database.generated_transaction_object_type, 2, on_generated_transaction_object)
+    tester.db.walk(database.generated_transaction_object_type, 3, on_generated_transaction_object)
+    tester.db.walk(database.generated_transaction_object_type, 4, on_generated_transaction_object)
+
+    lower_bound = int.to_bytes(0, 8, 'little')
+    upper_bound = int.to_bytes(0x7fffffffffffffff, 8, 'little')
+    tester.db.walk_range(database.generated_transaction_object_type, 0, lower_bound, upper_bound, on_generated_transaction_object)
+
+    lower_bound = int.to_bytes(0, 32, 'little')
+    upper_bound = b'\xff'*32
+    tester.db.walk_range(database.generated_transaction_object_type, 1, lower_bound, upper_bound, on_generated_transaction_object)
+
+    lower_bound = b'\x00'*12
+    upper_bound = b'\xff'*12
+    tester.db.walk(database.generated_transaction_object_type, 2, on_generated_transaction_object)
+
+    lower_bound = b'\x00'*64
+    upper_bound = b'\xff'*64
+    tester.db.walk(database.generated_transaction_object_type, 3, on_generated_transaction_object)
+
+    lower_bound = b'\x00'*64
+    upper_bound = b'\xff'*64
+    tester.db.walk(database.generated_transaction_object_type, 4, on_generated_transaction_object)
+
+    lower_bound = b'\x00'*64
+    data = tester.db.lower_bound(database.generated_transaction_object_type, 0, lower_bound)
+    print(data)
+    data = tester.db.lower_bound(database.generated_transaction_object_type, 1, lower_bound)
+    print(data)
+    data = tester.db.lower_bound(database.generated_transaction_object_type, 2, lower_bound)
+    print(data)
+    data = tester.db.lower_bound(database.generated_transaction_object_type, 3, lower_bound)
+    print(data)
+    data = tester.db.lower_bound(database.generated_transaction_object_type, 4, lower_bound)
+    print(data)
+
+
+    data = tester.db.upper_bound(database.generated_transaction_object_type, 0, lower_bound)
+    print(data)
+    data = tester.db.upper_bound(database.generated_transaction_object_type, 1, lower_bound)
+    print(data)
+    data = tester.db.upper_bound(database.generated_transaction_object_type, 2, lower_bound)
+    print(data)
+    data = tester.db.upper_bound(database.generated_transaction_object_type, 3, lower_bound)
+    print(data)
+    data = tester.db.upper_bound(database.generated_transaction_object_type, 4, lower_bound)
+    print(data)
+
+
+    data1 = tester.db.find(database.generated_transaction_object_type, 0, int.to_bytes(0, 8, 'little'))
+    if data1:
+        table_id, trx_id = parse_generated_transaction_object(data1)
+        print(table_id, expiration, trx_id)
+
+        data2 = tester.db.find(database.generated_transaction_object_type, 1, trx_id)
+        if data2:
+            print(data2)
+            assert data1 == data2
+    # data3 = tester.db.find(database.generated_transaction_object_type, 2, int.to_bytes(expiration, 4, 'little') + int.to_bytes(table_id, 8, 'little'))
+    # print(data3)
+    # assert data1 == data3
+
+@chain_test(True)
+def test_resource_limits_object(tester: ChainTester):
+#    struct resource_limits_object : public chainbase::object<resource_limits_object_type, resource_limits_object> {
+#       OBJECT_CTOR(resource_limits_object)
+#       id_type id;
+#       account_name owner; //< owner should not be changed within a chainbase modifier lambda
+#       bool pending = false; //< pending should not be changed within a chainbase modifier lambda
+#       int64_t net_weight = -1;
+#       int64_t cpu_weight = -1;
+#       int64_t ram_bytes = -1;
+#    };
+
+#    struct by_owner;
+#    struct by_dirty;
+
+#    using resource_limits_index = chainbase::shared_multi_index_container<
+#       resource_limits_object,
+#       indexed_by<
+#          ordered_unique<tag<by_id>, member<resource_limits_object, resource_limits_object::id_type, &resource_limits_object::id>>,
+#          ordered_unique<tag<by_owner>,
+#                BOOST_MULTI_INDEX_MEMBER(resource_limits_object, bool, pending),
+#                BOOST_MULTI_INDEX_MEMBER(resource_limits_object, account_name, owner)
+    def parse_resource_limits_object(data):
+        dec = Decoder(data)
+        table_id = dec.unpack_u64()
+        owner = dec.unpack_name()
+        # pending = dec.unpack_u8()
+        net_weight = dec.unpack_i64()
+        cpu_weight = dec.unpack_i64()
+        ram_bytes = dec.unpack_i64()
+        return (
+            table_id,
+            owner,
+            # pending,
+            net_weight,
+            cpu_weight,
+            ram_bytes,
+        )
+
+    def on_resource_limits_object(tp, data):
+        assert tp == database.resource_limits_object_type
+        ret = parse_resource_limits_object(data)
+        print(ret)
+        return 1
+
+    tester.produce_block()
+    count = tester.db.row_count(database.resource_limits_object_type)
+    print(count)
+
+    tester.db.walk(database.resource_limits_object_type, 0, on_resource_limits_object)
+    tester.db.walk(database.resource_limits_object_type, 1, on_resource_limits_object)
+
+    lower_bound = int.to_bytes(0, 8, 'little')
+    upper_bound = int.to_bytes(0x7fffffffffffffff, 8, 'little')
+    tester.db.walk_range(database.resource_limits_object_type, 0, lower_bound, upper_bound, on_resource_limits_object)
+
+    lower_bound = int.to_bytes(0, 32, 'little')
+    upper_bound = b'\x00' + b'\xff'*31
+    tester.db.walk_range(database.resource_limits_object_type, 1, lower_bound, upper_bound, on_resource_limits_object)
+
+    data = tester.db.upper_bound(database.resource_limits_object_type, 0, lower_bound)
+    print(data)
+    data = tester.db.upper_bound(database.resource_limits_object_type, 1, lower_bound)
+    print(data)
+
+    data1 = tester.db.find(database.resource_limits_object_type, 0, int.to_bytes(0, 8, 'little'))
+    ret = parse_resource_limits_object(data1)
+    print(ret)
+
+    # data2 = tester.db.find(database.resource_limits_object_type, 1, trx_id)
+    # print(data2)
+    # assert data1 == data2
+
+class UsageAccumulator(object):
+    def __init__(self, last_ordinal, value_ex, consumed):
+        self.last_ordinal = last_ordinal
+        self.value_ex = value_ex
+        self.consumed = consumed
+
+    @classmethod
+    def unpack(cls, dec: Decoder):
+        last_ordinal = dec.unpack_u32()
+        value_ex = dec.unpack_u64()
+        consumed = dec.unpack_u64()
+        return UsageAccumulator(last_ordinal, value_ex, consumed)
+
+    def __repr__(self):
+        return str((self.last_ordinal, self.value_ex, self.consumed))
+
+@chain_test(True)
+def test_resource_usage_object(tester: ChainTester):
+#    struct resource_usage_object : public chainbase::object<resource_usage_object_type, resource_usage_object> {
+#       id_type id;
+#       account_name owner; //< owner should not be changed within a chainbase modifier lambda
+#       usage_accumulator        net_usage;
+#       usage_accumulator        cpu_usage;
+#       uint64_t                 ram_usage = 0;
+#    };
+
+#   struct exponential_moving_average_accumulator
+#      uint32_t   last_ordinal;  ///< The ordinal of the last period which has contributed to the average
+#      uint64_t   value_ex;      ///< The current average pre-multiplied by Precision
+#      uint64_t   consumed;       ///< The last periods average + the current periods contribution so far
+
+#    using resource_usage_index = chainbase::shared_multi_index_container<
+#       resource_usage_object,
+#       indexed_by<
+#          ordered_unique<tag<by_id>, member<resource_usage_object, resource_usage_object::id_type, &resource_usage_object::id>>,
+#          ordered_unique<tag<by_owner>, member<resource_usage_object, account_name, &resource_usage_object::owner> >
+#       >
+#    >;
+
+    def parse_resource_usage_object(data):
+        dec = Decoder(data)
+        table_id = dec.unpack_u64()
+        owner = dec.unpack_name()
+        net_usage = UsageAccumulator.unpack(dec)
+        cpu_usage = UsageAccumulator.unpack(dec)
+        ram_usage = dec.unpack_u64()
+        return (
+            table_id,
+            owner,
+            net_usage,
+            cpu_usage,
+            ram_usage,
+        )
+
+    def on_resource_usage_object(tp, data):
+        assert tp == database.resource_usage_object_type
+        ret = parse_resource_usage_object(data)
+        print(ret)
+        return 1
+
+    tester.produce_block()
+    count = tester.db.row_count(database.resource_usage_object_type)
+    print(count)
+
+    tester.db.walk(database.resource_usage_object_type, 0, on_resource_usage_object)
+    tester.db.walk(database.resource_usage_object_type, 1, on_resource_usage_object)
+
+    lower_bound = int.to_bytes(0, 8, 'little')
+    upper_bound = int.to_bytes(0x7fffffffffffffff, 8, 'little')
+    tester.db.walk_range(database.resource_usage_object_type, 0, lower_bound, upper_bound, on_resource_usage_object)
+
+    lower_bound = int.to_bytes(0, 8, 'little')
+    upper_bound = b'\xff'*8
+    tester.db.walk_range(database.resource_usage_object_type, 1, lower_bound, upper_bound, on_resource_usage_object)
+
+    data = tester.db.upper_bound(database.resource_usage_object_type, 0, lower_bound)
+    print(data)
+    data = tester.db.upper_bound(database.resource_usage_object_type, 1, lower_bound)
+    print(data)
+
+    data1 = tester.db.find(database.resource_usage_object_type, 0, int.to_bytes(0, 8, 'little'))
+    ret = parse_resource_usage_object(data1)
+    print(ret)
+
+    data1 = tester.db.find(database.resource_usage_object_type, 1, eos.s2b('hello'))
+    ret = parse_resource_usage_object(data1)
+    print(ret)
+
+
+
+#    class resource_limits_state_object : public chainbase::object<resource_limits_state_object_type, resource_limits_state_object> {
+#       OBJECT_CTOR(resource_limits_state_object);
+#       id_type id;
+
+#       /**
+#        * Track the average netusage for blocks
+#        */
+#       usage_accumulator average_block_net_usage;
+
+#       /**
+#        * Track the average cpu usage for blocks
+#        */
+#       usage_accumulator average_block_cpu_usage;
+
+#       void update_virtual_net_limit( const resource_limits_config_object& cfg );
+#       void update_virtual_cpu_limit( const resource_limits_config_object& cfg );
+
+#       uint64_t pending_net_usage = 0ULL;
+#       uint64_t pending_cpu_usage = 0ULL;
+
+#       uint64_t total_net_weight = 0ULL;
+#       uint64_t total_cpu_weight = 0ULL;
+#       uint64_t total_ram_bytes = 0ULL;
+
+#       /**
+#        * The virtual number of bytes that would be consumed over blocksize_average_window_ms
+#        * if all blocks were at their maximum virtual size. This is virtual because the
+#        * real maximum block is less, this virtual number is only used for rate limiting users.
+#        *
+#        * It's lowest possible value is max_block_size * blocksize_average_window_ms / block_interval
+#        * It's highest possible value is config::maximum_elastic_resource_multiplier (1000) times its lowest possible value
+#        *
+#        * This means that the most an account can consume during idle periods is 1000x the bandwidth
+#        * it is gauranteed under congestion.
+#        *
+#        * Increases when average_block_size < target_block_size, decreases when
+#        * average_block_size > target_block_size, with a cap at 1000x max_block_size
+#        * and a floor at max_block_size;
+#        **/
+#       uint64_t virtual_net_limit = 0ULL;
+
+#       /**
+#        *  Increases when average_bloc
+#        */
+#       uint64_t virtual_cpu_limit = 0ULL;
+
+#    };
+
+#    using resource_limits_state_index = chainbase::shared_multi_index_container<
+#       resource_limits_state_object,
+#       indexed_by<
+#          ordered_unique<tag<by_id>, member<resource_limits_state_object, resource_limits_state_object::id_type, &resource_limits_state_object::id>>
+#       >
+#    >;
+
+@chain_test(True)
+def test_resource_limits_state_object(tester: ChainTester):
+    deploy_contract(tester, 'test')
+    def parse_resource_limits_state(data):
+#       usage_accumulator average_block_net_usage;
+#       usage_accumulator average_block_cpu_usage;
+#       uint64_t pending_net_usage = 0ULL;
+#       uint64_t pending_cpu_usage = 0ULL;
+#       uint64_t total_net_weight = 0ULL;
+#       uint64_t total_cpu_weight = 0ULL;
+#       uint64_t total_ram_bytes = 0ULL;
+#       uint64_t virtual_net_limit = 0ULL;
+#       uint64_t virtual_cpu_limit = 0ULL;
+        dec = Decoder(data)
+        average_block_net_usage = UsageAccumulator.unpack(dec)
+        average_block_cpu_usage = UsageAccumulator.unpack(dec)
+        pending_net_usage = dec.unpack_u64()
+        pending_cpu_usage = dec.unpack_u64()
+        total_net_weight = dec.unpack_u64()
+        total_cpu_weight = dec.unpack_u64()
+        total_ram_bytes = dec.unpack_u64()
+        virtual_net_limit = dec.unpack_u64()
+        virtual_cpu_limit = dec.unpack_u64()
+        return (average_block_net_usage,
+            average_block_cpu_usage,
+            pending_net_usage,
+            pending_cpu_usage,
+            total_net_weight,
+            total_cpu_weight,
+            total_ram_bytes,
+            virtual_net_limit,
+            virtual_cpu_limit,
+        )
+
+    def on_data(tp, data):
+        parse_resource_limits_state(data)
+
+    data = tester.db.find(database.resource_limits_state_object_type, 0, 0)
+    print(parse_resource_limits_state(data))
+
+class ElasticLimitParameters(object):
+    def __init__(self, target, max_, periods):
+        self.target = target
+        self.max_ = max_
+        self.periods = periods
+
+    def __repr__(self):
+        return f"(target: {self.target}, max_: {self.max_}, periods: {self.periods})"
+
+    @classmethod
+    def unpack(cls, dec):
+        target = dec.unpack_u64()
+        max_ = dec.unpack_u64()
+        periods = dec.unpack_u32()
+        return ElasticLimitParameters(target, max_, periods)
+
+class Ratio(object):
+    def __init__(self, numerator, denominator):
+        self.numerator = numerator
+        self.denominator = denominator
+
+    def __repr__(self):
+        return f"(numerator: {self.numerator}, denominator: {self.denominator})"
+
+    @classmethod
+    def unpack(cls, dec):
+        numerator = dec.unpack_u64()
+        denominator = dec.unpack_u64()
+        return Ratio(numerator, denominator)
+
+class ResourceLimitsConfig(object):
+    def __init__(self, cpu_limit_parameters, net_limit_parameters, max_multiplier, contract_rate, expand_rate):
+        self.cpu_limit_parameters = cpu_limit_parameters
+        self.net_limit_parameters = net_limit_parameters
+        self.max_multiplier = max_multiplier
+        self.contract_rate = contract_rate
+        self.expand_rate = expand_rate
+
+    def __repr__(self):
+        return f"""
+cpu_limit_parameters: {self.cpu_limit_parameters},
+net_limit_parameters: {self.net_limit_parameters},
+max_multiplier: {self.max_multiplier},
+contract_rate: {self.contract_rate},
+expand_rate: {self.expand_rate}
+"""
+
+    @classmethod
+    def unpack(cls, dec: Decoder):
+        cpu_limit_parameters = ElasticLimitParameters.unpack(dec)
+        net_limit_parameters = ElasticLimitParameters.unpack(dec)
+        max_multiplier = dec.unpack_u32()
+        contract_rate = Ratio.unpack(dec)
+        expand_rate = Ratio.unpack(dec)
+        return ResourceLimitsConfig(
+            cpu_limit_parameters,
+            net_limit_parameters,
+            max_multiplier,
+            contract_rate,
+            expand_rate,
+        )
+
+@chain_test(True)
+def test_resource_limits_config(tester: ChainTester):
+# class resource_limits_config_object : public chainbase::object<resource_limits_config_object_type, resource_limits_config_object> {
+#     OBJECT_CTOR(resource_limits_config_object);
+#     id_type id;
+
+#     elastic_limit_parameters cpu_limit_parameters = {EOS_PERCENT(config::default_max_block_cpu_usage, config::default_target_block_cpu_usage_pct), config::default_max_block_cpu_usage, config::block_cpu_usage_average_window_ms / config::block_interval_ms, 1000, {99, 100}, {1000, 999}};
+#     elastic_limit_parameters net_limit_parameters = {EOS_PERCENT(config::default_max_block_net_usage, config::default_target_block_net_usage_pct), config::default_max_block_net_usage, config::block_size_average_window_ms / config::block_interval_ms, 1000, {99, 100}, {1000, 999}};
+
+    #    struct elastic_limit_parameters {
+    #       uint64_t target;           // the desired usage
+    #       uint64_t max;              // the maximum usage
+    #       uint32_t periods;          // the number of aggregation periods that contribute to the average usage
+
+#       uint32_t max_multiplier;   // the multiplier by which virtual space can oversell usage when uncongested
+#       ratio    contract_rate;    // the rate at which a congested resource contracts its limit
+#       ratio    expand_rate;       // the rate at which an uncongested resource expands its limits
+
+#    namespace impl {
+#       template<typename T>
+#       struct ratio {
+#          T numerator;
+#          T denominator;
+
+#    using ratio = impl::ratio<uint64_t>;
+
+
+#       friend inline bool operator !=( const elastic_limit_parameters& lhs, const elastic_limit_parameters& rhs ) {
+#          return !(lhs == rhs);
+#       }
+
+#     uint32_t account_cpu_usage_average_window = config::account_cpu_usage_average_window_ms / config::block_interval_ms;
+#     uint32_t account_net_usage_average_window = config::account_net_usage_average_window_ms / config::block_interval_ms;
+
+    def parse_resource_limits_config(data):
+        dec = Decoder(data)
+        return ResourceLimitsConfig.unpack(dec)
+
+    data = tester.db.find(database.resource_limits_config_object_type, 0, 0)
+    print(parse_resource_limits_config(data))
+
+
+
+#    class protocol_state_object : public chainbase::object<protocol_state_object_type, protocol_state_object>
+#    {
+#       OBJECT_CTOR(protocol_state_object, (activated_protocol_features)(preactivated_protocol_features)(whitelisted_intrinsics))
+
+#    public:
+#       struct activated_protocol_feature {
+#          digest_type feature_digest;
+#          uint32_t    activation_block_num = 0;
+
+#          activated_protocol_feature() = default;
+
+#          activated_protocol_feature( const digest_type& feature_digest, uint32_t activation_block_num )
+#          :feature_digest( feature_digest )
+#          ,activation_block_num( activation_block_num )
+#          {}
+
+#          bool operator==(const activated_protocol_feature& rhs) const {
+#             return feature_digest == rhs.feature_digest && activation_block_num == rhs.activation_block_num;
+#          }
+#       };
+
+#    public:
+#       id_type                                    id;
+#       shared_vector<activated_protocol_feature>  activated_protocol_features;
+#       shared_vector<digest_type>                 preactivated_protocol_features;
+#       whitelisted_intrinsics_type                whitelisted_intrinsics;
+#       uint32_t                                   num_supported_key_types = 0;
+#    };
+
+class ActivatedProtocolFeature(object):
+    def __init__(self, feature_digest, activation_block_num):
+        self.feature_digest = feature_digest
+        self.activation_block_num = activation_block_num
+
+    def __repr__(self):
+        return f'(feature_digest: "{self.feature_digest}", activation_block_num: {self.activation_block_num})'
+
+    @classmethod
+    def unpack(cls, dec):
+        feature_digest = dec.unpack_checksum256()
+        activation_block_num = dec.unpack_u32()
+        return ActivatedProtocolFeature(feature_digest, activation_block_num)
+
+class WhitelistedIntrinsics(object):
+    def __init__(self, intrinsics):
+        self.intrinsics = intrinsics
+
+    def __repr__(self):
+        return str(self.intrinsics)
+
+    @classmethod
+    def unpack(cls, dec):
+        length = dec.unpack_length()
+        d = {}
+        for i in range(length):
+            a = dec.unpack_u64()
+            b = dec.unpack_string()
+            d[a] = b
+        return WhitelistedIntrinsics(d)
+
+@chain_test(True)
+def test_protocol_state_object(tester: ChainTester):
+    def parse_protocol_state_object(data):
+        dec = Decoder(data)
+        table_id = dec.unpack_u64()
+        activated_protocol_feature_size = dec.unpack_length()
+
+        features = []
+        for i in range(activated_protocol_feature_size):
+            features.append(ActivatedProtocolFeature.unpack(dec))
+
+        preactivated_protocol_features = []
+        preactivated_protocol_features_size = dec.unpack_length()
+
+        for i in range(preactivated_protocol_features_size):
+            preactivated_protocol_features.append(dec.unpack_checksum256())
+        
+        whitelisted_intrinsics = WhitelistedIntrinsics.unpack(dec)
+        num_supported_key_types = dec.unpack_u32()
+        print(table_id)
+        for feature in features:
+            print(feature)
+
+        print(preactivated_protocol_features)
+        print(whitelisted_intrinsics.intrinsics)
+        print(num_supported_key_types)
+
+    data = tester.db.find(database.protocol_state_object_type, 0, 0)
+    parse_protocol_state_object(data)
+
+
+#    class account_ram_correction_object : public chainbase::object<account_ram_correction_object_type, account_ram_correction_object>
+#       id_type      id;
+#       account_name name; //< name should not be changed within a chainbase modifier lambda
+#       uint64_t     ram_correction = 0;
+#    };
+
+#    struct by_name;
+#    using account_ram_correction_index = chainbase::shared_multi_index_container<
+#       account_ram_correction_object,
+#          ordered_unique<tag<by_id>, member<account_ram_correction_object, account_ram_correction_object::id_type, &account_ram_correction_object::id>>,
+#          ordered_unique<tag<by_name>, member<account_ram_correction_object, account_name, &account_ram_correction_object::name>>
+
+@chain_test(True)
+def test_account_ram_correction_object(tester: ChainTester):
+
+    def parse_account_ram_correction_object(data):
+        dec = Decoder(data)
+        table_id = dec.unpack_i64()
+        name = dec.unpack_name()
+        ram_correction = dec.unpack_u64()
+        print(table_id, name, ram_correction)
+
+    data = tester.db.find(database.account_ram_correction_object_type, 0, 0)
+    print(data)
+    if data:
+        parse_account_ram_correction_object(data)
+
+
+# class code_object : public chainbase::object<code_object_type, code_object> {
+#     id_type      id;
+#     digest_type  code_hash; //< code_hash should not be changed within a chainbase modifier lambda
+#     shared_blob  code;
+#     uint64_t     code_ref_count;
+#     uint32_t     first_block_used;
+#     uint8_t      vm_type = 0; //< vm_type should not be changed within a chainbase modifier lambda
+#     uint8_t      vm_version = 0; //< vm_version should not be changed within a chainbase modifier lambda
+# };
+
+# struct by_code_hash;
+# using code_index = chainbase::shared_multi_index_container<
+#         ordered_unique<tag<by_id>, member<code_object, code_object::id_type, &code_object::id>>,
+#         ordered_unique<tag<by_code_hash>,
+#             member<code_object, digest_type, &code_object::code_hash>,
+#             member<code_object, uint8_t,     &code_object::vm_type>,
+#             member<code_object, uint8_t,     &code_object::vm_version>
+
+
+@chain_test(True)
+def test_code_object(tester: ChainTester):
+
+    def parse_code_object(data):
+        dec = Decoder(data)
+        table_id = dec.unpack_i64()
+        code_hash = dec.unpack_checksum256()
+        code = dec.unpack_bytes()
+        code_ref_count = dec.unpack_u64()
+        first_block_used = dec.unpack_u32()
+        vm_type = dec.unpack_u8()
+        vm_version = dec.unpack_u8()
+        print(code_hash, code_ref_count, first_block_used)
+
+    def on_data(tp, data):
+        parse_code_object(data)
+        return 1
+
+    data = tester.db.find(database.code_object_type, 0, 0)
+    # print(data)
+    if data:
+        parse_code_object(data)
+
+#         ordered_unique<tag<by_code_hash>,
+#             member<code_object, digest_type, &code_object::code_hash>,
+#             member<code_object, uint8_t,     &code_object::vm_type>,
+#             member<code_object, uint8_t,     &code_object::vm_version>
+    print('+++++++++by table id')
+    tester.db.walk(database.code_object_type, 0, on_data)
+    print('+++++++by_code_hash')
+    tester.db.walk(database.code_object_type, 1, on_data)
+
+    print('+++++++++walk range by id')
+    lower_bound = 0
+    upper_bound = b'\xff'*7 + b'\x7f'
+    tester.db.walk_range(database.code_object_type, 0, lower_bound, upper_bound, on_data)
+
+    print('+++++++=walk range by code hash')
+    lower_bound = b'\x00'*(32+1+1)
+    upper_bound = b'\xff'*(32+1+1)
+    tester.db.walk_range(database.code_object_type, 1, lower_bound, upper_bound, on_data)
+
+    data = tester.db.lower_bound(database.code_object_type, 0, 0)
+    assert data
+    data = tester.db.upper_bound(database.code_object_type, 0, 0)
+    assert data
+
+    key = b'\x00'*(32+1+1)
+    data = tester.db.lower_bound(database.code_object_type, 1, key)
+    assert data
+    data = tester.db.upper_bound(database.code_object_type, 1, key)
+    assert data
+
+# class database_header_object : public chainbase::object<database_header_object_type, database_header_object>
+# {
+#     OBJECT_CTOR(database_header_object)
+
+#     /**
+#     *  VERSION HISTORY
+#     *   - 0 : implied version when this header is absent
+#     *   - 1 : initial version, prior to this no `database_header_object` existed in the shared memory file but
+#     *         no changes to its format were made so it can be safely added to existing databases
+#     *   - 2 : shared_authority now holds shared_key_weights & shared_public_keys
+#     *         change from producer_key to producer_authority for many in-memory structures
+#     */
+
+#     static constexpr uint32_t current_version            = 2;
+#     static constexpr uint32_t minimum_version            = 2;
+
+#     id_type        id;
+#     uint32_t       version = current_version;
+
+#     void validate() const {
+#     EOS_ASSERT(std::clamp(version, minimum_version, current_version) == version, bad_database_version_exception,
+#                 "state database version is incompatible, please restore from a compatible snapshot or replay!",
+#                 ("version", version)("minimum_version", minimum_version)("maximum_version", current_version));
+#     }
+# };
+
+# struct by_block_id;
+# using database_header_multi_index = chainbase::shared_multi_index_container<
+#     database_header_object,
+#     indexed_by<
+#             ordered_unique<tag<by_id>, BOOST_MULTI_INDEX_MEMBER(database_header_object, database_header_object::id_type, id)>
+#         >
+# >;
+
+@chain_test(True)
+def test_database_header_object(tester: ChainTester):
+
+    def parse_database_header_object(data):
+        dec = Decoder(data)
+        table_id = dec.unpack_i64()
+        version = dec.unpack_u32()
+        print(table_id, version)
+
+    data = tester.db.find(database.database_header_object_type, 0, 0)
+    print(data)
+    if data:
+        parse_database_header_object(data)
