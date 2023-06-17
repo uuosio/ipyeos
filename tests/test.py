@@ -2,11 +2,14 @@ import os
 import hashlib
 import platform
 
-from ipyeos import eos
+from ipyeos import eos, log
 from ipyeos import chaintester
 from ipyeos.chaintester import ChainTester
 
 chaintester.chain_config['contracts_console'] = True
+dir_name = os.path.dirname(__file__)
+
+logger = log.get_logger(__name__)
 
 def test_example():
     t = ChainTester(True)
@@ -75,3 +78,8 @@ def test_hello():
 #     transport.open()
 #     ret = client.create_key("K1")
 #     print(ret)
+
+def test_custom_dir():
+    t = ChainTester(True, data_dir=os.path.join(dir_name, 'dd'), config_dir=os.path.join(dir_name, 'cd'))
+    t.produce_block()
+    logger.info("+++++++%s", t.api.get_info())

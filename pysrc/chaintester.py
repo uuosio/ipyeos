@@ -134,11 +134,23 @@ log_level_off = 5
 
 class ChainTester(object):
 
-    def __init__(self, initialize=True, log_level=log_level_debug):
+    def __init__(self, initialize=True, data_dir=None, config_dir=None, log_level=log_level_debug):
         atexit.register(self.free)
+        self.is_temp_data_dir = True
+        self.is_temp_config_dir = True
 
-        self.data_dir = tempfile.mkdtemp()
-        self.config_dir = tempfile.mkdtemp()
+        if data_dir:
+            self.data_dir = data_dir
+            self.is_temp_data_dir = False
+        else:
+            self.data_dir = tempfile.mkdtemp()
+
+        if config_dir:
+           self.config_dir = config_dir
+           self.is_temp_config_dir = False
+        else:
+            self.config_dir = tempfile.mkdtemp()
+
         logger.info('++++data_dir %s', self.data_dir)
         logger.info('++++config_dir %s', self.config_dir)
 
@@ -148,10 +160,13 @@ class ChainTester(object):
 
         eos.set_log_level('default', log_level)
 
+        if os.path.exists(chain_config['state_dir']):
+            initialize = False
+
         self.chain_config = json.dumps(chain_config)
         self.genesis_test = json.dumps(genesis_test)
         self.chain = chain.Chain(self.chain_config, self.genesis_test, os.path.join(self.config_dir, "protocol_features"), "")
-        self.chain.startup(True)
+        self.chain.startup(initialize)
         self.api = chainapi.ChainApi(self.chain)
 
         self.db = database.Database(self.chain.get_database())
@@ -159,10 +174,12 @@ class ChainTester(object):
         # logger.info(self.api.get_info())
         # logger.info(self.api.get_account('eosio'))
 
-        self.feature_digests = []
-
-        self.feature_digests = ['0ec7e080177b2c02b278d5088611686b49d739925a92d9bfcacd7fc6b74053bd']
-        self.start_block()
+        if not initialize:
+            self.feature_digests = []
+            self.start_block()
+        else:
+            self.feature_digests = ['0ec7e080177b2c02b278d5088611686b49d739925a92d9bfcacd7fc6b74053bd']
+            self.start_block()
         self.code_cache = {}
 
         if not initialize:
@@ -325,14 +342,17 @@ class ChainTester(object):
     #     self.chain.start_block(self.calc_pending_block_time(), 0, self.feature_digests)
 
     def free(self):
-        if self.chain:
-            self.chain.free()
-            self.chain = None
-
-        if self.data_dir:
+        if not self.chain:
+            return
+        self.chain.free()
+        self.chain = None
+            
+        if self.is_temp_data_dir and self.data_dir:
             shutil.rmtree(self.data_dir)
-            shutil.rmtree(self.config_dir)
             self.data_dir = None
+
+        if self.is_temp_config_dir and self.config_dir:
+            shutil.rmtree(self.config_dir)
             self.config_dir = None
 
     def __del__(self):
