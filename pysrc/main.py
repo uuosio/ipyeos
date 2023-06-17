@@ -32,6 +32,11 @@ commands:
     '''
     return web.Response(text=commands)
 
+def print_help():
+    argv = sys.argv[1:]
+    argv[0] = 'ipyeos'
+    return eos.init(argv)
+
 def _run_eos():
     argv = sys.argv[1:]
     argv[0] = 'ipyeos'
@@ -47,6 +52,7 @@ def _run_eos():
     #     await asyncio.sleep(0.0)
     #     print('run once')
     print('run return', ret)
+    return ret
 
 async def run_eos():
     future = asyncio.get_event_loop().run_in_executor(executor, _run_eos)
@@ -128,8 +134,9 @@ async def main():
     print('all done!')
 
 def run():
-    result = args.parse_args()
-    if result.subparser == 'eosnode':
+    if sys.argv[1] == 'eosnode':
+        if sys.argv[2] in ['-h', '--help']:
+            return print_help()
         def start():
             asyncio.run(main())
             thread_queue.put(None)
@@ -146,8 +153,10 @@ def run():
                     _run_ipython()
             except KeyboardInterrupt:
                 eos.post(eos.quit)
-
-    elif result.subparser == 'eosdebugger':
-        server.start_debug_server(result.addr, result.server_port, result.vm_api_port, result.apply_request_addr, result.apply_request_port, result.addr,result.rpc_server_port)
     else:
-        parser.print_help()
+        result = args.parse_args()
+        if result.subparser == 'eosdebugger':
+            result = args.parse_args()
+            server.start_debug_server(result.addr, result.server_port, result.vm_api_port, result.apply_request_addr, result.apply_request_port, result.addr,result.rpc_server_port)
+        else:
+            parser.print_help()
