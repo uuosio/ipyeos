@@ -22,10 +22,10 @@ def handle_error(fn):
 
 class Chain(object):
 
-    def __init__(self, config: dict, genesis: dict, protocol_features_dir: str, snapshot_dir: str):
-        self.new(config, genesis, protocol_features_dir, snapshot_dir)
+    def __init__(self, config: dict, genesis: dict, chain_id: str, protocol_features_dir: str, snapshot_dir: str):
+        self.new(config, genesis, chain_id, protocol_features_dir, snapshot_dir)
 
-    def new(self, config: dict, genesis: dict, protocol_features_dir: str, snapshot_dir: str) -> None:
+    def new(self, config: dict, genesis: dict, chain_id: str, protocol_features_dir: str, snapshot_dir: str) -> None:
         """
         Create a new Chain instance
         Code example::
@@ -47,7 +47,7 @@ class Chain(object):
         assert isinstance(config, str)
         assert isinstance(genesis, str)
 
-        self.ptr = _chain.chain_new(config, genesis, protocol_features_dir, snapshot_dir)
+        self.ptr = _chain.chain_new(config, genesis, chain_id, protocol_features_dir, snapshot_dir)
         if not self.ptr:
             error = _eos.get_last_error()
             raise Exception(error)
@@ -60,7 +60,10 @@ class Chain(object):
         :param bool initdb
         :returns bool: Return True on success, False on failture.
         """
-        return _chain.startup(self.ptr, initdb)
+        ret = _chain.startup(self.ptr, initdb)
+        if not ret:
+            self.ptr = 0
+            raise Exception(_eos.get_last_error())
 
     def free(self) -> None:
         """

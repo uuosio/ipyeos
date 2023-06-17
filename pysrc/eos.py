@@ -21,6 +21,8 @@ class NativeType:
     trx_message_v1 = 10         # which = 10
     genesis_state = 11
     abi_def = 12
+    transaction_type = 13
+    global_property_type = 14
 
 class LogLevel(Enum):
     ALL = 0

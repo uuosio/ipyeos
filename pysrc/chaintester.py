@@ -1,4 +1,5 @@
 import atexit
+import hashlib
 import json
 import logging
 import os
@@ -132,6 +133,122 @@ log_level_warn = 3
 log_level_error = 4
 log_level_off = 5
 
+class Decoder(object):
+    def __init__(self, raw_data: bytes):
+        self.raw_data = raw_data
+        self.pos = 0
+
+    def read_bytes(self, size):
+        assert len(self.raw_data) >= self.pos + size
+        ret = self.raw_data[self.pos:self.pos+size]
+        self.pos += size
+        return ret
+
+    def unpack_name(self):
+        name = self.read_bytes(8)
+        return eos.b2s(name)
+
+    def unpack_u8(self):
+        ret = self.read_bytes(1)[0]
+        return ret
+
+    def unpack_u16(self):
+        ret = int.from_bytes(self.read_bytes(2), 'little')
+        return ret
+
+    def unpack_u32(self):
+        ret = int.from_bytes(self.read_bytes(4), 'little')
+        return ret
+
+    def unpack_u64(self):
+        ret = int.from_bytes(self.read_bytes(8), 'little')
+        return ret
+
+    def unpack_i64(self):
+        ret = int.from_bytes(self.read_bytes(8), 'little', signed=True)
+        return ret
+
+    def unpack_checksum256(self):
+        ret = self.read_bytes(32)
+        return ret
+
+    def unpack_length(self):
+        v = 0
+        by = 0
+        while True:
+            b = self.unpack_u8()
+            v |= (b & 0x7f) << by
+            by += 7
+            if b & 0x80 == 0:
+                break
+        return v
+
+    def unpack_bytes(self):
+        length = self.unpack_length()
+        data = self.read_bytes(length)
+        return data
+    
+    def unpack_string(self):
+        length = self.unpack_length()
+        data = self.read_bytes(length)
+        return data.decode()
+
+    def unpack_time_point(self):
+        return self.unpack_u64()
+
+    def unpack_public_key(self):
+        ret = self.read_bytes(33)
+        return ret
+
+    def get_bytes(self, size):
+        ret = self.read_bytes(size)
+        return ret
+
+    def get_pos(self):
+        return self.pos
+
+genesis_state_or_chain_id_version = 3
+
+def contains_genesis_state(version, first_block_num):
+    return version < genesis_state_or_chain_id_version or first_block_num == 1
+
+def contains_chain_id(version, first_block_num):
+    return version >= genesis_state_or_chain_id_version and first_block_num > 1
+
+def read_genesis_from_block_log(tester):
+    with open(f'{tester.data_dir}/blocks/blocks.log', 'rb') as f:
+        data = f.read()
+
+    dec = Decoder(data)
+    ver = dec.unpack_u32()
+    print(ver)
+    first_block_num = dec.unpack_u32()
+    print(first_block_num)
+    if contains_genesis_state(ver, first_block_num):
+        # GenesisState.unpack(dec)
+        data = dec.read_bytes(68+8+34)
+        chain_id = hashlib.sha256(data).hexdigest()
+    elif contains_chain_id(ver, first_block_num):
+        chain_id = dec.read_bytes(32).hex()
+    assert chain_id == tester.api.get_info()['chain_id']
+
+def read_chain_id_from_block_log(data_dir):
+    with open(f'{data_dir}/blocks/blocks.log', 'rb') as f:
+        data = f.read(1024)
+
+    dec = Decoder(data)
+    ver = dec.unpack_u32()
+    print(ver)
+    first_block_num = dec.unpack_u32()
+    print(first_block_num)
+    if contains_genesis_state(ver, first_block_num):
+        # GenesisState.unpack(dec)
+        data = dec.read_bytes(68+8+34)
+        return hashlib.sha256(data).hexdigest()
+    elif contains_chain_id(ver, first_block_num):
+        return dec.read_bytes(32).hex()
+    assert False, "unknown chain id"
+
 class ChainTester(object):
 
     def __init__(self, initialize=True, data_dir=None, config_dir=None, log_level=log_level_debug):
@@ -160,13 +277,20 @@ class ChainTester(object):
 
         eos.set_log_level('default', log_level)
 
-        if os.path.exists(chain_config['state_dir']):
+        logger.info(os.path.join(chain_config['state_dir'], 'shared_memory.bin'))
+        if os.path.exists(os.path.join(chain_config['state_dir'], 'shared_memory.bin')):
             initialize = False
+            init_database = False
+            self.genesis_test = ''
+            self.chain_id = read_chain_id_from_block_log(self.data_dir)
+        else:
+            init_database = True
+            self.chain_id = ''
 
         self.chain_config = json.dumps(chain_config)
         self.genesis_test = json.dumps(genesis_test)
-        self.chain = chain.Chain(self.chain_config, self.genesis_test, os.path.join(self.config_dir, "protocol_features"), "")
-        self.chain.startup(initialize)
+        self.chain = chain.Chain(self.chain_config, self.genesis_test, self.chain_id, os.path.join(self.config_dir, "protocol_features"), "")
+        self.chain.startup(init_database)
         self.api = chainapi.ChainApi(self.chain)
 
         self.db = database.Database(self.chain.get_database())

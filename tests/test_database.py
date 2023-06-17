@@ -1,3 +1,4 @@
+import hashlib
 import os
 import sys
 import json
@@ -1628,3 +1629,154 @@ def test_database_header_object(tester: ChainTester):
     print(data)
     if data:
         parse_database_header_object(data)
+
+#    chain_config_v0   initial_configuration = {
+#       .max_block_net_usage                  = config::default_max_block_net_usage,
+#       .target_block_net_usage_pct           = config::default_target_block_net_usage_pct,
+#       .max_transaction_net_usage            = config::default_max_transaction_net_usage,
+#       .base_per_transaction_net_usage       = config::default_base_per_transaction_net_usage,
+#       .net_usage_leeway                     = config::default_net_usage_leeway,
+#       .context_free_discount_net_usage_num  = config::default_context_free_discount_net_usage_num,
+#       .context_free_discount_net_usage_den  = config::default_context_free_discount_net_usage_den,
+
+#       .max_block_cpu_usage                  = config::default_max_block_cpu_usage,
+#       .target_block_cpu_usage_pct           = config::default_target_block_cpu_usage_pct,
+#       .max_transaction_cpu_usage            = config::default_max_transaction_cpu_usage,
+#       .min_transaction_cpu_usage            = config::default_min_transaction_cpu_usage,
+
+#       .max_transaction_lifetime             = config::default_max_trx_lifetime,
+#       .deferred_trx_expiration_window       = config::default_deferred_trx_expiration_window,
+#       .max_transaction_delay                = config::default_max_trx_delay,
+#       .max_inline_action_size               = config::default_max_inline_action_size,
+#       .max_inline_action_depth              = config::default_max_inline_action_depth,
+#       .max_authority_depth                  = config::default_max_auth_depth,
+#    };
+
+#    uint64_t   max_block_net_usage;                 ///< the maxiumum net usage in instructions for a block
+#    uint32_t   target_block_net_usage_pct;          ///< the target percent (1% == 100, 100%= 10,000) of maximum net usage; exceeding this triggers congestion handling
+#    uint32_t   max_transaction_net_usage;           ///< the maximum objectively measured net usage that the chain will allow regardless of account limits
+#    uint32_t   base_per_transaction_net_usage;      ///< the base amount of net usage billed for a transaction to cover incidentals
+#    uint32_t   net_usage_leeway;
+#    uint32_t   context_free_discount_net_usage_num; ///< the numerator for the discount on net usage of context-free data
+#    uint32_t   context_free_discount_net_usage_den; ///< the denominator for the discount on net usage of context-free data
+
+#    uint32_t   max_block_cpu_usage;                 ///< the maxiumum billable cpu usage (in microseconds) for a block
+#    uint32_t   target_block_cpu_usage_pct;          ///< the target percent (1% == 100, 100%= 10,000) of maximum cpu usage; exceeding this triggers congestion handling
+#    uint32_t   max_transaction_cpu_usage;           ///< the maximum billable cpu usage (in microseconds) that the chain will allow regardless of account limits
+#    uint32_t   min_transaction_cpu_usage;           ///< the minimum billable cpu usage (in microseconds) that the chain requires
+
+#    uint32_t   max_transaction_lifetime;            ///< the maximum number of seconds that an input transaction's expiration can be ahead of the time of the block in which it is first included
+#    uint32_t   deferred_trx_expiration_window;      ///< the number of seconds after the time a deferred transaction can first execute until it expires
+#    uint32_t   max_transaction_delay;               ///< the maximum number of seconds that can be imposed as a delay requirement by authorization checks
+#    uint32_t   max_inline_action_size;              ///< maximum allowed size (in bytes) of an inline action
+#    uint16_t   max_inline_action_depth;             ///< recursion depth limit on sending inline actions
+#    uint16_t   max_authority_depth;                 ///< recursion depth limit for checking if an authority is satisfied
+
+
+#    static constexpr wasm_config default_initial_wasm_configuration {
+#       .max_mutable_global_bytes = config::default_max_wasm_mutable_global_bytes,
+#       .max_table_elements       = config::default_max_wasm_table_elements,
+#       .max_section_elements     = config::default_max_wasm_section_elements,
+#       .max_linear_memory_init   = config::default_max_wasm_linear_memory_init,
+#       .max_func_local_bytes     = config::default_max_wasm_func_local_bytes,
+#       .max_nested_structures    = config::default_max_wasm_nested_structures,
+#       .max_symbol_bytes         = config::default_max_wasm_symbol_bytes,
+#       .max_module_bytes         = config::default_max_wasm_module_bytes,
+#       .max_code_bytes           = config::default_max_wasm_code_bytes,
+#       .max_pages                = config::default_max_wasm_pages,
+#       .max_call_depth           = config::default_max_wasm_call_depth
+#    };
+
+#    time_point                               initial_timestamp;
+#    public_key_type                          initial_key;
+
+class GenesisState(object):
+    def __init__(self):
+        pass
+
+    @classmethod
+    def unpack(cls, dec):
+        initial_timestamp = dec.unpack_i64()
+        initial_key = dec.read_bytes(34)
+
+#    uint64_t   max_block_net_usage;                 ///< the maxiumum net usage in instructions for a block
+        max_block_net_usage = dec.unpack_u64()
+#    uint32_t   target_block_net_usage_pct;          ///< the target percent (1% == 100, 100%= 10,000) of maximum net usage; exceeding this triggers congestion handling
+        target_block_net_usage_pct = dec.unpack_u32()
+#    uint32_t   max_transaction_net_usage;           ///< the maximum objectively measured net usage that the chain will allow regardless of account limits
+        max_transaction_net_usage = dec.unpack_u32()
+#    uint32_t   base_per_transaction_net_usage;      ///< the base amount of net usage billed for a transaction to cover incidentals
+        base_per_transaction_net_usage = dec.unpack_u32()
+#    uint32_t   net_usage_leeway;
+        net_usage_leeway = dec.unpack_u32()
+#    uint32_t   context_free_discount_net_usage_num; ///< the numerator for the discount on net usage of context-free data
+        context_free_discount_net_usage_num = dec.unpack_u32()
+#    uint32_t   context_free_discount_net_usage_den; ///< the denominator for the discount on net usage of context-free data
+        context_free_discount_net_usage_den = dec.unpack_u32()
+#    uint32_t   max_block_cpu_usage;                 ///< the maxiumum billable cpu usage (in microseconds) for a block
+        max_block_cpu_usage = dec.unpack_u32()
+#    uint32_t   target_block_cpu_usage_pct;          ///< the target percent (1% == 100, 100%= 10,000) of maximum cpu usage; exceeding this triggers congestion handling
+        target_block_cpu_usage_pct = dec.unpack_u32()
+#    uint32_t   max_transaction_cpu_usage;           ///< the maximum billable cpu usage (in microseconds) that the chain will allow regardless of account limits
+        max_transaction_cpu_usage = dec.unpack_u32()
+#    uint32_t   min_transaction_cpu_usage;           ///< the minimum billable cpu usage (in microseconds) that the chain requires
+        min_transaction_cpu_usage = dec.unpack_u32()
+#    uint32_t   max_transaction_lifetime;            ///< the maximum number of seconds that an input transaction's expiration can be ahead of the time of the block in which it is first included
+        max_transaction_lifetime = dec.unpack_u32()
+#    uint32_t   deferred_trx_expiration_window;      ///< the number of seconds after the time a deferred transaction can first execute until it expires
+        deferred_trx_expiration_window = dec.unpack_u32()
+#    uint32_t   max_transaction_delay;               ///< the maximum number of seconds that can be imposed as a delay requirement by authorization checks
+        max_transaction_delay = dec.unpack_u32()
+#    uint32_t   max_inline_action_size;              ///< maximum allowed size (in bytes) of an inline action
+        max_inline_action_size = dec.unpack_u32()
+#    uint16_t   max_inline_action_depth;             ///< recursion depth limit on sending inline actions
+        max_inline_action_depth = dec.unpack_u16()
+#    uint16_t   max_authority_depth;                 ///< recursion depth limit for checking if an authority is satisfied
+        max_authority_depth = dec.unpack_u16()
+        print(initial_timestamp,
+            initial_key,
+            max_block_net_usage,
+            max_transaction_net_usage,
+            base_per_transaction_net_usage,
+            net_usage_leeway,
+            context_free_discount_net_usage_num,
+            context_free_discount_net_usage_den,
+            max_block_cpu_usage,
+            target_block_cpu_usage_pct,
+            max_transaction_cpu_usage,
+            min_transaction_cpu_usage,
+            max_transaction_lifetime,
+            deferred_trx_expiration_window,
+            max_transaction_delay,
+            max_inline_action_size,
+            max_inline_action_depth,
+            max_authority_depth,
+        )
+
+genesis_state_or_chain_id_version = 3
+
+def contains_genesis_state(version, first_block_num):
+    return version < genesis_state_or_chain_id_version or first_block_num == 1
+
+def contains_chain_id(version, first_block_num):
+    return version >= genesis_state_or_chain_id_version and first_block_num > 1
+
+@chain_test(True)
+def test_read_genesis_from_block_log(tester: ChainTester):
+    with open(f'{tester.data_dir}/blocks/blocks.log', 'rb') as f:
+        data = f.read()
+
+    dec = Decoder(data)
+    ver = dec.unpack_u32()
+    print(ver)
+    first_block_num = dec.unpack_u32()
+    print(first_block_num)
+    if contains_genesis_state(ver, first_block_num):
+        # GenesisState.unpack(dec)
+        data = dec.read_bytes(68+8+34)
+        genesis = eos.unpack_native_object(eos.NativeType.genesis_state, data)
+        logger.info(genesis)
+        chain_id = hashlib.sha256(data).hexdigest()
+    elif contains_chain_id(ver, first_block_num):
+        chain_id = dec.read_bytes(32).hex()
+    assert chain_id == tester.api.get_info()['chain_id']
