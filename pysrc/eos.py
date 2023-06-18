@@ -165,6 +165,9 @@ def get_public_key(priv_key: str) -> str:
     ret = _eos.get_public_key(priv_key)
     return check_ret(ret)
 
+def extract_chain_id_from_snapshot(snapshot: str) -> str:
+    return _eos.extract_chain_id_from_snapshot(snapshot)
+
 def sign_digest(digest: str, priv_key: str):
     ret = _eos.sign_digest(digest, priv_key)
     return check_ret(ret)

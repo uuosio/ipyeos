@@ -33,8 +33,8 @@ chain_config = {
     "key_blacklist":[],
     "blocks_dir":"dd/blocks",
     "state_dir":"dd/state",
-    "state_size":1073741824,
-    "state_guard_size":134217728,
+    "state_size":104857600,
+    "state_guard_size":10485760,
     "sig_cpu_bill_pct":5000,
     "thread_pool_size":2,
     "max_nonprivileged_inline_action_size":4096,
@@ -251,10 +251,13 @@ def read_chain_id_from_block_log(data_dir):
 
 class ChainTester(object):
 
-    def __init__(self, initialize=True, data_dir=None, config_dir=None, snapshot_dir='', log_level=log_level_debug):
+    def __init__(self, initialize=True, data_dir=None, config_dir=None, snapshot_dir='', state_size=10*1024*1024, log_level=log_level_debug):
         atexit.register(self.free)
         self.is_temp_data_dir = True
         self.is_temp_config_dir = True
+
+        chain_config['state_size'] = state_size
+        chain_config['state_guard_size'] = int(state_size * 0.005)
 
         if data_dir:
             self.data_dir = data_dir
@@ -276,9 +279,13 @@ class ChainTester(object):
 
 
         eos.set_log_level('default', log_level)
-
-        logger.info(os.path.join(chain_config['state_dir'], 'shared_memory.bin'))
-        if os.path.exists(os.path.join(chain_config['state_dir'], 'shared_memory.bin')):
+        
+        if snapshot_dir:
+            initialize = False
+            init_database = False
+            self.genesis_test = ''
+            self.chain_id = eos.extract_chain_id_from_snapshot(snapshot_dir)
+        elif os.path.exists(os.path.join(chain_config['state_dir'], 'shared_memory.bin')):
             initialize = False
             init_database = False
             self.genesis_test = ''

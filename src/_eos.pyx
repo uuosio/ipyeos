@@ -71,6 +71,8 @@ cdef extern from "_ipyeos.hpp":
 
         string create_key(string& key_type)
         string get_public_key(string &priv_key)
+ 
+        string extract_chain_id_from_snapshot(string& snapshot_dir)
 
         string sign_digest(string &priv_key, string &digest)
 
@@ -131,6 +133,9 @@ def create_key(key_type: str):
 def get_public_key(priv_key: str):
     return get_ipyeos_proxy().get_public_key(priv_key)
 
+def extract_chain_id_from_snapshot(string& snapshot) -> str:
+    return get_ipyeos_proxy().extract_chain_id_from_snapshot(snapshot)
+ 
 def sign_digest(digest: str, priv_key) -> str:
     return get_ipyeos_proxy().sign_digest(digest, priv_key)
 
