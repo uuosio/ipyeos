@@ -506,7 +506,8 @@ class ChainTester(object):
                         keys.append(priv_key)
         return keys
 
-    def import_key(self, pubkey, priv_key):
+    def import_key(self, priv_key):
+        pubkey = eos.get_public_key(priv_key)
         key_map[pubkey] = priv_key
         return True
 
