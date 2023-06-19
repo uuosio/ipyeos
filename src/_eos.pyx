@@ -78,6 +78,10 @@ cdef extern from "_ipyeos.hpp":
 
         eos_cb *cb
 
+        void set_debug_producer_key(string &pub_key)
+        string get_debug_producer_key()
+
+
     ipyeos_proxy *get_ipyeos_proxy() nogil
 
     void app_quit()
@@ -186,3 +190,9 @@ def post(fn, *args, **kwargs):
 
 def get_database() -> uint64_t:
     return <uint64_t>get_ipyeos_proxy().cb.get_database()
+
+def set_debug_producer_key(string &pub_key):
+    get_ipyeos_proxy().set_debug_producer_key(pub_key)
+
+def get_debug_producer_key() -> str:
+    return get_ipyeos_proxy().get_debug_producer_key()

@@ -79,7 +79,45 @@ def test_hello():
 #     ret = client.create_key("K1")
 #     print(ret)
 
+# print(os.getpid())
+# input('press any key to continue...')
+
 def test_custom_dir():
-    t = ChainTester(True, data_dir=os.path.join(dir_name, 'dd'), config_dir=os.path.join(dir_name, 'cd'))
+    t = ChainTester(False, data_dir=os.path.join(dir_name, 'dd'), config_dir=os.path.join(dir_name, 'cd'))
+    t.produce_block()
+    logger.info("+++++++%s", t.api.get_info())
+
+def test_custom_2dir():
+    # data_name = './data'
+    # snapshot_dir = './snapshot-2023-06-18-01-eos-v6-0315729695.bin'
+    # state_size = 32*1024*1024*1024
+
+    state_size = 10*1024*1024
+    data_name = './data'
+    snapshot_dir = './data/snapshot-0000001ba25b3b5af4ba6cacecb68ef4238a50bb7134e56fe985b4355fbf7488.bin'
+
+    # {'private': '5K3x5DPEbocfZSG8XD3RiyJAfPFH5Bd9ED15wtdEMbqzXCLPbma',
+    #  'public': 'EOS5K93aPtTdov2zWDqYxVcMQ4GBT1hyEpED8tjzPuLsf31tPySNY'}
+
+    # must call set_debug_producer_key and import_producer_key before create ChainTester
+    eos.set_debug_producer_key('EOS5K93aPtTdov2zWDqYxVcMQ4GBT1hyEpED8tjzPuLsf31tPySNY')
+    chaintester.import_producer_key('5K3x5DPEbocfZSG8XD3RiyJAfPFH5Bd9ED15wtdEMbqzXCLPbma')
+
+    t = ChainTester(True, data_dir=os.path.join(data_name, 'dd'), config_dir=os.path.join(data_name, 'cd'), state_size=state_size, snapshot_dir=snapshot_dir)
+    logger.info("+++++producer keys: %s", t.chain.get_producer_public_keys())
+    t.produce_block()
+    logger.info("+++++++%s", t.api.get_info())
+
+def test_custom_3dir():
+    state_size = 10*1024*1024
+    data_name = './data'
+    snapshot_dir = ''
+
+    # {'private': '5K3x5DPEbocfZSG8XD3RiyJAfPFH5Bd9ED15wtdEMbqzXCLPbma',
+    #  'public': 'EOS5K93aPtTdov2zWDqYxVcMQ4GBT1hyEpED8tjzPuLsf31tPySNY'}
+
+    chaintester.import_producer_key('5K3x5DPEbocfZSG8XD3RiyJAfPFH5Bd9ED15wtdEMbqzXCLPbma')
+    t = ChainTester(True, data_dir=os.path.join(data_name, 'dd'), config_dir=os.path.join(data_name, 'cd'), state_size=state_size, snapshot_dir=snapshot_dir)
+
     t.produce_block()
     logger.info("+++++++%s", t.api.get_info())

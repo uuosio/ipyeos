@@ -126,6 +126,18 @@ producer_key_map = {
     'EOS5fVw435RSwW3YYWAX9qz548JFTWuFiBcHT3PGLryWaAMmxgjp1':'5K9AZWR2wEwtZii52vHigrxcSwCzLhhJbNpdXpVFKHP5fgFG5Tx'
 }
 
+def import_key(priv_key):
+    global key_map
+    pubkey = eos.get_public_key(priv_key)
+    key_map[pubkey] = priv_key
+    return True
+
+def import_producer_key(priv_key):
+    global producer_key_map
+    pubkey = eos.get_public_key(priv_key)
+    producer_key_map[pubkey] = priv_key
+    return True
+
 log_level_all = 0
 log_level_debug = 1
 log_level_info = 2
@@ -506,9 +518,18 @@ class ChainTester(object):
                         keys.append(priv_key)
         return keys
 
-    def import_key(self, priv_key):
+    @classmethod
+    def import_key(cls, priv_key):
+        global key_map
         pubkey = eos.get_public_key(priv_key)
         key_map[pubkey] = priv_key
+        return True
+
+    @classmethod
+    def import_producer_key(cls, priv_key):
+        global producer_key_map
+        pubkey = eos.get_public_key(priv_key)
+        producer_key_map[pubkey] = priv_key
         return True
 
     def push_action(self, account: Name, action: Name, args: Union[Dict, str, bytes], permissions: Dict={}, explicit_cpu_bill=False):

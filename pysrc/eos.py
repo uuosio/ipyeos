@@ -188,3 +188,9 @@ def post(fn, *args, **kwargs):
 
 def quit() -> None:
     _eos.quit()
+
+def set_debug_producer_key(pub_key: str):
+    _eos.set_debug_producer_key(pub_key)
+
+def get_debug_producer_key() -> str:
+    return _eos.get_debug_producer_key()
