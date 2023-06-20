@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Dict, List, Optional, Union
 
 from . import _chain, _eos, log
-from .types import Name, PublicKey
+from .types import U8, U16, U32, U64, I64, Name, PublicKey
 
 logger = log.get_logger(__name__)
 
@@ -283,7 +283,10 @@ class Chain(object):
     def check_action_list(self, code: Name, action: Name) -> bool:
         return _chain.check_action_list(self.ptr, code, action)
 
-    def check_key_list(self, pub_key: PublicKey) -> bool:
+    def check_key_list(self, pub_key: Union[str, PublicKey]) -> bool:
+        if isinstance(pub_key, PublicKey):
+            pub_key = pub_key.to_string()
+        assert isinstance(pub_key, str)
         return _chain.check_key_list(self.ptr, pub_key)
 
     def is_building_block(self) -> bool:

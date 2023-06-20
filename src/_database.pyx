@@ -32,6 +32,9 @@ cdef extern from "_ipyeos.hpp":
         int32_t walk(void *db, int32_t tp, int32_t index_position)
         int32_t walk_range(void *db, int32_t tp, int32_t index_position, char *raw_lower_bound, size_t raw_lower_bound_size, char *raw_upper_bound, size_t raw_upper_bound_size)
         int32_t find(void *db, int32_t tp, int32_t index_position, char *raw_data, size_t size, char **out, size_t *out_size)
+        
+        int32_t create(void *_db, int32_t tp, const char *raw_data, size_t raw_data_size)
+        int32_t modify(void *_db, int32_t tp, int32_t index_position, char *raw_key, size_t raw_key_size, char *raw_data, size_t raw_data_size)
 
         int32_t lower_bound(void *db, int32_t tp, int32_t index_position, char *raw_data, size_t size, char **out, size_t *out_size)
         int32_t upper_bound(void *db, int32_t tp, int32_t index_position, char *raw_data, size_t size, char **out, size_t *out_size)
@@ -52,6 +55,24 @@ cdef database_proxy *db(uint64_t ptr):
 
 def new() -> uint64_t:
     return <uint64_t>get_ipyeos_proxy().new_database_proxy()
+
+def create(ptr: uint64_t, db_ptr: uint64_t, int32_t tp, raw_data: bytes):
+    cdef char *_raw_data
+    cdef Py_ssize_t _raw_data_size
+
+    PyBytes_AsStringAndSize(raw_data, &_raw_data, &_raw_data_size)
+    return db(ptr).create(<void *>db_ptr, tp, _raw_data, _raw_data_size)
+
+def modify(ptr: uint64_t, db_ptr: uint64_t, int32_t tp, int32_t index_position, raw_key: bytes, raw_data: bytes):
+    cdef char *_raw_key
+    cdef Py_ssize_t _raw_key_size
+    cdef char *_raw_data
+    cdef Py_ssize_t _raw_data_size
+
+    PyBytes_AsStringAndSize(raw_key, &_raw_key, &_raw_key_size)
+    PyBytes_AsStringAndSize(raw_data, &_raw_data, &_raw_data_size)
+
+    return db(ptr).modify(<void *>db_ptr, tp, index_position, _raw_key, _raw_key_size, _raw_data, _raw_data_size)
 
 def walk(ptr: uint64_t, db_ptr: uint64_t, tp: int32_t, index_position: int32_t, cb):
     db(ptr).set_data_handler(database_on_data, <void *>cb)

@@ -844,9 +844,7 @@ class ChainTester(object):
         self.chain.clear_abi_cache(account)
         return ret
 
-    def transfer(self, _from: Name, _to: Name, _amount: float, _memo: str='', token_account: Name='eosio.token', token_name: str='', permission: Name='active'):
-        if not token_name:
-            token_name = self.main_token
+    def transfer(self, _from: Name, _to: Name, _amount: float, _memo: str='', token_account: Name='eosio.token', token_name: str='EOS', permission: Name='active'):
         args = {"from":_from, "to":_to, "quantity":'%.4f %s'%(_amount,token_name), "memo":_memo}
         return self.push_action(token_account, 'transfer', args, {_from:permission})
 

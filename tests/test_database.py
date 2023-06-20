@@ -2,8 +2,8 @@ import hashlib
 import os
 import sys
 import json
-import struct
 import pytest
+import struct
 import time
 
 test_dir = os.path.dirname(__file__)
@@ -13,6 +13,12 @@ from ipyeos import eos, log
 from ipyeos import chaintester
 from ipyeos.chaintester import ChainTester
 from ipyeos import database
+
+from ipyeos.types import PublicKey
+from ipyeos.packer import Encoder, Decoder
+from ipyeos.structs import KeyWeight, Authority
+from ipyeos.database_objects import PermissionObject
+from ipyeos.database import PermissionObjectIndex
 
 chaintester.chain_config['contracts_console'] = True
 
@@ -62,93 +68,6 @@ class NewChain():
 
     def __exit__(self, type, value, traceback):
         self.chain.free()
-
-def unpack_length(val: bytes):
-    assert len(val) > 0, "raw VarUint32 value cannot be empty"
-    v = 0
-    by = 0
-    n = 0
-    for b in val:
-        v |= (b & 0x7f) << by
-        by += 7
-        n += 1
-        if b & 0x80 == 0:
-            break
-    return v, n
-
-class Decoder(object):
-    def __init__(self, raw_data: bytes):
-        self.raw_data = raw_data
-        self.pos = 0
-
-    def read_bytes(self, size):
-        assert len(self.raw_data) >= self.pos + size
-        ret = self.raw_data[self.pos:self.pos+size]
-        self.pos += size
-        return ret
-
-    def unpack_name(self):
-        name = self.read_bytes(8)
-        return eos.b2s(name)
-
-    def unpack_u8(self):
-        ret = self.read_bytes(1)[0]
-        return ret
-
-    def unpack_u16(self):
-        ret = int.from_bytes(self.read_bytes(2), 'little')
-        return ret
-
-    def unpack_u32(self):
-        ret = int.from_bytes(self.read_bytes(4), 'little')
-        return ret
-
-    def unpack_u64(self):
-        ret = int.from_bytes(self.read_bytes(8), 'little')
-        return ret
-
-    def unpack_i64(self):
-        ret = int.from_bytes(self.read_bytes(8), 'little', signed=True)
-        return ret
-
-    def unpack_checksum256(self):
-        ret = self.read_bytes(32)
-        return ret
-
-    def unpack_length(self):
-        v = 0
-        by = 0
-        while True:
-            b = self.unpack_u8()
-            v |= (b & 0x7f) << by
-            by += 7
-            if b & 0x80 == 0:
-                break
-        return v
-
-    def unpack_bytes(self):
-        length = self.unpack_length()
-        data = self.read_bytes(length)
-        return data
-    
-    def unpack_string(self):
-        length = self.unpack_length()
-        data = self.read_bytes(length)
-        return data.decode()
-
-    def unpack_time_point(self):
-        return self.unpack_u64()
-
-    def unpack_public_key(self):
-        ret = self.read_bytes(33)
-        return ret
-
-    def get_bytes(self, size):
-        ret = self.read_bytes(size)
-        return ret
-
-    def get_pos(self):
-        return self.pos
 
 test_dir = os.path.dirname(__file__)
 def deploy_contract(tester, package_name):
@@ -1780,3 +1699,28 @@ def test_read_genesis_from_block_log(tester: ChainTester):
     elif contains_chain_id(ver, first_block_num):
         chain_id = dec.read_bytes(32).hex()
     assert chain_id == tester.api.get_info()['chain_id']
+
+@chain_test(True)
+def test_modify_permission_object(tester: ChainTester):
+    idx = PermissionObjectIndex(tester.db)
+    perm = idx.find_by_owner('hello', 'active')
+
+    perm1 = idx.find_by_id(perm.table_id)
+    assert perm == perm1
+
+    perm2 = idx.find_by_parent(perm.parent, perm.table_id)
+    assert perm == perm2
+
+    perm3 = idx.find_by_name(perm.name, perm.table_id)
+    assert perm == perm3
+
+    enc = Encoder()
+    keys = [KeyWeight(PublicKey.from_base58('EOS61MgZLN7Frbc2J7giU7JdYjy2TqnfWFjZuLXvpHJoKzWAj7Nst'), 1)]
+    perm.auth = Authority(1, keys, [], [])
+    enc.pack(perm)
+
+    ret = idx.modify(perm)
+    print('modify_by_id return:', ret)
+
+    perm = idx.find_by_id(perm.table_id)
+    print(perm)
