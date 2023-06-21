@@ -1,7 +1,7 @@
 import base58
 import hashlib
 from typing import NewType
-from . import eos
+# from . import eos
 
 U8 = NewType('U8', int)
 U16 = NewType('U16', int)
@@ -37,6 +37,9 @@ Name = NewType('Name', str)
 #     def unpack(cls, dec):
 #         raw = dec.read_bytes(8)
 #         return Name(eos.b2s(raw), raw)
+
+#    def to_bytes(self):
+#        return self.raw
 
 class Float128(object):
     def __init__(self, raw: bytes):

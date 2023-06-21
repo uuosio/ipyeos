@@ -408,6 +408,12 @@ class Chain(object):
             raise Exception(result)
         return result
 
+    def push_block(self, block_log_ptr: int, block_num: int) -> bool:
+        ret = _chain.push_block(self.ptr, block_log_ptr, block_num)
+        if not ret:
+            raise Exception(_eos.get_last_error())
+        return True
+
     def get_scheduled_transaction(self, sender_id: int, sender: Name) -> dict:
         ret = _chain.get_scheduled_transaction(self.ptr, sender_id, sender)
         if ret:

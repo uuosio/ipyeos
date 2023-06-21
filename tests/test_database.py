@@ -1156,6 +1156,16 @@ def test_resource_limits_object(tester: ChainTester):
     # print(data2)
     # assert data1 == data2
 
+    idx = ResourceLimitsObjectIndex(tester.db)
+    obj = idx.find_by_id(0)
+    logger.info(obj)
+    obj.ram_bytes = 123
+    idx.modify(obj)
+    obj2 = idx.find_by_id(0)
+    logger.info(obj2)
+    assert obj == obj2
+
+
 class UsageAccumulator(object):
     def __init__(self, last_ordinal, value_ex, consumed):
         self.last_ordinal = last_ordinal
@@ -1244,7 +1254,14 @@ def test_resource_usage_object(tester: ChainTester):
     ret = parse_resource_usage_object(data1)
     print(ret)
 
-
+    idx = ResourceUsageObjectIndex(tester.db)
+    obj = idx.find_by_id(0)
+    logger.info(obj)
+    obj.ram_usage = 123
+    idx.modify(obj)
+    obj2 = idx.find_by_id(0)
+    logger.info(obj2)
+    assert obj == obj2
 
 #    class resource_limits_state_object : public chainbase::object<resource_limits_state_object_type, resource_limits_state_object> {
 #       OBJECT_CTOR(resource_limits_state_object);
@@ -1340,6 +1357,15 @@ def test_resource_limits_state_object(tester: ChainTester):
 
     data = tester.db.find(database.resource_limits_state_object_type, 0, 0)
     print(parse_resource_limits_state(data))
+
+    idx = ResourceLimitsStateObjectIndex(tester.db)
+    obj = idx.find_by_id(0)
+    logger.info(obj)
+    obj.virtual_cpu_limit = 123
+    idx.modify(obj)
+    obj2 = idx.find_by_id(0)
+    logger.info(obj2)
+    assert obj == obj2
 
 class ElasticLimitParameters(object):
     def __init__(self, target, max_, periods):
@@ -1444,6 +1470,14 @@ def test_resource_limits_config(tester: ChainTester):
     data = tester.db.find(database.resource_limits_config_object_type, 0, 0)
     print(parse_resource_limits_config(data))
 
+    idx = ResourceLimitsConfigObjectIndex(tester.db)
+    obj = idx.find_by_id(0)
+    logger.info(obj)
+    obj.account_net_usage_average_window = 123
+    idx.modify(obj)
+    obj2 = idx.find_by_id(0)
+    logger.info(obj2)
+    assert obj == obj2
 
 
 #    class protocol_state_object : public chainbase::object<protocol_state_object_type, protocol_state_object>
@@ -1536,6 +1570,15 @@ def test_protocol_state_object(tester: ChainTester):
     data = tester.db.find(database.protocol_state_object_type, 0, 0)
     parse_protocol_state_object(data)
 
+    idx = ProtocolStateObjectIndex(tester.db)
+    obj = idx.find_by_id(0)
+    logger.info(obj)
+    obj.num_supported_key_types = 123
+    # obj.whitelisted_intrinsics.append('zmyintrinsics')
+    idx.modify(obj)
+    obj2 = idx.find_by_id(0)
+    logger.info(obj2)
+    assert obj == obj2
 
 #    class account_ram_correction_object : public chainbase::object<account_ram_correction_object_type, account_ram_correction_object>
 #       id_type      id;
@@ -1637,6 +1680,16 @@ def test_code_object(tester: ChainTester):
     data = tester.db.upper_bound(database.code_object_type, 1, key)
     assert data
 
+    idx = CodeObjectIndex(tester.db)
+    obj = idx.find_by_id(0)
+    logger.info(obj)
+    obj.vm_version = 123
+    # obj.whitelisted_intrinsics.append('zmyintrinsics')
+    idx.modify(obj)
+    obj2 = idx.find_by_id(0)
+    logger.info(obj2)
+    assert obj == obj2
+
 # class database_header_object : public chainbase::object<database_header_object_type, database_header_object>
 # {
 #     OBJECT_CTOR(database_header_object)
@@ -1684,6 +1737,16 @@ def test_database_header_object(tester: ChainTester):
     print(data)
     if data:
         parse_database_header_object(data)
+
+    idx = DatabaseHeaderObjectIndex(tester.db)
+    obj = idx.find_by_id(0)
+    logger.info(obj)
+    obj.version = 123
+    # obj.whitelisted_intrinsics.append('zmyintrinsics')
+    idx.modify(obj)
+    obj2 = idx.find_by_id(0)
+    logger.info(obj2)
+    assert obj == obj2
 
 #    chain_config_v0   initial_configuration = {
 #       .max_block_net_usage                  = config::default_max_block_net_usage,

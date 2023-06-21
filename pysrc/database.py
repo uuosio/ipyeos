@@ -785,11 +785,11 @@ class DatabaseHeaderObjectIndex(object):
     def __init__(self, db: Database):
         self.db = db
 
-    def find(self):
-        return self.find_by_id()
+    def find(self, table_id=0):
+        return self.find_by_id(table_id)
 
-    def find_by_id(self):
-        key = int.to_bytes(0, 8, 'little', signed=True)
+    def find_by_id(self, table_id=0):
+        key = int.to_bytes(table_id, 8, 'little', signed=True)
         data = self.db.find(database_header_object_type, DatabaseHeaderObject.by_id, key)
         if not data:
             return None

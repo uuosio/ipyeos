@@ -3,4 +3,5 @@ _PyInit__chainapi
 _PyInit__vm_api
 _PyInit__eos
 _PyInit__database
+_PyInit__block_log
 _native_apply

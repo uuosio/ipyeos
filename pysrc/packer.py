@@ -96,8 +96,11 @@ class Encoder(object):
         self.write_bytes(bs)
         return len(bs)
 
-    def pack_name(self, s: Name):
-        raw = eos.s2b(s)
+    def pack_name(self, s: Union[str, Name]):
+        if isinstance(s, str):
+            raw = eos.s2b(s)
+        else:
+            raw = s.to_bytes()
         self.write_bytes(raw)
         return 8
 
@@ -125,7 +128,10 @@ class Encoder(object):
         pos = self.get_pos()
         self.pack_length(len(l))
         for item in l:
-            self.pack(item)
+            if isinstance(item, str):
+                self.pack_string(item)
+            else:
+                self.pack(item)
         return self.get_pos() - pos
 
     def pack_optional(self, value: Any, tp: Type):

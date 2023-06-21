@@ -1199,20 +1199,19 @@ class TableIdObject(object):
 
 class ResourceLimitsObject(object):
     by_id = 0
-    def __init__(self, table_id: I64, owner: Name, pending: bool, net_weight: I64, cpu_weight: I64, ram_bytes: I64):
+    def __init__(self, table_id: I64, owner: Name, net_weight: I64, cpu_weight: I64, ram_bytes: I64):
         self.table_id = table_id
         self.owner = owner
-        self.pending = pending
+        # self.pending = pending
         self.net_weight = net_weight
         self.cpu_weight = cpu_weight
         self.ram_bytes = ram_bytes
 
     def __repr__(self):
-        return f"{{owner: {self.owner}, pending: {self.pending}, net_weight: {self.net_weight}, cpu_weight: {self.cpu_weight}, ram_bytes: {self.ram_bytes}}}"
+        return f"{{owner: {self.owner}, net_weight: {self.net_weight}, cpu_weight: {self.cpu_weight}, ram_bytes: {self.ram_bytes}}}"
 
     def __eq__(self, other):
         return self.owner == other.owner \
-            and self.pending == other.pending \
             and self.net_weight == other.net_weight \
             and self.cpu_weight == other.cpu_weight \
             and self.ram_bytes == other.ram_bytes
@@ -1220,7 +1219,7 @@ class ResourceLimitsObject(object):
     def pack(self, enc: Encoder) -> int:
         pos = enc.get_pos()
         enc.pack_name(self.owner)
-        enc.pack_bool(self.pending)
+        # enc.pack_bool(self.pending)
         enc.pack_i64(self.net_weight)
         enc.pack_i64(self.cpu_weight)
         enc.pack_i64(self.ram_bytes)
@@ -1230,11 +1229,11 @@ class ResourceLimitsObject(object):
     def unpack(cls, dec: Decoder):
         table_id = dec.unpack_i64()
         owner = dec.unpack_name()
-        pending = dec.unpack_bool()
+        # pending = dec.unpack_bool()
         net_weight = dec.unpack_i64()
         cpu_weight = dec.unpack_i64()
         ram_bytes = dec.unpack_i64()
-        return ResourceLimitsObject(table_id, owner, pending, net_weight, cpu_weight, ram_bytes)
+        return ResourceLimitsObject(table_id, owner, net_weight, cpu_weight, ram_bytes)
 
 # struct usage_accumulator {
 #          uint32_t   last_ordinal;  ///< The ordinal of the last period which has contributed to the average
@@ -1343,6 +1342,7 @@ class ResourceLimitsStateObject(object):
                 total_ram_bytes: U64,
                 virtual_net_limit: U64,
                 virtual_cpu_limit: U64):
+        self.table_id = table_id
         self.average_block_net_usage = average_block_net_usage
         self.average_block_cpu_usage = average_block_cpu_usage
         self.pending_net_usage = pending_net_usage
@@ -1582,7 +1582,12 @@ class ProtocolStateObject(object):
         table_id = dec.unpack_i64()
         activated_protocol_features = dec.unpack_list(ActivatedProtocolFeature)
         preactivated_protocol_features = dec.unpack_list(Checksum256)
-        whitelisted_intrinsics = dec.unpack_list(str)
+        whitelisted_intrinsics = []
+        length = dec.unpack_length()
+        for i in range(length):
+            _ = dec.unpack_u64()
+            s = dec.unpack_string()
+            whitelisted_intrinsics.append(s)
         num_supported_key_types = dec.unpack_u32()
         return ProtocolStateObject(table_id, activated_protocol_features, preactivated_protocol_features, whitelisted_intrinsics, num_supported_key_types)
 

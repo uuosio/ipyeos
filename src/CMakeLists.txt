@@ -3,6 +3,7 @@ add_cython_target(_chain CXX)
 add_cython_target(_chainapi CXX)
 add_cython_target(_vm_api CXX)
 add_cython_target(_database CXX)
+add_cython_target(_block_log CXX)
 
 add_library(_eos MODULE
     ${_eos}
@@ -10,6 +11,7 @@ add_library(_eos MODULE
     ${_chainapi}
     ${_vm_api}
     ${_database}
+    ${_block_log}
     main.cpp
     _ipyeos.cpp
     _vm_api.cpp

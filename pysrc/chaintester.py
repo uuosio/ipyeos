@@ -1,4 +1,5 @@
 import atexit
+from enum import Enum
 import hashlib
 import json
 import logging
@@ -26,6 +27,11 @@ test_dir = os.path.dirname(__file__)
 
 # default_time = datetime.fromtimestamp(946684800000/1e3, tz=timezone.utc)
 default_time = datetime.utcfromtimestamp(946684800000/1e3)
+
+class DBReadMode(Enum):
+    HEAD = 0
+    IRREVERSIBLE = 1
+    SPECULATIVE = 2
 
 chain_config = {
     "sender_bypass_whiteblacklist":[],
@@ -59,7 +65,7 @@ chain_config = {
         "threads":1
     },
     "eosvmoc_tierup":False,
-    "read_mode":"HEAD",
+    "read_mode": DBReadMode.HEAD.name,
     "block_validation_mode":"FULL",
     "db_map_mode":"mapped",
     "resource_greylist":[],
