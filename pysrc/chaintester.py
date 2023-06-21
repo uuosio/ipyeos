@@ -16,6 +16,10 @@ from ipyeos import chain, chainapi, database, config
 from . import eos, log
 from .types import Name
 
+from .packer import Decoder
+from .database_objects import GeneratedTransactionObject
+from .database import GeneratedTransactionObjectIndex
+
 logger = log.get_logger(__name__)
 
 test_dir = os.path.dirname(__file__)
@@ -144,80 +148,6 @@ log_level_info = 2
 log_level_warn = 3
 log_level_error = 4
 log_level_off = 5
-
-class Decoder(object):
-    def __init__(self, raw_data: bytes):
-        self.raw_data = raw_data
-        self.pos = 0
-
-    def read_bytes(self, size):
-        assert len(self.raw_data) >= self.pos + size
-        ret = self.raw_data[self.pos:self.pos+size]
-        self.pos += size
-        return ret
-
-    def unpack_name(self):
-        name = self.read_bytes(8)
-        return eos.b2s(name)
-
-    def unpack_u8(self):
-        ret = self.read_bytes(1)[0]
-        return ret
-
-    def unpack_u16(self):
-        ret = int.from_bytes(self.read_bytes(2), 'little')
-        return ret
-
-    def unpack_u32(self):
-        ret = int.from_bytes(self.read_bytes(4), 'little')
-        return ret
-
-    def unpack_u64(self):
-        ret = int.from_bytes(self.read_bytes(8), 'little')
-        return ret
-
-    def unpack_i64(self):
-        ret = int.from_bytes(self.read_bytes(8), 'little', signed=True)
-        return ret
-
-    def unpack_checksum256(self):
-        ret = self.read_bytes(32)
-        return ret
-
-    def unpack_length(self):
-        v = 0
-        by = 0
-        while True:
-            b = self.unpack_u8()
-            v |= (b & 0x7f) << by
-            by += 7
-            if b & 0x80 == 0:
-                break
-        return v
-
-    def unpack_bytes(self):
-        length = self.unpack_length()
-        data = self.read_bytes(length)
-        return data
-    
-    def unpack_string(self):
-        length = self.unpack_length()
-        data = self.read_bytes(length)
-        return data.decode()
-
-    def unpack_time_point(self):
-        return self.unpack_u64()
-
-    def unpack_public_key(self):
-        ret = self.read_bytes(33)
-        return ret
-
-    def get_bytes(self, size):
-        ret = self.read_bytes(size)
-        return ret
-
-    def get_pos(self):
-        return self.pos
 
 genesis_state_or_chain_id_version = 3
 
@@ -677,13 +607,42 @@ class ChainTester(object):
 
     def produce_block(self, next_block_time=default_time, start_block=True):
         trxs = self.chain.get_scheduled_transactions()
+        idx = GeneratedTransactionObjectIndex(self.db)
+        pending_block_time = self.chain.pending_block_time()
+        ready_txs = []
+        def get_ready_trx(tp, data):
+            # print(tp, data)
+            dec = Decoder(data)
+            #     transaction_id_type           trx_id;
+            #     account_name                  sender;
+            #     uint128_t                     sender_id;
+            #     account_name                  payer;
+            #     time_point                    delay_until; /// this generated transaction will not be applied until the specified time
+            #     time_point                    expiration; /// this generated transaction will not be applied after this time
+            #     time_point                    published;
+            table_id = dec.unpack_u64()
+            trx_id = dec.read_bytes(32).hex()
+            sender = dec.unpack_name()
+            sender_id = dec.unpack_u128()
+            payer = dec.unpack_name()
+            delay_until = dec.unpack_i64()
+            # print('+++delay_until:', delay_until, pending_block_time)
+            if pending_block_time > delay_until:
+                return 0
+            ready_txs.append(trx_id)
+            return 1
+            # expiration = dec.unpack_i64()
+            # published = dec.unpack_i64()
+        idx.walk_by_expiration(get_ready_trx)
+        # print('+++ready_txs:', ready_txs)
+
         deadline = datetime.utcnow() + timedelta(microseconds=10000000)
         priv_keys = []
         for pub_key in self.chain.get_producer_public_keys():
             if pub_key in producer_key_map:
                 priv_keys.append(producer_key_map[pub_key])
 
-        for scheduled_tx_id in trxs:
+        for scheduled_tx_id in ready_txs:
             self.chain.push_scheduled_transaction(scheduled_tx_id, deadline, 100)
         # logger.info("+++priv_keys: %s", priv_keys)
         self.chain.finalize_block(priv_keys)
