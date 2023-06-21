@@ -1,5 +1,5 @@
 import struct
-from typing import List, Type
+from typing import List, Type, Union, Any
 
 from . import eos
 from .types import U8, U16, U32, U64, I64, U128, U256, Name, Checksum256, PublicKey
@@ -39,7 +39,7 @@ class Encoder(object):
         self.data.append(raw)
         self.pos += len(raw)
 
-    def pack(self, obj) -> int:
+    def pack(self, obj: Any) -> int:
         return obj.pack(self)
 
     def pack_u8(self, n: U8) -> int:
@@ -101,7 +101,12 @@ class Encoder(object):
         self.write_bytes(raw)
         return 8
 
-    def pack_checksum256(self, h: Checksum256):
+    def pack_checksum256(self, h: Union[bytes, Checksum256]):
+        if isinstance(h, bytes):
+            assert len(h) == 32, "invalid checksum256"
+            self.write_bytes(h)
+            return 32            
+        assert isinstance(h, Checksum256)
         h.pack(self)
         return 32
 
@@ -122,6 +127,27 @@ class Encoder(object):
         for item in l:
             self.pack(item)
         return self.get_pos() - pos
+
+    def pack_optional(self, value: Any, tp: Type):
+        if value is None:
+            self.pack_u8(0)
+            return 1
+        self.pack_u8(1)
+        if tp is U32:
+            return self.pack_u32(value) + 1
+        elif tp is U64:
+            return self.pack_u64(value) + 1
+        elif tp is U128:
+            return self.pack_u128(value) + 1
+        elif tp is U256:
+            return self.pack_u256(value) + 1
+        elif tp is Name:
+            return self.pack_name(value) + 1
+        elif tp is Checksum256:
+            return self.pack_checksum256(value) + 1
+        elif tp is str:
+            return self.pack_string(value) + 1
+        return self.pack(value) + 1
 
     def get_pos(self):
         return self.pos
@@ -181,7 +207,7 @@ class Decoder(object):
 
     def unpack_checksum256(self):
         ret = self.read_bytes(32)
-        return ret
+        return Checksum256(ret)
 
     def unpack_length(self):
         v = 0
@@ -218,10 +244,14 @@ class Decoder(object):
         flag = self.unpack_u8()
         if flag == 0:
             return None
+        if tp is U32:
+            return self.unpack_u32()
+        elif tp is U64:
+            return self.unpack_u64()
         return tp.unpack(self)
 
     def unpack_time_point(self):
-        return self.unpack_u64()
+        return self.unpack_i64()
 
     def unpack_public_key(self):
         ret = PublicKey.unpack(self)

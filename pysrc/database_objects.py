@@ -33,7 +33,10 @@ class template(object):
         pass
 
 class AccountObject(object):
-    def __init__(self, name: Name, creation_date: U32, abi: bytes):
+    by_id = 0
+    by_name = 1
+    def __init__(self, table_id: I64, name: Name, creation_date: U32, abi: bytes):
+        self.table_id = table_id
         self.name = name
         self.creation_date = creation_date
         self.abi = abi
@@ -47,16 +50,19 @@ class AccountObject(object):
             and self.abi == other.abi
 
     def pack(self, enc: Encoder):
+        pos = enc.get_pos()
         enc.pack_name(self.name)
         enc.pack_u32(self.creation_date)
         enc.pack_bytes(self.abi)
+        return enc.get_pos() - pos
 
     @classmethod
     def unpack(cls, dec: Decoder):
+        table_id = dec.unpack_i64()
         name = dec.unpack_name()
         creation_date = dec.unpack_u32()
         abi = dec.unpack_bytes()
-        return AccountObject(name, creation_date, abi)
+        return AccountObject(table_id, name, creation_date, abi)
 
 # struct account_metadata_object_
 # {
@@ -73,8 +79,10 @@ class AccountObject(object):
 # };
 
 class AccountMetadataObject(object):
-    def __init__(self, name: Name, recv_sequence: U64, auth_sequence: U64, code_sequence: U64, abi_sequence: U64, \
+    by_id = 0
+    def __init__(self, table_id: I64, name: Name, recv_sequence: U64, auth_sequence: U64, code_sequence: U64, abi_sequence: U64, \
                 code_hash: Checksum256, last_code_update: I64, flags: U32, vm_type: U8, vm_version: U8):
+        self.table_id = table_id
         self.name = name
         self.recv_sequence = recv_sequence
         self.auth_sequence = auth_sequence
@@ -98,18 +106,19 @@ class AccountMetadataObject(object):
         vm_version: {self.vm_version}}}"
 
     def __eq__(self, other):
-        return self.name == name \
-        and self.recv_sequence == recv_sequence \
-        and self.auth_sequence == auth_sequence \
-        and self.code_sequence == code_sequence \
-        and self.abi_sequence == abi_sequence \
-        and self.code_hash == code_hash \
-        and self.last_code_update == last_code_update \
-        and self.flags == flags \
-        and self.vm_type == vm_type \
-        and self.vm_version == vm_version
+        return self.name == self.name \
+        and self.recv_sequence == other.recv_sequence \
+        and self.auth_sequence == other.auth_sequence \
+        and self.code_sequence == other.code_sequence \
+        and self.abi_sequence == other.abi_sequence \
+        and self.code_hash == other.code_hash \
+        and self.last_code_update == other.last_code_update \
+        and self.flags == other.flags \
+        and self.vm_type == other.vm_type \
+        and self.vm_version == other.vm_version
 
     def pack(self, enc: Encoder):
+        pos = enc.get_pos()
         enc.pack_name(self.name)
         enc.pack_u64(self.recv_sequence)
         enc.pack_u64(self.auth_sequence)
@@ -120,21 +129,23 @@ class AccountMetadataObject(object):
         enc.pack_u32(self.flags)
         enc.pack_u8(self.vm_type)
         enc.pack_u8(self.vm_version)
+        return enc.get_pos() - pos
 
     @classmethod
     def unpack(cls, dec: Decoder):
-        name = enc.pack_name(self.name)
-        recv_sequence = enc.pack_u64(self.recv_sequence)
-        auth_sequence = enc.pack_u64(self.auth_sequence)
-        code_sequence = enc.pack_u64(self.code_sequence)
-        abi_sequence = enc.pack_u64(self.abi_sequence)
-        code_hash = enc.pack_checksum256(self.code_hash)
-        last_code_update = enc.pack_i64(self.last_code_update)
-        flags = enc.pack_u32(self.flags)
-        vm_type = enc.pack_u8(self.vm_type)
-        vm_version = enc.pack_u8(self.vm_version)
-        return AccountMetadataObject(name, recv_sequence, auth_sequence, code_sequence, abi_sequence, \
-                code_hash, last_code_update, flags, vm_type, vm_version)
+        table_id = dec.unpack_i64()
+        name = dec.unpack_name()
+        recv_sequence = dec.unpack_u64()
+        auth_sequence = dec.unpack_u64()
+        code_sequence = dec.unpack_u64()
+        abi_sequence = dec.unpack_u64()
+        code_hash = dec.unpack_checksum256()
+        last_code_update = dec.unpack_i64()
+        flags = dec.unpack_u32()
+        vm_type = dec.unpack_u8()
+        vm_version = dec.unpack_u8()
+        return AccountMetadataObject(table_id, name, recv_sequence, auth_sequence, code_sequence, abi_sequence, \
+            code_hash, last_code_update, flags, vm_type, vm_version)
 
 # struct permission_object_ {
 #     permission_usage_object::id_type  usage_id;
@@ -240,7 +251,9 @@ class PermissionObject(object):
 # };
 
 class PermissionUsageObject(object):
-    def __init__(self, last_used: I64):
+    by_id = 0
+    def __init__(self, table_id: I64, last_used: I64):
+        self.table_id = table_id
         self.last_used = last_used
 
     def __repr__(self):
@@ -254,8 +267,9 @@ class PermissionUsageObject(object):
 
     @classmethod
     def unpack(cls, dec: Decoder):
+        table_id = dec.unpack_i64()
         last_used = dec.unpack_i64()
-        return PermissionUsageObject(last_used)
+        return PermissionUsageObject(table_id, last_used)
 
 # struct permission_link_object_ {
 #     /// The account which is defining its permission requirements
@@ -271,7 +285,9 @@ class PermissionUsageObject(object):
 # };
 
 class PermissionLinkObject(object):
-    def __init__(self, account: Name, code: Name, message_type: Name, required_permission: Name):
+    by_id = 0
+    def __init__(self, table_id: I64, account: Name, code: Name, message_type: Name, required_permission: Name):
+        self.table_id = table_id
         self.account = account
         self.code = code
         self.message_type = message_type
@@ -296,11 +312,12 @@ class PermissionLinkObject(object):
 
     @classmethod
     def unpack(cls, dec: Decoder):
+        table_id = dec.unpack_i64()
         account = dec.unpack_name()
         code = dec.unpack_name()
         message_type = dec.unpack_name()
         required_permission = dec.unpack_name()
-        return PermissionLinkObject(account, code, message_type, required_permission)
+        return PermissionLinkObject(table_id, account, code, message_type, required_permission)
 
 # struct key_value_object_ {
 #     int64_t              t_id; //< t_id should not be changed within a chainbase modifier lambda
@@ -310,7 +327,9 @@ class PermissionLinkObject(object):
 # };
 
 class KeyValueObject(object):
-    def __init__(self, t_id: I64, primary_key: U64, payer: Name, value: bytes):
+    by_id = 0
+    def __init__(self, table_id: I64, t_id: I64, primary_key: U64, payer: Name, value: bytes):
+        self.table_id = table_id
         self.t_id = t_id
         self.primary_key = primary_key
         self.payer = payer
@@ -335,11 +354,12 @@ class KeyValueObject(object):
 
     @classmethod
     def unpack(cls, dec: Decoder):
+        table_id = dec.unpack_i64()
         t_id = dec.unpack_i64()
         primary_key = dec.unpack_u64()
         payer = dec.unpack_name()
         value = dec.unpack_bytes()
-        return KeyValueObject(t_id, primary_key, payer, value)
+        return KeyValueObject(table_id, t_id, primary_key, payer, value)
 
 # struct index64_object_ {
 #     int64_t       t_id; //< t_id should not be changed within a chainbase modifier lambda
@@ -349,7 +369,9 @@ class KeyValueObject(object):
 # };
 
 class Index64Object(object):
-    def __init__(self, t_id: I64, primary_key: U64, payer: Name, secondary_key: U64):
+    by_id = 0
+    def __init__(self, table_id: I64, t_id: I64, primary_key: U64, payer: Name, secondary_key: U64):
+        self.table_id = table_id
         self.t_id = t_id
         self.primary_key = primary_key
         self.payer = payer
@@ -374,11 +396,12 @@ class Index64Object(object):
 
     @classmethod
     def unpack(cls, dec: Decoder):
+        table_id = dec.unpack_i64()
         t_id = dec.unpack_i64()
         primary_key = dec.unpack_u64()
         payer = dec.unpack_name()
         secondary_key = dec.unpack_u64()
-        return Index64Object(t_id, primary_key, payer, secondary_key)
+        return Index64Object(table_id, t_id, primary_key, payer, secondary_key)
 
 # struct index128_object_ {
 #     int64_t       t_id; //< t_id should not be changed within a chainbase modifier lambda
@@ -388,7 +411,8 @@ class Index64Object(object):
 # };
 
 class Index128Object(object):
-    def __init__(self, t_id: I64, primary_key: U64, payer: Name, secondary_key: U128):
+    def __init__(self, table_id: I64, t_id: I64, primary_key: U64, payer: Name, secondary_key: U128):
+        self.table_id = table_id
         self.t_id = t_id
         self.primary_key = primary_key
         self.payer = payer
@@ -413,11 +437,12 @@ class Index128Object(object):
 
     @classmethod
     def unpack(cls, dec: Decoder):
+        table_id = dec.unpack_i64()
         t_id = dec.unpack_i64()
         primary_key = dec.unpack_u64()
         payer = dec.unpack_name()
         secondary_key = dec.unpack_u128()
-        return Index128Object(t_id, primary_key, payer, secondary_key)
+        return Index128Object(table_id, t_id, primary_key, payer, secondary_key)
 
 
 # struct index256_object_ {
@@ -428,7 +453,8 @@ class Index128Object(object):
 # };
 
 class Index256Object(object):
-    def __init__(self, t_id: I64, primary_key: U64, payer: Name, secondary_key: U256):
+    by_id = 0
+    def __init__(self, table_id: I64, t_id: I64, primary_key: U64, payer: Name, secondary_key: U256):
         self.t_id = t_id
         self.primary_key = primary_key
         self.payer = payer
@@ -453,11 +479,12 @@ class Index256Object(object):
 
     @classmethod
     def unpack(cls, dec: Decoder):
+        table_id = dec.unpack_i64()
         t_id = dec.unpack_i64()
         primary_key = dec.unpack_u64()
         payer = dec.unpack_name()
         secondary_key = dec.unpack_u256()
-        return Index256Object(t_id, primary_key, payer, secondary_key)
+        return Index256Object(table_id, t_id, primary_key, payer, secondary_key)
 
 # struct index_double_object_ {
 #     int64_t       t_id; //< t_id should not be changed within a chainbase modifier lambda
@@ -467,7 +494,9 @@ class Index256Object(object):
 # };
 
 class IndexDoubleObject(object):
-    def __init__(self, t_id: I64, primary_key: U64, payer: Name, secondary_key: float):
+    by_id = 0
+    def __init__(self, table_id: I64, t_id: I64, primary_key: U64, payer: Name, secondary_key: float):
+        self.table_id = table_id
         self.t_id = t_id
         self.primary_key = primary_key
         self.payer = payer
@@ -492,11 +521,12 @@ class IndexDoubleObject(object):
 
     @classmethod
     def unpack(cls, dec: Decoder):
+        table_id = dec.unpack_i64()
         t_id = dec.unpack_i64()
         primary_key = dec.unpack_u64()
         payer = dec.unpack_name()
         secondary_key = dec.unpack_double()
-        return IndexDoubleObject(t_id, primary_key, payer, secondary_key)
+        return IndexDoubleObject(table_id, t_id, primary_key, payer, secondary_key)
 
 # struct index_long_double_object_ {
 #     int64_t       t_id; //< t_id should not be changed within a chainbase modifier lambda
@@ -506,7 +536,9 @@ class IndexDoubleObject(object):
 # };
 
 class IndexLongDoubleObject(object):
-    def __init__(self, t_id: I64, primary_key: U64, payer: Name, secondary_key: Float128):
+    by_id = 0
+    def __init__(self, table_id: I64, t_id: I64, primary_key: U64, payer: Name, secondary_key: Float128):
+        self.table_id = table_id
         self.t_id = t_id
         self.primary_key = primary_key
         self.payer = payer
@@ -531,11 +563,12 @@ class IndexLongDoubleObject(object):
 
     @classmethod
     def unpack(cls, dec: Decoder):
+        table_id = dec.unpack_i64()
         t_id = dec.unpack_i64()
         primary_key = dec.unpack_u64()
         payer = dec.unpack_name()
         secondary_key = Float128.unpack(dec)
-        return IndexLongDoubleObject(t_id, primary_key, payer, secondary_key)
+        return IndexLongDoubleObject(table_id, t_id, primary_key, payer, secondary_key)
 
 
 # struct block_signing_authority_v0 {
@@ -545,6 +578,7 @@ class IndexLongDoubleObject(object):
 
 
 class BlockSigningAuthorityV0(object):
+    by_id = 0
     def __init__(self, threshold: U32, keys: List[KeyWeight]):
         self.threshold = threshold
         self.keys = keys
@@ -576,6 +610,7 @@ BlockSigningAuthority = Variant[BlockSigningAuthorityV0]
 # };
 
 class ProducerAuthority(object):
+    by_id = 0
     def __init__(self, producer_name: Name, authority: BlockSigningAuthority):
         self.producer_name = producer_name
         self.authority = authority
@@ -605,6 +640,7 @@ class ProducerAuthority(object):
 # }
 
 class ProducerAuthoritySchedule(object):
+    by_id = 0
     def __init__(self, version: U32, producers: List[ProducerAuthority]):
         self.version = version
         self.producers = producers
@@ -705,29 +741,29 @@ class ChainConfig(object):
 
     def pack(self, enc: Encoder):
         pos = enc.get_pos()
-        self.pack_u32(self.max_block_net_usage)
-        self.pack_u32(self.target_block_net_usage_pct)
-        self.pack_u32(self.max_transaction_net_usage)
-        self.pack_u32(self.base_per_transaction_net_usage)
-        self.pack_u32(self.net_usage_leeway)
-        self.pack_u32(self.context_free_discount_net_usage_num)
-        self.pack_u32(self.context_free_discount_net_usage_den)
-        self.pack_u32(self.max_block_cpu_usage)
-        self.pack_u32(self.target_block_cpu_usage_pct)
-        self.pack_u32(self.max_transaction_cpu_usage)
-        self.pack_u32(self.min_transaction_cpu_usage)
-        self.pack_u32(self.max_transaction_lifetime)
-        self.pack_u32(self.deferred_trx_expiration_window)
-        self.pack_u32(self.max_transaction_delay)
-        self.pack_u32(self.max_inline_action_size)
-        self.pack_u16(self.max_inline_action_depth)
-        self.pack_u16(self.max_authority_depth)
-        self.pack_u32(self.max_action_return_value_size)
+        enc.pack_u64(self.max_block_net_usage)
+        enc.pack_u32(self.target_block_net_usage_pct)
+        enc.pack_u32(self.max_transaction_net_usage)
+        enc.pack_u32(self.base_per_transaction_net_usage)
+        enc.pack_u32(self.net_usage_leeway)
+        enc.pack_u32(self.context_free_discount_net_usage_num)
+        enc.pack_u32(self.context_free_discount_net_usage_den)
+        enc.pack_u32(self.max_block_cpu_usage)
+        enc.pack_u32(self.target_block_cpu_usage_pct)
+        enc.pack_u32(self.max_transaction_cpu_usage)
+        enc.pack_u32(self.min_transaction_cpu_usage)
+        enc.pack_u32(self.max_transaction_lifetime)
+        enc.pack_u32(self.deferred_trx_expiration_window)
+        enc.pack_u32(self.max_transaction_delay)
+        enc.pack_u32(self.max_inline_action_size)
+        enc.pack_u16(self.max_inline_action_depth)
+        enc.pack_u16(self.max_authority_depth)
+        enc.pack_u32(self.max_action_return_value_size)
         return enc.get_pos() - pos
 
     @classmethod
     def unpack(cls, dec: Decoder):
-        max_block_net_usage = dec.unpack_u32()
+        max_block_net_usage = dec.unpack_u64()
         target_block_net_usage_pct = dec.unpack_u32()
         max_transaction_net_usage = dec.unpack_u32()
         base_per_transaction_net_usage = dec.unpack_u32()
@@ -787,9 +823,9 @@ class KvDatabaseConfig(object):
 
     def pack(self, enc: Encoder):
         pos = enc.get_pos()
-        self.pack_u32(self.max_key_size)
-        self.pack_u32(self.max_value_size)
-        self.pack_u32(self.max_iterators)
+        enc.pack_u32(self.max_key_size)
+        enc.pack_u32(self.max_value_size)
+        enc.pack_u32(self.max_iterators)
         return enc.get_pos() - pos
 
     @classmethod
@@ -848,17 +884,17 @@ class WasmConfig(object):
 
     def pack(self, enc: Encoder) -> int:
         pos = enc.get_pos()
-        self.pack_u32(self.max_mutable_global_bytes)
-        self.pack_u32(self.max_table_elements)
-        self.pack_u32(self.max_section_elements)
-        self.pack_u32(self.max_linear_memory_init)
-        self.pack_u32(self.max_func_local_bytes)
-        self.pack_u32(self.max_nested_structures)
-        self.pack_u32(self.max_symbol_bytes)
-        self.pack_u32(self.max_module_bytes)
-        self.pack_u32(self.max_code_bytes)
-        self.pack_u32(self.max_pages)
-        self.pack_u32(self.max_call_depth)
+        enc.pack_u32(self.max_mutable_global_bytes)
+        enc.pack_u32(self.max_table_elements)
+        enc.pack_u32(self.max_section_elements)
+        enc.pack_u32(self.max_linear_memory_init)
+        enc.pack_u32(self.max_func_local_bytes)
+        enc.pack_u32(self.max_nested_structures)
+        enc.pack_u32(self.max_symbol_bytes)
+        enc.pack_u32(self.max_module_bytes)
+        enc.pack_u32(self.max_code_bytes)
+        enc.pack_u32(self.max_pages)
+        enc.pack_u32(self.max_call_depth)
         return enc.get_pos() - pos
     
     @classmethod
@@ -897,7 +933,9 @@ class WasmConfig(object):
 # };
 
 class GlobalPropertyObject(object):
-    def __init__(self, proposed_schedule_block_num: Optional[U32],
+    by_id = 0
+    def __init__(self, table_id: I64,
+                        proposed_schedule_block_num: Optional[U32],
                         proposed_schedule: ProducerAuthoritySchedule,
                         configuration: ChainConfig,
                         chain_id: Checksum256,
@@ -922,30 +960,33 @@ class GlobalPropertyObject(object):
 
     def pack(self, enc: Encoder) -> int:
         pos = enc.get_pos()
-        enc.pack_optional(self.proposed_schedule_block_num, enc.pack_u32)
-        self.proposed_schedule.pack(enc)
-        self.configuration.pack(enc)
+        enc.pack_optional(self.proposed_schedule_block_num, U32)
+        enc.pack(self.proposed_schedule)
+        enc.pack(self.configuration)
         enc.pack(self.chain_id)
-        self.kv_configuration.pack(enc)
-        self.wasm_configuration.pack(enc)
+        enc.pack(self.kv_configuration)
+        enc.pack(self.wasm_configuration)
         return enc.get_pos() - pos
 
     @classmethod
     def unpack(cls, dec: Decoder):
-        proposed_schedule_block_num = dec.unpack_optional(dec.unpack_u32)
+        table_id = dec.unpack_i64()
+        proposed_schedule_block_num = dec.unpack_optional(U32)
         proposed_schedule = ProducerAuthoritySchedule.unpack(dec)
         configuration = ChainConfig.unpack(dec)
-        chain_id = dec.unpack(ChainId)
+        chain_id = dec.unpack_checksum256()
         kv_configuration = KvDatabaseConfig.unpack(dec)
         wasm_configuration = WasmConfig.unpack(dec)
-        return GlobalPropertyObject(proposed_schedule_block_num, proposed_schedule, configuration, chain_id, kv_configuration, wasm_configuration)
+        return GlobalPropertyObject(table_id, proposed_schedule_block_num, proposed_schedule, configuration, chain_id, kv_configuration, wasm_configuration)
 
 # struct dynamic_global_property_object_ {
 #     uint64_t   global_action_sequence = 0;
 # };
 
 class DynamicGlobalPropertyObject(object):
-    def __init__(self, global_action_sequence: U64):
+    by_id = 0
+    def __init__(self, table_id: I64, global_action_sequence: U64):
+        self.table_id = table_id
         self.global_action_sequence = global_action_sequence
 
     def __repr__(self):
@@ -961,8 +1002,9 @@ class DynamicGlobalPropertyObject(object):
 
     @classmethod
     def unpack(cls, dec: Decoder):
+        table_id = dec.unpack_i64()
         global_action_sequence = dec.unpack_u64()
-        return DynamicGlobalPropertyObject(global_action_sequence)
+        return DynamicGlobalPropertyObject(table_id, global_action_sequence)
 
 
 # struct block_summary_object_ {
@@ -970,7 +1012,9 @@ class DynamicGlobalPropertyObject(object):
 # };
 
 class BlockSummaryObject(object):
-    def __init__(self, block_id: Checksum256):
+    by_id = 0
+    def __init__(self, table_id: I64, block_id: Checksum256):
+        self.table_id = table_id
         self.block_id = block_id
 
     def __repr__(self):
@@ -986,8 +1030,9 @@ class BlockSummaryObject(object):
 
     @classmethod
     def unpack(cls, dec: Decoder):
+        table_id = dec.unpack_i64()
         block_id = dec.unpack(Checksum256)
-        return BlockSummaryObject(block_id)
+        return BlockSummaryObject(table_id, block_id)
 
 # struct transaction_object_ {
 #     time_point_sec      expiration;
@@ -995,7 +1040,9 @@ class BlockSummaryObject(object):
 # };
 
 class TransactionObject(object):
-    def __init__(self, expiration: TimePointSec, trx_id: Checksum256):
+    by_id = 0
+    def __init__(self, table_id: I64, expiration: TimePointSec, trx_id: Checksum256):
+        self.table_id = table_id
         self.expiration = expiration
         self.trx_id = trx_id
 
@@ -1014,9 +1061,10 @@ class TransactionObject(object):
 
     @classmethod
     def unpack(cls, dec: Decoder):
+        table_id = dec.unpack_i64()
         expiration = dec.unpack(TimePointSec)
         trx_id = dec.unpack(Checksum256)
-        return TransactionObject(expiration, trx_id)
+        return TransactionObject(table_id, expiration, trx_id)
 
 # struct generated_transaction_object_ {
 #     transaction_id_type           trx_id;
@@ -1030,7 +1078,14 @@ class TransactionObject(object):
 # };
 
 class GeneratedTransactionObject(object):
-    def __init__(self, trx_id: Checksum256, sender: Name, sender_id: U128, payer: Name, delay_until: TimePoint, expiration: TimePoint, published: TimePoint, packed_trx: bytes):
+    by_id = 0
+    by_trx_id = 1
+    by_expiration = 2
+    by_delay = 3
+    by_sender_id = 4
+
+    def __init__(self, table_id: I64, trx_id: Checksum256, sender: Name, sender_id: U128, payer: Name, delay_until: TimePoint, expiration: TimePoint, published: TimePoint, packed_trx: bytes):
+        self.table_id = table_id
         self.trx_id = trx_id
         self.sender = sender
         self.sender_id = sender_id
@@ -1067,6 +1122,7 @@ class GeneratedTransactionObject(object):
 
     @classmethod
     def unpack(cls, dec: Decoder):
+        table_id = dec.unpack_i64()
         trx_id = dec.unpack_checksum256()
         sender = dec.unpack_name()
         sender_id = dec.unpack_u128()
@@ -1075,7 +1131,8 @@ class GeneratedTransactionObject(object):
         expiration = TimePoint.unpack(dec)
         published = TimePoint.unpack(dec)
         packed_trx = dec.unpack_bytes()
-        return GeneratedTransactionObject(trx_id,
+        return GeneratedTransactionObject(table_id,
+                trx_id,
                 sender,
                 sender_id,
                 payer,
@@ -1093,7 +1150,9 @@ class GeneratedTransactionObject(object):
 # };
 
 class TableIdObject(object):
-    def __init__(self, code: Name, scope: Name, table: Name, payer: Name, count: U32):
+    by_id = 0
+    def __init__(self, table_id: I64, code: Name, scope: Name, table: Name, payer: Name, count: U32):
+        self.table_id = table_id
         self.code = code
         self.scope = scope
         self.table = table
@@ -1121,12 +1180,13 @@ class TableIdObject(object):
 
     @classmethod
     def unpack(cls, dec: Decoder):
+        table_id = dec.unpack_i64()
         code = dec.unpack_name()
         scope = dec.unpack_name()
         table = dec.unpack_name()
         payer = dec.unpack_name()
         count = dec.unpack_u32()
-        return TableIdObject(code, scope, table, payer, count)
+        return TableIdObject(table_id, code, scope, table, payer, count)
 
 # struct resource_limits_object_ {
 #     account_name owner; //< owner should not be changed within a chainbase modifier lambda
@@ -1138,7 +1198,9 @@ class TableIdObject(object):
 # };
 
 class ResourceLimitsObject(object):
-    def __init__(self, owner: Name, pending: bool, net_weight: I64, cpu_weight: I64, ram_bytes: I64):
+    by_id = 0
+    def __init__(self, table_id: I64, owner: Name, pending: bool, net_weight: I64, cpu_weight: I64, ram_bytes: I64):
+        self.table_id = table_id
         self.owner = owner
         self.pending = pending
         self.net_weight = net_weight
@@ -1166,12 +1228,13 @@ class ResourceLimitsObject(object):
 
     @classmethod
     def unpack(cls, dec: Decoder):
+        table_id = dec.unpack_i64()
         owner = dec.unpack_name()
         pending = dec.unpack_bool()
         net_weight = dec.unpack_i64()
         cpu_weight = dec.unpack_i64()
         ram_bytes = dec.unpack_i64()
-        return ResourceLimitsObject(owner, pending, net_weight, cpu_weight, ram_bytes)
+        return ResourceLimitsObject(table_id, owner, pending, net_weight, cpu_weight, ram_bytes)
 
 # struct usage_accumulator {
 #          uint32_t   last_ordinal;  ///< The ordinal of the last period which has contributed to the average
@@ -1215,7 +1278,9 @@ class UsageAccumulator(object):
 # };
 
 class ResourceUsageObject(object):
-    def __init__(self, owner: Name, net_usage: UsageAccumulator, cpu_usage: UsageAccumulator, ram_usage: U64):
+    by_id = 0
+    def __init__(self, table_id: I64, owner: Name, net_usage: UsageAccumulator, cpu_usage: UsageAccumulator, ram_usage: U64):
+        self.table_id = table_id
         self.owner = owner
         self.net_usage = net_usage
         self.cpu_usage = cpu_usage
@@ -1233,18 +1298,19 @@ class ResourceUsageObject(object):
     def pack(self, enc: Encoder) -> int:
         pos = enc.get_pos()
         enc.pack_name(self.owner)
-        self.net_usage.pack(enc)
-        self.cpu_usage.pack(enc)
+        enc.pack(self.net_usage)
+        enc.pack(self.cpu_usage)
         enc.pack_u64(self.ram_usage)
         return enc.get_pos() - pos
 
     @classmethod
     def unpack(cls, dec: Decoder):
+        table_id = dec.unpack_i64()
         owner = dec.unpack_name()
         net_usage = UsageAccumulator.unpack(dec)
         cpu_usage = UsageAccumulator.unpack(dec)
         ram_usage = dec.unpack_u64()
-        return ResourceUsageObject(owner, net_usage, cpu_usage, ram_usage)
+        return ResourceUsageObject(table_id, owner, net_usage, cpu_usage, ram_usage)
 
 # struct resource_limits_state_object_ {
 #     resource_limits::usage_accumulator average_block_net_usage;
@@ -1266,7 +1332,9 @@ class ResourceUsageObject(object):
 # };
 
 class ResourceLimitsStateObject(object):
-    def __init__(self, average_block_net_usage: UsageAccumulator,
+    by_id = 0
+    def __init__(self, table_id: I64,
+                average_block_net_usage: UsageAccumulator,
                 average_block_cpu_usage: UsageAccumulator,
                 pending_net_usage: U64,
                 pending_cpu_usage: U64,
@@ -1301,8 +1369,8 @@ class ResourceLimitsStateObject(object):
     
     def pack(self, enc: Encoder) -> int:
         pos = enc.get_pos()
-        self.average_block_net_usage.pack(enc)
-        self.average_block_cpu_usage.pack(enc)
+        enc.pack(self.average_block_net_usage)
+        enc.pack(self.average_block_cpu_usage)
         enc.pack_u64(self.pending_net_usage)
         enc.pack_u64(self.pending_cpu_usage)
         enc.pack_u64(self.total_net_weight)
@@ -1314,6 +1382,7 @@ class ResourceLimitsStateObject(object):
     
     @classmethod
     def unpack(cls, dec: Decoder):
+        table_id = dec.unpack_i64()
         average_block_net_usage = UsageAccumulator.unpack(dec)
         average_block_cpu_usage = UsageAccumulator.unpack(dec)
         pending_net_usage = dec.unpack_u64()
@@ -1323,7 +1392,7 @@ class ResourceLimitsStateObject(object):
         total_ram_bytes = dec.unpack_u64()
         virtual_net_limit = dec.unpack_u64()
         virtual_cpu_limit = dec.unpack_u64()
-        return ResourceLimitsStateObject(average_block_net_usage, average_block_cpu_usage, pending_net_usage, pending_cpu_usage, total_net_weight, total_cpu_weight, total_ram_bytes, virtual_net_limit, virtual_cpu_limit)
+        return ResourceLimitsStateObject(table_id, average_block_net_usage, average_block_cpu_usage, pending_net_usage, pending_cpu_usage, total_net_weight, total_cpu_weight, total_ram_bytes, virtual_net_limit, virtual_cpu_limit)
 
 # struct ratio {
 #     uint64_t numerator;
@@ -1389,8 +1458,8 @@ class ElasticLimitParameters(object):
         enc.pack_u64(self.max)
         enc.pack_u32(self.periods)
         enc.pack_u32(self.max_multiplier)
-        self.contract_rate.pack(enc)
-        self.expand_rate.pack(enc)
+        enc.pack(self.contract_rate)
+        enc.pack(self.expand_rate)
         return enc.get_pos() - pos
     
     @classmethod
@@ -1413,7 +1482,9 @@ class ElasticLimitParameters(object):
 # };
 
 class ResourceLimitsConfigObject(object):
-    def __init__(self, cpu_limit_parameters: ElasticLimitParameters, net_limit_parameters: ElasticLimitParameters, account_cpu_usage_average_window: U32, account_net_usage_average_window: U32):
+    by_id = 0
+    def __init__(self, table_id: I64, cpu_limit_parameters: ElasticLimitParameters, net_limit_parameters: ElasticLimitParameters, account_cpu_usage_average_window: U32, account_net_usage_average_window: U32):
+        self.table_id = table_id
         self.cpu_limit_parameters = cpu_limit_parameters
         self.net_limit_parameters = net_limit_parameters
         self.account_cpu_usage_average_window = account_cpu_usage_average_window
@@ -1430,19 +1501,20 @@ class ResourceLimitsConfigObject(object):
     
     def pack(self, enc: Encoder) -> int:
         pos = enc.get_pos()
-        self.cpu_limit_parameters.pack(enc)
-        self.net_limit_parameters.pack(enc)
+        enc.pack(self.cpu_limit_parameters)
+        enc.pack(self.net_limit_parameters)
         enc.pack_u32(self.account_cpu_usage_average_window)
         enc.pack_u32(self.account_net_usage_average_window)
         return enc.get_pos() - pos
     
     @classmethod
     def unpack(cls, dec: Decoder):
+        table_id = dec.unpack_i64()
         cpu_limit_parameters = ElasticLimitParameters.unpack(dec)
         net_limit_parameters = ElasticLimitParameters.unpack(dec)
         account_cpu_usage_average_window = dec.unpack_u32()
         account_net_usage_average_window = dec.unpack_u32()
-        return ResourceLimitsConfigObject(cpu_limit_parameters, net_limit_parameters, account_cpu_usage_average_window, account_net_usage_average_window)
+        return ResourceLimitsConfigObject(table_id, cpu_limit_parameters, net_limit_parameters, account_cpu_usage_average_window, account_net_usage_average_window)
 
 # struct activated_protocol_feature_ {
 #     digest_type feature_digest;
@@ -1462,7 +1534,7 @@ class ActivatedProtocolFeature(object):
     
     def pack(self, enc: Encoder) -> int:
         pos = enc.get_pos()
-        self.feature_digest.pack(enc)
+        enc.pack(self.feature_digest)
         enc.pack_u32(self.activation_block_num)
         return enc.get_pos() - pos
     
@@ -1480,7 +1552,9 @@ class ActivatedProtocolFeature(object):
 # };
 
 class ProtocolStateObject(object):
-    def __init__(self, activated_protocol_features: List[ActivatedProtocolFeature], preactivated_protocol_features: List[Checksum256], whitelisted_intrinsics: List[str], num_supported_key_types: U32):
+    by_id = 0
+    def __init__(self, table_id: I64, activated_protocol_features: List[ActivatedProtocolFeature], preactivated_protocol_features: List[Checksum256], whitelisted_intrinsics: List[str], num_supported_key_types: U32):
+        self.table_id = table_id
         self.activated_protocol_features = activated_protocol_features
         self.preactivated_protocol_features = preactivated_protocol_features
         self.whitelisted_intrinsics = whitelisted_intrinsics
@@ -1505,11 +1579,12 @@ class ProtocolStateObject(object):
     
     @classmethod
     def unpack(cls, dec: Decoder):
+        table_id = dec.unpack_i64()
         activated_protocol_features = dec.unpack_list(ActivatedProtocolFeature)
         preactivated_protocol_features = dec.unpack_list(Checksum256)
         whitelisted_intrinsics = dec.unpack_list(str)
         num_supported_key_types = dec.unpack_u32()
-        return ProtocolStateObject(activated_protocol_features, preactivated_protocol_features, whitelisted_intrinsics, num_supported_key_types)
+        return ProtocolStateObject(table_id, activated_protocol_features, preactivated_protocol_features, whitelisted_intrinsics, num_supported_key_types)
 
 # struct account_ram_correction_object_ {
 #     account_name name; //< name should not be changed within a chainbase modifier lambda
@@ -1517,7 +1592,9 @@ class ProtocolStateObject(object):
 # };
 
 class AccountRamCorrectionObject(object):
-    def __init__(self, name: Name, ram_correction: U64):
+    by_id = 0
+    def __init__(self, table_id: I64, name: Name, ram_correction: U64):
+        self.table_id = table_id
         self.name = name
         self.ram_correction = ram_correction
     
@@ -1529,15 +1606,16 @@ class AccountRamCorrectionObject(object):
     
     def pack(self, enc: Encoder) -> int:
         pos = enc.get_pos()
-        self.name.pack(enc)
+        enc.pack_name(self.name)
         enc.pack_u64(self.ram_correction)
         return enc.get_pos() - pos
     
     @classmethod
     def unpack(cls, dec: Decoder):
-        name = Name.unpack(dec)
+        table_id = dec.unpack_i64()
+        name = dec.unpack_name(dec)
         ram_correction = dec.unpack_u64()
-        return AccountRamCorrectionObject(name, ram_correction)
+        return AccountRamCorrectionObject(table_id, name, ram_correction)
 
 
 # struct code_object_ {
@@ -1550,7 +1628,9 @@ class AccountRamCorrectionObject(object):
 # };
 
 class CodeObject(object):
-    def __init__(self, code_hash: Checksum256, code: List[str], code_ref_count: U64, first_block_used: U32, vm_type: U8, vm_version: U8):
+    by_id = 0
+    def __init__(self, table_id: I64, code_hash: Checksum256, code: List[str], code_ref_count: U64, first_block_used: U32, vm_type: U8, vm_version: U8):
+        self.table_id = table_id
         self.code_hash = code_hash
         self.code = code
         self.code_ref_count = code_ref_count
@@ -1571,7 +1651,7 @@ class CodeObject(object):
     
     def pack(self, enc: Encoder) -> int:
         pos = enc.get_pos()
-        self.code_hash.pack(enc)
+        enc.pack(self.code_hash)
         enc.pack_bytes(self.code)
         enc.pack_u64(self.code_ref_count)
         enc.pack_u32(self.first_block_used)
@@ -1581,20 +1661,23 @@ class CodeObject(object):
     
     @classmethod
     def unpack(cls, dec: Decoder):
+        table_id = dec.unpack_i64()
         code_hash = Checksum256.unpack(dec)
         code = dec.unpack_bytes()
         code_ref_count = dec.unpack_u64()
         first_block_used = dec.unpack_u32()
         vm_type = dec.unpack_u8()
         vm_version = dec.unpack_u8()
-        return CodeObject(code_hash, code, code_ref_count, first_block_used, vm_type, vm_version)
+        return CodeObject(table_id, code_hash, code, code_ref_count, first_block_used, vm_type, vm_version)
 
 # struct database_header_object_ {
 #     uint32_t       version;
 # };
 
 class DatabaseHeaderObject(object):
-    def __init__(self, version: U32):
+    by_id = 0
+    def __init__(self, table_id: I64, version: U32):
+        self.table_id = table_id
         self.version = version
     
     def __repr__(self):
@@ -1610,5 +1693,6 @@ class DatabaseHeaderObject(object):
     
     @classmethod
     def unpack(cls, dec: Decoder):
+        table_id = dec.unpack_i64()
         version = dec.unpack_u32()
-        return DatabaseHeaderObject(version)
+        return DatabaseHeaderObject(table_id, version)

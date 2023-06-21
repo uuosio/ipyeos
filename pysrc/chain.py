@@ -218,9 +218,8 @@ class Chain(object):
     def fork_db_pending_head_block_producer(self) -> Name:
         return _chain.fork_db_pending_head_block_producer(self.ptr)
 
-    def pending_block_time(self) -> str:
-        iso_time = _chain.pending_block_time(self.ptr)
-        return datetime.strptime(iso_time, "%Y-%m-%dT%H:%M:%S.%f")
+    def pending_block_time(self) -> int:
+        return _chain.pending_block_time(self.ptr)
 
     def pending_block_producer(self) -> Name:
         return _chain.pending_block_producer(self.ptr)

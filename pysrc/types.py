@@ -10,30 +10,33 @@ U64 = NewType('U64', int)
 I64 = NewType('I64', int)
 U128 = NewType('U128', int)
 U256 = NewType('U256', int)
-# Name = NewType('Name', str)
+Name = NewType('Name', str)
 
-class Name(object):
-    def __init__(self, s: str, raw = None):
-        self.s = s
-        if not raw:
-            self.raw = eos.s2b(s)
-        else:
-            self.raw = raw
+# class Name(object):
+#     def __init__(self, s: str, raw = None):
+#         self.s = s
+#         if not raw:
+#             self.raw = eos.s2b(s)
+#         else:
+#             self.raw = raw
 
-    def __repr__(self):
-        return self.s
+#     def n2b(self):
+#         return self.raw
+
+#     def __repr__(self):
+#         return self.s
     
-    def __eq__(self, other):
-        return self.s == other.s
+#     def __eq__(self, other):
+#         return self.s == other.s
     
-    def pack(self, enc):
-        enc.write_bytes(self.raw)
-        return len(self.raw)
+#     def pack(self, enc):
+#         enc.write_bytes(self.raw)
+#         return len(self.raw)
     
-    @classmethod
-    def unpack(cls, dec):
-        raw = dec.read_bytes(8)
-        return Name(eos.b2s(raw), raw)
+#     @classmethod
+#     def unpack(cls, dec):
+#         raw = dec.read_bytes(8)
+#         return Name(eos.b2s(raw), raw)
 
 class Float128(object):
     def __init__(self, raw: bytes):
@@ -65,6 +68,11 @@ class Checksum256(object):
 
     def __eq__(self, other):
         return self.raw == other.raw
+
+    @classmethod
+    def from_string(cls, s: str):
+        assert len(s) == 64
+        return Checksum256(bytes.fromhex(s))
 
     def pack(self, enc) -> int:
         enc.write_bytes(self.raw)

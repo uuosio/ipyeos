@@ -60,7 +60,7 @@ cdef extern from "_ipyeos.hpp":
         string fork_db_pending_head_block_id()
         string fork_db_pending_head_block_time()
         string fork_db_pending_head_block_producer()
-        string pending_block_time()
+        int64_t pending_block_time()
         string pending_block_producer()
         string pending_producer_block_id()
         string active_producers()
@@ -271,7 +271,7 @@ def fork_db_pending_head_block_producer(uint64_t ptr):
     '''
     return chain(ptr).fork_db_pending_head_block_producer()
 
-def pending_block_time(uint64_t ptr):
+def pending_block_time(uint64_t ptr) -> int:
     '''
     returns: str
     '''

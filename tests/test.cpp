@@ -1,3 +1,4 @@
+#include <eosio/transaction.hpp>
 #include "test.hpp"
 
 [[eosio::action("teststore")]]
@@ -48,4 +49,22 @@ void test_contract::test_cmp(checksum256 a, checksum256 b) {
     print("\n");
 
     print(a < b, "\n");
+}
+
+
+[[eosio::action("testgentx")]]
+void test_contract::test_generated_tx() {
+    print("+++++ test_generated_tx\n");
+    // auto trx = transaction(eosio::time_point_sec(0));
+    auto trx = transaction(time_point_sec(current_time_point()) + 5);
+    std::vector<permission_level> permissions = { {"hello"_n, "active"_n} };
+
+    trx.actions.emplace_back(permissions, "hello"_n, "sayhello"_n, string("hello"));
+    trx.send( 1, "hello"_n );
+}
+
+[[eosio::action("sayhello")]]
+void test_contract::test_say_hello() {
+    print("+++++ test_say_hello\n");
+    print("hello\n");
 }

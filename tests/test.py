@@ -1,5 +1,6 @@
 import os
 import hashlib
+import shutil
 import platform
 
 from ipyeos import eos, log
@@ -8,7 +9,7 @@ from ipyeos.chaintester import ChainTester
 
 from ipyeos.types import PublicKey
 from ipyeos.database_objects import KeyWeight, Authority
-from ipyeos.database_objects import PermissionObject, PermissionObjectIndex, Encoder, Decoder
+from ipyeos.database import PermissionObjectIndex
 
 chaintester.chain_config['contracts_console'] = True
 dir_name = os.path.dirname(__file__)
@@ -68,7 +69,7 @@ def test_basic():
     digest = hashlib.sha256(b'Hello World').hexdigest()
     # digest = digest.upper()
     print(digest, priv_key)
-    signature = eos.sign_digest(priv_key, digest)
+    signature = eos.sign_digest(digest, priv_key)
     print(signature)
 
 def test_load_native_lib():
@@ -129,7 +130,8 @@ def test_custom_2dir():
     # data_name = './data'
     # snapshot_dir = './snapshot-2023-06-18-01-eos-v6-0315729695.bin'
     # state_size = 32*1024*1024*1024
-
+    if os.path.exists('./data/ddd'):
+        shutil.rmtree('./data/ddd')
     state_size = 10*1024*1024
     data_name = './data'
     snapshot_dir = './data/snapshot-0000001ba25b3b5af4ba6cacecb68ef4238a50bb7134e56fe985b4355fbf7488.bin'
@@ -141,7 +143,7 @@ def test_custom_2dir():
     eos.set_debug_producer_key('EOS5K93aPtTdov2zWDqYxVcMQ4GBT1hyEpED8tjzPuLsf31tPySNY')
     chaintester.import_producer_key('5K3x5DPEbocfZSG8XD3RiyJAfPFH5Bd9ED15wtdEMbqzXCLPbma')
 
-    t = ChainTester(True, data_dir=os.path.join(data_name, 'dd'), config_dir=os.path.join(data_name, 'cd'), state_size=state_size, snapshot_dir=snapshot_dir)
+    t = ChainTester(True, data_dir=os.path.join(data_name, 'ddd'), config_dir=os.path.join(data_name, 'cd'), state_size=state_size, snapshot_dir=snapshot_dir)
     logger.info("+++++producer keys: %s", t.chain.get_producer_public_keys())
     t.produce_block()
     logger.info("+++++++%s", t.api.get_info())
@@ -156,7 +158,7 @@ def test_custom_2dir():
     keys = [KeyWeight(PublicKey.from_base58('EOS6hM1U89jbHWyX8ArHttFzoGe21y7ehXvtN5q7GbDxYEa9NFXH2'), 1)]
     perm.auth = Authority(1, keys, [], [])
 
-    ret = idx.modify_by_id(perm.table_id, perm)
+    ret = idx.modify(perm)
     print('modify_by_id return:', ret)
 
     idx = PermissionObjectIndex(t.db)

@@ -2,7 +2,7 @@ from typing import Union
 
 from . import _database
 from . import _eos
-from .types import U8, U16, U32, U64, I64, Name
+from .types import U8, U16, U32, U64, I64, Name, Checksum256
 from .packer import Encoder, Decoder
 from .database_objects import *
 
@@ -140,11 +140,19 @@ class AccountObjectIndex(object):
         dec = Decoder(data)
         return AccountObject.unpack(dec)
 
+    def find_by_name(self, account: Name):
+        key = eos.s2b(account)
+        data = self.db.find(account_object_type, AccountObject.by_name, key)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return AccountObject.unpack(dec)
+
     def modify(self, perm: AccountObject):
         key = int.to_bytes(perm.table_id, 8, 'little', signed=True)
         enc = Encoder()
         enc.pack(perm)
-        return self.db.modify(permission_object_type, AccountObject.by_id, key, enc.get_bytes())
+        return self.db.modify(account_object_type, AccountObject.by_id, key, enc.get_bytes())
 
     def row_count(self):
         return self.db.row_count(account_object_type)
@@ -169,7 +177,7 @@ class AccountMetadataObjectIndex(object):
         key = int.to_bytes(perm.table_id, 8, 'little', signed=True)
         enc = Encoder()
         enc.pack(perm)
-        return self.db.modify(permission_object_type, AccountMetadataObject.by_id, key, enc.get_bytes())
+        return self.db.modify(account_metadata_object_type, AccountMetadataObject.by_id, key, enc.get_bytes())
 
     def row_count(self):
         return self.db.row_count(account_metadata_object_type)
@@ -542,6 +550,27 @@ class GeneratedTransactionObjectIndex(object):
             return None
         dec = Decoder(data)
         return GeneratedTransactionObject.unpack(dec)
+
+    def find_by_trx_id(self, trx_id: Union[str, Checksum256]):
+        if isinstance(trx_id, str):
+            trx_id = Checksum256.from_string(trx_id)
+        assert isinstance(trx_id, Checksum256)
+        data = self.db.find(generated_transaction_object_type, GeneratedTransactionObject.by_trx_id, trx_id.raw)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return GeneratedTransactionObject.unpack(dec)
+
+    def find_by_expiration(self, expiration: I64):
+        key = int.to_bytes(expiration, 8, 'little', signed=True)
+        data = self.db.find(generated_transaction_object_type, GeneratedTransactionObject.by_expiration, key)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return GeneratedTransactionObject.unpack(dec)
+
+    def walk_by_expiration(self, cb):
+        self.db.walk(generated_transaction_object_type, GeneratedTransactionObject.by_expiration, cb)
 
     def modify(self, perm: GeneratedTransactionObject):
         key = int.to_bytes(perm.table_id, 8, 'little', signed=True)

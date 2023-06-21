@@ -52,6 +52,16 @@
             ]
         },
         {
+            "name": "test_generated_tx",
+            "base": "",
+            "fields": []
+        },
+        {
+            "name": "test_say_hello",
+            "base": "",
+            "fields": []
+        },
+        {
             "name": "test_store",
             "base": "",
             "fields": [
@@ -68,8 +78,18 @@
     ],
     "actions": [
         {
+            "name": "sayhello",
+            "type": "test_say_hello",
+            "ricardian_contract": ""
+        },
+        {
             "name": "testcmp",
             "type": "test_cmp",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "testgentx",
+            "type": "test_generated_tx",
             "ricardian_contract": ""
         },
         {

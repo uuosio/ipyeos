@@ -43,6 +43,12 @@ public:
     [[eosio::action("teststore")]]
     void test_store(uint64_t key, checksum256 hash);
 
+    [[eosio::action("testgentx")]]
+    void test_generated_tx();
+
+    [[eosio::action("sayhello")]]
+    void test_say_hello();
+
     [[eosio::action("testcmp")]]
     void test_cmp(checksum256 a, checksum256 b);
 

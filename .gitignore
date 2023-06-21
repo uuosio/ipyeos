@@ -4,6 +4,7 @@ pysrc/release
 *.wallet
 cd
 dd
+ddd
 _skbuild
 dist
 eos/build
