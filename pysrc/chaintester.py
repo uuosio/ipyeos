@@ -169,9 +169,7 @@ def read_genesis_from_block_log(tester):
 
     dec = Decoder(data)
     ver = dec.unpack_u32()
-    print(ver)
     first_block_num = dec.unpack_u32()
-    print(first_block_num)
     if contains_genesis_state(ver, first_block_num):
         # GenesisState.unpack(dec)
         data = dec.read_bytes(68+8+34)
@@ -186,9 +184,7 @@ def read_chain_id_from_block_log(data_dir):
 
     dec = Decoder(data)
     ver = dec.unpack_u32()
-    print(ver)
     first_block_num = dec.unpack_u32()
-    print(first_block_num)
     if contains_genesis_state(ver, first_block_num):
         # GenesisState.unpack(dec)
         data = dec.read_bytes(68+8+34)
@@ -421,6 +417,9 @@ class ChainTester(object):
     #     self.chain.start_block(self.calc_pending_block_time(), 0, self.feature_digests)
 
     def free(self):
+        # in case of exception throw from __init__, chain may not be initialized
+        if not hasattr(self, 'chain'):
+            return
         if not self.chain:
             return
         self.chain.free()
