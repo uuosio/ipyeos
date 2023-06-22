@@ -46,9 +46,15 @@ cdef extern from "_ipyeos.hpp":
 
     ipyeos_proxy *get_ipyeos_proxy() nogil
 
-cdef int32_t database_on_data(int32_t tp, char *data, size_t size, void* handler):
-    _handler = <object>handler
-    return _handler(tp, PyBytes_FromStringAndSize(data, size))
+ctypedef struct python_custom_data:
+    void *cb
+    void *custom_data
+
+cdef int32_t database_on_data(int32_t tp, char *data, size_t size, void *custom_data):
+    cdef python_custom_data *_data = <python_custom_data *>custom_data
+    _cb = <object>_data.cb
+    _custom_dta = <object>_data.custom_data
+    return _cb(tp, PyBytes_FromStringAndSize(data, size), _custom_dta)
 
 cdef database_proxy *db(uint64_t ptr):
     return <database_proxy*>ptr
@@ -74,11 +80,15 @@ def modify(ptr: uint64_t, db_ptr: uint64_t, int32_t tp, int32_t index_position, 
 
     return db(ptr).modify(<void *>db_ptr, tp, index_position, _raw_key, _raw_key_size, _raw_data, _raw_data_size)
 
-def walk(ptr: uint64_t, db_ptr: uint64_t, tp: int32_t, index_position: int32_t, cb):
-    db(ptr).set_data_handler(database_on_data, <void *>cb)
+def walk(ptr: uint64_t, db_ptr: uint64_t, tp: int32_t, index_position: int32_t, cb, custom_data: object):
+    cdef python_custom_data data
+    data.cb = <void *>cb
+    data.custom_data = <void *>custom_data
+    db(ptr).set_data_handler(database_on_data, <void *>&data)
     return db(ptr).walk(<void *>db_ptr, tp, index_position)
 
-def walk_range(ptr: uint64_t, db_ptr: uint64_t, tp: int32_t, index_position: int32_t, cb, raw_lower_bound: bytes, raw_upper_bound: bytes):
+def walk_range(ptr: uint64_t, db_ptr: uint64_t, tp: int32_t, index_position: int32_t, raw_lower_bound: bytes, raw_upper_bound: bytes, cb, custom_data: object):
+    cdef python_custom_data data
     cdef char *_raw_lower_bound
     cdef Py_ssize_t _raw_lower_bound_length
     cdef char *_raw_upper_bound
@@ -87,7 +97,9 @@ def walk_range(ptr: uint64_t, db_ptr: uint64_t, tp: int32_t, index_position: int
     PyBytes_AsStringAndSize(raw_lower_bound, &_raw_lower_bound, &_raw_lower_bound_length)
     PyBytes_AsStringAndSize(raw_upper_bound, &_raw_upper_bound, &_raw_upper_bound_length)
 
-    db(ptr).set_data_handler(database_on_data, <void *>cb)
+    data.cb = <void *>cb
+    data.custom_data = <void *>custom_data
+    db(ptr).set_data_handler(database_on_data, <void *>&data)
 
     ret = db(ptr).walk_range(<void *>db_ptr, tp, index_position, _raw_lower_bound, _raw_lower_bound_length, _raw_upper_bound, _raw_upper_bound_length)
     return ret

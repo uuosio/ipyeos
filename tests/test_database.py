@@ -79,7 +79,7 @@ def deploy_contract(tester, package_name):
 
 @chain_test(True)
 def test_walk(tester: ChainTester):
-    def on_data(tp, raw_data):
+    def on_data(tp, raw_data, custom_data):
         print(tp, len(raw_data))
         if tp == 1:
             print(eos.b2s(raw_data[8:16]))
@@ -99,7 +99,7 @@ def test_row_count(tester: ChainTester):
 
 @chain_test(True)
 def test_2walk_range(tester: ChainTester):
-    def on_data(tp, raw_data):
+    def on_data(tp, raw_data, custom_data):
         print(tp, raw_data)
         if tp == 1:
             print(eos.b2s(raw_data[:8]))
@@ -347,7 +347,7 @@ def parse_permission_object(raw_data: bytes):
 
 @chain_test(True)
 def test_permission_index(tester: ChainTester):
-    def on_data(tp, raw_data):
+    def on_data(tp, raw_data, custom_data):
         print(tp, len(raw_data))
         try:
             parse_permission_object(raw_data)
@@ -403,7 +403,7 @@ def parse_permission_usage_object(raw_data: bytes):
 
 @chain_test(True)
 def test_permission_usage_index(tester: ChainTester):
-    def on_data(tp, raw_data):
+    def on_data(tp, raw_data, custom_data):
         print(tp, len(raw_data))
         try:
             parse_permission_usage_object(raw_data)
@@ -477,7 +477,7 @@ def test_permission_link_index(tester: ChainTester):
     }
     tester.push_action('eosio', 'linkauth', args, {"hello": "active"})
 
-    def on_data(tp, raw_data):
+    def on_data(tp, raw_data, custom_data):
         print(tp, len(raw_data))
         try:
             parse_permission_link_object(raw_data)
@@ -568,7 +568,7 @@ def test_contract_table_objects(tester: ChainTester):
         count = dec.unpack_u32()
         return (table_id, code, scope, table, payer, count)
 
-    def on_table_id_object_data(tp, raw_data):
+    def on_table_id_object_data(tp, raw_data, custom_data):
         ret = parse_table_id_object_data(raw_data)
         print(ret)
         return 1
@@ -608,14 +608,14 @@ def test_contract_table_objects(tester: ChainTester):
         value = dec.unpack_bytes()
         return (table_id, t_id, primary_key, payer, value)
 
-    def on_data_key_value(tp, raw_data):
+    def on_data_key_value(tp, raw_data, custom_data):
         # print(tp, len(raw_data))
         assert tp == database.key_value_object_type
         ret = parse_key_value_object(raw_data)
         print(ret)
         return 1
 
-    def on_data_secondary(tp, raw_data):
+    def on_data_secondary(tp, raw_data, custom_data):
         print(tp, len(raw_data))
         dec = Decoder(raw_data)
         table_id = dec.unpack_u64()
@@ -706,7 +706,7 @@ def test_find_all_table_in_contract(tester: ChainTester):
         value = raw_data[dec.get_pos():]
         return(table_id, t_id, primary_key, payer, value)
 
-    def on_table_id_object_data(tp, raw_data):
+    def on_table_id_object_data(tp, raw_data, custom_data):
         ret = parse_table_id_object_data(raw_data)
         logger.info(ret)
         table_id = ret[0]
@@ -758,7 +758,7 @@ def test_find_all_table_in_contract(tester: ChainTester):
         value = dec.unpack_bytes()
         return (table_id, t_id, primary_key, payer, value)
 
-    def on_data_key_value(tp, raw_data):
+    def on_data_key_value(tp, raw_data, custom_data):
         # print(tp, len(raw_data))
         assert tp == database.key_value_object_type
         ret = parse_key_value_object(raw_data)
@@ -786,7 +786,7 @@ def test_find_all_table_in_contract(tester: ChainTester):
 
 @chain_test(True)
 def test_global_property_object(tester: ChainTester):
-    def on_global_property_object_data(tp, data):
+    def on_global_property_object_data(tp, data, custom_data):
         print(data)
         obj = eos.unpack_native_object(14, data)
         print(json.loads(obj))
@@ -813,7 +813,7 @@ def test_dynamic_global_property_object(tester: ChainTester):
 #    class dynamic_global_property_object : public chainbase::object<dynamic_global_property_object_type, dynamic_global_property_object>
 #         id_type    id;
 #         uint64_t   global_action_sequence = 0;
-    def on_dynamic_global_property_object(tp, data):
+    def on_dynamic_global_property_object(tp, data, custom_data):
         print(data)
         dec = Decoder(data)
         table_id = dec.unpack_u64()
@@ -840,7 +840,7 @@ def test_block_summary_object(tester: ChainTester):
 #    {
 #          id_type        id;
 #          block_id_type  block_id;
-    def on_block_summary_object(tp, data):
+    def on_block_summary_object(tp, data, custom_data):
         # print(data)
         dec = Decoder(data)
         table_id = dec.unpack_u64()
@@ -893,7 +893,7 @@ def test_transaction_object(tester: ChainTester):
         trx_id = dec.unpack_checksum256()
         return (table_id, expiration, trx_id)
 
-    def on_transaction_object(tp, data):
+    def on_transaction_object(tp, data, custom_data):
         assert tp == database.transaction_object_type
         ret = parse_transaction_object(data)
         print(ret)
@@ -995,7 +995,7 @@ def test_generated_transaction_object(tester: ChainTester):
         dec = Decoder(data)
         return GeneratedTransactionObject.unpack(dec)
 
-    def on_generated_transaction_object(tp, data):
+    def on_generated_transaction_object(tp, data, custom_data):
         assert tp == database.generated_transaction_object_type
         ret = parse_generated_transaction_object(data)
         print(ret)
@@ -1122,7 +1122,7 @@ def test_resource_limits_object(tester: ChainTester):
             ram_bytes,
         )
 
-    def on_resource_limits_object(tp, data):
+    def on_resource_limits_object(tp, data, custom_data):
         assert tp == database.resource_limits_object_type
         ret = parse_resource_limits_object(data)
         print(ret)
@@ -1220,7 +1220,7 @@ def test_resource_usage_object(tester: ChainTester):
             ram_usage,
         )
 
-    def on_resource_usage_object(tp, data):
+    def on_resource_usage_object(tp, data, custom_data):
         assert tp == database.resource_usage_object_type
         ret = parse_resource_usage_object(data)
         print(ret)
@@ -1352,7 +1352,7 @@ def test_resource_limits_state_object(tester: ChainTester):
             virtual_cpu_limit,
         )
 
-    def on_data(tp, data):
+    def on_data(tp, data, custom_data):
         parse_resource_limits_state(data)
 
     data = tester.db.find(database.resource_limits_state_object_type, 0, 0)
@@ -1641,7 +1641,7 @@ def test_code_object(tester: ChainTester):
         vm_version = dec.unpack_u8()
         print(code_hash, code_ref_count, first_block_used)
 
-    def on_data(tp, data):
+    def on_data(tp, data, custom_data):
         parse_code_object(data)
         return 1
 

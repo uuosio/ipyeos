@@ -615,7 +615,7 @@ class ChainTester(object):
         idx = GeneratedTransactionObjectIndex(self.db)
         pending_block_time = self.chain.pending_block_time()
         ready_txs = []
-        def get_ready_trx(tp, data):
+        def get_ready_trx(tp, data, custom_data):
             # print(tp, data)
             dec = Decoder(data)
             #     transaction_id_type           trx_id;

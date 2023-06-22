@@ -1634,6 +1634,7 @@ class AccountRamCorrectionObject(object):
 
 class CodeObject(object):
     by_id = 0
+    by_code_hash = 1
     def __init__(self, table_id: I64, code_hash: Checksum256, code: List[str], code_ref_count: U64, first_block_used: U32, vm_type: U8, vm_version: U8):
         self.table_id = table_id
         self.code_hash = code_hash

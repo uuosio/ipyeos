@@ -69,20 +69,20 @@ class Database:
             return True
         return False
 
-    def walk(self, tp: int, index_position: int, cb):
-        ret = _database.walk(self.ptr, self.db_ptr, tp, index_position, cb)
+    def walk(self, tp: int, index_position: int, cb, custom_data = None):
+        ret = _database.walk(self.ptr, self.db_ptr, tp, index_position, cb, custom_data)
         if ret == -2:
             raise Exception(_eos.get_last_error_and_clear())
         return ret
 
-    def walk_range(self, tp: int, index_position: int, lower_bound: Union[int, bytes], upper_bound: Union[int, bytes], cb):
+    def walk_range(self, tp: int, index_position: int, lower_bound: Union[int, bytes], upper_bound: Union[int, bytes], cb, custom_data = None):
         if index_position == 0:
             if isinstance(lower_bound, int):
                 lower_bound = int.to_bytes(lower_bound, 8, 'little')
             if isinstance(upper_bound, int):
                 upper_bound = int.to_bytes(upper_bound, 8, 'little')
 
-        ret = _database.walk_range(self.ptr, self.db_ptr, tp, index_position, cb, lower_bound, upper_bound)
+        ret = _database.walk_range(self.ptr, self.db_ptr, tp, index_position, lower_bound, upper_bound, cb, custom_data)
         if ret == -2:
             raise Exception(_eos.get_last_error_and_clear())
         return ret
@@ -553,7 +553,7 @@ class GeneratedTransactionObjectIndex(object):
 
     def find_by_trx_id(self, trx_id: Union[str, Checksum256]):
         if isinstance(trx_id, str):
-            trx_id = Checksum256.from_string(trx_id)
+            trx_id = Checksum256.from_str(trx_id)
         assert isinstance(trx_id, Checksum256)
         data = self.db.find(generated_transaction_object_type, GeneratedTransactionObject.by_trx_id, trx_id.raw)
         if not data:
@@ -766,6 +766,20 @@ class CodeObjectIndex(object):
     def find_by_id(self, table_id: I64):
         key = int.to_bytes(table_id, 8, 'little', signed=True)
         data = self.db.find(code_object_type, CodeObject.by_id, key)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return CodeObject.unpack(dec)
+
+    def find_by_code_hash(self, code_hash: Union[str, bytes, Checksum256], vm_type: U8, vm_version: U8):
+        if isinstance(code_hash, str):
+            code_hash = Checksum256.from_str(code_hash).get_bytes()
+        elif isinstance(code_hash, Checksum256):
+            code_hash = code_hash.get_bytes()
+        assert isinstance(code_hash, bytes)
+        assert len(code_hash) == 32, 'code_hash must be 32 bytes'
+        key = code_hash + int.to_bytes(vm_type, 1, 'little') + int.to_bytes(vm_version, 1, 'little')
+        data = self.db.find(code_object_type, CodeObject.by_code_hash, key)
         if not data:
             return None
         dec = Decoder(data)

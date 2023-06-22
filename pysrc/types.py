@@ -72,8 +72,11 @@ class Checksum256(object):
     def __eq__(self, other):
         return self.raw == other.raw
 
+    def get_bytes(self):
+        return self.raw
+
     @classmethod
-    def from_string(cls, s: str):
+    def from_str(cls, s: str):
         assert len(s) == 64
         return Checksum256(bytes.fromhex(s))
 
