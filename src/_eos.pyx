@@ -101,6 +101,11 @@ def get_last_error():
     ret = get_ipyeos_proxy().get_last_error()
     return ret
 
+def get_last_error_and_clear():
+    ret = get_ipyeos_proxy().get_last_error()
+    get_ipyeos_proxy().set_last_error(b"")
+    return ret
+
 def set_last_error(err: str):
     get_ipyeos_proxy().set_last_error(err)
 

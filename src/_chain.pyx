@@ -110,7 +110,7 @@ cdef extern from "_ipyeos.hpp":
 
         void gen_transaction(bool json, string& _actions, string& expiration, string& reference_block_id, string& _chain_id, bool compress, string& _private_keys, vector[char]& result)
         string push_transaction(string& _packed_trx, string& deadline, uint32_t billed_cpu_time_us, bool explicit_cpu_bill, uint32_t subjective_cpu_bill_us)
-        bool push_block(void *block_log_ptr, uint32_t block_num);
+        bool push_block(void *block_log_ptr, uint32_t block_num)
 
         string get_scheduled_transactions()
         string get_scheduled_transaction(__uint128_t sender_id, string& sender)
@@ -541,7 +541,7 @@ def gen_transaction(uint64_t ptr, bool json, string& _actions, string& expiratio
 def push_transaction(uint64_t ptr, string& _packed_trx, string& deadline, uint32_t billed_cpu_time_us, bool explicit_cpu_bill = 0, uint32_t subjective_cpu_bill_us=0):
     return chain(ptr).push_transaction(_packed_trx, deadline, billed_cpu_time_us, explicit_cpu_bill, subjective_cpu_bill_us)
 
-def push_block(uint64_t ptr, uint64_t block_log_ptr, uint32_t block_num):
+def push_block(uint64_t ptr, uint64_t block_log_ptr, uint32_t block_num) -> bool:
     return chain(ptr).push_block(<void *>block_log_ptr, block_num)
 
 def get_scheduled_transactions(uint64_t ptr):

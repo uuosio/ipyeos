@@ -4,6 +4,7 @@ from typing import Dict, List, Optional, Union
 
 from . import _chain, _eos, log
 from .types import U8, U16, U32, U64, I64, Name, PublicKey
+from .block_log import BlockLog
 
 logger = log.get_logger(__name__)
 
@@ -49,7 +50,7 @@ class Chain(object):
 
         self.ptr = _chain.chain_new(config, genesis, chain_id, protocol_features_dir, snapshot_dir)
         if not self.ptr:
-            error = _eos.get_last_error()
+            error = _eos.get_last_error_and_clear()
             raise Exception(error)
 
     def startup(self, initdb: bool) -> bool:
@@ -63,7 +64,7 @@ class Chain(object):
         ret = _chain.startup(self.ptr, initdb)
         if not ret:
             self.ptr = 0
-            raise Exception(_eos.get_last_error())
+            raise Exception(_eos.get_last_error_and_clear())
 
     def free(self) -> None:
         """
@@ -402,16 +403,22 @@ class Chain(object):
             deadline = deadline.isoformat(timespec='milliseconds')
         result = _chain.push_transaction(self.ptr, packed_trx, deadline, billed_cpu_time_us, explicit_cpu_bill, subjective_cpu_bill_us)
         if not result:
-            result = _eos.get_last_error()
+            result = _eos.get_last_error_and_clear()
         result = json.loads(result)
         if 'except' in result:
             raise Exception(result)
         return result
 
-    def push_block(self, block_log_ptr: int, block_num: int) -> bool:
-        ret = _chain.push_block(self.ptr, block_log_ptr, block_num)
+    def push_block(self, log: BlockLog, block_num: int) -> bool:
+        if block_num > log.head_block_num() or block_num < log.first_block_num():
+            raise Exception("invalid block number, block_num: %d, head_block_num: %d, first_block_num: %d" % (block_num, log.head_block_num(), log.first_block_num()))
+        ret = _chain.push_block(self.ptr, log.get_block_log_ptr(), block_num)
         if not ret:
-            raise Exception(_eos.get_last_error())
+            err = _eos.get_last_error_and_clear()
+            if err:
+                raise Exception(err)
+            else:
+                raise Exception("invalid block num")
         return True
 
     def get_scheduled_transaction(self, sender_id: int, sender: Name) -> dict:
@@ -485,7 +492,7 @@ class Chain(object):
         return _chain.gen_transaction(self.ptr, json_str, _actions, expiration, reference_block_id, _id, compress, _private_keys)
 
     def get_last_error(self) -> str:
-        err = _eos.get_last_error()
+        err = _eos.get_last_error_and_clear()
         try:
             return {'except': json.loads(err)}
         except json.JSONDecodeError:        

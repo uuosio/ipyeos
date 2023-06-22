@@ -94,7 +94,7 @@ def s2n(s: str) -> int:
     ret = _eos.s2n(s)
     if not ret == 0:
         return ret
-    err = _eos.get_last_error()
+    err = _eos.get_last_error_and_clear()
     if err:
         _eos.set_last_error("")
         raise Exception(err)
@@ -150,7 +150,7 @@ def is_debug_enabled() -> bool:
     return _eos.is_debug_enabled()
 
 def get_last_error() -> str:
-    return _eos.get_last_error()
+    return _eos.get_last_error_and_clear()
 
 def create_key(key_type: str = "K1") -> dict:
     ret = _eos.create_key(key_type)

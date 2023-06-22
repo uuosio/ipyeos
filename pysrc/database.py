@@ -63,7 +63,7 @@ class Database:
     def modify(self, tp: int, index_position: int, raw_key: bytes, raw_data: bytes):
         ret = _database.modify(self.ptr, self.db_ptr, tp, index_position, raw_key, raw_data)
         if ret == -2:
-            raise Exception(_eos.get_last_error())
+            raise Exception(_eos.get_last_error_and_clear())
         assert ret in (0, 1)
         if ret:
             return True
@@ -72,7 +72,7 @@ class Database:
     def walk(self, tp: int, index_position: int, cb):
         ret = _database.walk(self.ptr, self.db_ptr, tp, index_position, cb)
         if ret == -2:
-            raise Exception(_eos.get_last_error())
+            raise Exception(_eos.get_last_error_and_clear())
         return ret
 
     def walk_range(self, tp: int, index_position: int, lower_bound: Union[int, bytes], upper_bound: Union[int, bytes], cb):
@@ -84,7 +84,7 @@ class Database:
 
         ret = _database.walk_range(self.ptr, self.db_ptr, tp, index_position, cb, lower_bound, upper_bound)
         if ret == -2:
-            raise Exception(_eos.get_last_error())
+            raise Exception(_eos.get_last_error_and_clear())
         return ret
 
     def find(self, tp: int, index_position: int, key: Union[int, bytes]):
@@ -92,7 +92,7 @@ class Database:
             key = int.to_bytes(key, 8, 'little')
         ret, data = _database.find(self.ptr, self.db_ptr, tp, index_position, key)
         if ret == -2:
-            raise Exception(_eos.get_last_error())
+            raise Exception(_eos.get_last_error_and_clear())
         if ret == 0:
             return None
         return data
@@ -102,7 +102,7 @@ class Database:
             key = int.to_bytes(key, 8, 'little')
         ret, data = _database.lower_bound(self.ptr, self.db_ptr, tp, index_position, key)
         if ret == -2:
-            raise Exception(_eos.get_last_error())
+            raise Exception(_eos.get_last_error_and_clear())
         if ret == 0:
             return None
         return data
@@ -113,7 +113,7 @@ class Database:
 
         ret, data = _database.upper_bound(self.ptr, self.db_ptr, tp, index_position, key)
         if ret == -2:
-            raise Exception(_eos.get_last_error())
+            raise Exception(_eos.get_last_error_and_clear())
         if ret == 0:
             return None
         return data
