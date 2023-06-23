@@ -1,10 +1,11 @@
-from typing import Union
+from typing import Union, Tuple
 
 from . import _database
 from . import _eos
-from .types import U8, U16, U32, U64, I64, Name, Checksum256
+from .types import U8, U16, U32, U64, I64, F64, Name, Checksum256
 from .packer import Encoder, Decoder
 from .database_objects import *
+from . import utils
 
 null_object_type = 0
 account_object_type = 1
@@ -148,6 +149,60 @@ class AccountObjectIndex(object):
         dec = Decoder(data)
         return AccountObject.unpack(dec)
 
+    def on_object_data(self, tp, data, custom_data):
+        dec = Decoder(data)
+        obj = AccountObject.unpack(dec)
+        cb, user_data = custom_data
+        return cb(obj, user_data)
+
+    def walk_by_id(self, cb, user_data=None):
+        return self.db.walk(account_object_type, AccountObject.by_id, self.on_object_data, (cb, user_data))
+    
+    def walk_by_name(self, cb, user_data=None):
+        return self.db.walk(account_object_type, AccountObject.by_name, self.on_object_data, (cb, user_data))
+
+    def walk_range_by_id(self, lower_bound: I64, upper_bound: I64, cb, user_data=None):
+        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
+        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        return self.db.walk_range(account_object_type, AccountObject.by_id, lower_bound, upper_bound, self.on_object_data, (cb, user_data))
+
+    def walk_range_by_name(self, lower_bound: Name, upper_bound: Name, cb, user_data=None):
+        lower_bound = eos.s2b(lower_bound)
+        upper_bound = eos.s2b(upper_bound)
+        return self.db.walk_range(account_object_type, AccountObject.by_name, lower_bound, upper_bound, self.on_object_data, (cb, user_data))
+
+    def lower_bound_by_id(self, lower_bound: I64):
+        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
+        data = self.db.lower_bound(account_object_type, AccountObject.by_id, lower_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return AccountObject.unpack(dec)
+
+    def lower_bound_by_name(self, lower_bound: Name):
+        lower_bound = eos.s2b(lower_bound)
+        data = self.db.lower_bound(account_object_type, AccountObject.by_name, lower_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return AccountObject.unpack(dec)
+
+    def upper_bound_by_id(self, upper_bound: I64):
+        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        data = self.db.upper_bound(account_object_type, AccountObject.by_id, upper_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return AccountObject.unpack(dec)
+
+    def upper_bound_by_name(self, upper_bound: Name):
+        upper_bound = eos.s2b(upper_bound)
+        data = self.db.upper_bound(account_object_type, AccountObject.by_name, upper_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return AccountObject.unpack(dec)
+
     def modify(self, perm: AccountObject):
         key = int.to_bytes(perm.table_id, 8, 'little', signed=True)
         enc = Encoder()
@@ -168,6 +223,68 @@ class AccountMetadataObjectIndex(object):
     def find_by_id(self, table_id: I64):
         key = int.to_bytes(table_id, 8, 'little', signed=True)
         data = self.db.find(account_metadata_object_type, AccountMetadataObject.by_id, key)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return AccountMetadataObject.unpack(dec)
+    
+    def find_by_name(self, name: Name):
+        key = eos.s2b(name)
+        data = self.db.find(account_metadata_object_type, AccountMetadataObject.by_name, key)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return AccountMetadataObject.unpack(dec)
+
+    def on_object_data(self, tp, data, custom_data):
+        dec = Decoder(data)
+        obj = AccountMetadataObject.unpack(dec)
+        cb, user_data = custom_data
+        return cb(obj, user_data)
+
+    def walk_by_id(self, cb, user_data=None):
+        return self.db.walk(account_metadata_object_type, AccountMetadataObject.by_id, self.on_object_data, (cb, user_data))
+    
+    def walk_by_name(self, cb, user_data=None):
+        return self.db.walk(account_metadata_object_type, AccountMetadataObject.by_name, self.on_object_data, (cb, user_data))
+
+    def walk_range_by_id(self, lower_bound: I64, upper_bound: I64, cb, user_data=None):
+        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
+        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        return self.db.walk_range(account_metadata_object_type, AccountMetadataObject.by_id, lower_bound, upper_bound, self.on_object_data, (cb, user_data))
+
+    def walk_range_by_name(self, lower_bound: Name, upper_bound: Name, cb, user_data=None):
+        lower_bound = eos.s2b(lower_bound)
+        upper_bound = eos.s2b(upper_bound)
+        return self.db.walk_range(account_metadata_object_type, AccountMetadataObject.by_name, lower_bound, upper_bound, self.on_object_data, (cb, user_data))
+
+    def lower_bound_by_id(self, lower_bound: I64):
+        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
+        data = self.db.lower_bound(account_metadata_object_type, AccountMetadataObject.by_id, lower_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return AccountMetadataObject.unpack(dec)
+
+    def lower_bound_by_name(self, lower_bound: Name):
+        lower_bound = eos.s2b(lower_bound)
+        data = self.db.lower_bound(account_metadata_object_type, AccountMetadataObject.by_name, lower_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return AccountMetadataObject.unpack(dec)
+
+    def upper_bound_by_id(self, upper_bound: I64):
+        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        data = self.db.upper_bound(account_metadata_object_type, AccountMetadataObject.by_id, upper_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return AccountMetadataObject.unpack(dec)
+
+    def upper_bound_by_name(self, upper_bound: Name):
+        upper_bound = eos.s2b(upper_bound)
+        data = self.db.upper_bound(account_metadata_object_type, AccountMetadataObject.by_name, upper_bound)
         if not data:
             return None
         dec = Decoder(data)
@@ -229,6 +346,108 @@ class PermissionObjectIndex(object):
         dec = Decoder(data)
         return PermissionObject.unpack(dec)
 
+    def on_object_data(self, tp, data, custom_data):
+        dec = Decoder(data)
+        obj = PermissionObject.unpack(dec)
+        cb, user_data = custom_data
+        return cb(obj, user_data)
+
+    def walk_by_id(self, cb, user_data=None):
+        return self.db.walk(permission_object_type, PermissionObject.by_id, self.on_object_data, (cb, user_data))
+    
+    def walk_by_parent(self, cb, user_data=None):
+        return self.db.walk(permission_object_type, PermissionObject.by_parent, self.on_object_data, (cb, user_data))
+
+    def walk_by_owner(self, cb, user_data=None):
+        return self.db.walk(permission_object_type, PermissionObject.by_owner, self.on_object_data, (cb, user_data))
+    
+    def walk_by_name(self, cb, user_data=None):
+        return self.db.walk(permission_object_type, PermissionObject.by_name, self.on_object_data, (cb, user_data))
+
+    def walk_range_by_id(self, lower_bound: I64, upper_bound: I64, cb, user_data=None):
+        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
+        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        return self.db.walk_range(permission_object_type, PermissionObject.by_id, lower_bound, upper_bound, self.on_object_data, (cb, user_data))
+
+    def walk_range_by_parent(self, lower_bound: Tuple[I64, I64], upper_bound: Tuple[I64, I64], cb, user_data=None):
+        lower_bound = PermissionObject.generate_key_by_parent(*lower_bound)
+        upper_bound = PermissionObject.generate_key_by_parent(*upper_bound)
+        return self.db.walk_range(permission_object_type, PermissionObject.by_parent, lower_bound, upper_bound, self.on_object_data, (cb, user_data))
+
+    def walk_range_by_owner(self, lower_bound: Tuple[Name, Name], upper_bound: Tuple[Name, Name], cb, user_data=None):
+        lower_bound = PermissionObject.generate_key_by_owner(*lower_bound)
+        upper_bound = PermissionObject.generate_key_by_owner(*upper_bound)
+        return self.db.walk_range(permission_object_type, PermissionObject.by_owner, lower_bound, upper_bound, self.on_object_data, (cb, user_data))
+
+    def walk_range_by_name(self, lower_bound: Tuple[Name, I64], upper_bound: Tuple[Name, I64], cb, user_data=None):
+        lower_bound = PermissionObject.generate_key_by_name(*lower_bound)
+        upper_bound = PermissionObject.generate_key_by_name(*upper_bound)
+        return self.db.walk_range(permission_object_type, PermissionObject.by_name, lower_bound, upper_bound, self.on_object_data, (cb, user_data))
+
+    def lower_bound_by_id(self, table_id: I64):
+        key = int.to_bytes(table_id, 8, 'little', signed=True)
+        data = self.db.lower_bound(permission_object_type, PermissionObject.by_id, key)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return PermissionObject.unpack(dec)
+
+    def lower_bound_by_parent(self, parent: I64, table_id: I64):
+        key = PermissionObject.generate_key_by_parent(parent, table_id)
+        data = self.db.lower_bound(permission_object_type, PermissionObject.by_parent, key)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return PermissionObject.unpack(dec)
+    
+    def lower_bound_by_owner(self, owner: Name, name: Name):
+        key = PermissionObject.generate_key_by_owner(owner, name)
+        data = self.db.lower_bound(permission_object_type, PermissionObject.by_owner, key)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return PermissionObject.unpack(dec)
+
+    def lower_bound_by_name(self, name: Name, table_id: I64):
+        key = PermissionObject.generate_key_by_name(name, table_id)
+        data = self.db.lower_bound(permission_object_type, PermissionObject.by_name, key)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return PermissionObject.unpack(dec)
+
+    def upper_bound_by_id(self, table_id: I64):
+        key = int.to_bytes(table_id, 8, 'little', signed=True)
+        data = self.db.upper_bound(permission_object_type, PermissionObject.by_id, key)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return PermissionObject.unpack(dec)
+
+    def upper_bound_by_parent(self, parent: I64, table_id: I64):
+        key = PermissionObject.generate_key_by_parent(parent, table_id)
+        data = self.db.upper_bound(permission_object_type, PermissionObject.by_parent, key)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return PermissionObject.unpack(dec)
+
+    def upper_bound_by_owner(self, owner: Name, name: Name):
+        key = PermissionObject.generate_key_by_owner(owner, name)
+        data = self.db.upper_bound(permission_object_type, PermissionObject.by_owner, key)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return PermissionObject.unpack(dec)
+    
+    def upper_bound_by_name(self, name: Name, table_id: I64):
+        key = PermissionObject.generate_key_by_name(name, table_id)
+        data = self.db.upper_bound(permission_object_type, PermissionObject.by_name, key)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return PermissionObject.unpack(dec)
+
     def modify(self, perm: PermissionObject):
         key = int.to_bytes(perm.table_id, 8, 'little', signed=True)
         enc = Encoder()
@@ -260,6 +479,36 @@ class PermissionUsageObjectIndex(object):
     def row_count(self):
         return self.db.row_count(permission_usage_object_type)
 
+    def on_object_data(self, tp, data, custom_data):
+        dec = Decoder(data)
+        obj = PermissionUsageObject.unpack(dec)
+        cb, user_data = custom_data
+        return cb(obj, user_data)
+
+    def walk_by_id(self, cb, user_data=None):
+        return self.db.walk(permission_usage_object_type, PermissionUsageObject.by_id, self.on_object_data, (cb, user_data))
+
+    def walk_range_by_id(self, lower_bound: I64, upper_bound: I64, cb, user_data=None):
+        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
+        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        return self.db.walk_range(permission_usage_object_type, PermissionUsageObject.by_id, lower_bound, upper_bound, self.on_object_data, (cb, user_data))
+
+    def lower_bound_by_id(self, lower_bound: I64):
+        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
+        data = self.db.lower_bound(permission_usage_object_type, PermissionUsageObject.by_id, lower_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return PermissionUsageObject.unpack(dec)
+
+    def upper_bound_by_id(self, upper_bound: I64):
+        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        data = self.db.upper_bound(permission_usage_object_type, PermissionUsageObject.by_id, upper_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return PermissionUsageObject.unpack(dec)
+
 # permission_link_object_type = 5
 class PermissionLinkObjectIndex(object):
     def __init__(self, db: Database):
@@ -275,6 +524,22 @@ class PermissionLinkObjectIndex(object):
             return None
         dec = Decoder(data)
         return PermissionLinkObject.unpack(dec)
+    
+    def find_by_action_name(self, action: Name, code: Name, message_type: Name):
+        key = PermissionLinkObject.generate_key_by_action_name(action, code, message_type)
+        data = self.db.find(permission_link_object_type, PermissionLinkObject.by_action_name, key)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return PermissionLinkObject.unpack(dec)
+
+    def find_by_permission_name(self, account: Name, required_permission: Name, table_id: I64):
+        key = PermissionLinkObject.generate_key_by_permission_name(account, required_permission, table_id)
+        data = self.db.find(permission_link_object_type, PermissionLinkObject.by_permission_name, key)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return PermissionLinkObject.unpack(dec)
 
     def modify(self, perm: PermissionLinkObject):
         key = int.to_bytes(perm.table_id, 8, 'little', signed=True)
@@ -284,6 +549,85 @@ class PermissionLinkObjectIndex(object):
 
     def row_count(self):
         return self.db.row_count(permission_link_object_type)
+
+    def on_object_data(self, tp, data, custom_data):
+        dec = Decoder(data)
+        obj = PermissionLinkObject.unpack(dec)
+        cb, user_data = custom_data
+        return cb(obj, user_data)
+
+    def walk_by_id(self, cb, user_data=None):
+        return self.db.walk(permission_link_object_type, PermissionLinkObject.by_id, self.on_object_data, (cb, user_data))
+    
+    def walk_by_action_name(self, cb, user_data=None):
+        return self.db.walk(permission_link_object_type, PermissionLinkObject.by_action_name, self.on_object_data, (cb, user_data))
+
+    def walk_by_permission_name(self, cb, user_data=None):
+        return self.db.walk(permission_link_object_type, PermissionLinkObject.by_permission_name, self.on_object_data, (cb, user_data))
+
+    def walk_range_by_id(self, lower_bound: I64, upper_bound: I64, cb, user_data=None):
+        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
+        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        return self.db.walk_range(permission_link_object_type, PermissionLinkObject.by_id, lower_bound, upper_bound, self.on_object_data, (cb, user_data))
+
+    def walk_range_by_action_name(self, lower_bound: Tuple[Name, Name, Name], upper_bound: Tuple[Name, Name, Name], cb, user_data=None):
+        lower_bound = PermissionLinkObject.generate_key_by_action_name(*lower_bound)
+        upper_bound = PermissionLinkObject.generate_key_by_action_name(*upper_bound)
+        return self.db.walk_range(permission_link_object_type, PermissionLinkObject.by_action_name, lower_bound, upper_bound, self.on_object_data, (cb, user_data))
+
+    def walk_range_by_permission_name(self, lower_bound: Tuple[Name, Name, I64], upper_bound: Tuple[Name, Name, I64], cb, user_data=None):
+        lower_bound = PermissionLinkObject.generate_key_by_permission_name(*lower_bound)
+        upper_bound = PermissionLinkObject.generate_key_by_permission_name(*upper_bound)
+        return self.db.walk_range(permission_link_object_type, PermissionLinkObject.by_permission_name, lower_bound, upper_bound, self.on_object_data, (cb, user_data))
+
+    def lower_bound_by_id(self, lower_bound: I64):
+        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
+        data = self.db.lower_bound(permission_link_object_type, PermissionLinkObject.by_id, lower_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return PermissionLinkObject.unpack(dec)
+
+    def lower_bound_by_action_name(self, lower_bound: Tuple[Name, Name, Name]):
+        lower_bound = PermissionLinkObject.generate_key_by_action_name(*lower_bound)
+        data = self.db.lower_bound(permission_link_object_type, PermissionLinkObject.by_action_name, lower_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return PermissionLinkObject.unpack(dec)
+
+    def lower_bound_by_permission_name(self, lower_bound: Tuple[Name, Name, I64]):
+        lower_bound = PermissionLinkObject.generate_key_by_permission_name(*lower_bound)
+        data = self.db.lower_bound(permission_link_object_type, PermissionLinkObject.by_permission_name, lower_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return PermissionLinkObject.unpack(dec)
+
+    def upper_bound_by_id(self, upper_bound: I64):
+        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        data = self.db.upper_bound(permission_link_object_type, PermissionLinkObject.by_id, upper_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return PermissionLinkObject.unpack(dec)
+
+    def upper_bound_by_action_name(self, upper_bound: Tuple[Name, Name, Name]):
+        upper_bound = PermissionLinkObject.generate_key_by_action_name(*upper_bound)
+        data = self.db.upper_bound(permission_link_object_type, PermissionLinkObject.by_action_name, upper_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return PermissionLinkObject.unpack(dec)
+
+    def upper_bound_by_permission_name(self, upper_bound: Tuple[Name, Name, I64]):
+        upper_bound = PermissionLinkObject.generate_key_by_permission_name(*upper_bound)
+        data = self.db.upper_bound(permission_link_object_type, PermissionLinkObject.by_permission_name, upper_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return PermissionLinkObject.unpack(dec)
+
 
 # key_value_object_type = 7
 class KeyValueObjectIndex(object):
@@ -300,6 +644,14 @@ class KeyValueObjectIndex(object):
             return None
         dec = Decoder(data)
         return KeyValueObject.unpack(dec)
+    
+    def find_by_scope_primary(self, t_id: I64, primary_key: U64):
+        key = KeyValueObject.generate_key_by_scope_primary(t_id, primary_key)
+        data = self.db.find(key_value_object_type, KeyValueObject.by_scope_primary, key)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return KeyValueObject.unpack(dec)
 
     def modify(self, perm: KeyValueObject):
         key = int.to_bytes(perm.table_id, 8, 'little', signed=True)
@@ -309,6 +661,60 @@ class KeyValueObjectIndex(object):
 
     def row_count(self):
         return self.db.row_count(key_value_object_type)
+
+    def on_object_data(self, tp, data, custom_data):
+        dec = Decoder(data)
+        obj = KeyValueObject.unpack(dec)
+        cb, user_data = custom_data
+        return cb(obj, user_data)
+
+    def walk_by_id(self, cb, user_data=None):
+        return self.db.walk(key_value_object_type, KeyValueObject.by_id, self.on_object_data, (cb, user_data))
+    
+    def walk_by_scope_primary(self, cb, user_data=None):
+        return self.db.walk(key_value_object_type, KeyValueObject.by_scope_primary, self.on_object_data, (cb, user_data))
+
+    def walk_range_by_id(self, lower_bound: I64, upper_bound: I64, cb, user_data=None):
+        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
+        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        return self.db.walk_range(key_value_object_type, KeyValueObject.by_id, lower_bound, upper_bound, self.on_object_data, (cb, user_data))
+
+    def walk_range_by_scope_primary(self, lower_bound: Tuple[I64, U64], upper_bound: Tuple[I64, U64], cb, user_data=None):
+        lower_bound = KeyValueObject.generate_key_by_scope_primary(*lower_bound)
+        upper_bound = KeyValueObject.generate_key_by_scope_primary(*upper_bound)
+        return self.db.walk_range(key_value_object_type, KeyValueObject.by_scope_primary, lower_bound, upper_bound, self.on_object_data, (cb, user_data))
+
+    def lower_bound_by_id(self, lower_bound: I64):
+        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
+        data = self.db.lower_bound(key_value_object_type, KeyValueObject.by_id, lower_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return KeyValueObject.unpack(dec)
+
+    def lower_bound_by_scope_primary(self, lower_bound: Tuple[I64, U64]):
+        lower_bound = KeyValueObject.generate_key_by_scope_primary(*lower_bound)
+        data = self.db.lower_bound(key_value_object_type, KeyValueObject.by_scope_primary, lower_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return KeyValueObject.unpack(dec)
+
+    def upper_bound_by_id(self, upper_bound: I64):
+        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        data = self.db.upper_bound(key_value_object_type, KeyValueObject.by_id, upper_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return KeyValueObject.unpack(dec)
+    
+    def upper_bound_by_scope_primary(self, upper_bound: Tuple[I64, U64]):
+        upper_bound = KeyValueObject.generate_key_by_scope_primary(*upper_bound)
+        data = self.db.upper_bound(key_value_object_type, KeyValueObject.by_scope_primary, upper_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return KeyValueObject.unpack(dec)
 
 # index64_object_type = 8
 class Index64ObjectIndex(object):
@@ -325,6 +731,22 @@ class Index64ObjectIndex(object):
             return None
         dec = Decoder(data)
         return Index64Object.unpack(dec)
+    
+    def find_by_primary(self, t_id: I64, primary_key: U64):
+        key = int.to_bytes(t_id, 8, 'little', signed=True) + int.to_bytes(primary_key, 8, 'little')
+        data = self.db.find(index64_object_type, Index64Object.by_primary, key)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return Index64Object.unpack(dec)
+
+    def find_by_secondary(self, t_id: I64, secondary_key: U64, primary_key: U64):
+        key = utils.to_bytes(t_id, signed=True) + utils.to_bytes(secondary_key) + utils.to_bytes(primary_key)
+        data = self.db.find(index64_object_type, Index64Object.by_secondary, key)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return Index64Object.unpack(dec)
 
     def modify(self, perm: Index64Object):
         key = int.to_bytes(perm.table_id, 8, 'little', signed=True)
@@ -334,6 +756,84 @@ class Index64ObjectIndex(object):
 
     def row_count(self):
         return self.db.row_count(index64_object_type)
+
+    def on_object_data(self, tp, data, custom_data):
+        dec = Decoder(data)
+        obj = Index64Object.unpack(dec)
+        cb, user_data = custom_data
+        return cb(obj, user_data)
+
+    def walk_by_id(self, cb, user_data=None):
+        return self.db.walk(index64_object_type, Index64Object.by_id, self.on_object_data, (cb, user_data))
+    
+    def walk_by_primary(self, cb, user_data=None):
+        return self.db.walk(index64_object_type, Index64Object.by_primary, self.on_object_data, (cb, user_data))
+
+    def walk_by_secondary(self, cb, user_data=None):
+        return self.db.walk(index64_object_type, Index64Object.by_secondary, self.on_object_data, (cb, user_data))
+
+    def walk_range_by_id(self, lower_bound: I64, upper_bound: I64, cb, user_data=None):
+        lower_bound = int.to_bytes(lower_bound, 8, 'little')
+        upper_bound = int.to_bytes(upper_bound, 8, 'little')
+        return self.db.walk_range(index64_object_type, Index64Object.by_id, lower_bound, upper_bound, self.on_object_data, (cb, user_data))
+
+    def walk_range_by_primary(self, lower_bound: Tuple[I64, U64], upper_bound: Tuple[I64, U64], cb, user_data=None):
+        lower_bound = Index64Object.generate_key_by_primary(*lower_bound)
+        upper_bound = Index64Object.generate_key_by_primary(*upper_bound)
+        return self.db.walk_range(index64_object_type, Index64Object.by_primary, lower_bound, upper_bound, self.on_object_data, (cb, user_data))
+
+    def walk_range_by_secondary(self, lower_bound: Tuple[I64, U64, U64], upper_bound: Tuple[I64, U64, U64], cb, user_data=None):
+        lower_bound = Index64Object.generate_key_by_secondary(*lower_bound)
+        upper_bound = Index64Object.generate_key_by_secondary(*upper_bound)
+        return self.db.walk_range(index64_object_type, Index64Object.by_secondary, lower_bound, upper_bound, self.on_object_data, (cb, user_data))
+
+    def lower_bound_by_id(self, lower_bound: I64):
+        lower_bound = int.to_bytes(lower_bound, 8, 'little')
+        data = self.db.lower_bound(index64_object_type, Index64Object.by_id, lower_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return Index64Object.unpack(dec)
+
+    def lower_bound_by_primary(self, t_id: I64, primary_key: U64):
+        lower_bound = Index64Object.generate_key_by_primary(t_id, primary_key)
+        data = self.db.lower_bound(index64_object_type, Index64Object.by_primary, lower_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return Index64Object.unpack(dec)
+
+    def lower_bound_by_secondary(self, t_id: I64, secondary_key: U64, primary_key: U64):
+        lower_bound = Index64Object.generate_key_by_secondary(t_id, secondary_key, primary_key)
+        data = self.db.lower_bound(index64_object_type, Index64Object.by_secondary, lower_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return Index64Object.unpack(dec)
+
+    def upper_bound_by_id(self, upper_bound: I64):
+        upper_bound = int.to_bytes(upper_bound, 8, 'little')
+        data = self.db.upper_bound(index64_object_type, Index64Object.by_id, upper_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return Index64Object.unpack(dec)
+
+    def upper_bound_by_primary(self, t_id: I64, primary_key: U64):
+        upper_bound = Index64Object.generate_key_by_primary(t_id, primary_key)
+        data = self.db.upper_bound(index64_object_type, Index64Object.by_primary, upper_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return Index64Object.unpack(dec)
+    
+    def upper_bound_by_secondary(self, t_id: I64, secondary_key: U64, primary_key: U64):
+        upper_bound = Index64Object.generate_key_by_secondary(t_id, secondary_key, primary_key)
+        data = self.db.upper_bound(index64_object_type, Index64Object.by_secondary, upper_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return Index64Object.unpack(dec)
 
 # index128_object_type = 9
 class Index128ObjectIndex(object):
@@ -350,6 +850,22 @@ class Index128ObjectIndex(object):
             return None
         dec = Decoder(data)
         return Index128Object.unpack(dec)
+    
+    def find_by_primary(self, t_id: I64, primary_key: U64):
+        key = int.to_bytes(t_id, 8, 'little', signed=True) + int.to_bytes(primary_key, 8, 'little')
+        data = self.db.find(index128_object_type, Index128Object.by_primary, key)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return Index128Object.unpack(dec)
+    
+    def find_by_secondary(self, t_id: I64, secondary_key: U128, primary_key: U64):
+        key = utils.to_bytes(t_id, signed=True) + utils.to_bytes(secondary_key, 16) + utils.to_bytes(primary_key)
+        data = self.db.find(index128_object_type, Index128Object.by_secondary, key)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return Index128Object.unpack(dec)
 
     def modify(self, perm: Index128Object):
         key = int.to_bytes(perm.table_id, 8, 'little', signed=True)
@@ -359,6 +875,84 @@ class Index128ObjectIndex(object):
 
     def row_count(self):
         return self.db.row_count(index128_object_type)
+
+    def on_object_data(self, tp, data, custom_data):
+        dec = Decoder(data)
+        obj = Index128Object.unpack(dec)
+        cb, user_data = custom_data
+        return cb(obj, user_data)
+
+    def walk_by_id(self, cb, user_data=None):
+        return self.db.walk(index128_object_type, Index128Object.by_id, self.on_object_data, (cb, user_data))
+
+    def walk_by_primary(self, cb, user_data=None):
+        return self.db.walk(index128_object_type, Index128Object.by_primary, self.on_object_data, (cb, user_data))
+
+    def walk_by_secondary(self, cb, user_data=None):
+        return self.db.walk(index128_object_type, Index128Object.by_secondary, self.on_object_data, (cb, user_data))
+
+    def walk_range_by_id(self, lower_bound: I64, upper_bound: I64, cb, user_data=None):
+        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
+        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        return self.db.walk_range(index128_object_type, Index128Object.by_id, lower_bound, upper_bound, self.on_object_data, (cb, user_data))
+
+    def walk_range_by_primary(self, lower_bound: Tuple[I64, U64], upper_bound: Tuple[I64, U64], cb, user_data=None):
+        lower_bound = Index128Object.generate_key_by_primary(*lower_bound)
+        upper_bound = Index128Object.generate_key_by_primary(*upper_bound)
+        return self.db.walk_range(index128_object_type, Index128Object.by_primary, lower_bound, upper_bound, self.on_object_data, (cb, user_data))
+
+    def walk_range_by_secondary(self, lower_bound: Tuple[I64, U128, U64], upper_bound: Tuple[I64, U128, U64], cb, user_data=None):
+        lower_bound = Index128Object.generate_key_by_secondary(*lower_bound)
+        upper_bound = Index128Object.generate_key_by_secondary(*upper_bound)
+        return self.db.walk_range(index128_object_type, Index128Object.by_secondary, lower_bound, upper_bound, self.on_object_data, (cb, user_data))
+
+    def lower_bound_by_id(self, lower_bound: I64):
+        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
+        data = self.db.lower_bound(index128_object_type, Index128Object.by_id, lower_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return Index128Object.unpack(dec)
+
+    def lower_bound_by_primary(self, t_id: I64, primary_key: U64):
+        lower_bound = Index128Object.generate_key_by_primary(t_id, primary_key)
+        data = self.db.lower_bound(index128_object_type, Index128Object.by_primary, lower_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return Index128Object.unpack(dec)
+
+    def lower_bound_by_secondary(self, t_id: I64, secondary_key: U128, primary_key: U64):
+        lower_bound = Index128Object.generate_key_by_secondary(t_id, secondary_key, primary_key)
+        data = self.db.lower_bound(index128_object_type, Index128Object.by_secondary, lower_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return Index128Object.unpack(dec)
+
+    def upper_bound_by_id(self, upper_bound: I64):
+        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        data = self.db.upper_bound(index128_object_type, Index128Object.by_id, upper_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return Index128Object.unpack(dec)
+
+    def upper_bound_by_primary(self, t_id: I64, primary_key: U64):
+        upper_bound = Index128Object.generate_key_by_primary(t_id, primary_key)
+        data = self.db.upper_bound(index128_object_type, Index128Object.by_primary, upper_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return Index128Object.unpack(dec)
+    
+    def upper_bound_by_secondary(self, t_id: I64, secondary_key: U128, primary_key: U64):
+        upper_bound = Index128Object.generate_key_by_secondary(t_id, secondary_key, primary_key)
+        data = self.db.upper_bound(index128_object_type, Index128Object.by_secondary, upper_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return Index128Object.unpack(dec)
 
 # index256_object_type = 10
 class Index256ObjectIndex(object):
@@ -375,6 +969,22 @@ class Index256ObjectIndex(object):
             return None
         dec = Decoder(data)
         return Index256Object.unpack(dec)
+    
+    def find_by_primary(self, t_id: I64, primary_key: U64):
+        key = int.to_bytes(t_id, 8, 'little', signed=True) + int.to_bytes(primary_key, 8, 'little')
+        data = self.db.find(index256_object_type, Index256Object.by_primary, key)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return Index256Object.unpack(dec)
+    
+    def find_by_secondary(self, t_id: I64, secondary_key: U256, primary_key: U64):
+        key = utils.to_bytes(t_id, signed=True) + utils.to_bytes(secondary_key, 32) + utils.to_bytes(primary_key)
+        data = self.db.find(index256_object_type, Index256Object.by_secondary, key)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return Index256Object.unpack(dec)
 
     def modify(self, perm: Index256Object):
         key = int.to_bytes(perm.table_id, 8, 'little', signed=True)
@@ -384,6 +994,84 @@ class Index256ObjectIndex(object):
 
     def row_count(self):
         return self.db.row_count(index256_object_type)
+
+    def on_object_data(self, tp, data, custom_data):
+        dec = Decoder(data)
+        obj = Index256Object.unpack(dec)
+        cb, user_data = custom_data
+        return cb(obj, user_data)
+
+    def walk_by_id(self, cb, user_data=None):
+        return self.db.walk(index256_object_type, Index256Object.by_id, self.on_object_data, (cb, user_data))
+
+    def walk_by_primary(self, cb, user_data=None):
+        return self.db.walk(index256_object_type, Index256Object.by_primary, self.on_object_data, (cb, user_data))
+
+    def walk_by_secondary(self, cb, user_data=None):
+        return self.db.walk(index256_object_type, Index256Object.by_secondary, self.on_object_data, (cb, user_data))
+
+    def walk_range_by_id(self, lower_bound: I64, upper_bound: I64, cb, user_data=None):
+        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
+        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        return self.db.walk_range(index256_object_type, Index256Object.by_id, lower_bound, upper_bound, self.on_object_data, (cb, user_data))
+
+    def walk_range_by_primary(self, lower_bound: Tuple[I64, U64], upper_bound: Tuple[I64, U64], cb, user_data=None):
+        lower_bound = Index256Object.generate_key_by_primary(*lower_bound)
+        upper_bound = Index256Object.generate_key_by_primary(*upper_bound)
+        return self.db.walk_range(index256_object_type, Index256Object.by_primary, lower_bound, upper_bound, self.on_object_data, (cb, user_data))
+
+    def walk_range_by_secondary(self, lower_bound: Tuple[I64, U256, U64], upper_bound: Tuple[I64, U256, U64], cb, user_data=None):
+        lower_bound = Index256Object.generate_key_by_secondary(*lower_bound)
+        upper_bound = Index256Object.generate_key_by_secondary(*upper_bound)
+        return self.db.walk_range(index256_object_type, Index256Object.by_secondary, lower_bound, upper_bound, self.on_object_data, (cb, user_data))
+
+    def lower_bound_by_id(self, lower_bound: I64):
+        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
+        data = self.db.lower_bound(index256_object_type, Index256Object.by_id, lower_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return Index256Object.unpack(dec)
+
+    def lower_bound_by_primary(self, t_id: I64, primary_key: U64):
+        lower_bound = Index256Object.generate_key_by_primary(t_id, primary_key)
+        data = self.db.lower_bound(index256_object_type, Index256Object.by_primary, lower_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return Index256Object.unpack(dec)
+
+    def lower_bound_by_secondary(self, t_id: I64, secondary_key: U256, primary_key: U64):
+        lower_bound = Index256Object.generate_key_by_secondary(t_id, secondary_key, primary_key)
+        data = self.db.lower_bound(index256_object_type, Index256Object.by_secondary, lower_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return Index256Object.unpack(dec)
+
+    def upper_bound_by_id(self, upper_bound: I64):
+        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        data = self.db.upper_bound(index256_object_type, Index256Object.by_id, upper_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return Index256Object.unpack(dec)
+    
+    def upper_bound_by_primary(self, t_id: I64, primary_key: U64):
+        upper_bound = Index256Object.generate_key_by_primary(t_id, primary_key)
+        data = self.db.upper_bound(index256_object_type, Index256Object.by_primary, upper_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return Index256Object.unpack(dec)
+    
+    def upper_bound_by_secondary(self, t_id: I64, secondary_key: U256, primary_key: U64):
+        upper_bound = Index256Object.generate_key_by_secondary(t_id, secondary_key, primary_key)
+        data = self.db.upper_bound(index256_object_type, Index256Object.by_secondary, upper_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return Index256Object.unpack(dec)
 
 # index_double_object_type = 11
 class IndexDoubleObjectIndex(object):
@@ -400,6 +1088,22 @@ class IndexDoubleObjectIndex(object):
             return None
         dec = Decoder(data)
         return IndexDoubleObject.unpack(dec)
+    
+    def find_by_primary(self, t_id: I64, primary_key: U64):
+        key = int.to_bytes(t_id, 8, 'little', signed=True) + int.to_bytes(primary_key, 8, 'little')
+        data = self.db.find(index_double_object_type, IndexDoubleObject.by_primary, key)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return IndexDoubleObject.unpack(dec)
+
+    def find_by_secondary(self, t_id: I64, secondary_key: F64, primary_key: U64):
+        key = utils.to_bytes(t_id) + utils.to_bytes(secondary_key) + utils.to_bytes(primary_key)
+        data = self.db.find(index_double_object_type, IndexDoubleObject.by_secondary, key)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return IndexDoubleObject.unpack(dec)
 
     def modify(self, perm: IndexDoubleObject):
         key = int.to_bytes(perm.table_id, 8, 'little', signed=True)
@@ -409,6 +1113,84 @@ class IndexDoubleObjectIndex(object):
 
     def row_count(self):
         return self.db.row_count(index_double_object_type)
+
+    def on_object_data(self, tp, data, custom_data):
+        dec = Decoder(data)
+        obj = IndexDoubleObject.unpack(dec)
+        cb, user_data = custom_data
+        return cb(obj, user_data)
+
+    def walk_by_id(self, cb, user_data=None):
+        return self.db.walk(index_double_object_type, IndexDoubleObject.by_id, self.on_object_data, (cb, user_data))
+
+    def walk_by_primary(self, cb, user_data=None):
+        return self.db.walk(index_double_object_type, IndexDoubleObject.by_primary, self.on_object_data, (cb, user_data))
+    
+    def walk_by_secondary(self, cb, user_data=None):
+        return self.db.walk(index_double_object_type, IndexDoubleObject.by_secondary, self.on_object_data, (cb, user_data))
+
+    def walk_range_by_id(self, lower_bound: I64, upper_bound: I64, cb, user_data=None):
+        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
+        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        return self.db.walk_range(index_double_object_type, IndexDoubleObject.by_id, lower_bound, upper_bound, self.on_object_data, (cb, user_data))
+
+    def walk_range_by_primary(self, lower_bound: Tuple[I64, U64], upper_bound: Tuple[I64, U64], cb, user_data=None):
+        lower_bound = IndexDoubleObject.generate_key_by_primary(*lower_bound)
+        upper_bound = IndexDoubleObject.generate_key_by_primary(*upper_bound)
+        return self.db.walk_range(index_double_object_type, IndexDoubleObject.by_primary, lower_bound, upper_bound, self.on_object_data, (cb, user_data))
+
+    def walk_range_by_secondary(self, lower_bound: Tuple[I64, F64, U64], upper_bound: Tuple[I64, F64, U64], cb, user_data=None):
+        lower_bound = IndexDoubleObject.generate_key_by_secondary(*lower_bound)
+        upper_bound = IndexDoubleObject.generate_key_by_secondary(*upper_bound)
+        return self.db.walk_range(index_double_object_type, IndexDoubleObject.by_secondary, lower_bound, upper_bound, self.on_object_data, (cb, user_data))
+
+    def lower_bound_by_id(self, lower_bound: I64):
+        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
+        data = self.db.lower_bound(index_double_object_type, IndexDoubleObject.by_id, lower_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return IndexDoubleObject.unpack(dec)
+
+    def lower_bound_by_primary(self, t_id: I64, primary_key: U64):
+        lower_bound = IndexDoubleObject.generate_key_by_primary(t_id, primary_key)
+        data = self.db.lower_bound(index_double_object_type, IndexDoubleObject.by_primary, lower_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return IndexDoubleObject.unpack(dec)
+    
+    def lower_bound_by_secondary(self, t_id: I64, secondary_key: F64, primary_key: U64):
+        lower_bound = IndexDoubleObject.generate_key_by_secondary(t_id, secondary_key, primary_key)
+        data = self.db.lower_bound(index_double_object_type, IndexDoubleObject.by_secondary, lower_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return IndexDoubleObject.unpack(dec)
+
+    def upper_bound_by_id(self, upper_bound: I64):
+        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        data = self.db.upper_bound(index_double_object_type, IndexDoubleObject.by_id, upper_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return IndexDoubleObject.unpack(dec)
+    
+    def upper_bound_by_primary(self, t_id: I64, primary_key: U64):
+        upper_bound = IndexDoubleObject.generate_key_by_primary(t_id, primary_key)
+        data = self.db.upper_bound(index_double_object_type, IndexDoubleObject.by_primary, upper_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return IndexDoubleObject.unpack(dec)
+    
+    def upper_bound_by_secondary(self, t_id: I64, secondary_key: F64, primary_key: U64):
+        upper_bound = IndexDoubleObject.generate_key_by_secondary(t_id, secondary_key, primary_key)
+        data = self.db.upper_bound(index_double_object_type, IndexDoubleObject.by_secondary, upper_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return IndexDoubleObject.unpack(dec)
 
 # index_long_double_object_type = 12
 class IndexLongDoubleObjectIndex(object):
@@ -426,6 +1208,23 @@ class IndexLongDoubleObjectIndex(object):
         dec = Decoder(data)
         return IndexLongDoubleObject.unpack(dec)
 
+    def find_by_primary(self, t_id: I64, primary_key: U64):
+        key = int.to_bytes(t_id, 8, 'little', signed=True) + int.to_bytes(primary_key, 8, 'little')
+        data = self.db.find(index_long_double_object_type, IndexLongDoubleObject.by_primary, key)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return IndexLongDoubleObject.unpack(dec)
+
+    def find_by_secondary(self, t_id: I64, secondary_key: F128, primary_key: U64):
+        key = utils.to_bytes(t_id) + utils.to_bytes(secondary_key) + utils.to_bytes(primary_key)
+        data = self.db.find(index_long_double_object_type, IndexLongDoubleObject.by_secondary, key)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return IndexLongDoubleObject.unpack(dec)
+
+
     def modify(self, perm: IndexLongDoubleObject):
         key = int.to_bytes(perm.table_id, 8, 'little', signed=True)
         enc = Encoder()
@@ -434,6 +1233,84 @@ class IndexLongDoubleObjectIndex(object):
 
     def row_count(self):
         return self.db.row_count(index_long_double_object_type)
+
+    def on_object_data(self, tp, data, custom_data):
+        dec = Decoder(data)
+        obj = IndexLongDoubleObject.unpack(dec)
+        cb, user_data = custom_data
+        return cb(obj, user_data)
+
+    def walk_by_id(self, cb, user_data=None):
+        return self.db.walk(index_long_double_object_type, IndexLongDoubleObject.by_id, self.on_object_data, (cb, user_data))
+
+    def walk_by_primary(self, cb, user_data=None):
+        return self.db.walk(index_long_double_object_type, IndexLongDoubleObject.by_primary, self.on_object_data, (cb, user_data))
+
+    def walk_by_secondary(self, cb, user_data=None):
+        return self.db.walk(index_long_double_object_type, IndexLongDoubleObject.by_secondary, self.on_object_data, (cb, user_data))
+
+    def walk_range_by_id(self, lower_bound: I64, upper_bound: I64, cb, user_data=None):
+        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
+        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        return self.db.walk_range(index_long_double_object_type, IndexLongDoubleObject.by_id, lower_bound, upper_bound, self.on_object_data, (cb, user_data))
+
+    def walk_range_by_primary(self, lower_bound: Tuple[I64, U64], upper_bound: Tuple[I64, U64], cb, user_data=None):
+        lower_bound = IndexLongDoubleObject.generate_key_by_primary(*lower_bound)
+        upper_bound = IndexLongDoubleObject.generate_key_by_primary(*upper_bound)
+        return self.db.walk_range(index_long_double_object_type, IndexLongDoubleObject.by_primary, lower_bound, upper_bound, self.on_object_data, (cb, user_data))
+
+    def walk_range_by_secondary(self, lower_bound: Tuple[I64, F128, U64], upper_bound: Tuple[I64, F128, U64], cb, user_data=None):
+        lower_bound = IndexLongDoubleObject.generate_key_by_secondary(*lower_bound)
+        upper_bound = IndexLongDoubleObject.generate_key_by_secondary(*upper_bound)
+        return self.db.walk_range(index_long_double_object_type, IndexLongDoubleObject.by_secondary, lower_bound, upper_bound, self.on_object_data, (cb, user_data))
+
+    def lower_bound_by_id(self, lower_bound: I64):
+        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
+        data = self.db.lower_bound(index_long_double_object_type, IndexLongDoubleObject.by_id, lower_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return IndexLongDoubleObject.unpack(dec)
+
+    def lower_bound_by_primary(self, t_id: I64, lower_bound: U64):
+        lower_bound = IndexLongDoubleObject.generate_key_by_primary(t_id, lower_bound)
+        data = self.db.lower_bound(index_long_double_object_type, IndexLongDoubleObject.by_primary, lower_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return IndexLongDoubleObject.unpack(dec)
+
+    def lower_bound_by_secondary(self, t_id: I64, lower_bound: F128, primary_key: U64):
+        lower_bound = IndexLongDoubleObject.generate_key_by_secondary(t_id, lower_bound, primary_key)
+        data = self.db.lower_bound(index_long_double_object_type, IndexLongDoubleObject.by_secondary, lower_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return IndexLongDoubleObject.unpack(dec)
+
+    def upper_bound_by_id(self, upper_bound: I64):
+        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        data = self.db.upper_bound(index_long_double_object_type, IndexLongDoubleObject.by_id, upper_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return IndexLongDoubleObject.unpack(dec)
+    
+    def upper_bound_by_primary(self, t_id: I64, primary_key: U64):
+        upper_bound = IndexLongDoubleObject.generate_key_by_primary(t_id, primary_key)
+        data = self.db.upper_bound(index_long_double_object_type, IndexLongDoubleObject.by_primary, upper_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return IndexLongDoubleObject.unpack(dec)
+    
+    def upper_bound_by_secondary(self, t_id: I64, secondary_key: F128, primary_key: U64):
+        upper_bound = IndexLongDoubleObject.generate_key_by_secondary(t_id, secondary_key, primary_key)
+        data = self.db.upper_bound(index_long_double_object_type, IndexLongDoubleObject.by_secondary, upper_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return IndexLongDoubleObject.unpack(dec)
 
 # global_property_object_type = 13
 class GlobalPropertyObjectIndex(object):
@@ -500,7 +1377,7 @@ class BlockSummaryObjectIndex(object):
             return None
         dec = Decoder(data)
         return BlockSummaryObject.unpack(dec)
-
+    
     def modify(self, perm: BlockSummaryObject):
         key = int.to_bytes(perm.table_id, 8, 'little', signed=True)
         enc = Encoder()
@@ -509,6 +1386,31 @@ class BlockSummaryObjectIndex(object):
 
     def row_count(self):
         return self.db.row_count(block_summary_object_type)
+
+    def on_object_data(self, tp, data, custom_data):
+        dec = Decoder(data)
+        obj = BlockSummaryObject.unpack(dec)
+        cb, user_data = custom_data
+        return cb(obj, user_data)
+
+    def walk_by_id(self, cb, user_data=None):
+        return self.db.walk(block_summary_object_type, BlockSummaryObject.by_id, self.on_object_data, (cb, user_data))
+
+    def walk_by_block_id(self, cb, user_data=None):
+        return self.db.walk(block_summary_object_type, BlockSummaryObject.by_block_id, self.on_object_data, (cb, user_data))
+
+    def walk_range_by_id(self, lower_bound: I64, upper_bound: I64, cb, user_data=None):
+        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
+        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        return self.db.walk_range(block_summary_object_type, BlockSummaryObject.by_id, lower_bound, upper_bound, self.on_object_data, (cb, user_data))
+
+    def lower_bound_by_id(self, lower_bound: I64):
+        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
+        return self.db.lower_bound(block_summary_object_type, BlockSummaryObject.by_id, lower_bound)
+
+    def upper_bound_by_id(self, upper_bound: I64):
+        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        return self.db.upper_bound(block_summary_object_type, BlockSummaryObject.by_id, upper_bound)
 
 # transaction_object_type = 16
 class TransactionObjectIndex(object):
@@ -526,6 +1428,22 @@ class TransactionObjectIndex(object):
         dec = Decoder(data)
         return TransactionObject.unpack(dec)
 
+    def find_by_trx_id(self, trx_id: Checksum256):
+        key = trx_id.to_bytes()
+        data = self.db.find(transaction_object_type, TransactionObject.by_trx_id, key)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return TransactionObject.unpack(dec)
+    
+    def find_by_expiration(self, expiration: U32, table_id: I64):
+        key = utils.to_bytes(expiration, 4) + utils.to_bytes(table_id, signed=True)
+        data = self.db.find(transaction_object_type, TransactionObject.by_expiration, key)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return TransactionObject.unpack(dec)
+
     def modify(self, perm: TransactionObject):
         key = int.to_bytes(perm.table_id, 8, 'little', signed=True)
         enc = Encoder()
@@ -534,6 +1452,84 @@ class TransactionObjectIndex(object):
 
     def row_count(self):
         return self.db.row_count(transaction_object_type)
+
+    def on_object_data(self, tp, data, custom_data):
+        dec = Decoder(data)
+        obj = TransactionObject.unpack(dec)
+        cb, user_data = custom_data
+        return cb(obj, user_data)
+
+    def walk_by_id(self, cb, user_data=None):
+        return self.db.walk(transaction_object_type, TransactionObject.by_id, self.on_object_data, (cb, user_data))
+    
+    def walk_by_trx_id(self, cb, user_data=None):
+        return self.db.walk(transaction_object_type, TransactionObject.by_trx_id, self.on_object_data, (cb, user_data))
+
+    def walk_by_expiration(self, cb, user_data=None):
+        return self.db.walk(transaction_object_type, TransactionObject.by_expiration, self.on_object_data, (cb, user_data))
+
+    def walk_range_by_id(self, lower_bound: I64, upper_bound: I64, cb, user_data=None):
+        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
+        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        return self.db.walk_range(transaction_object_type, TransactionObject.by_id, lower_bound, upper_bound, self.on_object_data, (cb, user_data))
+
+    def walk_range_by_trx_id(self, lower_bound: Checksum256, upper_bound: Checksum256, cb, user_data=None):
+        lower_bound = lower_bound.to_bytes()
+        upper_bound = upper_bound.to_bytes()
+        return self.db.walk_range(transaction_object_type, TransactionObject.by_trx_id, lower_bound, upper_bound, self.on_object_data, (cb, user_data))
+
+    def walk_range_by_expiration(self, lower_bound: Union[U32, I64], upper_bound: Union[U32, I64], cb, user_data=None):
+        lower_bound = TransactionObject.generate_key_by_expiration(*lower_bound)
+        upper_bound = TransactionObject.generate_key_by_expiration(*upper_bound)
+        return self.db.walk_range(transaction_object_type, TransactionObject.by_expiration, lower_bound, upper_bound, self.on_object_data, (cb, user_data))
+
+    def lower_bound_by_id(self, lower_bound: I64):
+        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
+        data = self.db.lower_bound(transaction_object_type, TransactionObject.by_id, lower_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return TransactionObject.unpack(dec)
+
+    def lower_bound_by_trx_id(self, lower_bound: Checksum256):
+        lower_bound = lower_bound.to_bytes()
+        data = self.db.lower_bound(transaction_object_type, TransactionObject.by_trx_id, lower_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return TransactionObject.unpack(dec)
+
+    def lower_bound_by_expiration(self, expiration: U32, table_id: I64):
+        lower_bound = TransactionObject.generate_key_by_expiration(expiration, table_id)
+        data = self.db.lower_bound(transaction_object_type, TransactionObject.by_expiration, lower_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return TransactionObject.unpack(dec)
+
+    def upper_bound_by_id(self, upper_bound: I64):
+        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        data = self.db.upper_bound(transaction_object_type, TransactionObject.by_id, upper_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return TransactionObject.unpack(dec)
+
+    def upper_bound_by_trx_id(self, upper_bound: Checksum256):
+        upper_bound = upper_bound.to_bytes()
+        data = self.db.upper_bound(transaction_object_type, TransactionObject.by_trx_id, upper_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return TransactionObject.unpack(dec)
+
+    def upper_bound_by_expiration(self, expiration: U32, table_id: I64):
+        upper_bound = TransactionObject.generate_key_by_expiration(expiration, table_id)
+        data = self.db.upper_bound(transaction_object_type, TransactionObject.by_expiration, upper_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return TransactionObject.unpack(dec)
 
 # generated_transaction_object_type = 17
 class GeneratedTransactionObjectIndex(object):
@@ -561,16 +1557,29 @@ class GeneratedTransactionObjectIndex(object):
         dec = Decoder(data)
         return GeneratedTransactionObject.unpack(dec)
 
-    def find_by_expiration(self, expiration: I64):
-        key = int.to_bytes(expiration, 8, 'little', signed=True)
+    def find_by_expiration(self, expiration: Union[I64, TimePoint], table_id: I64):
+        key = GeneratedTransactionObject.generate_key_by_expiration(expiration, table_id)
         data = self.db.find(generated_transaction_object_type, GeneratedTransactionObject.by_expiration, key)
         if not data:
             return None
         dec = Decoder(data)
         return GeneratedTransactionObject.unpack(dec)
-
-    def walk_by_expiration(self, cb):
-        self.db.walk(generated_transaction_object_type, GeneratedTransactionObject.by_expiration, cb)
+    
+    def find_by_delay(self, delay: Union[I64, TimePoint], table_id: I64):
+        key = GeneratedTransactionObject.generate_key_by_delay(delay, table_id)
+        data = self.db.find(generated_transaction_object_type, GeneratedTransactionObject.by_delay, key)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return GeneratedTransactionObject.unpack(dec)
+    
+    def find_by_sender_id(self, sender_id: I64, table_id: I64):
+        key = GeneratedTransactionObject.generate_key_by_sender_id(sender_id, table_id)
+        data = self.db.find(generated_transaction_object_type, GeneratedTransactionObject.by_sender_id, key)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return GeneratedTransactionObject.unpack(dec)
 
     def modify(self, perm: GeneratedTransactionObject):
         key = int.to_bytes(perm.table_id, 8, 'little', signed=True)
@@ -580,6 +1589,144 @@ class GeneratedTransactionObjectIndex(object):
 
     def row_count(self):
         return self.db.row_count(generated_transaction_object_type)
+
+    def on_object_data(self, tp, data, custom_data):
+        dec = Decoder(data)
+        obj = GeneratedTransactionObject.unpack(dec)
+        cb, user_data = custom_data
+        return cb(obj, user_data)
+
+    def walk_by_id(self, cb, user_data=None):
+        return self.db.walk(generated_transaction_object_type, GeneratedTransactionObject.by_id, self.on_object_data, (cb, user_data))
+
+    def walk_by_trx_id(self, cb, user_data=None):
+        return self.db.walk(generated_transaction_object_type, GeneratedTransactionObject.by_trx_id, self.on_object_data, (cb, user_data))
+    
+    def walk_by_expiration(self, cb, user_data=None):
+        return self.db.walk(generated_transaction_object_type, GeneratedTransactionObject.by_expiration, self.on_object_data, (cb, user_data))
+    
+    def walk_by_delay(self, cb, user_data=None):
+        return self.db.walk(generated_transaction_object_type, GeneratedTransactionObject.by_delay, self.on_object_data, (cb, user_data))
+
+    def walk_by_sender(self, cb, user_data=None):
+        return self.db.walk(generated_transaction_object_type, GeneratedTransactionObject.by_sender, self.on_object_data, (cb, user_data))
+
+    def walk_range_by_id(self, lower_bound: I64, upper_bound: I64, cb, user_data=None):
+        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
+        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        return self.db.walk_range(generated_transaction_object_type, GeneratedTransactionObject.by_id, lower_bound, upper_bound, self.on_object_data, (cb, user_data))
+
+    def walk_range_by_trx_id(self, lower_bound: Union[bytes, Checksum256], upper_bound: Union[bytes, Checksum256], cb, user_data=None):
+        if isinstance(lower_bound, Checksum256):
+            lower_bound = lower_bound.to_bytes()
+        if isinstance(upper_bound, Checksum256):
+            upper_bound = upper_bound.to_bytes()
+        assert isinstance(lower_bound, bytes) and isinstance(upper_bound, bytes)
+        assert len(lower_bound) == 32 and len(upper_bound) == 32
+        return self.db.walk_range(generated_transaction_object_type, GeneratedTransactionObject.by_trx_id, lower_bound, upper_bound, self.on_object_data, (cb, user_data))
+
+    def walk_range_by_expiration(self, lower_bound: Union[Union[I64, TimePoint], I64], upper_bound: Union[Union[I64, TimePoint], I64], cb, user_data=None):
+        lower_bound = GeneratedTransactionObject.generate_key_by_expiration(*lower_bound)
+        upper_bound = GeneratedTransactionObject.generate_key_by_expiration(*upper_bound)
+        return self.db.walk_range(generated_transaction_object_type, GeneratedTransactionObject.by_expiration, lower_bound, upper_bound, self.on_object_data, (cb, user_data))
+
+    def walk_range_by_delay(self, lower_bound: Union[Union[I64, TimePoint], I64], upper_bound: Union[Union[I64, TimePoint], I64], cb, user_data=None):
+        lower_bound = GeneratedTransactionObject.generate_key_by_delay(*lower_bound)
+        upper_bound = GeneratedTransactionObject.generate_key_by_delay(*upper_bound)
+        return self.db.walk_range(generated_transaction_object_type, GeneratedTransactionObject.by_delay, lower_bound, upper_bound, self.on_object_data, (cb, user_data))
+
+    def walk_range_by_sender(self, lower_bound: Union[Name, I64], upper_bound: Union[Name, I64], cb, user_data=None):
+        lower_bound = GeneratedTransactionObject.generate_key_by_sender(*lower_bound)
+        upper_bound = GeneratedTransactionObject.generate_key_by_sender(*upper_bound)
+        return self.db.walk_range(generated_transaction_object_type, GeneratedTransactionObject.by_sender, lower_bound, upper_bound, self.on_object_data, (cb, user_data))
+
+    def lower_bound_by_id(self, lower_bound: I64):
+        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
+        data = self.db.lower_bound(generated_transaction_object_type, GeneratedTransactionObject.by_id, lower_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return GeneratedTransactionObject.unpack(dec)
+
+    def lower_bound_by_trx_id(self, lower_bound: Union[bytes, Checksum256]):
+        if isinstance(lower_bound, Checksum256):
+            lower_bound = lower_bound.to_bytes()
+        assert isinstance(lower_bound, bytes)
+        assert len(lower_bound) == 32
+
+        data = self.db.lower_bound(generated_transaction_object_type, GeneratedTransactionObject.by_trx_id, lower_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return GeneratedTransactionObject.unpack(dec)
+    
+    def lower_bound_by_expiration(self, lower_bound: Union[Union[I64, TimePoint], I64]):
+        lower_bound = GeneratedTransactionObject.generate_key_by_expiration(*lower_bound)
+        data = self.db.lower_bound(generated_transaction_object_type, GeneratedTransactionObject.by_expiration, lower_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return GeneratedTransactionObject.unpack(dec)
+    
+    def lower_bound_by_delay(self, lower_bound: Union[Union[I64, TimePoint], I64]):
+        lower_bound = GeneratedTransactionObject.generate_key_by_delay(*lower_bound)
+        data = self.db.lower_bound(generated_transaction_object_type, GeneratedTransactionObject.by_delay, lower_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return GeneratedTransactionObject.unpack(dec)
+
+    def lower_bound_by_sender(self, lower_bound: Union[Name, U128]):
+        lower_bound = GeneratedTransactionObject.generate_key_by_sender(*lower_bound)
+        data = self.db.lower_bound(generated_transaction_object_type, GeneratedTransactionObject.by_sender, lower_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return GeneratedTransactionObject.unpack(dec)
+
+    def upper_bound_by_id(self, upper_bound: I64):
+        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        data = self.db.upper_bound(generated_transaction_object_type, GeneratedTransactionObject.by_id, upper_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return GeneratedTransactionObject.unpack(dec)
+
+    def upper_bound_by_trx_id(self, upper_bound: Union[bytes, Checksum256]):
+        if isinstance(upper_bound, Checksum256):
+            upper_bound = upper_bound.to_bytes()
+        assert isinstance(upper_bound, bytes)
+        assert len(upper_bound) == 32
+
+        data = self.db.upper_bound(generated_transaction_object_type, GeneratedTransactionObject.by_trx_id, upper_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return GeneratedTransactionObject.unpack(dec)
+    
+    def upper_bound_by_expiration(self, upper_bound: Union[Union[I64, TimePoint], I64]):
+        upper_bound = GeneratedTransactionObject.generate_key_by_expiration(*upper_bound)
+        data = self.db.upper_bound(generated_transaction_object_type, GeneratedTransactionObject.by_expiration, upper_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return GeneratedTransactionObject.unpack(dec)
+    
+    def upper_bound_by_delay(self, upper_bound: Union[Union[I64, TimePoint], I64]):
+        upper_bound = GeneratedTransactionObject.generate_key_by_delay(*upper_bound)
+        data = self.db.upper_bound(generated_transaction_object_type, GeneratedTransactionObject.by_delay, upper_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return GeneratedTransactionObject.unpack(dec)
+
+    def upper_bound_by_sender(self, upper_bound: Union[Name, U128]):
+        upper_bound = GeneratedTransactionObject.generate_key_by_sender(*upper_bound)
+        data = self.db.upper_bound(generated_transaction_object_type, GeneratedTransactionObject.by_sender, upper_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return GeneratedTransactionObject.unpack(dec)
 
 # table_id_object_type = 30
 class TableIdObjectIndex(object):
@@ -596,6 +1743,14 @@ class TableIdObjectIndex(object):
             return None
         dec = Decoder(data)
         return TableIdObject.unpack(dec)
+    
+    def find_by_code_scope_table(self, code: Name, scope: Name, table: Name):
+        key = TableIdObject.generate_key_by_code_scope_table(code, scope, table)
+        data = self.db.find(table_id_object_type, TableIdObject.by_code_scope_table, key)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return TableIdObject.unpack(dec)
 
     def modify(self, perm: TableIdObject):
         key = int.to_bytes(perm.table_id, 8, 'little', signed=True)
@@ -605,6 +1760,60 @@ class TableIdObjectIndex(object):
 
     def row_count(self):
         return self.db.row_count(table_id_object_type)
+
+    def on_object_data(self, tp, data, custom_data):
+        dec = Decoder(data)
+        obj = TableIdObject.unpack(dec)
+        cb, user_data = custom_data
+        return cb(obj, user_data)
+
+    def walk_by_id(self, cb, user_data=None):
+        return self.db.walk(table_id_object_type, TableIdObject.by_id, self.on_object_data, (cb, user_data))
+
+    def walk_by_code_scope_table(self, cb, user_data=None):
+        return self.db.walk(table_id_object_type, TableIdObject.by_code_scope_table, self.on_object_data, (cb, user_data))
+
+    def walk_range_by_id(self, lower_bound: I64, upper_bound: I64, cb, user_data=None):
+        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
+        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        return self.db.walk_range(table_id_object_type, TableIdObject.by_id, lower_bound, upper_bound, self.on_object_data, (cb, user_data))
+
+    def walk_range_by_code_scope_table(self, lower_bound: Union[Name, Name, Name], upper_bound: Union[Name, Name, Name], cb, user_data=None):
+        lower_bound = TableIdObject.generate_key_by_code_scope_table(*lower_bound)
+        upper_bound = TableIdObject.generate_key_by_code_scope_table(*upper_bound)
+        return self.db.walk_range(table_id_object_type, TableIdObject.by_code_scope_table, lower_bound, upper_bound, self.on_object_data, (cb, user_data))
+
+    def lower_bound_by_id(self, lower_bound: I64):
+        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
+        data = self.db.lower_bound(table_id_object_type, TableIdObject.by_id, lower_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return TableIdObject.unpack(dec)
+    
+    def lower_bound_by_code_scope_table(self, code: Name, scope: Name, table: Name):
+        lower_bound = TableIdObject.generate_key_by_code_scope_table(code, scope, table)
+        data = self.db.lower_bound(table_id_object_type, TableIdObject.by_code_scope_table, lower_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return TableIdObject.unpack(dec)
+
+    def upper_bound_by_id(self, upper_bound: I64):
+        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        data = self.db.upper_bound(table_id_object_type, TableIdObject.by_id, upper_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return TableIdObject.unpack(dec)
+    
+    def upper_bound_by_code_scope_table(self, code: Name, scope: Name, table: Name):
+        upper_bound = TableIdObject.generate_key_by_code_scope_table(code, scope, table)
+        data = self.db.upper_bound(table_id_object_type, TableIdObject.by_code_scope_table, upper_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return TableIdObject.unpack(dec)
 
 # resource_limits_object_type = 31
 class ResourceLimitsObjectIndex(object):
@@ -621,6 +1830,14 @@ class ResourceLimitsObjectIndex(object):
             return None
         dec = Decoder(data)
         return ResourceLimitsObject.unpack(dec)
+    
+    def find_by_owner(self, pending: bool, owner: Name):
+        key = ResourceLimitsObject.generate_key_by_owner(pending, owner)
+        data = self.db.find(resource_limits_object_type, ResourceLimitsObject.by_owner, key)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return ResourceLimitsObject.unpack(dec)
 
     def modify(self, perm: ResourceLimitsObject):
         key = int.to_bytes(perm.table_id, 8, 'little', signed=True)
@@ -630,6 +1847,61 @@ class ResourceLimitsObjectIndex(object):
 
     def row_count(self):
         return self.db.row_count(resource_limits_object_type)
+
+    def on_object_data(self, tp, data, custom_data):
+        dec = Decoder(data)
+        obj = ResourceLimitsObject.unpack(dec)
+        cb, user_data = custom_data
+        return cb(obj, user_data)
+
+    def walk_by_id(self, cb, user_data=None):
+        return self.db.walk(resource_limits_object_type, ResourceLimitsObject.by_id, self.on_object_data, (cb, user_data))
+
+    def walk_by_owner(self, cb, user_data=None):
+        return self.db.walk(resource_limits_object_type, ResourceLimitsObject.by_owner, self.on_object_data, (cb, user_data))
+
+    def walk_range_by_id(self, lower_bound: I64, upper_bound: I64, cb, user_data=None):
+        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
+        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        return self.db.walk_range(resource_limits_object_type, ResourceLimitsObject.by_id, lower_bound, upper_bound, self.on_object_data, (cb, user_data))
+
+    def walk_range_by_owner(self, lower_bound: Tuple[bool, Name], upper_bound: Tuple[bool, Name], cb, user_data=None):
+        lower_bound = ResourceLimitsObject.generate_key_by_owner(*lower_bound)
+        upper_bound = ResourceLimitsObject.generate_key_by_owner(*upper_bound)
+        return self.db.walk_range(resource_limits_object_type, ResourceLimitsObject.by_owner, lower_bound, upper_bound, self.on_object_data, (cb, user_data))
+
+    def lower_bound_by_id(self, lower_bound: I64):
+        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
+        data = self.db.lower_bound(resource_limits_object_type, ResourceLimitsObject.by_id, lower_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return ResourceLimitsObject.unpack(dec)
+
+    def lower_bound_by_owner(self, pending: bool, owner: Name):
+        lower_bound = ResourceLimitsObject.generate_key_by_owner(pending, owner)
+        data = self.db.lower_bound(resource_limits_object_type, ResourceLimitsObject.by_owner, lower_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return ResourceLimitsObject.unpack(dec)
+
+    def upper_bound_by_id(self, upper_bound: I64):
+        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        data = self.db.upper_bound(resource_limits_object_type, ResourceLimitsObject.by_id, upper_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return ResourceLimitsObject.unpack(dec)
+    
+    def upper_bound_by_owner(self, pending: bool, owner: Name):
+        upper_bound = ResourceLimitsObject.generate_key_by_owner(pending, owner)
+        data = self.db.upper_bound(resource_limits_object_type, ResourceLimitsObject.by_owner, upper_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return ResourceLimitsObject.unpack(dec)
+
 # resource_usage_object_type = 32
 class ResourceUsageObjectIndex(object):
     def __init__(self, db: Database):
@@ -645,6 +1917,14 @@ class ResourceUsageObjectIndex(object):
             return None
         dec = Decoder(data)
         return ResourceUsageObject.unpack(dec)
+    
+    def find_by_owner(self, owner: Name):
+        key = eos.s2b(owner)
+        data = self.db.find(resource_usage_object_type, ResourceUsageObject.by_owner, key)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return ResourceUsageObject.unpack(dec)
 
     def modify(self, perm: ResourceUsageObject):
         key = int.to_bytes(perm.table_id, 8, 'little', signed=True)
@@ -654,6 +1934,60 @@ class ResourceUsageObjectIndex(object):
 
     def row_count(self):
         return self.db.row_count(resource_usage_object_type)
+
+    def on_object_data(self, tp, data, custom_data):
+        dec = Decoder(data)
+        obj = ResourceUsageObject.unpack(dec)
+        cb, user_data = custom_data
+        return cb(obj, user_data)
+
+    def walk_by_id(self, cb, user_data=None):
+        return self.db.walk(resource_usage_object_type, ResourceUsageObject.by_id, self.on_object_data, (cb, user_data))
+
+    def walk_by_owner(self, cb, user_data=None):
+        return self.db.walk(resource_usage_object_type, ResourceUsageObject.by_owner, self.on_object_data, (cb, user_data))
+
+    def walk_range_by_id(self, lower_bound: I64, upper_bound: I64, cb, user_data=None):
+        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
+        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        return self.db.walk_range(resource_usage_object_type, ResourceUsageObject.by_id, lower_bound, upper_bound, self.on_object_data, (cb, user_data))
+
+    def walk_range_by_owner(self, lower_bound: Name, upper_bound: Name, cb, user_data=None):
+        lower_bound = eos.s2b(lower_bound)
+        upper_bound = eos.s2b(upper_bound)
+        return self.db.walk_range(resource_usage_object_type, ResourceUsageObject.by_owner, lower_bound, upper_bound, self.on_object_data, (cb, user_data))
+
+    def lower_bound_by_id(self, lower_bound: I64):
+        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
+        data = self.db.lower_bound(resource_usage_object_type, ResourceUsageObject.by_id, lower_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return ResourceUsageObject.unpack(dec)
+
+    def lower_bound_by_owner(self, lower_bound: Name):
+        lower_bound = eos.s2b(lower_bound)
+        data = self.db.lower_bound(resource_usage_object_type, ResourceUsageObject.by_owner, lower_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return ResourceUsageObject.unpack(dec)
+
+    def upper_bound_by_id(self, upper_bound: I64):
+        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        data = self.db.upper_bound(resource_usage_object_type, ResourceUsageObject.by_id, upper_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return ResourceUsageObject.unpack(dec)
+    
+    def upper_bound_by_owner(self, upper_bound: Name):
+        upper_bound = eos.s2b(upper_bound)
+        data = self.db.upper_bound(resource_usage_object_type, ResourceUsageObject.by_owner, upper_bound)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return ResourceUsageObject.unpack(dec)
 
 # resource_limits_state_object_type = 33
 class ResourceLimitsStateObjectIndex(object):
@@ -771,15 +2105,77 @@ class CodeObjectIndex(object):
         dec = Decoder(data)
         return CodeObject.unpack(dec)
 
-    def find_by_code_hash(self, code_hash: Union[str, bytes, Checksum256], vm_type: U8, vm_version: U8):
+    def convert_code_hash(self, code_hash: Union[str, bytes, Checksum256]):
         if isinstance(code_hash, str):
-            code_hash = Checksum256.from_str(code_hash).get_bytes()
+            code_hash = Checksum256.from_str(code_hash).to_bytes()
         elif isinstance(code_hash, Checksum256):
-            code_hash = code_hash.get_bytes()
+            code_hash = code_hash.to_bytes()
         assert isinstance(code_hash, bytes)
         assert len(code_hash) == 32, 'code_hash must be 32 bytes'
+        return code_hash
+
+    def find_by_code_hash(self, code_hash: Union[str, bytes, Checksum256], vm_type: U8, vm_version: U8):
+        code_hash = self.convert_code_hash(code_hash)
         key = code_hash + int.to_bytes(vm_type, 1, 'little') + int.to_bytes(vm_version, 1, 'little')
         data = self.db.find(code_object_type, CodeObject.by_code_hash, key)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return CodeObject.unpack(dec)
+
+    def on_object_data(self, tp, data, custom_data):
+        dec = Decoder(data)
+        obj = CodeObject.unpack(dec)
+        cb, user_data = custom_data
+        return cb(obj, user_data)
+
+    def walk_by_id(self, cb, user_data=None):
+        return self.db.walk(database.code_object_type, CodeObject.by_id, self.on_object_data, (cb, user_data))
+
+    def walk_by_code_hash(self, cb, user_data=None):
+        return self.db.walk(database.code_object_type, CodeObject.by_code_hash, self.on_object_data, (cb, user_data))
+
+    def walk_range_by_id(self, start_id: I64, end_id: I64, cb, user_data=None):
+        lower_bound = int.to_bytes(start_id, 8, 'little', signed=True)
+        upper_bound = int.to_bytes(end_id, 8, 'little', signed=True)
+        return self.db.walk_range(database.code_object_type, CodeObject.by_id, lower_bound, upper_bound, self.on_object_data, (cb, user_data))
+
+    def convert_by_code_hash_key(self, key: Tuple[Union[str, bytes, Checksum256], U8, U8]):
+        code_hash, vm_type, vm_version = key
+        return self.convert_code_hash(code_hash) + int.to_bytes(vm_type, 1, 'little') + int.to_bytes(vm_version, 1, 'little')
+
+    def walk_range_by_code_hash(self, lower_bound: Tuple[Union[str, bytes, Checksum256], U8, U8], upper_bound: Tuple[Union[str, bytes, Checksum256], U8, U8], cb, user_data=None):
+        lower_bound = self.convert_by_code_hash_key(lower_bound)
+        upper_bound = self.convert_by_code_hash_key(upper_bound)
+        return self.db.walk_range(database.code_object_type, CodeObject.by_code_hash, lower_bound, upper_bound, self.on_object_data, (cb, user_data))
+
+    def lower_bound_by_id(self, table_id: I64):
+        key = int.to_bytes(table_id, 8, 'little', signed=True)
+        data = self.db.lower_bound(code_object_type, CodeObject.by_id, key)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return CodeObject.unpack(dec)
+
+    def lower_bound_by_code_hash(self, lower_bound: Tuple[Union[str, bytes, Checksum256], U8, U8]):
+        key = self.convert_by_code_hash_key(lower_bound)
+        data = self.db.lower_bound(code_object_type, CodeObject.by_code_hash, key)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return CodeObject.unpack(dec)
+
+    def upper_bound_by_id(self, table_id: I64):
+        key = int.to_bytes(table_id, 8, 'little', signed=True)
+        data = self.db.upper_bound(code_object_type, CodeObject.by_id, key)
+        if not data:
+            return None
+        dec = Decoder(data)
+        return CodeObject.unpack(dec)
+
+    def upper_bound_by_code_hash(self, upper_bound: Tuple[Union[str, bytes, Checksum256], U8, U8]):
+        key = self.convert_by_code_hash_key(upper_bound)
+        data = self.db.upper_bound(code_object_type, CodeObject.by_code_hash, key)
         if not data:
             return None
         dec = Decoder(data)

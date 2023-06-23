@@ -41,7 +41,13 @@ public:
                  >;
 
     [[eosio::action("teststore")]]
-    void test_store(uint64_t key, checksum256 hash);
+    void test_store(uint64_t key,
+                uint64_t    secondary1,
+                uint128_t   secondary2,
+                checksum256 secondary3,
+                double      secondary4,
+                long double secondary5
+    );
 
     [[eosio::action("testgentx")]]
     void test_generated_tx();

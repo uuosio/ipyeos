@@ -1,14 +1,14 @@
 import base58
 import hashlib
-from typing import NewType, List, TypeVar, Generic, Optional
+from typing import NewType, List, TypeVar, Generic, Optional, Union
 
 from . import database
 from . import eos
-from .types import U8, U16, U32, U64, I64, U128, U256, Name, Float128, PublicKey, Checksum256
+from .types import U8, U16, U32, U64, I64, U128, U256, Name, TimePointSec, F128, PublicKey, Checksum256
 from .packer import Encoder, Decoder
 from .structs import PermissionLevel, KeyWeight, PermissionLevelWeight, WaitWeight, Authority, TimePoint
-from .structs import Variant, TimePointSec
-
+from .structs import Variant
+from . import utils
 # struct account_object_ {
 #     account_name         name; //< name should not be changed within a chainbase modifier lambda
 #     block_timestamp_type creation_date;
@@ -80,6 +80,7 @@ class AccountObject(object):
 
 class AccountMetadataObject(object):
     by_id = 0
+    by_name = 1
     def __init__(self, table_id: I64, name: Name, recv_sequence: U64, auth_sequence: U64, code_sequence: U64, abi_sequence: U64, \
                 code_hash: Checksum256, last_code_update: I64, flags: U32, vm_type: U8, vm_version: U8):
         self.table_id = table_id
@@ -286,6 +287,8 @@ class PermissionUsageObject(object):
 
 class PermissionLinkObject(object):
     by_id = 0
+    by_action_name = 1
+    by_permission_name = 2
     def __init__(self, table_id: I64, account: Name, code: Name, message_type: Name, required_permission: Name):
         self.table_id = table_id
         self.account = account
@@ -319,6 +322,15 @@ class PermissionLinkObject(object):
         required_permission = dec.unpack_name()
         return PermissionLinkObject(table_id, account, code, message_type, required_permission)
 
+    @classmethod
+    def generate_key_by_action_name(cls, account: Name, code: Name, message_type: Name):
+        return eos.s2b(account) + eos.s2b(code) + eos.s2b(message_type)
+    
+    @classmethod
+    def generate_key_by_permission_name(cls, account: Name, required_permission: Name, table_id: I64):
+        return eos.s2b(account) + eos.s2b(required_permission) + int.to_bytes(table_id, 8, 'little', signed=True)
+
+
 # struct key_value_object_ {
 #     int64_t              t_id; //< t_id should not be changed within a chainbase modifier lambda
 #     uint64_t             primary_key; //< primary_key should not be changed within a chainbase modifier lambda
@@ -328,6 +340,7 @@ class PermissionLinkObject(object):
 
 class KeyValueObject(object):
     by_id = 0
+    by_scope_primary = 1
     def __init__(self, table_id: I64, t_id: I64, primary_key: U64, payer: Name, value: bytes):
         self.table_id = table_id
         self.t_id = t_id
@@ -360,6 +373,10 @@ class KeyValueObject(object):
         payer = dec.unpack_name()
         value = dec.unpack_bytes()
         return KeyValueObject(table_id, t_id, primary_key, payer, value)
+    
+    @classmethod
+    def generate_key_by_scope_primary(cls, t_id: I64, primary_key: U64):
+        return int.to_bytes(t_id, 8, 'little', signed=True) + int.to_bytes(primary_key, 8, 'little')
 
 # struct index64_object_ {
 #     int64_t       t_id; //< t_id should not be changed within a chainbase modifier lambda
@@ -370,6 +387,9 @@ class KeyValueObject(object):
 
 class Index64Object(object):
     by_id = 0
+    by_primary = 1
+    by_secondary = 2
+
     def __init__(self, table_id: I64, t_id: I64, primary_key: U64, payer: Name, secondary_key: U64):
         self.table_id = table_id
         self.t_id = t_id
@@ -403,6 +423,14 @@ class Index64Object(object):
         secondary_key = dec.unpack_u64()
         return Index64Object(table_id, t_id, primary_key, payer, secondary_key)
 
+    @classmethod
+    def generate_key_by_primary(cls, t_id: I64, primary_key: U64):
+        return utils.to_bytes(t_id, 8, signed=True) + utils.to_bytes(primary_key, 8)
+    
+    @classmethod
+    def generate_key_by_secondary(cls, t_id: I64, secondary_key: U64, primary_key: U64):
+        return utils.to_bytes(t_id, 8, signed=True) + utils.to_bytes(secondary_key, 8) + utils.to_bytes(primary_key, 8)
+
 # struct index128_object_ {
 #     int64_t       t_id; //< t_id should not be changed within a chainbase modifier lambda
 #     uint64_t      primary_key; //< primary_key should not be changed within a chainbase modifier lambda
@@ -411,6 +439,9 @@ class Index64Object(object):
 # };
 
 class Index128Object(object):
+    by_id = 0
+    by_primary = 1
+    by_secondary = 2
     def __init__(self, table_id: I64, t_id: I64, primary_key: U64, payer: Name, secondary_key: U128):
         self.table_id = table_id
         self.t_id = t_id
@@ -444,6 +475,14 @@ class Index128Object(object):
         secondary_key = dec.unpack_u128()
         return Index128Object(table_id, t_id, primary_key, payer, secondary_key)
 
+    @classmethod
+    def generate_key_by_primary(cls, t_id: I64, primary_key: U64):
+        return int.to_bytes(t_id, 8, 'little', signed=True) + int.to_bytes(primary_key, 8, 'little')
+    
+    @classmethod
+    def generate_key_by_secondary(cls, t_id: I64, secondary_key: U128, primary_key: U64):
+        return int.to_bytes(t_id, 8, 'little', signed=True) + int.to_bytes(secondary_key, 16, 'little') + int.to_bytes(primary_key, 8, 'little')
+
 
 # struct index256_object_ {
 #     int64_t       t_id; //< t_id should not be changed within a chainbase modifier lambda
@@ -454,7 +493,10 @@ class Index128Object(object):
 
 class Index256Object(object):
     by_id = 0
+    by_primary = 1
+    by_secondary = 2
     def __init__(self, table_id: I64, t_id: I64, primary_key: U64, payer: Name, secondary_key: U256):
+        self.table_id = table_id
         self.t_id = t_id
         self.primary_key = primary_key
         self.payer = payer
@@ -486,6 +528,15 @@ class Index256Object(object):
         secondary_key = dec.unpack_u256()
         return Index256Object(table_id, t_id, primary_key, payer, secondary_key)
 
+    @classmethod
+    def generate_key_by_primary(cls, t_id: I64, primary_key: U64):
+        return int.to_bytes(t_id, 8, 'little', signed=True) + int.to_bytes(primary_key, 8, 'little')
+    
+    @classmethod
+    def generate_key_by_secondary(cls, t_id: I64, secondary_key: U256, primary_key: U64):
+        return int.to_bytes(t_id, 8, 'little', signed=True) + int.to_bytes(secondary_key, 32, 'little') + int.to_bytes(primary_key, 8, 'little')
+
+
 # struct index_double_object_ {
 #     int64_t       t_id; //< t_id should not be changed within a chainbase modifier lambda
 #     uint64_t      primary_key; //< primary_key should not be changed within a chainbase modifier lambda
@@ -495,6 +546,8 @@ class Index256Object(object):
 
 class IndexDoubleObject(object):
     by_id = 0
+    by_primary = 1
+    by_secondary = 2
     def __init__(self, table_id: I64, t_id: I64, primary_key: U64, payer: Name, secondary_key: float):
         self.table_id = table_id
         self.t_id = t_id
@@ -528,6 +581,15 @@ class IndexDoubleObject(object):
         secondary_key = dec.unpack_double()
         return IndexDoubleObject(table_id, t_id, primary_key, payer, secondary_key)
 
+    @classmethod
+    def generate_key_by_primary(cls, t_id: I64, primary_key: U64):
+        return int.to_bytes(t_id, 8, 'little', signed=True) + int.to_bytes(primary_key, 8, 'little')
+    
+    @classmethod
+    def generate_key_by_secondary(cls, t_id: I64, secondary_key: float, primary_key: U64):
+        return utils.to_bytes(t_id, signed=True) + utils.to_bytes(secondary_key) + utils.to_bytes(primary_key, 8)
+
+
 # struct index_long_double_object_ {
 #     int64_t       t_id; //< t_id should not be changed within a chainbase modifier lambda
 #     uint64_t      primary_key; //< primary_key should not be changed within a chainbase modifier lambda
@@ -537,7 +599,9 @@ class IndexDoubleObject(object):
 
 class IndexLongDoubleObject(object):
     by_id = 0
-    def __init__(self, table_id: I64, t_id: I64, primary_key: U64, payer: Name, secondary_key: Float128):
+    by_primary = 1
+    by_secondary = 2
+    def __init__(self, table_id: I64, t_id: I64, primary_key: U64, payer: Name, secondary_key: F128):
         self.table_id = table_id
         self.t_id = t_id
         self.primary_key = primary_key
@@ -567,9 +631,20 @@ class IndexLongDoubleObject(object):
         t_id = dec.unpack_i64()
         primary_key = dec.unpack_u64()
         payer = dec.unpack_name()
-        secondary_key = Float128.unpack(dec)
+        secondary_key = F128.unpack(dec)
         return IndexLongDoubleObject(table_id, t_id, primary_key, payer, secondary_key)
 
+    @classmethod
+    def generate_key_by_primary(cls, t_id: I64, primary_key: U64):
+        return int.to_bytes(t_id, 8, 'little', signed=True) + int.to_bytes(primary_key, 8, 'little')
+    
+    @classmethod
+    def generate_key_by_secondary(cls, t_id: I64, secondary_key: F128, primary_key: U64):
+        enc = Encoder()
+        enc.pack_i64(t_id)
+        enc.pack(secondary_key)
+        enc.pack_u64(primary_key)
+        return enc.get_bytes()
 
 # struct block_signing_authority_v0 {
 #    uint32_t                           threshold = 0;
@@ -1041,6 +1116,8 @@ class BlockSummaryObject(object):
 
 class TransactionObject(object):
     by_id = 0
+    by_trx_id = 1
+    by_expiration = 2
     def __init__(self, table_id: I64, expiration: TimePointSec, trx_id: Checksum256):
         self.table_id = table_id
         self.expiration = expiration
@@ -1055,16 +1132,20 @@ class TransactionObject(object):
 
     def pack(self, enc: Encoder) -> int:
         pos = enc.get_pos()
-        enc.pack(self.expiration)
+        enc.pack_u32(self.expiration)
         enc.pack(self.trx_id)
         return enc.get_pos() - pos
 
     @classmethod
     def unpack(cls, dec: Decoder):
         table_id = dec.unpack_i64()
-        expiration = dec.unpack(TimePointSec)
+        expiration = dec.unpack_u32()
         trx_id = dec.unpack(Checksum256)
         return TransactionObject(table_id, expiration, trx_id)
+    
+    @classmethod
+    def generate_key_by_expiration(cls, expiration: U32, table_id: I64):
+        return utils.to_bytes(expiration, 4) + utils.to_bytes(table_id, signed=True)
 
 # struct generated_transaction_object_ {
 #     transaction_id_type           trx_id;
@@ -1141,6 +1222,24 @@ class GeneratedTransactionObject(object):
                 published,
                 packed_trx)
 
+    @classmethod
+    def generate_key_by_expiration(self, expiration: Union[I64, TimePoint], table_id: I64):
+        if isinstance(expiration, TimePoint):
+            expiration = expiration.time
+        assert isinstance(expiration, int)
+        return int.to_bytes(expiration, 8, 'little', signed=True) + int.to_bytes(table_id, 8, 'little', signed=True)
+
+    @classmethod
+    def generate_key_by_delay(self, delay_until: Union[I64, TimePoint], table_id: I64):
+        if isinstance(delay_until, TimePoint):
+            delay_until = delay_until.time
+        assert isinstance(delay_until, int)
+        return int.to_bytes(delay_until, 8, 'little', signed=True) + int.to_bytes(table_id, 8, 'little', signed=True)
+
+    @classmethod
+    def generate_key_by_sender_id(self, sender: Name, sender_id: U128):
+        return  eos.s2b(sender) + int.to_bytes(sender_id, 16, 'little')
+
 # struct table_id_object_ {
 #     account_name   code;  //< code should not be changed within a chainbase modifier lambda
 #     scope_name     scope; //< scope should not be changed within a chainbase modifier lambda
@@ -1151,6 +1250,7 @@ class GeneratedTransactionObject(object):
 
 class TableIdObject(object):
     by_id = 0
+    by_code_scope_table = 1
     def __init__(self, table_id: I64, code: Name, scope: Name, table: Name, payer: Name, count: U32):
         self.table_id = table_id
         self.code = code
@@ -1188,6 +1288,10 @@ class TableIdObject(object):
         count = dec.unpack_u32()
         return TableIdObject(table_id, code, scope, table, payer, count)
 
+    @classmethod
+    def generate_key_by_code_scope_table(cls, code: Name, scope: Name, table: Name):
+        return eos.s2b(code) + eos.s2b(scope) + eos.s2b(table)
+
 # struct resource_limits_object_ {
 #     account_name owner; //< owner should not be changed within a chainbase modifier lambda
 #     bool pending = false; //< pending should not be changed within a chainbase modifier lambda
@@ -1199,16 +1303,17 @@ class TableIdObject(object):
 
 class ResourceLimitsObject(object):
     by_id = 0
-    def __init__(self, table_id: I64, owner: Name, net_weight: I64, cpu_weight: I64, ram_bytes: I64):
+    by_owner = 1
+    def __init__(self, table_id: I64, owner: Name, pending: bool, net_weight: I64, cpu_weight: I64, ram_bytes: I64):
         self.table_id = table_id
         self.owner = owner
-        # self.pending = pending
+        self.pending = pending
         self.net_weight = net_weight
         self.cpu_weight = cpu_weight
         self.ram_bytes = ram_bytes
 
     def __repr__(self):
-        return f"{{owner: {self.owner}, net_weight: {self.net_weight}, cpu_weight: {self.cpu_weight}, ram_bytes: {self.ram_bytes}}}"
+        return f"{{owner: {self.owner}, pending: {self.pending}, net_weight: {self.net_weight}, cpu_weight: {self.cpu_weight}, ram_bytes: {self.ram_bytes}}}"
 
     def __eq__(self, other):
         return self.owner == other.owner \
@@ -1229,11 +1334,18 @@ class ResourceLimitsObject(object):
     def unpack(cls, dec: Decoder):
         table_id = dec.unpack_i64()
         owner = dec.unpack_name()
-        # pending = dec.unpack_bool()
+        pending = dec.unpack_bool()
         net_weight = dec.unpack_i64()
         cpu_weight = dec.unpack_i64()
         ram_bytes = dec.unpack_i64()
-        return ResourceLimitsObject(table_id, owner, net_weight, cpu_weight, ram_bytes)
+        return ResourceLimitsObject(table_id, owner, pending, net_weight, cpu_weight, ram_bytes)
+
+    @classmethod
+    def generate_key_by_owner(cls, pending: bool, owner: Name):
+        if pending:
+            return b'\x01' + eos.s2b(owner)
+        else:
+            return b'\x00' + eos.s2b(owner)
 
 # struct usage_accumulator {
 #          uint32_t   last_ordinal;  ///< The ordinal of the last period which has contributed to the average
@@ -1278,6 +1390,7 @@ class UsageAccumulator(object):
 
 class ResourceUsageObject(object):
     by_id = 0
+    by_owner = 1
     def __init__(self, table_id: I64, owner: Name, net_usage: UsageAccumulator, cpu_usage: UsageAccumulator, ram_usage: U64):
         self.table_id = table_id
         self.owner = owner

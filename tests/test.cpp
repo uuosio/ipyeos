@@ -2,32 +2,22 @@
 #include "test.hpp"
 
 [[eosio::action("teststore")]]
-void test_contract::test_store(uint64_t key, checksum256 hash) {
+void test_contract::test_store(uint64_t key,
+                uint64_t    secondary1,
+                uint128_t   secondary2,
+                checksum256 secondary3,
+                double      secondary4,
+                long double secondary5) {
     record_table mytable( get_self(), 0);
-
-    std::array<uint128_t, 2> a1 = {0, 1};
-    std::array<uint128_t, 2> a2 = {1, 0};
-    printhex((char*)a1.data(), 32);
-    print("\n");
-
-    printhex((char*)a2.data(), 32);
-    print("\n");
-
-
-    print(a1 < a2, "\n");
-    print(std::less<std::array<uint128_t, 2>>()(a1, a2), "\n");
-
-    auto buf = hash.extract_as_byte_array();
-    printhex(buf.data(), buf.size());
-    print("\n");
-
-    printhex((char*)hash.data(), 32);
-    print("\n");
 
     mytable.emplace( _self, [&]( auto& row ) {
         row.primary = key;
-        row.secondary3 = hash;
-        row.data = 3;
+        row.secondary1 = secondary1;
+        row.secondary2 = secondary2;
+        row.secondary3 = secondary3;
+        row.secondary4 = secondary4;
+        row.secondary5 = secondary5;
+        row.data = 333;
     });
 }
 

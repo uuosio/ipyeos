@@ -70,8 +70,24 @@
                     "type": "uint64"
                 },
                 {
-                    "name": "hash",
+                    "name": "secondary1",
+                    "type": "uint64"
+                },
+                {
+                    "name": "secondary2",
+                    "type": "uint128"
+                },
+                {
+                    "name": "secondary3",
                     "type": "checksum256"
+                },
+                {
+                    "name": "secondary4",
+                    "type": "float64"
+                },
+                {
+                    "name": "secondary5",
+                    "type": "float128"
                 }
             ]
         }

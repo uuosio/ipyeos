@@ -197,20 +197,20 @@ class TimePoint(object):
         time = dec.unpack_i64()
         return TimePoint(time)
 
-class TimePointSec(object):
-    def __init__(self, utc_seconds: U32):
-        self.utc_seconds = utc_seconds
+# class TimePointSec(object):
+#     def __init__(self, utc_seconds: U32):
+#         self.utc_seconds = utc_seconds
 
-    def __repr__(self):
-        return f"{{utc_seconds: {self.utc_seconds}}}"
+#     def __repr__(self):
+#         return f"{{utc_seconds: {self.utc_seconds}}}"
 
-    def __eq__(self, other) -> bool:
-        return self.utc_seconds == other.utc_seconds
+#     def __eq__(self, other) -> bool:
+#         return self.utc_seconds == other.utc_seconds
 
-    def pack(self, enc: Encoder):
-        enc.pack_u32(self.utc_seconds)
+#     def pack(self, enc: Encoder):
+#         enc.pack_u32(self.utc_seconds)
 
-    @classmethod
-    def unpack(cls, dec: Decoder):
-        utc_seconds = dec.unpack_u32()
-        return TimePointSec(utc_seconds)
+#     @classmethod
+#     def unpack(cls, dec: Decoder):
+#         utc_seconds = dec.unpack_u32()
+#         return TimePointSec(utc_seconds)

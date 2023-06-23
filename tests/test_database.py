@@ -19,6 +19,7 @@ from ipyeos.packer import Encoder, Decoder
 from ipyeos.structs import KeyWeight, Authority
 from ipyeos.database_objects import PermissionObject
 from ipyeos.database import *
+from ipyeos.types import F128
 
 chaintester.chain_config['contracts_console'] = True
 
@@ -213,7 +214,31 @@ def test_account_index(tester: ChainTester):
     data = tester.db.find(database.account_object_type, 1, key)
     parse_account_object(data)
 
+    def on_data(obj, user_data):
+        logger.info('%s %s', obj.table_id, obj)
+        return 1
     idx = AccountObjectIndex(tester.db)
+    idx.walk_by_id(on_data)
+    idx.walk_by_name(on_data)
+    idx.walk_range_by_id(0, 100, on_data)
+    idx.walk_range_by_name('', 'zzzzzzzzzzzzj', on_data)
+    
+    obj = idx.lower_bound_by_id(0)
+    obj_find = idx.find_by_id(obj.table_id)
+    assert obj == obj_find
+    
+    obj = idx.lower_bound_by_name('')
+    obj_find = idx.find_by_id(obj.table_id)
+    assert obj == obj_find
+
+    obj = idx.upper_bound_by_id(0)
+    obj_find = idx.find_by_id(obj.table_id)
+    assert obj == obj_find
+    
+    obj = idx.upper_bound_by_name('')
+    obj_find = idx.find_by_id(obj.table_id)
+    assert obj == obj_find
+
     perm = idx.find_by_id(1)
     print(perm)
     perm.creation_date += 1
@@ -276,9 +301,38 @@ def test_account_metadata_index(tester: ChainTester):
     assert ret == ret2
     print(ret)
 
+    def on_data(obj, user_data):
+        logger.info("+++%s", obj.table_id)
+        return 1
+
     idx = AccountMetadataObjectIndex(tester.db)
+    idx.walk_by_id(on_data)
+    idx.walk_by_name(on_data)
+    idx.walk_range_by_id(0, 100, on_data)
+    idx.walk_range_by_name('', 'zzzzzzzzzzzzj', on_data)
+
+    obj = idx.lower_bound_by_id(0)
+    obj_find = idx.find_by_id(obj.table_id)
+    assert obj == obj_find
+    
+    obj = idx.lower_bound_by_name('')
+    obj_find = idx.find_by_id(obj.table_id)
+    assert obj == obj_find
+
+    obj = idx.upper_bound_by_id(0)
+    obj_find = idx.find_by_id(obj.table_id)
+    assert obj == obj_find
+    
+    obj = idx.upper_bound_by_name('')
+    obj_find = idx.find_by_id(obj.table_id)
+    assert obj == obj_find
+
+
     perm = idx.find_by_id(1)
     print(perm)
+    perm_by_name = idx.find_by_name(perm.name)
+    assert perm_by_name == perm
+
     perm.recv_sequence += 1
     idx.modify(perm)
     perm2 = idx.find_by_id(1)
@@ -387,6 +441,48 @@ def test_permission_index(tester: ChainTester):
     obj = idx.find_by_id(1)
     print(obj)
 
+    obj_by_parent = idx.find_by_parent(obj.parent, obj.table_id)
+    assert obj == obj_by_parent
+    
+    obj_by_owner = idx.find_by_owner(obj.owner, obj.name)
+    assert obj == obj_by_owner
+
+    obj_by_name = idx.find_by_name(obj.name, obj.table_id)
+    assert obj == obj_by_name
+
+    def on_obj_data(obj, user_data):
+        print(obj)
+        return 1
+
+    idx.walk_by_id(on_obj_data)
+    idx.walk_by_parent(on_obj_data)
+    idx.walk_by_owner(on_obj_data)
+    idx.walk_by_name(on_obj_data)
+
+    idx.walk_range_by_id(0, 0x7fffffffffffffff, on_obj_data)
+    idx.walk_range_by_parent((0, 0), (0x7fffffffffffffff, 0x7fffffffffffffff), on_obj_data)
+    idx.walk_range_by_owner(('', ''), ('zzzzzzzzzzzzj', 'zzzzzzzzzzzzj'), on_obj_data)
+    idx.walk_range_by_name(('', 0), ('zzzzzzzzzzzzj', 0x7fffffffffffffff), on_obj_data)
+
+    obj_by_id = idx.lower_bound_by_id(1)
+    assert obj_by_id == obj
+    obj_by_parent = idx.lower_bound_by_parent(obj.parent, obj.table_id)
+    assert obj_by_parent == obj
+    obj_by_owner = idx.lower_bound_by_owner(obj.owner, obj.name)
+    assert obj_by_owner == obj
+    obj_by_name = idx.lower_bound_by_name(obj.name, obj.table_id)
+    assert obj_by_name == obj
+
+    obj_by_id = idx.upper_bound_by_id(1)
+    assert obj_by_id == idx.find_by_id(obj_by_id.table_id)
+    obj_by_parent = idx.upper_bound_by_parent(obj.parent, obj.table_id)
+    assert obj_by_parent == idx.find_by_parent(obj_by_parent.parent, obj_by_parent.table_id)
+    obj_by_owner = idx.upper_bound_by_owner(obj.owner, obj.name)
+    assert obj_by_owner == idx.find_by_owner(obj_by_owner.owner, obj_by_owner.name)
+    obj_by_name = idx.upper_bound_by_name(obj.name, obj.table_id)
+    assert obj_by_name == idx.find_by_name(obj_by_name.name, obj_by_name.table_id)
+
+    obj = idx.find_by_id(1)
     obj.last_updated += 1
     idx.modify(obj)
     obj2 = idx.find_by_id(1)
@@ -418,7 +514,18 @@ def test_permission_usage_index(tester: ChainTester):
     upper_bound = int.to_bytes(40, 8, 'little')
     tester.db.walk_range(database.permission_usage_object_type, 0, lower_bound, upper_bound, on_data)
 
+    def on_data(obj, user_data):
+        logger.info(obj)
+        return 1
     idx = PermissionUsageObjectIndex(tester.db)
+    obj = idx.find_by_id(1)
+    idx.walk_by_id(on_data)
+    idx.walk_range_by_id(0, 0x7fffffffffffffff, on_data)
+    obj_by_id = idx.lower_bound_by_id(0)
+    assert obj_by_id == idx.find_by_id(obj_by_id.table_id)
+    obj_by_id = idx.upper_bound_by_id(0)
+    assert obj_by_id == idx.find_by_id(obj_by_id.table_id)
+
     obj = idx.find_by_id(1)
     print(obj)
     obj.last_used += 1
@@ -519,6 +626,31 @@ def test_permission_link_index(tester: ChainTester):
     print(ret)
 
     idx = PermissionLinkObjectIndex(tester.db)
+    obj = idx.find_by_id(0)
+    obj_by_action_name = idx.find_by_action_name(obj.account, obj.code, obj.message_type)
+    assert obj == obj_by_action_name
+    obj_by_permission_name = idx.find_by_permission_name(obj.account, obj.required_permission, obj.table_id)
+    assert obj == obj_by_permission_name
+
+    def on_data(obj, user_data):
+        logger.info(obj)
+        return 1
+
+    idx.walk_by_id(on_data)
+    idx.walk_by_action_name(on_data)
+    idx.walk_by_permission_name(on_data)
+
+    idx.walk_range_by_id(0, 100, on_data)
+    idx.walk_range_by_action_name(('', '', ''), ('zzzzzzzzzzzzj', 'zzzzzzzzzzzzj', 'zzzzzzzzzzzzj'), on_data)
+    idx.walk_range_by_permission_name(('', '', 0), ('zzzzzzzzzzzzj', 'zzzzzzzzzzzzj', 0x7fffffffffffffff), on_data)
+
+    obj_by_id = idx.lower_bound_by_id(0)
+    assert obj_by_id == idx.find_by_id(0)
+    obj_by_action_name = idx.lower_bound_by_action_name(('', '', ''))
+    assert obj_by_action_name == idx.find_by_action_name(obj.account, obj.code, obj.message_type)
+    obj_by_permission_name = idx.lower_bound_by_permission_name(('', '', 0))
+    assert obj_by_permission_name == idx.find_by_permission_name(obj.account, obj.required_permission, obj.table_id)
+
     obj = idx.find_by_id(0)
     print(obj)
 
@@ -628,9 +760,28 @@ def test_contract_table_objects(tester: ChainTester):
 
     deploy_contract(tester, 'test')
 
+    # uint64_t    secondary1,
+    # uint128_t   secondary2,
+    # checksum256 secondary3,
+    # double      secondary4,
+    # long double secondary5
+    args = {
+        'key': 0,
+        'secondary1': 1,
+        'secondary2': 2,
+        'secondary3': (b'\x03' + b'\x00' * 31).hex(),
+        'secondary4': "4.0",
+        'secondary5': "0x" + '05'*16
+    }
+    r = tester.push_action('hello', 'teststore', args, {'hello': 'active'})
+
     args = {
         'key': 1,
-        'hash': '0000000000000000000000000000000100000000000000000000000000000000'
+        'secondary1': 11,
+        'secondary2': 22,
+        'secondary3': (b'\x21' + b'\x00' * 31).hex(),
+        'secondary4': "44.0",
+        'secondary5': "0x" + '05'*16
     }
     r = tester.push_action('hello', 'teststore', args, {'hello': 'active'})
 
@@ -675,7 +826,142 @@ def test_contract_table_objects(tester: ChainTester):
     ret = parse_key_value_object(raw_data)
     logger.info(ret)
 
+    def on_obj(obj, user_data):
+        print(obj)
+        return 1
+    # +++++++++Index64ObjectIndex+++++++++++++
+    idx = Index64ObjectIndex(tester.db)
+    obj = idx.find_by_id(0)
+    assert obj == idx.find_by_primary(obj.t_id, obj.primary_key)
+    assert obj == idx.find_by_secondary(obj.t_id, obj.secondary_key, obj.primary_key)
+    idx.walk_by_id(on_obj)
+    idx.walk_by_primary(on_obj)
+    idx.walk_by_secondary(on_obj)
+
+    idx.walk_range_by_id(0, 0x7fffffffffffffff, on_obj)
+    idx.walk_range_by_primary((0, 0), (0x7fffffffffffffff, 0xffffffffffffffff), on_obj)
+    idx.walk_range_by_secondary((0, 0, 0), (0x7fffffffffffffff, 0xffffffffffffffff, 0xffffffffffffffff), on_obj)
+
+    obj = idx.lower_bound_by_id(0)
+    assert obj == idx.lower_bound_by_primary(obj.t_id, obj.primary_key)
+    assert obj == idx.lower_bound_by_secondary(obj.t_id, obj.secondary_key, obj.primary_key)
+
+    obj = idx.upper_bound_by_id(0)
+    assert obj == idx.find_by_id(obj.table_id)
+    obj_by_primary = idx.upper_bound_by_primary(obj.t_id, obj.primary_key)
+    assert idx.upper_bound_by_id(1) == obj_by_primary
+
+    # +++++++++Index128ObjectIndex+++++++++++++
+    idx = Index128ObjectIndex(tester.db)
+    obj = idx.find_by_id(0)
+    assert obj == idx.find_by_primary(obj.t_id, obj.primary_key)
+    assert obj == idx.find_by_secondary(obj.t_id, obj.secondary_key, obj.primary_key)
+    idx.walk_by_id(on_obj)
+    idx.walk_by_primary(on_obj)
+    idx.walk_by_secondary(on_obj)
+
+    idx.walk_range_by_id(0, 0x7fffffffffffffff, on_obj)
+    idx.walk_range_by_primary((0, 0), (0x7fffffffffffffff, 0xffffffffffffffff), on_obj)
+    idx.walk_range_by_secondary((0, 0, 0), (0x7fffffffffffffff, 0xffffffffffffffff, 0xffffffffffffffff), on_obj)
+
+    obj = idx.lower_bound_by_id(0)
+    assert obj == idx.lower_bound_by_primary(obj.t_id, obj.primary_key)
+    assert obj == idx.lower_bound_by_secondary(obj.t_id, obj.secondary_key, obj.primary_key)
+
+    obj = idx.upper_bound_by_id(0)
+    assert obj == idx.find_by_id(obj.table_id)
+    obj_by_primary = idx.upper_bound_by_primary(obj.t_id, obj.primary_key)
+    assert idx.upper_bound_by_id(1) == obj_by_primary
+    # +++++++++Index128ObjectIndex+++++++++++++
+    idx = Index256ObjectIndex(tester.db)
+    obj = idx.find_by_id(0)
+    assert obj == idx.find_by_primary(obj.t_id, obj.primary_key)
+    assert obj == idx.find_by_secondary(obj.t_id, obj.secondary_key, obj.primary_key)
+    idx.walk_by_id(on_obj)
+    idx.walk_by_primary(on_obj)
+    idx.walk_by_secondary(on_obj)
+
+    idx.walk_range_by_id(0, 0x7fffffffffffffff, on_obj)
+    idx.walk_range_by_primary((0, 0), (0x7fffffffffffffff, 0xffffffffffffffff), on_obj)
+    idx.walk_range_by_secondary((0, 0, 0), (0x7fffffffffffffff, 0xffffffffffffffff, 0xffffffffffffffff), on_obj)
+
+    obj = idx.lower_bound_by_id(0)
+    assert obj == idx.lower_bound_by_primary(obj.t_id, obj.primary_key)
+    assert obj == idx.lower_bound_by_secondary(obj.t_id, obj.secondary_key, obj.primary_key)
+
+    obj = idx.upper_bound_by_id(0)
+    assert obj == idx.find_by_id(obj.table_id)
+    obj_by_primary = idx.upper_bound_by_primary(obj.t_id, obj.primary_key)
+    assert idx.upper_bound_by_id(1) == obj_by_primary
+
+    # +++++++++IndexDoubleObjectIndex+++++++++++++
+    idx = IndexDoubleObjectIndex(tester.db)
+    obj = idx.find_by_id(0)
+    assert obj == idx.find_by_primary(obj.t_id, obj.primary_key)
+    assert obj == idx.find_by_secondary(obj.t_id, obj.secondary_key, obj.primary_key)
+    idx.walk_by_id(on_obj)
+    idx.walk_by_primary(on_obj)
+    idx.walk_by_secondary(on_obj)
+
+    idx.walk_range_by_id(0, 0x7fffffffffffffff, on_obj)
+    idx.walk_range_by_primary((0, 0), (0x7fffffffffffffff, 0xffffffffffffffff), on_obj)
+    idx.walk_range_by_secondary((0, 0.0, 0), (0x7fffffffffffffff, 99999.0, 0xffffffffffffffff), on_obj)
+
+    obj = idx.lower_bound_by_id(0)
+    assert obj == idx.lower_bound_by_primary(obj.t_id, obj.primary_key)
+    assert obj == idx.lower_bound_by_secondary(obj.t_id, obj.secondary_key, obj.primary_key)
+
+    obj = idx.upper_bound_by_id(0)
+    assert obj == idx.find_by_id(obj.table_id)
+    obj_by_primary = idx.upper_bound_by_primary(obj.t_id, obj.primary_key)
+    assert idx.upper_bound_by_id(1) == obj_by_primary
+
+    # +++++++++IndexLongDoubleObjectIndex+++++++++++++
+    idx = IndexLongDoubleObjectIndex(tester.db)
+    obj = idx.find_by_id(0)
+    assert obj == idx.find_by_primary(obj.t_id, obj.primary_key)
+    assert obj == idx.find_by_secondary(obj.t_id, obj.secondary_key, obj.primary_key)
+    idx.walk_by_id(on_obj)
+    idx.walk_by_primary(on_obj)
+    idx.walk_by_secondary(on_obj)
+
+
+    idx.walk_range_by_id(0, 0x7fffffffffffffff, on_obj)
+    idx.walk_range_by_primary((0, 0), (0x7fffffffffffffff, 0xffffffffffffffff), on_obj)
+    secondary_key_lower = F128(b'\x00' * 16)
+    secondary_key_upper = F128(b'\x11' * 16)
+    idx.walk_range_by_secondary((0, secondary_key_lower, 0), (0x7fffffffffffffff, secondary_key_upper, 0xffffffffffffffff), on_obj)
+
+    obj = idx.lower_bound_by_id(0)
+    assert obj == idx.lower_bound_by_primary(obj.t_id, obj.primary_key)
+    assert obj == idx.lower_bound_by_secondary(obj.t_id, obj.secondary_key, obj.primary_key)
+
+    obj = idx.upper_bound_by_id(0)
+    assert obj == idx.find_by_id(obj.table_id)
+    obj_by_primary = idx.upper_bound_by_primary(obj.t_id, obj.primary_key)
+    assert idx.upper_bound_by_id(1) == obj_by_primary
+
+
     idx = TableIdObjectIndex(tester.db)
+    obj = idx.find_by_id(0)
+    assert obj == idx.find_by_code_scope_table(obj.code, obj.scope, obj.table)
+    idx.walk_by_id(on_obj)
+    idx.walk_by_code_scope_table(on_obj)
+
+    idx.walk_range_by_id(0, 0x7fffffffffffffff, on_obj)
+    idx.walk_range_by_code_scope_table(('', '', ''), ('zzzzzzzzzzzzj', 'zzzzzzzzzzzzj', 'zzzzzzzzzzzzj'), on_obj)
+    
+    obj = idx.lower_bound_by_id(0)
+    assert obj == idx.find_by_id(obj.table_id)
+    obj_by_code_scope_table = idx.lower_bound_by_code_scope_table(obj.code, obj.scope, obj.table)
+    assert obj == obj_by_code_scope_table
+
+    obj = idx.upper_bound_by_id(0)
+    assert obj == idx.find_by_id(obj.table_id)
+
+    obj_by_code_scope_table = idx.upper_bound_by_code_scope_table(obj.code, obj.scope, obj.table)
+    assert idx.find_by_id(obj_by_code_scope_table.table_id) == obj_by_code_scope_table
+
     obj = idx.find_by_id(0)
     print(obj)
     obj.payer = 'hello'
@@ -857,7 +1143,13 @@ def test_block_summary_object(tester: ChainTester):
 
     idx = BlockSummaryObjectIndex(tester.db)
     obj = idx.find_by_id(0)
-    logger.info(obj)
+    def on_obj(obj, user_data):
+        print(obj)
+        return 0
+    idx.walk_by_id(on_obj)
+
+    idx.walk_range_by_id(0, 0x7fffffffffffffff, on_obj)
+
     obj.block_id.raw = b'\x01' * 32
     idx.modify(obj)
     obj2 = idx.find_by_id(0)
@@ -865,7 +1157,7 @@ def test_block_summary_object(tester: ChainTester):
     assert obj == obj2
 
 @chain_test(True)
-def test_transaction_object(tester: ChainTester):
+def test_transaction_index(tester: ChainTester):
 #    class transaction_object : public chainbase::object<transaction_object_type, transaction_object>
 #    {
 #          OBJECT_CTOR(transaction_object)
@@ -948,8 +1240,35 @@ def test_transaction_object(tester: ChainTester):
 
     idx = TransactionObjectIndex(tester.db)
     obj = idx.find_by_id(0)
+    assert obj == idx.find_by_trx_id(obj.trx_id)
+    assert obj == idx.find_by_expiration(obj.expiration, obj.table_id)
+
+    def on_obj(obj, user_data):
+        logger.info(obj)
+        return 1
+    idx.walk_by_id(on_obj)
+    idx.walk_by_trx_id(on_obj)
+    logger.info('+++++++walk_by_expiration')
+    idx.walk_by_expiration(on_obj)
+
+    idx.walk_range_by_id(0, 0x7fffffffffffffff, on_obj)
+    idx.walk_range_by_trx_id(Checksum256(b'\x00'*32), Checksum256(b'\xff'*32), on_obj)
+    idx.walk_range_by_expiration((0, 0), (0xffffffff, 0x7fffffff), on_obj)
+
+    obj = idx.lower_bound_by_id(0)
+    assert obj == idx.lower_bound_by_trx_id(obj.trx_id)
+    assert obj == idx.lower_bound_by_expiration(obj.expiration, obj.table_id)
+
+    obj = idx.upper_bound_by_id(0)
+    assert obj == idx.find_by_id(obj.table_id)
+    obj = idx.upper_bound_by_trx_id(Checksum256(b'\x00'*32))
+    assert obj == idx.find_by_trx_id(obj.trx_id)
+    obj = idx.upper_bound_by_expiration(0, 0)
+    assert obj == idx.find_by_expiration(obj.expiration, obj.table_id)
+
+    obj = idx.find_by_id(0)
     logger.info(obj)
-    obj.expiration.utc_seconds += 1
+    obj.expiration += 1
     idx.modify(obj)
     obj2 = idx.find_by_id(0)
     logger.info(obj2)
@@ -1072,6 +1391,50 @@ def test_generated_transaction_object(tester: ChainTester):
 
     idx = GeneratedTransactionObjectIndex(tester.db)
     obj = idx.find_by_id(0)
+    assert ob == idx.find_by_trx_id(obj.trx_id)
+    assert obj == idx.find_by_expiration(obj.expiration)
+    assert obj == idx.find_by_delay(obj.delay_until, obj.table_id)
+    assert obj == idx.find_by_sender_id(obj.sender, obj.sender_id)
+    
+    def on_obj(obj, user_data):
+        logger.info(obj)
+        return 1
+
+    idx.walk_by_id(on_obj)
+    idx.walk_by_trx_id(on_obj)
+    idx.walk_by_expiration(on_obj)
+    idx.walk_by_delay(on_obj)
+    idx.walk_by_sender_id(on_obj)
+    
+    idx.walk_range_by_id(0, 0x7fffffffffffffff, on_obj)
+    idx.walk_range_by_trx_id(b'\x00'*32, b'\xff'*32, on_obj)
+    idx.walk_range_by_expiration((0, 0), (0x7fffffffffffffff, 0x7fffffffffffffff), on_obj)
+    idx.walk_range_by_delay((0, 0), (0x7fffffffffffffff, 0x7fffffffffffffff), on_obj)
+    idx.walk_range_by_sender_id(('', 0), ('zzzzzzzzzzzzj', 0x7fffffffffffffff), on_obj)
+
+    obj = idx.lower_bound_by_id(0)
+    assert obj == idx.find_by_id(0)
+    obj = idx.lower_bound_by_trx_id(b'\x00'*32)
+    assert obj == idx.find_by_trx_id(obj.trx_id)
+    obj = idx.lower_bound_by_expiration(0, 0)
+    assert obj == idx.find_by_expiration(obj.expiration, obj.table_id)
+    obj = idx.lower_bound_by_delay(0, 0)
+    assert obj == idx.find_by_delay(obj.delay_until, obj.table_id)
+    obj = idx.lower_bound_by_sender_id('', 0)
+    assert obj == idx.find_by_sender_id(obj.sender, obj.sender_id)
+
+    obj = idx.upper_bound_by_id(0)
+    assert obj == idx.find_by_id(1)
+    obj = idx.upper_bound_by_trx_id(b'\x00'*32)
+    assert obj == idx.find_by_trx_id(obj.trx_id)
+    obj = idx.upper_bound_by_expiration(0, 0)
+    assert obj == idx.find_by_expiration(obj.expiration, obj.table_id)
+    obj = idx.upper_bound_by_delay(0, 0)
+    assert obj == idx.find_by_delay(obj.delay_until, obj.table_id)
+    obj = idx.upper_bound_by_sender_id('', 0)
+    assert obj == idx.find_by_sender_id(obj.sender, obj.sender_id)
+
+    obj = idx.find_by_id(0)
     logger.info(obj)
     obj.sender = 'alice'
     idx.modify(obj)
@@ -1084,7 +1447,7 @@ def test_generated_transaction_object(tester: ChainTester):
     assert not idx.find_by_id(0)
 
 @chain_test(True)
-def test_resource_limits_object(tester: ChainTester):
+def test_resource_limits_index(tester: ChainTester):
 #    struct resource_limits_object : public chainbase::object<resource_limits_object_type, resource_limits_object> {
 #       OBJECT_CTOR(resource_limits_object)
 #       id_type id;
@@ -1157,6 +1520,29 @@ def test_resource_limits_object(tester: ChainTester):
     # assert data1 == data2
 
     idx = ResourceLimitsObjectIndex(tester.db)
+    obj = idx.find_by_id(0)
+    print(obj)
+    obj_by_owner = idx.find_by_owner(obj.pending, obj.owner)
+
+    def on_obj(obj, user_data):
+        print(obj)
+        return 1
+
+    idx.walk_by_id(on_obj)
+    idx.walk_by_owner(on_obj)
+    idx.walk_range_by_id(0, 0x7fffffffffffffff, on_obj)
+    idx.walk_range_by_owner((False, ''), (True, 'zzzzzzzzzzzzj'), on_obj)
+
+    obj = idx.lower_bound_by_id(0)
+    assert obj == idx.find_by_id(obj.table_id)
+    obj = idx.lower_bound_by_owner(False, '')
+    assert obj == idx.find_by_owner(obj.pending, obj.owner)
+
+    obj = idx.upper_bound_by_id(0)
+    assert obj == idx.find_by_id(obj.table_id)
+    obj = idx.upper_bound_by_owner(False, '')
+    assert obj == idx.find_by_owner(obj.pending, obj.owner)
+
     obj = idx.find_by_id(0)
     logger.info(obj)
     obj.ram_bytes = 123
@@ -1255,6 +1641,28 @@ def test_resource_usage_object(tester: ChainTester):
     print(ret)
 
     idx = ResourceUsageObjectIndex(tester.db)
+    obj = idx.find_by_id(0)
+    assert obj == idx.find_by_id(obj.table_id)
+    assert obj == idx.find_by_owner(obj.owner)
+
+    def on_obj(obj, user_data):
+        logger.info(obj)
+        return 1
+    idx.walk_by_id(on_obj)
+    idx.walk_by_owner(on_obj)
+    idx.walk_range_by_id(0, 0x7fffffffffffffff, on_obj)
+    idx.walk_range_by_owner('', 'zzzzzzzzzzzzj', on_obj)
+
+    obj = idx.lower_bound_by_id(0)
+    assert idx.find_by_id(obj.table_id) == obj
+    obj = idx.lower_bound_by_owner('')
+    assert idx.find_by_owner(obj.owner) == obj
+
+    obj = idx.upper_bound_by_id(0)
+    assert idx.find_by_id(obj.table_id) == obj
+    obj = idx.upper_bound_by_owner('')
+    assert idx.find_by_owner(obj.owner) == obj
+
     obj = idx.find_by_id(0)
     logger.info(obj)
     obj.ram_usage = 123
@@ -1680,14 +2088,49 @@ def test_code_object(tester: ChainTester):
     data = tester.db.upper_bound(database.code_object_type, 1, key)
     assert data
 
+    def on_data(obj: CodeObject, user_data):
+        logger.info("%s %s %s", obj.code_hash, obj.code_ref_count, obj.first_block_used)
+        return 1
+
     idx = CodeObjectIndex(tester.db)
     obj = idx.find_by_id(0)
-    logger.info(obj)
+
+    logger.info('++++++++walk by id')
+    idx.walk_by_id(on_data)
+    logger.info('++++++++walk by code hash')
+    idx.walk_by_code_hash(on_data)
+
+    logger.info('+++++++++walk range by id')
+    idx.walk_range_by_id(0, 10, on_data)
+
+    logger.info('+++++++++walk range by code hash')
+    lower_bound = obj.code_hash, obj.vm_type, obj.vm_version
+    upper_bound = obj.code_hash, obj.vm_type, obj.vm_version + 1
+    idx.walk_range_by_code_hash(lower_bound, upper_bound, on_data)
+
+    obj_lower_bound = idx.lower_bound_by_id(0)
+    assert obj_lower_bound == obj
+
+    obj_lower_bound_by_code_hash = idx.lower_bound_by_code_hash((obj.code_hash, obj.vm_type, obj.vm_version))
+    assert obj_lower_bound == obj_lower_bound_by_code_hash
+
+    obj_lower_bound_1 = idx.lower_bound_by_id(1)
+    obj_upper_bound = idx.upper_bound_by_id(0)
+    assert obj_upper_bound == obj_lower_bound_1
+
+    obj_upper_bound_by_code_hash = idx.upper_bound_by_code_hash((b'\x00' * 32, 0, 0))
+    obj_find = idx.find_by_code_hash(obj_upper_bound_by_code_hash.code_hash, 0, 0)
+    logger.info("%s %s", obj_upper_bound_by_code_hash.code_hash, obj_find.code_hash)
+    assert obj_upper_bound_by_code_hash == obj_find
+
+    obj = idx.find_by_id(0)
+    obj_by_code_hash = idx.find_by_code_hash(obj.code_hash, obj.vm_type, obj.vm_version)
+    assert obj == obj_by_code_hash
+
     obj.vm_version = 123
     # obj.whitelisted_intrinsics.append('zmyintrinsics')
     idx.modify(obj)
     obj2 = idx.find_by_id(0)
-    logger.info(obj2)
     assert obj == obj2
 
 # class database_header_object : public chainbase::object<database_header_object_type, database_header_object>

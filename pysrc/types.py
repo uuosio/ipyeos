@@ -8,9 +8,11 @@ U16 = NewType('U16', int)
 U32 = NewType('U32', int)
 U64 = NewType('U64', int)
 I64 = NewType('I64', int)
+F64 = NewType('F64', float)
 U128 = NewType('U128', int)
 U256 = NewType('U256', int)
 Name = NewType('Name', str)
+TimePointSec = NewType('U32', int)
 
 # class Name(object):
 #     def __init__(self, s: str, raw = None):
@@ -41,7 +43,7 @@ Name = NewType('Name', str)
 #    def to_bytes(self):
 #        return self.raw
 
-class Float128(object):
+class F128(object):
     def __init__(self, raw: bytes):
         assert len(raw) == 16
         self.raw = raw
@@ -56,10 +58,13 @@ class Float128(object):
         enc.write_bytes(self.raw)
         return 16
 
+    def get_bytes(self):
+        return self.raw
+
     @classmethod
     def unpack(cls, dec):
         raw = dec.read_bytes(16)
-        return Float128(raw)
+        return F128(raw)
 
 class Checksum256(object):
     def __init__(self, raw: bytes):
@@ -72,7 +77,7 @@ class Checksum256(object):
     def __eq__(self, other):
         return self.raw == other.raw
 
-    def get_bytes(self):
+    def to_bytes(self):
         return self.raw
 
     @classmethod

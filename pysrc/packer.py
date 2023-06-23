@@ -42,6 +42,12 @@ class Encoder(object):
     def pack(self, obj: Any) -> int:
         return obj.pack(self)
 
+    def pack_bool(self, b: bool) -> int:
+        if b:
+            self.write_bytes(b'\x01')
+        else:
+            self.write_bytes(b'\x00')
+
     def pack_u8(self, n: U8) -> int:
         raw = int.to_bytes(n, 1, 'little')
         self.write_bytes(raw)
@@ -178,6 +184,11 @@ class Decoder(object):
     def unpack_name(self):
         name = self.read_bytes(8)
         return eos.b2s(name)
+
+    def unpack_bool(self):
+        ret = self.read_bytes(1)[0]
+        assert ret == 0 or ret == 1
+        return ret != 0
 
     def unpack_u8(self):
         ret = self.read_bytes(1)[0]
