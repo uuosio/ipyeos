@@ -48,16 +48,22 @@ def run_ipyeos(custom_cmds=[]):
 def run_eosnode():
     custom_cmds=['-m', 'ipyeos', 'eosnode']
     custom_cmds.extend(sys.argv[1:])
-    return run.run_eosnode(custom_cmds)
+    return run.run_ipyeos(custom_cmds)
 
 def run_nodeos():
-    run.run_program('nodeos')
+    custom_cmds=['nodeos']
+    custom_cmds.extend(sys.argv[1:])
+    return run.run_ipyeos(custom_cmds)
 
 def run_keosd():
-    run.run_program('keosd')
+    custom_cmds=['keosd']
+    custom_cmds.extend(sys.argv[1:])
+    return run.run_ipyeos(custom_cmds)
 
 def run_cleos():
-    run.run_program('cleos')
+    custom_cmds=['cleos']
+    custom_cmds.extend(sys.argv[1:])
+    return run.run_ipyeos(custom_cmds)
 
 def start_debug_server():
     return run.start_debug_server()

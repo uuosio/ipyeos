@@ -8,7 +8,7 @@ from .types import U8, U16, U32, U64, I64, U128, U256, Name, TimePointSec, F128,
 from .packer import Encoder, Decoder
 from .structs import PermissionLevel, KeyWeight, PermissionLevelWeight, WaitWeight, Authority, TimePoint
 from .structs import Variant
-from . import utils
+from .utils import to_bytes, i2b, u2b, f2b
 # struct account_object_ {
 #     account_name         name; //< name should not be changed within a chainbase modifier lambda
 #     block_timestamp_type creation_date;
@@ -207,11 +207,11 @@ class PermissionObject(object):
 
     @classmethod
     def generate_key_by_id(cls, table_id: I64):
-        return int.to_bytes(table_id, 8, 'little', signed=True)
+        return i2b(table_id)
 
     @classmethod
     def generate_key_by_parent(cls, parent: I64, table_id: I64):
-        return int.to_bytes(parent, 8, 'little', signed=True) + int.to_bytes(table_id, 8, 'little', signed=True)
+        return i2b(parent) + i2b(table_id)
 
     @classmethod
     def generate_key_by_owner(cls, owner: Name, name: Name):
@@ -219,7 +219,7 @@ class PermissionObject(object):
 
     @classmethod
     def generate_key_by_name(cls, name: Name, table_id: I64):
-        return eos.s2b(name) + int.to_bytes(table_id, 8, 'little', signed=True)
+        return eos.s2b(name) + i2b(table_id)
 
     def pack(self, enc: Encoder) -> int:
         pos = enc.get_pos()
@@ -328,7 +328,7 @@ class PermissionLinkObject(object):
     
     @classmethod
     def generate_key_by_permission_name(cls, account: Name, required_permission: Name, table_id: I64):
-        return eos.s2b(account) + eos.s2b(required_permission) + int.to_bytes(table_id, 8, 'little', signed=True)
+        return eos.s2b(account) + eos.s2b(required_permission) + i2b(table_id)
 
 
 # struct key_value_object_ {
@@ -376,7 +376,7 @@ class KeyValueObject(object):
     
     @classmethod
     def generate_key_by_scope_primary(cls, t_id: I64, primary_key: U64):
-        return int.to_bytes(t_id, 8, 'little', signed=True) + int.to_bytes(primary_key, 8, 'little')
+        return i2b(t_id) + u2b(primary_key)
 
 # struct index64_object_ {
 #     int64_t       t_id; //< t_id should not be changed within a chainbase modifier lambda
@@ -425,11 +425,11 @@ class Index64Object(object):
 
     @classmethod
     def generate_key_by_primary(cls, t_id: I64, primary_key: U64):
-        return utils.to_bytes(t_id, 8, signed=True) + utils.to_bytes(primary_key, 8)
+        return i2b(t_id) + u2b(primary_key)
     
     @classmethod
     def generate_key_by_secondary(cls, t_id: I64, secondary_key: U64, primary_key: U64):
-        return utils.to_bytes(t_id, 8, signed=True) + utils.to_bytes(secondary_key, 8) + utils.to_bytes(primary_key, 8)
+        return i2b(t_id) + u2b(secondary_key) + u2b(primary_key)
 
 # struct index128_object_ {
 #     int64_t       t_id; //< t_id should not be changed within a chainbase modifier lambda
@@ -477,11 +477,11 @@ class Index128Object(object):
 
     @classmethod
     def generate_key_by_primary(cls, t_id: I64, primary_key: U64):
-        return int.to_bytes(t_id, 8, 'little', signed=True) + int.to_bytes(primary_key, 8, 'little')
+        return i2b(t_id) + u2b(primary_key)
     
     @classmethod
     def generate_key_by_secondary(cls, t_id: I64, secondary_key: U128, primary_key: U64):
-        return int.to_bytes(t_id, 8, 'little', signed=True) + int.to_bytes(secondary_key, 16, 'little') + int.to_bytes(primary_key, 8, 'little')
+        return i2b(t_id) + u2b(secondary_key, 16) + u2b(primary_key)
 
 
 # struct index256_object_ {
@@ -530,11 +530,11 @@ class Index256Object(object):
 
     @classmethod
     def generate_key_by_primary(cls, t_id: I64, primary_key: U64):
-        return int.to_bytes(t_id, 8, 'little', signed=True) + int.to_bytes(primary_key, 8, 'little')
+        return i2b(t_id) + u2b(primary_key)
     
     @classmethod
     def generate_key_by_secondary(cls, t_id: I64, secondary_key: U256, primary_key: U64):
-        return int.to_bytes(t_id, 8, 'little', signed=True) + int.to_bytes(secondary_key, 32, 'little') + int.to_bytes(primary_key, 8, 'little')
+        return i2b(t_id) + u2b(secondary_key, 32) + u2b(primary_key)
 
 
 # struct index_double_object_ {
@@ -583,11 +583,11 @@ class IndexDoubleObject(object):
 
     @classmethod
     def generate_key_by_primary(cls, t_id: I64, primary_key: U64):
-        return int.to_bytes(t_id, 8, 'little', signed=True) + int.to_bytes(primary_key, 8, 'little')
+        return i2b(t_id) + u2b(primary_key)
     
     @classmethod
     def generate_key_by_secondary(cls, t_id: I64, secondary_key: float, primary_key: U64):
-        return utils.to_bytes(t_id, signed=True) + utils.to_bytes(secondary_key) + utils.to_bytes(primary_key, 8)
+        return i2b(t_id) + f2b(secondary_key) + u2b(primary_key)
 
 
 # struct index_long_double_object_ {
@@ -636,7 +636,7 @@ class IndexLongDoubleObject(object):
 
     @classmethod
     def generate_key_by_primary(cls, t_id: I64, primary_key: U64):
-        return int.to_bytes(t_id, 8, 'little', signed=True) + int.to_bytes(primary_key, 8, 'little')
+        return i2b(t_id) + u2b(primary_key)
     
     @classmethod
     def generate_key_by_secondary(cls, t_id: I64, secondary_key: F128, primary_key: U64):
@@ -1145,7 +1145,7 @@ class TransactionObject(object):
     
     @classmethod
     def generate_key_by_expiration(cls, expiration: U32, table_id: I64):
-        return utils.to_bytes(expiration, 4) + utils.to_bytes(table_id, signed=True)
+        return u2b(expiration, 4) + i2b(table_id)
 
 # struct generated_transaction_object_ {
 #     transaction_id_type           trx_id;
@@ -1227,18 +1227,18 @@ class GeneratedTransactionObject(object):
         if isinstance(expiration, TimePoint):
             expiration = expiration.time
         assert isinstance(expiration, int)
-        return int.to_bytes(expiration, 8, 'little', signed=True) + int.to_bytes(table_id, 8, 'little', signed=True)
+        return i2b(expiration) + i2b(table_id)
 
     @classmethod
     def generate_key_by_delay(self, delay_until: Union[I64, TimePoint], table_id: I64):
         if isinstance(delay_until, TimePoint):
             delay_until = delay_until.time
         assert isinstance(delay_until, int)
-        return int.to_bytes(delay_until, 8, 'little', signed=True) + int.to_bytes(table_id, 8, 'little', signed=True)
+        return i2b(delay_until) + i2b(table_id)
 
     @classmethod
     def generate_key_by_sender_id(self, sender: Name, sender_id: U128):
-        return  eos.s2b(sender) + int.to_bytes(sender_id, 16, 'little')
+        return  eos.s2b(sender) + u2b(sender_id, 16)
 
 # struct table_id_object_ {
 #     account_name   code;  //< code should not be changed within a chainbase modifier lambda

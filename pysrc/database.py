@@ -5,7 +5,7 @@ from . import _eos
 from .types import U8, U16, U32, U64, I64, F64, Name, Checksum256
 from .packer import Encoder, Decoder
 from .database_objects import *
-from . import utils
+from .utils import i2b, u2b, f2b, to_bytes
 
 null_object_type = 0
 account_object_type = 1
@@ -79,9 +79,9 @@ class Database:
     def walk_range(self, tp: int, index_position: int, lower_bound: Union[int, bytes], upper_bound: Union[int, bytes], cb, custom_data = None):
         if index_position == 0:
             if isinstance(lower_bound, int):
-                lower_bound = int.to_bytes(lower_bound, 8, 'little')
+                lower_bound = i2b(lower_bound)
             if isinstance(upper_bound, int):
-                upper_bound = int.to_bytes(upper_bound, 8, 'little')
+                upper_bound = i2b(upper_bound)
 
         ret = _database.walk_range(self.ptr, self.db_ptr, tp, index_position, lower_bound, upper_bound, cb, custom_data)
         if ret == -2:
@@ -90,7 +90,7 @@ class Database:
 
     def find(self, tp: int, index_position: int, key: Union[int, bytes]):
         if index_position == 0 and isinstance(key, int):
-            key = int.to_bytes(key, 8, 'little')
+            key = i2b(key)
         ret, data = _database.find(self.ptr, self.db_ptr, tp, index_position, key)
         if ret == -2:
             raise Exception(_eos.get_last_error_and_clear())
@@ -100,7 +100,7 @@ class Database:
 
     def lower_bound(self, tp: int, index_position: int, key: Union[int, bytes]):
         if index_position == 0 and isinstance(key, int):
-            key = int.to_bytes(key, 8, 'little')
+            key = i2b(key)
         ret, data = _database.lower_bound(self.ptr, self.db_ptr, tp, index_position, key)
         if ret == -2:
             raise Exception(_eos.get_last_error_and_clear())
@@ -110,7 +110,7 @@ class Database:
 
     def upper_bound(self, tp: int, index_position: int, key: Union[int, bytes]):
         if index_position == 0 and isinstance(key, int):
-            key = int.to_bytes(key, 8, 'little')
+            key = i2b(key, 8)
 
         ret, data = _database.upper_bound(self.ptr, self.db_ptr, tp, index_position, key)
         if ret == -2:
@@ -134,7 +134,7 @@ class AccountObjectIndex(object):
         return self.find_by_id(table_id)
 
     def find_by_id(self, table_id: I64):
-        key = int.to_bytes(table_id, 8, 'little', signed=True)
+        key = i2b(table_id)
         data = self.db.find(account_object_type, AccountObject.by_id, key)
         if not data:
             return None
@@ -164,8 +164,8 @@ class AccountObjectIndex(object):
         return self.db.walk(account_object_type, AccountObject.by_name, self.on_object_data, (cb, raw_data, user_data))
 
     def walk_range_by_id(self, lower_bound: I64, upper_bound: I64, cb, user_data=None, raw_data=False):
-        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
-        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        lower_bound = i2b(lower_bound)
+        upper_bound = i2b(upper_bound)
         return self.db.walk_range(account_object_type, AccountObject.by_id, lower_bound, upper_bound, self.on_object_data, (cb, raw_data, user_data))
 
     def walk_range_by_name(self, lower_bound: Name, upper_bound: Name, cb, user_data=None, raw_data=False):
@@ -174,7 +174,7 @@ class AccountObjectIndex(object):
         return self.db.walk_range(account_object_type, AccountObject.by_name, lower_bound, upper_bound, self.on_object_data, (cb, raw_data, user_data))
 
     def lower_bound_by_id(self, lower_bound: I64):
-        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
+        lower_bound = i2b(lower_bound)
         data = self.db.lower_bound(account_object_type, AccountObject.by_id, lower_bound)
         if not data:
             return None
@@ -190,7 +190,7 @@ class AccountObjectIndex(object):
         return AccountObject.unpack(dec)
 
     def upper_bound_by_id(self, upper_bound: I64):
-        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        upper_bound = i2b(upper_bound)
         data = self.db.upper_bound(account_object_type, AccountObject.by_id, upper_bound)
         if not data:
             return None
@@ -206,7 +206,7 @@ class AccountObjectIndex(object):
         return AccountObject.unpack(dec)
 
     def modify(self, perm: AccountObject):
-        key = int.to_bytes(perm.table_id, 8, 'little', signed=True)
+        key = i2b(perm.table_id)
         enc = Encoder()
         enc.pack(perm)
         return self.db.modify(account_object_type, AccountObject.by_id, key, enc.get_bytes())
@@ -223,7 +223,7 @@ class AccountMetadataObjectIndex(object):
         return self.find_by_id(table_id)
 
     def find_by_id(self, table_id: I64):
-        key = int.to_bytes(table_id, 8, 'little', signed=True)
+        key = i2b(table_id)
         data = self.db.find(account_metadata_object_type, AccountMetadataObject.by_id, key)
         if not data:
             return None
@@ -253,8 +253,8 @@ class AccountMetadataObjectIndex(object):
         return self.db.walk(account_metadata_object_type, AccountMetadataObject.by_name, self.on_object_data, (cb, raw_data, user_data))
 
     def walk_range_by_id(self, lower_bound: I64, upper_bound: I64, cb, user_data=None, raw_data=False):
-        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
-        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        lower_bound = i2b(lower_bound)
+        upper_bound = i2b(upper_bound)
         return self.db.walk_range(account_metadata_object_type, AccountMetadataObject.by_id, lower_bound, upper_bound, self.on_object_data, (cb, raw_data, user_data))
 
     def walk_range_by_name(self, lower_bound: Name, upper_bound: Name, cb, user_data=None, raw_data=False):
@@ -263,7 +263,7 @@ class AccountMetadataObjectIndex(object):
         return self.db.walk_range(account_metadata_object_type, AccountMetadataObject.by_name, lower_bound, upper_bound, self.on_object_data, (cb, raw_data, user_data))
 
     def lower_bound_by_id(self, lower_bound: I64):
-        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
+        lower_bound = i2b(lower_bound)
         data = self.db.lower_bound(account_metadata_object_type, AccountMetadataObject.by_id, lower_bound)
         if not data:
             return None
@@ -279,7 +279,7 @@ class AccountMetadataObjectIndex(object):
         return AccountMetadataObject.unpack(dec)
 
     def upper_bound_by_id(self, upper_bound: I64):
-        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        upper_bound = i2b(upper_bound)
         data = self.db.upper_bound(account_metadata_object_type, AccountMetadataObject.by_id, upper_bound)
         if not data:
             return None
@@ -295,7 +295,7 @@ class AccountMetadataObjectIndex(object):
         return AccountMetadataObject.unpack(dec)
 
     def modify(self, perm: AccountMetadataObject):
-        key = int.to_bytes(perm.table_id, 8, 'little', signed=True)
+        key = i2b(perm.table_id)
         enc = Encoder()
         enc.pack(perm)
         return self.db.modify(account_metadata_object_type, AccountMetadataObject.by_id, key, enc.get_bytes())
@@ -313,7 +313,7 @@ class PermissionObjectIndex(object):
         return self.find_by_id(table_id)
 
     def find_by_id(self, table_id: I64):
-        key = int.to_bytes(table_id, 8, 'little', signed=True)
+        key = i2b(table_id)
         data = self.db.find(permission_object_type, PermissionObject.by_id, key)
         if not data:
             return None
@@ -371,8 +371,8 @@ class PermissionObjectIndex(object):
         return self.db.walk(permission_object_type, PermissionObject.by_name, self.on_object_data, (cb, raw_data, user_data))
 
     def walk_range_by_id(self, lower_bound: I64, upper_bound: I64, cb, user_data=None, raw_data=False):
-        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
-        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        lower_bound = i2b(lower_bound)
+        upper_bound = i2b(upper_bound)
         return self.db.walk_range(permission_object_type, PermissionObject.by_id, lower_bound, upper_bound, self.on_object_data, (cb, raw_data, user_data))
 
     def walk_range_by_parent(self, lower_bound: Tuple[I64, I64], upper_bound: Tuple[I64, I64], cb, user_data=None, raw_data=False):
@@ -391,7 +391,7 @@ class PermissionObjectIndex(object):
         return self.db.walk_range(permission_object_type, PermissionObject.by_name, lower_bound, upper_bound, self.on_object_data, (cb, raw_data, user_data))
 
     def lower_bound_by_id(self, table_id: I64):
-        key = int.to_bytes(table_id, 8, 'little', signed=True)
+        key = i2b(table_id)
         data = self.db.lower_bound(permission_object_type, PermissionObject.by_id, key)
         if not data:
             return None
@@ -423,7 +423,7 @@ class PermissionObjectIndex(object):
         return PermissionObject.unpack(dec)
 
     def upper_bound_by_id(self, table_id: I64):
-        key = int.to_bytes(table_id, 8, 'little', signed=True)
+        key = i2b(table_id)
         data = self.db.upper_bound(permission_object_type, PermissionObject.by_id, key)
         if not data:
             return None
@@ -455,7 +455,7 @@ class PermissionObjectIndex(object):
         return PermissionObject.unpack(dec)
 
     def modify(self, perm: PermissionObject):
-        key = int.to_bytes(perm.table_id, 8, 'little', signed=True)
+        key = i2b(perm.table_id)
         enc = Encoder()
         enc.pack(perm)
         return self.db.modify(permission_object_type, PermissionObject.by_id, key, enc.get_bytes())
@@ -469,7 +469,7 @@ class PermissionUsageObjectIndex(object):
         return self.find_by_id(table_id)
 
     def find_by_id(self, table_id: I64):
-        key = int.to_bytes(table_id, 8, 'little', signed=True)
+        key = i2b(table_id)
         data = self.db.find(permission_usage_object_type, PermissionUsageObject.by_id, key)
         if not data:
             return None
@@ -477,7 +477,7 @@ class PermissionUsageObjectIndex(object):
         return PermissionUsageObject.unpack(dec)
 
     def modify(self, perm: PermissionUsageObject):
-        key = int.to_bytes(perm.table_id, 8, 'little', signed=True)
+        key = i2b(perm.table_id)
         enc = Encoder()
         enc.pack(perm)
         return self.db.modify(permission_usage_object_type, PermissionUsageObject.by_id, key, enc.get_bytes())
@@ -497,12 +497,12 @@ class PermissionUsageObjectIndex(object):
         return self.db.walk(permission_usage_object_type, PermissionUsageObject.by_id, self.on_object_data, (cb, raw_data, user_data))
 
     def walk_range_by_id(self, lower_bound: I64, upper_bound: I64, cb, user_data=None, raw_data=False):
-        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
-        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        lower_bound = i2b(lower_bound)
+        upper_bound = i2b(upper_bound)
         return self.db.walk_range(permission_usage_object_type, PermissionUsageObject.by_id, lower_bound, upper_bound, self.on_object_data, (cb, raw_data, user_data))
 
     def lower_bound_by_id(self, lower_bound: I64):
-        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
+        lower_bound = i2b(lower_bound)
         data = self.db.lower_bound(permission_usage_object_type, PermissionUsageObject.by_id, lower_bound)
         if not data:
             return None
@@ -510,7 +510,7 @@ class PermissionUsageObjectIndex(object):
         return PermissionUsageObject.unpack(dec)
 
     def upper_bound_by_id(self, upper_bound: I64):
-        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        upper_bound = i2b(upper_bound)
         data = self.db.upper_bound(permission_usage_object_type, PermissionUsageObject.by_id, upper_bound)
         if not data:
             return None
@@ -526,7 +526,7 @@ class PermissionLinkObjectIndex(object):
         return self.find_by_id(table_id)
 
     def find_by_id(self, table_id: I64):
-        key = int.to_bytes(table_id, 8, 'little', signed=True)
+        key = i2b(table_id)
         data = self.db.find(permission_link_object_type, PermissionLinkObject.by_id, key)
         if not data:
             return None
@@ -550,7 +550,7 @@ class PermissionLinkObjectIndex(object):
         return PermissionLinkObject.unpack(dec)
 
     def modify(self, perm: PermissionLinkObject):
-        key = int.to_bytes(perm.table_id, 8, 'little', signed=True)
+        key = i2b(perm.table_id)
         enc = Encoder()
         enc.pack(perm)
         return self.db.modify(permission_link_object_type, PermissionLinkObject.by_id, key, enc.get_bytes())
@@ -576,8 +576,8 @@ class PermissionLinkObjectIndex(object):
         return self.db.walk(permission_link_object_type, PermissionLinkObject.by_permission_name, self.on_object_data, (cb, raw_data, user_data))
 
     def walk_range_by_id(self, lower_bound: I64, upper_bound: I64, cb, user_data=None, raw_data=False):
-        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
-        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        lower_bound = i2b(lower_bound)
+        upper_bound = i2b(upper_bound)
         return self.db.walk_range(permission_link_object_type, PermissionLinkObject.by_id, lower_bound, upper_bound, self.on_object_data, (cb, raw_data, user_data))
 
     def walk_range_by_action_name(self, lower_bound: Tuple[Name, Name, Name], upper_bound: Tuple[Name, Name, Name], cb, user_data=None, raw_data=False):
@@ -591,7 +591,7 @@ class PermissionLinkObjectIndex(object):
         return self.db.walk_range(permission_link_object_type, PermissionLinkObject.by_permission_name, lower_bound, upper_bound, self.on_object_data, (cb, raw_data, user_data))
 
     def lower_bound_by_id(self, lower_bound: I64):
-        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
+        lower_bound = i2b(lower_bound)
         data = self.db.lower_bound(permission_link_object_type, PermissionLinkObject.by_id, lower_bound)
         if not data:
             return None
@@ -615,7 +615,7 @@ class PermissionLinkObjectIndex(object):
         return PermissionLinkObject.unpack(dec)
 
     def upper_bound_by_id(self, upper_bound: I64):
-        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        upper_bound = i2b(upper_bound)
         data = self.db.upper_bound(permission_link_object_type, PermissionLinkObject.by_id, upper_bound)
         if not data:
             return None
@@ -648,7 +648,7 @@ class KeyValueObjectIndex(object):
         return self.find_by_id(table_id)
 
     def find_by_id(self, table_id: I64):
-        key = int.to_bytes(table_id, 8, 'little', signed=True)
+        key = i2b(table_id)
         data = self.db.find(key_value_object_type, KeyValueObject.by_id, key)
         if not data:
             return None
@@ -664,7 +664,7 @@ class KeyValueObjectIndex(object):
         return KeyValueObject.unpack(dec)
 
     def modify(self, perm: KeyValueObject):
-        key = int.to_bytes(perm.table_id, 8, 'little', signed=True)
+        key = i2b(perm.table_id)
         enc = Encoder()
         enc.pack(perm)
         return self.db.modify(key_value_object_type, KeyValueObject.by_id, key, enc.get_bytes())
@@ -687,8 +687,8 @@ class KeyValueObjectIndex(object):
         return self.db.walk(key_value_object_type, KeyValueObject.by_scope_primary, self.on_object_data, (cb, raw_data, user_data))
 
     def walk_range_by_id(self, lower_bound: I64, upper_bound: I64, cb, user_data=None, raw_data=False):
-        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
-        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        lower_bound = i2b(lower_bound)
+        upper_bound = i2b(upper_bound)
         return self.db.walk_range(key_value_object_type, KeyValueObject.by_id, lower_bound, upper_bound, self.on_object_data, (cb, raw_data, user_data))
 
     def walk_range_by_scope_primary(self, lower_bound: Tuple[I64, U64], upper_bound: Tuple[I64, U64], cb, user_data=None, raw_data=False):
@@ -697,7 +697,7 @@ class KeyValueObjectIndex(object):
         return self.db.walk_range(key_value_object_type, KeyValueObject.by_scope_primary, lower_bound, upper_bound, self.on_object_data, (cb, raw_data, user_data))
 
     def lower_bound_by_id(self, lower_bound: I64):
-        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
+        lower_bound = i2b(lower_bound)
         data = self.db.lower_bound(key_value_object_type, KeyValueObject.by_id, lower_bound)
         if not data:
             return None
@@ -713,7 +713,7 @@ class KeyValueObjectIndex(object):
         return KeyValueObject.unpack(dec)
 
     def upper_bound_by_id(self, upper_bound: I64):
-        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        upper_bound = i2b(upper_bound)
         data = self.db.upper_bound(key_value_object_type, KeyValueObject.by_id, upper_bound)
         if not data:
             return None
@@ -737,7 +737,7 @@ class Index64ObjectIndex(object):
         return self.find_by_id(table_id)
 
     def find_by_id(self, table_id: I64):
-        key = int.to_bytes(table_id, 8, 'little', signed=True)
+        key = i2b(table_id)
         data = self.db.find(index64_object_type, Index64Object.by_id, key)
         if not data:
             return None
@@ -745,7 +745,7 @@ class Index64ObjectIndex(object):
         return Index64Object.unpack(dec)
     
     def find_by_primary(self, t_id: I64, primary_key: U64):
-        key = int.to_bytes(t_id, 8, 'little', signed=True) + int.to_bytes(primary_key, 8, 'little')
+        key = i2b(t_id) + u2b(primary_key)
         data = self.db.find(index64_object_type, Index64Object.by_primary, key)
         if not data:
             return None
@@ -753,7 +753,7 @@ class Index64ObjectIndex(object):
         return Index64Object.unpack(dec)
 
     def find_by_secondary(self, t_id: I64, secondary_key: U64, primary_key: U64):
-        key = utils.to_bytes(t_id, signed=True) + utils.to_bytes(secondary_key) + utils.to_bytes(primary_key)
+        key = i2b(t_id) + u2b(secondary_key) + u2b(primary_key)
         data = self.db.find(index64_object_type, Index64Object.by_secondary, key)
         if not data:
             return None
@@ -761,7 +761,7 @@ class Index64ObjectIndex(object):
         return Index64Object.unpack(dec)
 
     def modify(self, perm: Index64Object):
-        key = int.to_bytes(perm.table_id, 8, 'little', signed=True)
+        key = i2b(perm.table_id)
         enc = Encoder()
         enc.pack(perm)
         return self.db.modify(index64_object_type, Index64Object.by_id, key, enc.get_bytes())
@@ -787,8 +787,8 @@ class Index64ObjectIndex(object):
         return self.db.walk(index64_object_type, Index64Object.by_secondary, self.on_object_data, (cb, raw_data, user_data))
 
     def walk_range_by_id(self, lower_bound: I64, upper_bound: I64, cb, user_data=None, raw_data=False):
-        lower_bound = int.to_bytes(lower_bound, 8, 'little')
-        upper_bound = int.to_bytes(upper_bound, 8, 'little')
+        lower_bound = u2b(lower_bound)
+        upper_bound = u2b(upper_bound)
         return self.db.walk_range(index64_object_type, Index64Object.by_id, lower_bound, upper_bound, self.on_object_data, (cb, raw_data, user_data))
 
     def walk_range_by_primary(self, lower_bound: Tuple[I64, U64], upper_bound: Tuple[I64, U64], cb, user_data=None, raw_data=False):
@@ -802,7 +802,7 @@ class Index64ObjectIndex(object):
         return self.db.walk_range(index64_object_type, Index64Object.by_secondary, lower_bound, upper_bound, self.on_object_data, (cb, raw_data, user_data))
 
     def lower_bound_by_id(self, lower_bound: I64):
-        lower_bound = int.to_bytes(lower_bound, 8, 'little')
+        lower_bound = u2b(lower_bound)
         data = self.db.lower_bound(index64_object_type, Index64Object.by_id, lower_bound)
         if not data:
             return None
@@ -826,7 +826,7 @@ class Index64ObjectIndex(object):
         return Index64Object.unpack(dec)
 
     def upper_bound_by_id(self, upper_bound: I64):
-        upper_bound = int.to_bytes(upper_bound, 8, 'little')
+        upper_bound = u2b(upper_bound)
         data = self.db.upper_bound(index64_object_type, Index64Object.by_id, upper_bound)
         if not data:
             return None
@@ -858,7 +858,7 @@ class Index128ObjectIndex(object):
         return self.find_by_id(table_id)
 
     def find_by_id(self, table_id: I64):
-        key = int.to_bytes(table_id, 8, 'little', signed=True)
+        key = i2b(table_id)
         data = self.db.find(index128_object_type, Index128Object.by_id, key)
         if not data:
             return None
@@ -866,7 +866,7 @@ class Index128ObjectIndex(object):
         return Index128Object.unpack(dec)
     
     def find_by_primary(self, t_id: I64, primary_key: U64):
-        key = int.to_bytes(t_id, 8, 'little', signed=True) + int.to_bytes(primary_key, 8, 'little')
+        key = i2b(t_id) + u2b(primary_key)
         data = self.db.find(index128_object_type, Index128Object.by_primary, key)
         if not data:
             return None
@@ -874,7 +874,7 @@ class Index128ObjectIndex(object):
         return Index128Object.unpack(dec)
     
     def find_by_secondary(self, t_id: I64, secondary_key: U128, primary_key: U64):
-        key = utils.to_bytes(t_id, signed=True) + utils.to_bytes(secondary_key, 16) + utils.to_bytes(primary_key)
+        key = i2b(t_id) + u2b(secondary_key, 16) + u2b(primary_key)
         data = self.db.find(index128_object_type, Index128Object.by_secondary, key)
         if not data:
             return None
@@ -882,7 +882,7 @@ class Index128ObjectIndex(object):
         return Index128Object.unpack(dec)
 
     def modify(self, perm: Index128Object):
-        key = int.to_bytes(perm.table_id, 8, 'little', signed=True)
+        key = i2b(perm.table_id)
         enc = Encoder()
         enc.pack(perm)
         return self.db.modify(index128_object_type, Index128Object.by_id, key, enc.get_bytes())
@@ -908,8 +908,8 @@ class Index128ObjectIndex(object):
         return self.db.walk(index128_object_type, Index128Object.by_secondary, self.on_object_data, (cb, raw_data, user_data))
 
     def walk_range_by_id(self, lower_bound: I64, upper_bound: I64, cb, user_data=None, raw_data=False):
-        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
-        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        lower_bound = i2b(lower_bound)
+        upper_bound = i2b(upper_bound)
         return self.db.walk_range(index128_object_type, Index128Object.by_id, lower_bound, upper_bound, self.on_object_data, (cb, raw_data, user_data))
 
     def walk_range_by_primary(self, lower_bound: Tuple[I64, U64], upper_bound: Tuple[I64, U64], cb, user_data=None, raw_data=False):
@@ -923,7 +923,7 @@ class Index128ObjectIndex(object):
         return self.db.walk_range(index128_object_type, Index128Object.by_secondary, lower_bound, upper_bound, self.on_object_data, (cb, raw_data, user_data))
 
     def lower_bound_by_id(self, lower_bound: I64):
-        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
+        lower_bound = i2b(lower_bound)
         data = self.db.lower_bound(index128_object_type, Index128Object.by_id, lower_bound)
         if not data:
             return None
@@ -947,7 +947,7 @@ class Index128ObjectIndex(object):
         return Index128Object.unpack(dec)
 
     def upper_bound_by_id(self, upper_bound: I64):
-        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        upper_bound = i2b(upper_bound)
         data = self.db.upper_bound(index128_object_type, Index128Object.by_id, upper_bound)
         if not data:
             return None
@@ -979,7 +979,7 @@ class Index256ObjectIndex(object):
         return self.find_by_id(table_id)
 
     def find_by_id(self, table_id: I64):
-        key = int.to_bytes(table_id, 8, 'little', signed=True)
+        key = i2b(table_id)
         data = self.db.find(index256_object_type, Index256Object.by_id, key)
         if not data:
             return None
@@ -987,7 +987,7 @@ class Index256ObjectIndex(object):
         return Index256Object.unpack(dec)
     
     def find_by_primary(self, t_id: I64, primary_key: U64):
-        key = int.to_bytes(t_id, 8, 'little', signed=True) + int.to_bytes(primary_key, 8, 'little')
+        key = i2b(t_id) + u2b(primary_key)
         data = self.db.find(index256_object_type, Index256Object.by_primary, key)
         if not data:
             return None
@@ -995,7 +995,7 @@ class Index256ObjectIndex(object):
         return Index256Object.unpack(dec)
     
     def find_by_secondary(self, t_id: I64, secondary_key: U256, primary_key: U64):
-        key = utils.to_bytes(t_id, signed=True) + utils.to_bytes(secondary_key, 32) + utils.to_bytes(primary_key)
+        key = i2b(t_id) + u2b(secondary_key, 32) + u2b(primary_key)
         data = self.db.find(index256_object_type, Index256Object.by_secondary, key)
         if not data:
             return None
@@ -1003,7 +1003,7 @@ class Index256ObjectIndex(object):
         return Index256Object.unpack(dec)
 
     def modify(self, perm: Index256Object):
-        key = int.to_bytes(perm.table_id, 8, 'little', signed=True)
+        key = i2b(perm.table_id)
         enc = Encoder()
         enc.pack(perm)
         return self.db.modify(index256_object_type, Index256Object.by_id, key, enc.get_bytes())
@@ -1029,8 +1029,8 @@ class Index256ObjectIndex(object):
         return self.db.walk(index256_object_type, Index256Object.by_secondary, self.on_object_data, (cb, raw_data, user_data))
 
     def walk_range_by_id(self, lower_bound: I64, upper_bound: I64, cb, user_data=None, raw_data=False):
-        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
-        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        lower_bound = i2b(lower_bound)
+        upper_bound = i2b(upper_bound)
         return self.db.walk_range(index256_object_type, Index256Object.by_id, lower_bound, upper_bound, self.on_object_data, (cb, raw_data, user_data))
 
     def walk_range_by_primary(self, lower_bound: Tuple[I64, U64], upper_bound: Tuple[I64, U64], cb, user_data=None, raw_data=False):
@@ -1044,7 +1044,7 @@ class Index256ObjectIndex(object):
         return self.db.walk_range(index256_object_type, Index256Object.by_secondary, lower_bound, upper_bound, self.on_object_data, (cb, raw_data, user_data))
 
     def lower_bound_by_id(self, lower_bound: I64):
-        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
+        lower_bound = i2b(lower_bound)
         data = self.db.lower_bound(index256_object_type, Index256Object.by_id, lower_bound)
         if not data:
             return None
@@ -1068,7 +1068,7 @@ class Index256ObjectIndex(object):
         return Index256Object.unpack(dec)
 
     def upper_bound_by_id(self, upper_bound: I64):
-        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        upper_bound = i2b(upper_bound)
         data = self.db.upper_bound(index256_object_type, Index256Object.by_id, upper_bound)
         if not data:
             return None
@@ -1100,7 +1100,7 @@ class IndexDoubleObjectIndex(object):
         return self.find_by_id(table_id)
 
     def find_by_id(self, table_id: I64):
-        key = int.to_bytes(table_id, 8, 'little', signed=True)
+        key = i2b(table_id)
         data = self.db.find(index_double_object_type, IndexDoubleObject.by_id, key)
         if not data:
             return None
@@ -1108,7 +1108,7 @@ class IndexDoubleObjectIndex(object):
         return IndexDoubleObject.unpack(dec)
     
     def find_by_primary(self, t_id: I64, primary_key: U64):
-        key = int.to_bytes(t_id, 8, 'little', signed=True) + int.to_bytes(primary_key, 8, 'little')
+        key = i2b(t_id) + u2b(primary_key)
         data = self.db.find(index_double_object_type, IndexDoubleObject.by_primary, key)
         if not data:
             return None
@@ -1116,7 +1116,7 @@ class IndexDoubleObjectIndex(object):
         return IndexDoubleObject.unpack(dec)
 
     def find_by_secondary(self, t_id: I64, secondary_key: F64, primary_key: U64):
-        key = utils.to_bytes(t_id) + utils.to_bytes(secondary_key) + utils.to_bytes(primary_key)
+        key = i2b(t_id) + f2b(secondary_key) + u2b(primary_key)
         data = self.db.find(index_double_object_type, IndexDoubleObject.by_secondary, key)
         if not data:
             return None
@@ -1124,7 +1124,7 @@ class IndexDoubleObjectIndex(object):
         return IndexDoubleObject.unpack(dec)
 
     def modify(self, perm: IndexDoubleObject):
-        key = int.to_bytes(perm.table_id, 8, 'little', signed=True)
+        key = i2b(perm.table_id)
         enc = Encoder()
         enc.pack(perm)
         return self.db.modify(index_double_object_type, IndexDoubleObject.by_id, key, enc.get_bytes())
@@ -1150,8 +1150,8 @@ class IndexDoubleObjectIndex(object):
         return self.db.walk(index_double_object_type, IndexDoubleObject.by_secondary, self.on_object_data, (cb, raw_data, user_data))
 
     def walk_range_by_id(self, lower_bound: I64, upper_bound: I64, cb, user_data=None, raw_data=False):
-        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
-        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        lower_bound = i2b(lower_bound)
+        upper_bound = i2b(upper_bound)
         return self.db.walk_range(index_double_object_type, IndexDoubleObject.by_id, lower_bound, upper_bound, self.on_object_data, (cb, raw_data, user_data))
 
     def walk_range_by_primary(self, lower_bound: Tuple[I64, U64], upper_bound: Tuple[I64, U64], cb, user_data=None, raw_data=False):
@@ -1165,7 +1165,7 @@ class IndexDoubleObjectIndex(object):
         return self.db.walk_range(index_double_object_type, IndexDoubleObject.by_secondary, lower_bound, upper_bound, self.on_object_data, (cb, raw_data, user_data))
 
     def lower_bound_by_id(self, lower_bound: I64):
-        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
+        lower_bound = i2b(lower_bound)
         data = self.db.lower_bound(index_double_object_type, IndexDoubleObject.by_id, lower_bound)
         if not data:
             return None
@@ -1189,7 +1189,7 @@ class IndexDoubleObjectIndex(object):
         return IndexDoubleObject.unpack(dec)
 
     def upper_bound_by_id(self, upper_bound: I64):
-        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        upper_bound = i2b(upper_bound)
         data = self.db.upper_bound(index_double_object_type, IndexDoubleObject.by_id, upper_bound)
         if not data:
             return None
@@ -1221,7 +1221,7 @@ class IndexLongDoubleObjectIndex(object):
         return self.find_by_id(table_id)
 
     def find_by_id(self, table_id: I64):
-        key = int.to_bytes(table_id, 8, 'little', signed=True)
+        key = i2b(table_id)
         data = self.db.find(index_long_double_object_type, IndexLongDoubleObject.by_id, key)
         if not data:
             return None
@@ -1229,7 +1229,7 @@ class IndexLongDoubleObjectIndex(object):
         return IndexLongDoubleObject.unpack(dec)
 
     def find_by_primary(self, t_id: I64, primary_key: U64):
-        key = int.to_bytes(t_id, 8, 'little', signed=True) + int.to_bytes(primary_key, 8, 'little')
+        key = i2b(t_id) + u2b(primary_key)
         data = self.db.find(index_long_double_object_type, IndexLongDoubleObject.by_primary, key)
         if not data:
             return None
@@ -1237,7 +1237,7 @@ class IndexLongDoubleObjectIndex(object):
         return IndexLongDoubleObject.unpack(dec)
 
     def find_by_secondary(self, t_id: I64, secondary_key: F128, primary_key: U64):
-        key = utils.to_bytes(t_id) + utils.to_bytes(secondary_key) + utils.to_bytes(primary_key)
+        key = i2b(t_id) + to_bytes(secondary_key) + u2b(primary_key)
         data = self.db.find(index_long_double_object_type, IndexLongDoubleObject.by_secondary, key)
         if not data:
             return None
@@ -1246,7 +1246,7 @@ class IndexLongDoubleObjectIndex(object):
 
 
     def modify(self, perm: IndexLongDoubleObject):
-        key = int.to_bytes(perm.table_id, 8, 'little', signed=True)
+        key = i2b(perm.table_id)
         enc = Encoder()
         enc.pack(perm)
         return self.db.modify(index_long_double_object_type, IndexLongDoubleObject.by_id, key, enc.get_bytes())
@@ -1272,8 +1272,8 @@ class IndexLongDoubleObjectIndex(object):
         return self.db.walk(index_long_double_object_type, IndexLongDoubleObject.by_secondary, self.on_object_data, (cb, raw_data, user_data))
 
     def walk_range_by_id(self, lower_bound: I64, upper_bound: I64, cb, user_data=None, raw_data=False):
-        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
-        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        lower_bound = i2b(lower_bound)
+        upper_bound = i2b(upper_bound)
         return self.db.walk_range(index_long_double_object_type, IndexLongDoubleObject.by_id, lower_bound, upper_bound, self.on_object_data, (cb, raw_data, user_data))
 
     def walk_range_by_primary(self, lower_bound: Tuple[I64, U64], upper_bound: Tuple[I64, U64], cb, user_data=None, raw_data=False):
@@ -1287,7 +1287,7 @@ class IndexLongDoubleObjectIndex(object):
         return self.db.walk_range(index_long_double_object_type, IndexLongDoubleObject.by_secondary, lower_bound, upper_bound, self.on_object_data, (cb, raw_data, user_data))
 
     def lower_bound_by_id(self, lower_bound: I64):
-        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
+        lower_bound = i2b(lower_bound)
         data = self.db.lower_bound(index_long_double_object_type, IndexLongDoubleObject.by_id, lower_bound)
         if not data:
             return None
@@ -1311,7 +1311,7 @@ class IndexLongDoubleObjectIndex(object):
         return IndexLongDoubleObject.unpack(dec)
 
     def upper_bound_by_id(self, upper_bound: I64):
-        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        upper_bound = i2b(upper_bound)
         data = self.db.upper_bound(index_long_double_object_type, IndexLongDoubleObject.by_id, upper_bound)
         if not data:
             return None
@@ -1343,7 +1343,7 @@ class GlobalPropertyObjectIndex(object):
         return self.find_by_id(0)
 
     def find_by_id(self, table_id: I64):
-        key = int.to_bytes(table_id, 8, 'little', signed=True)
+        key = i2b(table_id)
         data = self.db.find(global_property_object_type, GlobalPropertyObject.by_id, key)
         if not data:
             return None
@@ -1351,7 +1351,7 @@ class GlobalPropertyObjectIndex(object):
         return GlobalPropertyObject.unpack(dec)
 
     def modify(self, perm: GlobalPropertyObject):
-        key = int.to_bytes(0, 8, 'little', signed=True)
+        key = u2b(0)
         enc = Encoder()
         enc.pack(perm)
         return self.db.modify(global_property_object_type, GlobalPropertyObject.by_id, key, enc.get_bytes())
@@ -1368,7 +1368,7 @@ class DynamicGlobalPropertyObjectIndex(object):
         return self.find_by_id(0)
 
     def find_by_id(self, table_id: I64):
-        key = int.to_bytes(table_id, 8, 'little', signed=True)
+        key = i2b(table_id)
         data = self.db.find(dynamic_global_property_object_type, DynamicGlobalPropertyObject.by_id, key)
         if not data:
             return None
@@ -1376,7 +1376,7 @@ class DynamicGlobalPropertyObjectIndex(object):
         return DynamicGlobalPropertyObject.unpack(dec)
 
     def modify(self, perm: DynamicGlobalPropertyObject):
-        key = int.to_bytes(0, 8, 'little', signed=True)
+        key = u2b(0)
         enc = Encoder()
         enc.pack(perm)
         return self.db.modify(dynamic_global_property_object_type, DynamicGlobalPropertyObject.by_id, key, enc.get_bytes())
@@ -1393,7 +1393,7 @@ class BlockSummaryObjectIndex(object):
         return self.find_by_id(table_id)
 
     def find_by_id(self, table_id: I64):
-        key = int.to_bytes(table_id, 8, 'little', signed=True)
+        key = i2b(table_id)
         data = self.db.find(block_summary_object_type, BlockSummaryObject.by_id, key)
         if not data:
             return None
@@ -1401,7 +1401,7 @@ class BlockSummaryObjectIndex(object):
         return BlockSummaryObject.unpack(dec)
     
     def modify(self, perm: BlockSummaryObject):
-        key = int.to_bytes(perm.table_id, 8, 'little', signed=True)
+        key = i2b(perm.table_id)
         enc = Encoder()
         enc.pack(perm)
         return self.db.modify(block_summary_object_type, BlockSummaryObject.by_id, key, enc.get_bytes())
@@ -1424,16 +1424,16 @@ class BlockSummaryObjectIndex(object):
         return self.db.walk(block_summary_object_type, BlockSummaryObject.by_block_id, self.on_object_data, (cb, raw_data, user_data))
 
     def walk_range_by_id(self, lower_bound: I64, upper_bound: I64, cb, user_data=None, raw_data=False):
-        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
-        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        lower_bound = i2b(lower_bound)
+        upper_bound = i2b(upper_bound)
         return self.db.walk_range(block_summary_object_type, BlockSummaryObject.by_id, lower_bound, upper_bound, self.on_object_data, (cb, raw_data, user_data))
 
     def lower_bound_by_id(self, lower_bound: I64):
-        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
+        lower_bound = i2b(lower_bound)
         return self.db.lower_bound(block_summary_object_type, BlockSummaryObject.by_id, lower_bound)
 
     def upper_bound_by_id(self, upper_bound: I64):
-        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        upper_bound = i2b(upper_bound)
         return self.db.upper_bound(block_summary_object_type, BlockSummaryObject.by_id, upper_bound)
 
 # transaction_object_type = 16
@@ -1445,7 +1445,7 @@ class TransactionObjectIndex(object):
         return self.find_by_id(table_id)
 
     def find_by_id(self, table_id: I64):
-        key = int.to_bytes(table_id, 8, 'little', signed=True)
+        key = i2b(table_id)
         data = self.db.find(transaction_object_type, TransactionObject.by_id, key)
         if not data:
             return None
@@ -1461,7 +1461,7 @@ class TransactionObjectIndex(object):
         return TransactionObject.unpack(dec)
     
     def find_by_expiration(self, expiration: U32, table_id: I64):
-        key = utils.to_bytes(expiration, 4) + utils.to_bytes(table_id, signed=True)
+        key = u2b(expiration, 4) + i2b(table_id)
         data = self.db.find(transaction_object_type, TransactionObject.by_expiration, key)
         if not data:
             return None
@@ -1469,7 +1469,7 @@ class TransactionObjectIndex(object):
         return TransactionObject.unpack(dec)
 
     def modify(self, perm: TransactionObject):
-        key = int.to_bytes(perm.table_id, 8, 'little', signed=True)
+        key = i2b(perm.table_id)
         enc = Encoder()
         enc.pack(perm)
         return self.db.modify(transaction_object_type, TransactionObject.by_id, key, enc.get_bytes())
@@ -1495,8 +1495,8 @@ class TransactionObjectIndex(object):
         return self.db.walk(transaction_object_type, TransactionObject.by_expiration, self.on_object_data, (cb, raw_data, user_data))
 
     def walk_range_by_id(self, lower_bound: I64, upper_bound: I64, cb, user_data=None, raw_data=False):
-        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
-        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        lower_bound = i2b(lower_bound)
+        upper_bound = i2b(upper_bound)
         return self.db.walk_range(transaction_object_type, TransactionObject.by_id, lower_bound, upper_bound, self.on_object_data, (cb, raw_data, user_data))
 
     def walk_range_by_trx_id(self, lower_bound: Checksum256, upper_bound: Checksum256, cb, user_data=None, raw_data=False):
@@ -1510,7 +1510,7 @@ class TransactionObjectIndex(object):
         return self.db.walk_range(transaction_object_type, TransactionObject.by_expiration, lower_bound, upper_bound, self.on_object_data, (cb, raw_data, user_data))
 
     def lower_bound_by_id(self, lower_bound: I64):
-        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
+        lower_bound = i2b(lower_bound)
         data = self.db.lower_bound(transaction_object_type, TransactionObject.by_id, lower_bound)
         if not data:
             return None
@@ -1534,7 +1534,7 @@ class TransactionObjectIndex(object):
         return TransactionObject.unpack(dec)
 
     def upper_bound_by_id(self, upper_bound: I64):
-        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        upper_bound = i2b(upper_bound)
         data = self.db.upper_bound(transaction_object_type, TransactionObject.by_id, upper_bound)
         if not data:
             return None
@@ -1566,7 +1566,7 @@ class GeneratedTransactionObjectIndex(object):
         return self.find_by_id(table_id)
 
     def find_by_id(self, table_id: I64):
-        key = int.to_bytes(table_id, 8, 'little', signed=True)
+        key = i2b(table_id)
         data = self.db.find(generated_transaction_object_type, GeneratedTransactionObject.by_id, key)
         if not data:
             return None
@@ -1608,7 +1608,7 @@ class GeneratedTransactionObjectIndex(object):
         return GeneratedTransactionObject.unpack(dec)
 
     def modify(self, perm: GeneratedTransactionObject):
-        key = int.to_bytes(perm.table_id, 8, 'little', signed=True)
+        key = i2b(perm.table_id)
         enc = Encoder()
         enc.pack(perm)
         return self.db.modify(generated_transaction_object_type, GeneratedTransactionObject.by_id, key, enc.get_bytes())
@@ -1640,8 +1640,8 @@ class GeneratedTransactionObjectIndex(object):
         return self.db.walk(generated_transaction_object_type, GeneratedTransactionObject.by_sender_id, self.on_object_data, (cb, raw_data, user_data))
 
     def walk_range_by_id(self, lower_bound: I64, upper_bound: I64, cb, user_data=None, raw_data=False):
-        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
-        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        lower_bound = i2b(lower_bound)
+        upper_bound = i2b(upper_bound)
         return self.db.walk_range(generated_transaction_object_type, GeneratedTransactionObject.by_id, lower_bound, upper_bound, self.on_object_data, (cb, raw_data, user_data))
 
     def walk_range_by_trx_id(self, lower_bound: Union[bytes, Checksum256], upper_bound: Union[bytes, Checksum256], cb, user_data=None, raw_data=False):
@@ -1669,7 +1669,7 @@ class GeneratedTransactionObjectIndex(object):
         return self.db.walk_range(generated_transaction_object_type, GeneratedTransactionObject.by_sender_id, lower_bound, upper_bound, self.on_object_data, (cb, raw_data, user_data))
 
     def lower_bound_by_id(self, lower_bound: I64):
-        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
+        lower_bound = i2b(lower_bound)
         data = self.db.lower_bound(generated_transaction_object_type, GeneratedTransactionObject.by_id, lower_bound)
         if not data:
             return None
@@ -1713,7 +1713,7 @@ class GeneratedTransactionObjectIndex(object):
         return GeneratedTransactionObject.unpack(dec)
 
     def upper_bound_by_id(self, upper_bound: I64):
-        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        upper_bound = i2b(upper_bound)
         data = self.db.upper_bound(generated_transaction_object_type, GeneratedTransactionObject.by_id, upper_bound)
         if not data:
             return None
@@ -1765,7 +1765,7 @@ class TableIdObjectIndex(object):
         return self.find_by_id(table_id)
 
     def find_by_id(self, table_id: I64):
-        key = int.to_bytes(table_id, 8, 'little', signed=True)
+        key = i2b(table_id)
         data = self.db.find(table_id_object_type, TableIdObject.by_id, key)
         if not data:
             return None
@@ -1781,7 +1781,7 @@ class TableIdObjectIndex(object):
         return TableIdObject.unpack(dec)
 
     def modify(self, perm: TableIdObject):
-        key = int.to_bytes(perm.table_id, 8, 'little', signed=True)
+        key = i2b(perm.table_id)
         enc = Encoder()
         enc.pack(perm)
         return self.db.modify(table_id_object_type, TableIdObject.by_id, key, enc.get_bytes())
@@ -1804,8 +1804,8 @@ class TableIdObjectIndex(object):
         return self.db.walk(table_id_object_type, TableIdObject.by_code_scope_table, self.on_object_data, (cb, raw_data, user_data))
 
     def walk_range_by_id(self, lower_bound: I64, upper_bound: I64, cb, user_data=None, raw_data=False):
-        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
-        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        lower_bound = i2b(lower_bound)
+        upper_bound = i2b(upper_bound)
         return self.db.walk_range(table_id_object_type, TableIdObject.by_id, lower_bound, upper_bound, self.on_object_data, (cb, raw_data, user_data))
 
     def walk_range_by_code_scope_table(self, lower_bound: Union[Name, Name, Name], upper_bound: Union[Name, Name, Name], cb, user_data=None, raw_data=False):
@@ -1814,7 +1814,7 @@ class TableIdObjectIndex(object):
         return self.db.walk_range(table_id_object_type, TableIdObject.by_code_scope_table, lower_bound, upper_bound, self.on_object_data, (cb, raw_data, user_data))
 
     def lower_bound_by_id(self, lower_bound: I64):
-        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
+        lower_bound = i2b(lower_bound)
         data = self.db.lower_bound(table_id_object_type, TableIdObject.by_id, lower_bound)
         if not data:
             return None
@@ -1830,7 +1830,7 @@ class TableIdObjectIndex(object):
         return TableIdObject.unpack(dec)
 
     def upper_bound_by_id(self, upper_bound: I64):
-        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        upper_bound = i2b(upper_bound)
         data = self.db.upper_bound(table_id_object_type, TableIdObject.by_id, upper_bound)
         if not data:
             return None
@@ -1854,7 +1854,7 @@ class ResourceLimitsObjectIndex(object):
         return self.find_by_id(table_id)
 
     def find_by_id(self, table_id: I64):
-        key = int.to_bytes(table_id, 8, 'little', signed=True)
+        key = i2b(table_id)
         data = self.db.find(resource_limits_object_type, ResourceLimitsObject.by_id, key)
         if not data:
             return None
@@ -1870,7 +1870,7 @@ class ResourceLimitsObjectIndex(object):
         return ResourceLimitsObject.unpack(dec)
 
     def modify(self, perm: ResourceLimitsObject):
-        key = int.to_bytes(perm.table_id, 8, 'little', signed=True)
+        key = i2b(perm.table_id)
         enc = Encoder()
         enc.pack(perm)
         return self.db.modify(resource_limits_object_type, ResourceLimitsObject.by_id, key, enc.get_bytes())
@@ -1893,8 +1893,8 @@ class ResourceLimitsObjectIndex(object):
         return self.db.walk(resource_limits_object_type, ResourceLimitsObject.by_owner, self.on_object_data, (cb, raw_data, user_data))
 
     def walk_range_by_id(self, lower_bound: I64, upper_bound: I64, cb, user_data=None, raw_data=False):
-        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
-        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        lower_bound = i2b(lower_bound)
+        upper_bound = i2b(upper_bound)
         return self.db.walk_range(resource_limits_object_type, ResourceLimitsObject.by_id, lower_bound, upper_bound, self.on_object_data, (cb, raw_data, user_data))
 
     def walk_range_by_owner(self, lower_bound: Tuple[bool, Name], upper_bound: Tuple[bool, Name], cb, user_data=None, raw_data=False):
@@ -1903,7 +1903,7 @@ class ResourceLimitsObjectIndex(object):
         return self.db.walk_range(resource_limits_object_type, ResourceLimitsObject.by_owner, lower_bound, upper_bound, self.on_object_data, (cb, raw_data, user_data))
 
     def lower_bound_by_id(self, lower_bound: I64):
-        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
+        lower_bound = i2b(lower_bound)
         data = self.db.lower_bound(resource_limits_object_type, ResourceLimitsObject.by_id, lower_bound)
         if not data:
             return None
@@ -1919,7 +1919,7 @@ class ResourceLimitsObjectIndex(object):
         return ResourceLimitsObject.unpack(dec)
 
     def upper_bound_by_id(self, upper_bound: I64):
-        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        upper_bound = i2b(upper_bound)
         data = self.db.upper_bound(resource_limits_object_type, ResourceLimitsObject.by_id, upper_bound)
         if not data:
             return None
@@ -1943,7 +1943,7 @@ class ResourceUsageObjectIndex(object):
         return self.find_by_id(table_id)
 
     def find_by_id(self, table_id: I64):
-        key = int.to_bytes(table_id, 8, 'little', signed=True)
+        key = i2b(table_id)
         data = self.db.find(resource_usage_object_type, ResourceUsageObject.by_id, key)
         if not data:
             return None
@@ -1959,7 +1959,7 @@ class ResourceUsageObjectIndex(object):
         return ResourceUsageObject.unpack(dec)
 
     def modify(self, perm: ResourceUsageObject):
-        key = int.to_bytes(perm.table_id, 8, 'little', signed=True)
+        key = i2b(perm.table_id)
         enc = Encoder()
         enc.pack(perm)
         return self.db.modify(resource_usage_object_type, ResourceUsageObject.by_id, key, enc.get_bytes())
@@ -1982,8 +1982,8 @@ class ResourceUsageObjectIndex(object):
         return self.db.walk(resource_usage_object_type, ResourceUsageObject.by_owner, self.on_object_data, (cb, raw_data, user_data))
 
     def walk_range_by_id(self, lower_bound: I64, upper_bound: I64, cb, user_data=None, raw_data=False):
-        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
-        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        lower_bound = i2b(lower_bound)
+        upper_bound = i2b(upper_bound)
         return self.db.walk_range(resource_usage_object_type, ResourceUsageObject.by_id, lower_bound, upper_bound, self.on_object_data, (cb, raw_data, user_data))
 
     def walk_range_by_owner(self, lower_bound: Name, upper_bound: Name, cb, user_data=None, raw_data=False):
@@ -1992,7 +1992,7 @@ class ResourceUsageObjectIndex(object):
         return self.db.walk_range(resource_usage_object_type, ResourceUsageObject.by_owner, lower_bound, upper_bound, self.on_object_data, (cb, raw_data, user_data))
 
     def lower_bound_by_id(self, lower_bound: I64):
-        lower_bound = int.to_bytes(lower_bound, 8, 'little', signed=True)
+        lower_bound = i2b(lower_bound)
         data = self.db.lower_bound(resource_usage_object_type, ResourceUsageObject.by_id, lower_bound)
         if not data:
             return None
@@ -2008,7 +2008,7 @@ class ResourceUsageObjectIndex(object):
         return ResourceUsageObject.unpack(dec)
 
     def upper_bound_by_id(self, upper_bound: I64):
-        upper_bound = int.to_bytes(upper_bound, 8, 'little', signed=True)
+        upper_bound = i2b(upper_bound)
         data = self.db.upper_bound(resource_usage_object_type, ResourceUsageObject.by_id, upper_bound)
         if not data:
             return None
@@ -2032,7 +2032,7 @@ class ResourceLimitsStateObjectIndex(object):
         return self.find_by_id(table_id)
 
     def find_by_id(self, table_id: I64):
-        key = int.to_bytes(table_id, 8, 'little', signed=True)
+        key = i2b(table_id)
         data = self.db.find(resource_limits_state_object_type, ResourceLimitsStateObject.by_id, key)
         if not data:
             return None
@@ -2040,7 +2040,7 @@ class ResourceLimitsStateObjectIndex(object):
         return ResourceLimitsStateObject.unpack(dec)
 
     def modify(self, perm: ResourceLimitsStateObject):
-        key = int.to_bytes(perm.table_id, 8, 'little', signed=True)
+        key = i2b(perm.table_id)
         enc = Encoder()
         enc.pack(perm)
         return self.db.modify(resource_limits_state_object_type, ResourceLimitsStateObject.by_id, key, enc.get_bytes())
@@ -2057,7 +2057,7 @@ class ResourceLimitsConfigObjectIndex(object):
         return self.find_by_id(table_id)
 
     def find_by_id(self, table_id: I64):
-        key = int.to_bytes(table_id, 8, 'little', signed=True)
+        key = i2b(table_id)
         data = self.db.find(resource_limits_config_object_type, ResourceLimitsConfigObject.by_id, key)
         if not data:
             return None
@@ -2065,7 +2065,7 @@ class ResourceLimitsConfigObjectIndex(object):
         return ResourceLimitsConfigObject.unpack(dec)
 
     def modify(self, perm: ResourceLimitsConfigObject):
-        key = int.to_bytes(perm.table_id, 8, 'little', signed=True)
+        key = i2b(perm.table_id)
         enc = Encoder()
         enc.pack(perm)
         return self.db.modify(resource_limits_config_object_type, ResourceLimitsConfigObject.by_id, key, enc.get_bytes())
@@ -2082,7 +2082,7 @@ class ProtocolStateObjectIndex(object):
         return self.find_by_id(table_id)
 
     def find_by_id(self, table_id: I64):
-        key = int.to_bytes(table_id, 8, 'little', signed=True)
+        key = i2b(table_id)
         data = self.db.find(protocol_state_object_type, ProtocolStateObject.by_id, key)
         if not data:
             return None
@@ -2090,7 +2090,7 @@ class ProtocolStateObjectIndex(object):
         return ProtocolStateObject.unpack(dec)
 
     def modify(self, perm: ProtocolStateObject):
-        key = int.to_bytes(perm.table_id, 8, 'little', signed=True)
+        key = i2b(perm.table_id)
         enc = Encoder()
         enc.pack(perm)
         return self.db.modify(protocol_state_object_type, ProtocolStateObject.by_id, key, enc.get_bytes())
@@ -2107,7 +2107,7 @@ class AccountRamCorrectionObjectIndex(object):
         return self.find_by_id(table_id)
 
     def find_by_id(self, table_id: I64):
-        key = int.to_bytes(table_id, 8, 'little', signed=True)
+        key = i2b(table_id)
         data = self.db.find(account_ram_correction_object_type, AccountRamCorrectionObject.by_id, key)
         if not data:
             return None
@@ -2115,7 +2115,7 @@ class AccountRamCorrectionObjectIndex(object):
         return AccountRamCorrectionObject.unpack(dec)
 
     def modify(self, perm: AccountRamCorrectionObject):
-        key = int.to_bytes(perm.table_id, 8, 'little', signed=True)
+        key = i2b(perm.table_id)
         enc = Encoder()
         enc.pack(perm)
         return self.db.modify(account_ram_correction_object_type, AccountRamCorrectionObject.by_id, key, enc.get_bytes())
@@ -2132,7 +2132,7 @@ class CodeObjectIndex(object):
         return self.find_by_id(table_id)
 
     def find_by_id(self, table_id: I64):
-        key = int.to_bytes(table_id, 8, 'little', signed=True)
+        key = i2b(table_id)
         data = self.db.find(code_object_type, CodeObject.by_id, key)
         if not data:
             return None
@@ -2150,7 +2150,7 @@ class CodeObjectIndex(object):
 
     def find_by_code_hash(self, code_hash: Union[str, bytes, Checksum256], vm_type: U8, vm_version: U8):
         code_hash = self.convert_code_hash(code_hash)
-        key = code_hash + int.to_bytes(vm_type, 1, 'little') + int.to_bytes(vm_version, 1, 'little')
+        key = code_hash + u2b(vm_type, 1) + u2b(vm_version, 1)
         data = self.db.find(code_object_type, CodeObject.by_code_hash, key)
         if not data:
             return None
@@ -2172,13 +2172,13 @@ class CodeObjectIndex(object):
         return self.db.walk(database.code_object_type, CodeObject.by_code_hash, self.on_object_data, (cb, raw_data, user_data))
 
     def walk_range_by_id(self, start_id: I64, end_id: I64, cb, user_data=None, raw_data=False):
-        lower_bound = int.to_bytes(start_id, 8, 'little', signed=True)
-        upper_bound = int.to_bytes(end_id, 8, 'little', signed=True)
+        lower_bound = i2b(start_id)
+        upper_bound = i2b(end_id)
         return self.db.walk_range(database.code_object_type, CodeObject.by_id, lower_bound, upper_bound, self.on_object_data, (cb, raw_data, user_data))
 
     def convert_by_code_hash_key(self, key: Tuple[Union[str, bytes, Checksum256], U8, U8]):
         code_hash, vm_type, vm_version = key
-        return self.convert_code_hash(code_hash) + int.to_bytes(vm_type, 1, 'little') + int.to_bytes(vm_version, 1, 'little')
+        return self.convert_code_hash(code_hash) + u2b(vm_type) + u2b(vm_version, 1)
 
     def walk_range_by_code_hash(self, lower_bound: Tuple[Union[str, bytes, Checksum256], U8, U8], upper_bound: Tuple[Union[str, bytes, Checksum256], U8, U8], cb, user_data=None, raw_data=False):
         lower_bound = self.convert_by_code_hash_key(lower_bound)
@@ -2186,7 +2186,7 @@ class CodeObjectIndex(object):
         return self.db.walk_range(database.code_object_type, CodeObject.by_code_hash, lower_bound, upper_bound, self.on_object_data, (cb, raw_data, user_data))
 
     def lower_bound_by_id(self, table_id: I64):
-        key = int.to_bytes(table_id, 8, 'little', signed=True)
+        key = i2b(table_id)
         data = self.db.lower_bound(code_object_type, CodeObject.by_id, key)
         if not data:
             return None
@@ -2202,7 +2202,7 @@ class CodeObjectIndex(object):
         return CodeObject.unpack(dec)
 
     def upper_bound_by_id(self, table_id: I64):
-        key = int.to_bytes(table_id, 8, 'little', signed=True)
+        key = i2b(table_id)
         data = self.db.upper_bound(code_object_type, CodeObject.by_id, key)
         if not data:
             return None
@@ -2218,7 +2218,7 @@ class CodeObjectIndex(object):
         return CodeObject.unpack(dec)
 
     def modify(self, perm: CodeObject):
-        key = int.to_bytes(perm.table_id, 8, 'little', signed=True)
+        key = i2b(perm.table_id)
         enc = Encoder()
         enc.pack(perm)
         return self.db.modify(code_object_type, CodeObject.by_id, key, enc.get_bytes())
@@ -2235,7 +2235,7 @@ class DatabaseHeaderObjectIndex(object):
         return self.find_by_id(table_id)
 
     def find_by_id(self, table_id=0):
-        key = int.to_bytes(table_id, 8, 'little', signed=True)
+        key = i2b(table_id)
         data = self.db.find(database_header_object_type, DatabaseHeaderObject.by_id, key)
         if not data:
             return None
@@ -2243,7 +2243,7 @@ class DatabaseHeaderObjectIndex(object):
         return DatabaseHeaderObject.unpack(dec)
 
     def modify(self, perm: DatabaseHeaderObject):
-        key = int.to_bytes(0, 8, 'little', signed=True)
+        key = u2b(0)
         enc = Encoder()
         enc.pack(perm)
         return self.db.modify(database_header_object_type, DatabaseHeaderObject.by_id, key, enc.get_bytes())
