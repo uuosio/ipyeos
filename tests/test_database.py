@@ -1055,7 +1055,11 @@ def test_find_all_table_in_contract(tester: ChainTester):
 
     args = {
         'key': 1,
-        'hash': '0000000000000000000000000000000100000000000000000000000000000000'
+        'secondary1': 11,
+        'secondary2': 22,
+        'secondary3': (b'\x21' + b'\x00' * 31).hex(),
+        'secondary4': "44.0",
+        'secondary5': "0x" + '05'*16
     }
     r = tester.push_action('hello', 'teststore', args, {'hello': 'active'})
 
@@ -1391,8 +1395,8 @@ def test_generated_transaction_object(tester: ChainTester):
 
     idx = GeneratedTransactionObjectIndex(tester.db)
     obj = idx.find_by_id(0)
-    assert ob == idx.find_by_trx_id(obj.trx_id)
-    assert obj == idx.find_by_expiration(obj.expiration)
+    assert obj == idx.find_by_trx_id(obj.trx_id)
+    assert obj == idx.find_by_expiration(obj.expiration, obj.table_id)
     assert obj == idx.find_by_delay(obj.delay_until, obj.table_id)
     assert obj == idx.find_by_sender_id(obj.sender, obj.sender_id)
     
@@ -1442,7 +1446,7 @@ def test_generated_transaction_object(tester: ChainTester):
     logger.info(obj2)
     assert obj == obj2
 
-    for i in range(5):
+    for i in range(20):
         tester.produce_block()
     assert not idx.find_by_id(0)
 
