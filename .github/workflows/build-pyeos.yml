@@ -2,7 +2,7 @@ name: build ipyeos
 
 on:
   push:
-    branches: [ debug ]
+    branches: [ main ]
     tags:
       - "v*.*.*"
   # pull_request:
@@ -73,6 +73,7 @@ jobs:
           python3.10 -m pip install ./dist/ipyeos-${{ env.IPYEOS_VERSION }}-cp310-cp310-macosx_10_15_x86_64.whl
           eosdebugger &
           python3.10 -m ipyeos -m pytest -s -x tests/test.py
+          python3.10 -m ipyeos -m pytest -s -x tests/test_database.py
       - name: release-ipyeos
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')

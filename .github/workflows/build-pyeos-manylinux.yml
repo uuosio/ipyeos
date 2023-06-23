@@ -2,7 +2,7 @@ name: build ipyeos manylinux
 
 on:
   push:
-    branches: [ debug ]
+    branches: [ main ]
     tags:
       - "v*.*.*"
   # pull_request:
@@ -80,6 +80,12 @@ jobs:
           PYTHON_SHARED_LIB_PATH=${{ env.pythonLocation }}/lib/libpython3.10.so eosdebugger &
           PYTHON_SHARED_LIB_PATH=${{ env.pythonLocation }}/lib/libpython3.10.so python3.10 -m ipyeos -m pytest -s -x tests/test.py
           PYTHON_SHARED_LIB_PATH=${{ env.pythonLocation }}/lib/libpython3.11.so python3.11 -m ipyeos -m pytest -s -x tests/test.py
+
+          PYTHON_SHARED_LIB_PATH=${{ env.pythonLocation }}/lib/libpython3.8.so python3.8 -m ipyeos -m pytest -s -x tests/test_database.py
+          PYTHON_SHARED_LIB_PATH=${{ env.pythonLocation }}/lib/libpython3.9.so python3.9 -m ipyeos -m pytest -s -x tests/test_database.py
+          PYTHON_SHARED_LIB_PATH=${{ env.pythonLocation }}/lib/libpython3.10.so python3.10 -m ipyeos -m pytest -s -x tests/test_database.py
+          PYTHON_SHARED_LIB_PATH=${{ env.pythonLocation }}/lib/libpython3.11.so python3.11 -m ipyeos -m pytest -s -x tests/test_database.py
+
       - name: release-pyeos
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
