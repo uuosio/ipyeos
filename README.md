@@ -32,7 +32,10 @@ If you have not installed the ipyeos image in Docker, then the ipyeos image will
 
 On macOS, the recommended software for installing and running Docker is [OrbStack](https://orbstack.dev/download). For other platforms, you can use [Docker Desktop](https://www.docker.com/products/docker-desktop).
 
-# Usage
+## Test Examples
+
+
+### Example 1:
 
 ```python
 #test.py
@@ -60,6 +63,93 @@ Test:
 ipyeos -m pytest -x -s tests/test.py
 ```
 
+### Restore from snapshot Example
+
+```python
+def test_snapshot():
+    # data_name = './data'
+    # snapshot_dir = './snapshot-2023-06-18-01-eos-v6-0315729695.bin'
+    # state_size = 32*1024*1024*1024
+    if os.path.exists('./data/ddd'):
+        shutil.rmtree('./data/ddd')
+    state_size = 10*1024*1024
+    data_name = './data'
+    snapshot_dir = './data/snapshot-0000001ba25b3b5af4ba6cacecb68ef4238a50bb7134e56fe985b4355fbf7488.bin'
+
+    t = ChainTester(True, data_dir=os.path.join(data_name, 'ddd'), config_dir=os.path.join(data_name, 'cd'), state_size=state_size, snapshot_dir=snapshot_dir)
+```
+
+### Accessing Database Object Example
+
+```python
+def test_database_object():
+    # data_name = './data'
+    # snapshot_dir = './snapshot-2023-06-18-01-eos-v6-0315729695.bin'
+    # state_size = 32*1024*1024*1024
+    if os.path.exists('./data/ddd'):
+        shutil.rmtree('./data/ddd')
+    state_size = 10*1024*1024
+    data_name = './data'
+    snapshot_dir = './data/snapshot-0000001ba25b3b5af4ba6cacecb68ef4238a50bb7134e56fe985b4355fbf7488.bin'
+
+    # {'private': '5K3x5DPEbocfZSG8XD3RiyJAfPFH5Bd9ED15wtdEMbqzXCLPbma',
+    #  'public': 'EOS5K93aPtTdov2zWDqYxVcMQ4GBT1hyEpED8tjzPuLsf31tPySNY'}
+
+    # must call set_debug_producer_key and import_producer_key before create ChainTester
+    eos.set_debug_producer_key('EOS5K93aPtTdov2zWDqYxVcMQ4GBT1hyEpED8tjzPuLsf31tPySNY')
+    chaintester.import_producer_key('5K3x5DPEbocfZSG8XD3RiyJAfPFH5Bd9ED15wtdEMbqzXCLPbma')
+
+    t = ChainTester(True, data_dir=os.path.join(data_name, 'ddd'), config_dir=os.path.join(data_name, 'cd'), state_size=state_size, snapshot_dir=snapshot_dir)
+    logger.info("+++++producer keys: %s", t.chain.get_producer_public_keys())
+    t.produce_block()
+    logger.info("+++++++%s", t.api.get_info())
+
+    idx = PermissionObjectIndex(t.db)
+    perm = idx.find_by_owner('eosio.token', 'active')
+    print(perm)
+
+    # Private key: 5JBW9jddvqHY7inGEK2qWbGLYKeqm32NDYL3fLdYgMjnWxRjXLF
+    # Public key: EOS6hM1U89jbHWyX8ArHttFzoGe21y7ehXvtN5q7GbDxYEa9NFXH2
+    t.import_key('5JBW9jddvqHY7inGEK2qWbGLYKeqm32NDYL3fLdYgMjnWxRjXLF')
+    keys = [KeyWeight(PublicKey.from_base58('EOS6hM1U89jbHWyX8ArHttFzoGe21y7ehXvtN5q7GbDxYEa9NFXH2'), 1)]
+    perm.auth = Authority(1, keys, [], [])
+
+    ret = idx.modify(perm)
+    print('modify_by_id return:', ret)
+
+    idx = PermissionObjectIndex(t.db)
+    perm = idx.find_by_owner('eosio.token', 'active')
+    print(perm)
+```
+
+### Push Block Example:
+
+```python
+def test_push_block():
+    if os.path.exists('./data/ddd'):
+        shutil.rmtree('./data/ddd')
+
+    state_size = 10*1024*1024
+    data_name = './data'
+
+    snapshot_dir = './data/push_block/snapshot-0000003b83662343c208e965654f4d906ed7fad0372e13c246981cd076d379bb.bin'
+    t = ChainTester(True, data_dir=os.path.join(data_name, 'ddd'), config_dir=os.path.join(data_name, 'cd'), state_size=state_size, snapshot_dir=snapshot_dir)
+    t.free()
+
+    snapshot_dir = ''
+    t = ChainTester(True, data_dir=os.path.join(data_name, 'ddd'), config_dir=os.path.join(data_name, 'cd'), state_size=state_size, snapshot_dir=snapshot_dir)
+    t.chain.abort_block()
+
+    info = t.api.get_info()
+    head_block_num = info['head_block_num']
+    log = BlockLog('./data/push_block/blocks')
+    logger.info("%s %s", head_block_num, log.head_block_num())
+    num_count = log.head_block_num() - head_block_num
+
+    for block_num in range(head_block_num+1, head_block_num+num_count+1):
+        t.chain.push_block(log, block_num)
+
+```
 ## Building
 
 To build this project, please follow the steps below:
