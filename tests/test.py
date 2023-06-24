@@ -199,21 +199,63 @@ def test_push_block():
 
     info = t.api.get_info()
     head_block_num = info['head_block_num']
-    log = BlockLog('./data/push_block/blocks')
-    logger.info("%s %s", head_block_num, log.head_block_num())
-    num_count = log.head_block_num() - head_block_num
+    blog = BlockLog('./data/push_block/blocks')
+    logger.info("%s %s", head_block_num, blog.head_block_num())
+    num_count = blog.head_block_num() - head_block_num
 
     for block_num in range(head_block_num+1, head_block_num+num_count+1):
-        t.chain.push_block(log, block_num)
+        t.chain.push_block(blog, block_num)
 
 
-    block = log.read_block_by_num(log.head_block_num())
+    block = blog.read_block_by_num(blog.head_block_num())
     logger.info("++++block: %s", block)
 
-    block_header = log.read_block_header_by_num(log.head_block_num())
+    block_header = blog.read_block_header_by_num(blog.head_block_num())
     logger.info("++++block_header: %s", block_header)
 
-    block_id = log.read_block_id_by_num(log.head_block_num())
+    block_id = blog.read_block_id_by_num(blog.head_block_num())
+    logger.info("++++block_id: %s", block_id)
+    
+
+    info = t.api.get_info()
+    logger.info("+++++++%s %s", head_block_num, info['head_block_num'])
+    assert head_block_num + num_count == info['head_block_num']
+
+
+def test_push_raw_block():
+    if os.path.exists('./data/ddd'):
+        shutil.rmtree('./data/ddd')
+
+    state_size = 10*1024*1024
+    data_name = './data'
+
+    snapshot_dir = './data/push_block/snapshot-0000003b83662343c208e965654f4d906ed7fad0372e13c246981cd076d379bb.bin'
+    t = ChainTester(True, data_dir=os.path.join(data_name, 'ddd'), config_dir=os.path.join(data_name, 'cd'), state_size=state_size, snapshot_dir=snapshot_dir)
+    t.free()
+
+    snapshot_dir = ''
+    t = ChainTester(True, data_dir=os.path.join(data_name, 'ddd'), config_dir=os.path.join(data_name, 'cd'), state_size=state_size, snapshot_dir=snapshot_dir)
+    t.chain.abort_block()
+
+    info = t.api.get_info()
+    head_block_num = info['head_block_num']
+    blog = BlockLog('./data/push_block/blocks')
+    logger.info("%s %s", head_block_num, blog.head_block_num())
+    num_count = blog.head_block_num() - head_block_num
+
+    for block_num in range(head_block_num+1, head_block_num+num_count+1):
+        block = blog.read_block_by_num(block_num)
+        raw_block = eos.pack_block(block)
+        t.chain.push_raw_block(raw_block)
+
+
+    block = blog.read_block_by_num(blog.head_block_num())
+    logger.info("++++block: %s", block)
+
+    block_header = blog.read_block_header_by_num(blog.head_block_num())
+    logger.info("++++block_header: %s", block_header)
+
+    block_id = blog.read_block_id_by_num(blog.head_block_num())
     logger.info("++++block_id: %s", block_id)
     
 

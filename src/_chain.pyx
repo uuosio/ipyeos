@@ -6,6 +6,7 @@ from libcpp.vector cimport vector
 from libcpp.map cimport map
 from libcpp cimport bool
 from libc.stdlib cimport malloc
+from libc.string cimport memcpy
 from typing import Union
 
 cdef extern from * :
@@ -22,6 +23,7 @@ cdef extern from "<Python.h>":
 
     object PyBytes_FromStringAndSize(const char* str, int size)
     int _PyLong_AsByteArray(PyLongObject* v, unsigned char* bytes, size_t n, int little_endian, int is_signed)
+    int PyBytes_AsStringAndSize(object obj, char **buffer, Py_ssize_t *length)
 
 cdef extern from "_ipyeos.hpp":
     chain_proxy *chain(uint64_t ptr)
@@ -111,6 +113,7 @@ cdef extern from "_ipyeos.hpp":
         void gen_transaction(bool json, string& _actions, string& expiration, string& reference_block_id, string& _chain_id, bool compress, string& _private_keys, vector[char]& result)
         string push_transaction(string& _packed_trx, string& deadline, uint32_t billed_cpu_time_us, bool explicit_cpu_bill, uint32_t subjective_cpu_bill_us)
         bool push_block(void *block_log_ptr, uint32_t block_num)
+        bool push_raw_block(const vector[char]& raw_block)
 
         string get_scheduled_transactions()
         string get_scheduled_transaction(__uint128_t sender_id, string& sender)
@@ -543,6 +546,12 @@ def push_transaction(uint64_t ptr, string& _packed_trx, string& deadline, uint32
 
 def push_block(uint64_t ptr, uint64_t block_log_ptr, uint32_t block_num) -> bool:
     return chain(ptr).push_block(<void *>block_log_ptr, block_num)
+
+def push_raw_block(uint64_t ptr, raw_block: bytes):
+    cdef vector[char] _raw_block
+    _raw_block.resize(len(raw_block))
+    memcpy(_raw_block.data(), <const char *>raw_block, len(raw_block))
+    return chain(ptr).push_raw_block(_raw_block)
 
 def get_scheduled_transactions(uint64_t ptr):
     return chain(ptr).get_scheduled_transactions()
