@@ -9,7 +9,7 @@ from ipyeos.chaintester import ChainTester
 
 from ipyeos.types import PublicKey
 from ipyeos.database_objects import KeyWeight, Authority
-from ipyeos.database import PermissionObjectIndex
+from ipyeos.database import PermissionObjectIndex, GlobalPropertyObjectIndex
 from ipyeos.block_log import BlockLog
 
 chaintester.chain_config['contracts_console'] = True
@@ -145,6 +145,15 @@ def test_custom_2dir():
     chaintester.import_producer_key('5K3x5DPEbocfZSG8XD3RiyJAfPFH5Bd9ED15wtdEMbqzXCLPbma')
 
     t = ChainTester(True, data_dir=os.path.join(data_name, 'ddd'), config_dir=os.path.join(data_name, 'cd'), state_size=state_size, snapshot_dir=snapshot_dir)
+
+    idx = GlobalPropertyObjectIndex(t.db)
+    obj = idx.get()
+    if obj.proposed_schedule_block_num:
+        # reset proposed schedule producers
+        obj.proposed_schedule.producers = []
+        obj.proposed_schedule_block_num = None
+        idx.set(obj)
+
     logger.info("+++++producer keys: %s", t.chain.get_producer_public_keys())
     t.produce_block()
     logger.info("+++++++%s", t.api.get_info())
