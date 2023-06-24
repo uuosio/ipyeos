@@ -1339,6 +1339,12 @@ class GlobalPropertyObjectIndex(object):
     def __init__(self, db: Database):
         self.db = db
 
+    def get(self):
+        return self.find_by_id(0)
+
+    def set(self, perm: GlobalPropertyObject):
+        return self.modify(perm)
+
     def find(self):
         return self.find_by_id(0)
 
@@ -1363,6 +1369,12 @@ class GlobalPropertyObjectIndex(object):
 class DynamicGlobalPropertyObjectIndex(object):
     def __init__(self, db: Database):
         self.db = db
+
+    def get(self):
+        return self.find_by_id(0)
+
+    def set(self, perm: DynamicGlobalPropertyObject):
+        return self.modify(perm)
 
     def find(self):
         return self.find_by_id(0)
@@ -2028,6 +2040,12 @@ class ResourceLimitsStateObjectIndex(object):
     def __init__(self, db: Database):
         self.db = db
 
+    def get(self):
+        return self.find_by_id(0)
+
+    def set(self, perm: ResourceLimitsStateObject):
+        return self.modify(perm)
+
     def find(self, table_id: I64):
         return self.find_by_id(table_id)
 
@@ -2053,6 +2071,12 @@ class ResourceLimitsConfigObjectIndex(object):
     def __init__(self, db: Database):
         self.db = db
 
+    def get(self):
+        return self.find_by_id(0)
+
+    def set(self, perm: ResourceLimitsConfigObject):
+        return self.modify(perm)
+
     def find(self, table_id: I64):
         return self.find_by_id(table_id)
 
@@ -2077,6 +2101,12 @@ class ResourceLimitsConfigObjectIndex(object):
 class ProtocolStateObjectIndex(object):
     def __init__(self, db: Database):
         self.db = db
+
+    def get(self):
+        return self.find_by_id(0)
+
+    def set(self, perm: ProtocolStateObject):
+        return self.modify(perm)
 
     def find(self, table_id: I64):
         return self.find_by_id(table_id)
@@ -2230,6 +2260,12 @@ class CodeObjectIndex(object):
 class DatabaseHeaderObjectIndex(object):
     def __init__(self, db: Database):
         self.db = db
+
+    def get(self):
+        return self.find_by_id(0)
+
+    def set(self, perm: DatabaseHeaderObject):
+        return self.modify(perm)
 
     def find(self, table_id=0):
         return self.find_by_id(table_id)
