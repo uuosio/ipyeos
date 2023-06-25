@@ -4,7 +4,6 @@ from typing import Union
 from enum import Enum
 
 from . import _eos
-from .types import Name
 
 
 class NativeType:
@@ -194,3 +193,9 @@ def set_debug_producer_key(pub_key: str):
 
 def get_debug_producer_key() -> str:
     return _eos.get_debug_producer_key()
+
+def base58_to_bytes(s: str):
+    return _eos.base58_to_bytes(s)
+
+def bytes_to_base58(data: bytes) -> str:
+    return _eos.bytes_to_base58(data)

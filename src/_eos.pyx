@@ -8,6 +8,7 @@ from libcpp cimport bool
 from libc.stdlib cimport malloc
 from libc.stdlib cimport free
 from cpython.bytes cimport PyBytes_AsStringAndSize, PyBytes_FromStringAndSize
+from typing import Union
 
 cdef extern from * :
     ctypedef long long int64_t
@@ -72,6 +73,9 @@ cdef extern from "_ipyeos.hpp":
 
         void set_debug_producer_key(string &pub_key)
         string get_debug_producer_key()
+
+        bool base58_to_bytes(const string& s, vector[char]& out)
+        bool bytes_to_base58(const char* data, size_t data_size, string& out)
 
 
     ipyeos_proxy *get_ipyeos_proxy() nogil
@@ -193,3 +197,19 @@ def set_debug_producer_key(string &pub_key):
 
 def get_debug_producer_key() -> str:
     return get_ipyeos_proxy().get_debug_producer_key()
+
+def base58_to_bytes(const string& s):
+    cdef vector[char] out
+    ret = get_ipyeos_proxy().base58_to_bytes(s, out)
+    if ret:
+        return PyBytes_FromStringAndSize(out.data(), out.size())
+    else:
+        return None
+
+def bytes_to_base58(data: bytes) -> str:
+    cdef string out
+    ret = get_ipyeos_proxy().bytes_to_base58(<const char *>data, len(data), out)
+    if ret:
+        return out
+    else:
+        return None
