@@ -122,15 +122,18 @@ cdef extern from "_ipyeos.hpp":
         string get_native_contract(const string& contract)
         bool set_native_contract(const string& contract, const string& native_contract_lib)
 
+        # void set_debug_producer_key(string &pub_key)
+        string get_debug_producer_key()
+
     ctypedef struct ipyeos_proxy:
-        chain_proxy* chain_new(string& config, string& _genesis, string& chain_id, string& protocol_features_dir, string& snapshot_dir)
+        chain_proxy* chain_new(string& config, string& _genesis, string& chain_id, string& protocol_features_dir, string& snapshot_dir, string& debug_producer_key)
         void chain_free(chain_proxy* api)
 
     ipyeos_proxy *get_ipyeos_proxy()
 
 
-def chain_new(string& config, string& _genesis, string& chain_id, string& protocol_features_dir, string& snapshot_dir):
-    return <uint64_t>get_ipyeos_proxy().chain_new(config, _genesis, chain_id, protocol_features_dir, snapshot_dir)
+def chain_new(string& config, string& _genesis, string& chain_id, string& protocol_features_dir, string& snapshot_dir, string& debug_producer_key):
+    return <uint64_t>get_ipyeos_proxy().chain_new(config, _genesis, chain_id, protocol_features_dir, snapshot_dir, debug_producer_key)
 
 def chain_free(uint64_t ptr):
     get_ipyeos_proxy().chain_free(<chain_proxy*>ptr)
@@ -578,3 +581,9 @@ def get_native_contract(uint64_t ptr, contract: str) -> str:
 #bool set_native_contract(uint64_t contract, const string& native_contract_lib)
 def set_native_contract(uint64_t ptr, contract: str, const string& native_contract_lib) -> bool:
     return chain(ptr).set_native_contract(contract, native_contract_lib)
+
+# def set_debug_producer_key(uint64_t ptr, string &pub_key):
+#     chain(ptr).set_debug_producer_key(pub_key)
+
+def get_debug_producer_key(uint64_t ptr) -> str:
+    return chain(ptr).get_debug_producer_key()

@@ -140,11 +140,9 @@ def test_custom_2dir():
     # {'private': '5K3x5DPEbocfZSG8XD3RiyJAfPFH5Bd9ED15wtdEMbqzXCLPbma',
     #  'public': 'EOS5K93aPtTdov2zWDqYxVcMQ4GBT1hyEpED8tjzPuLsf31tPySNY'}
 
-    # must call set_debug_producer_key and import_producer_key before create ChainTester
-    eos.set_debug_producer_key('EOS5K93aPtTdov2zWDqYxVcMQ4GBT1hyEpED8tjzPuLsf31tPySNY')
     chaintester.import_producer_key('5K3x5DPEbocfZSG8XD3RiyJAfPFH5Bd9ED15wtdEMbqzXCLPbma')
-
-    t = ChainTester(True, data_dir=os.path.join(data_name, 'ddd'), config_dir=os.path.join(data_name, 'cd'), state_size=state_size, snapshot_dir=snapshot_dir)
+    debug_producer_key = 'EOS5K93aPtTdov2zWDqYxVcMQ4GBT1hyEpED8tjzPuLsf31tPySNY'
+    t = ChainTester(True, data_dir=os.path.join(data_name, 'ddd'), config_dir=os.path.join(data_name, 'cd'), state_size=state_size, snapshot_dir=snapshot_dir, debug_producer_key=debug_producer_key)
 
     idx = GlobalPropertyObjectIndex(t.db)
     obj = idx.get()
@@ -175,10 +173,8 @@ def test_custom_2dir():
     perm = idx.find_by_owner('eosio.token', 'active')
     print(perm)
 
+    t.free()
 
-def test_custom_3dir():
-    state_size = 10*1024*1024
-    data_name = './data'
     snapshot_dir = ''
 
     # {'private': '5K3x5DPEbocfZSG8XD3RiyJAfPFH5Bd9ED15wtdEMbqzXCLPbma',
@@ -189,6 +185,7 @@ def test_custom_3dir():
 
     t.produce_block()
     logger.info("+++++++%s", t.api.get_info())
+    t.free()
 
 
 def test_push_block():
@@ -229,7 +226,7 @@ def test_push_block():
     info = t.api.get_info()
     logger.info("+++++++%s %s", head_block_num, info['head_block_num'])
     assert head_block_num + num_count == info['head_block_num']
-
+    t.free()
 
 def test_push_raw_block():
     if os.path.exists('./data/ddd'):
@@ -271,3 +268,4 @@ def test_push_raw_block():
     info = t.api.get_info()
     logger.info("+++++++%s %s", head_block_num, info['head_block_num'])
     assert head_block_num + num_count == info['head_block_num']
+    t.free()

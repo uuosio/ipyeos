@@ -195,11 +195,11 @@ def read_chain_id_from_block_log(data_dir):
 
 class ChainTester(object):
 
-    def __init__(self, initialize=True, data_dir=None, config_dir=None, snapshot_dir='', state_size=10*1024*1024, log_level=log_level_debug):
+    def __init__(self, initialize=True, data_dir=None, config_dir=None, snapshot_dir='', state_size=10*1024*1024, log_level=log_level_debug, debug_producer_key=''):
         atexit.register(self.free)
         self.is_temp_data_dir = True
         self.is_temp_config_dir = True
-
+        self.debug_producer_key=debug_producer_key
         chain_config['state_size'] = state_size
         chain_config['state_guard_size'] = int(state_size * 0.005)
 
@@ -240,7 +240,7 @@ class ChainTester(object):
 
         self.chain_config = json.dumps(chain_config)
         self.genesis_test = json.dumps(genesis_test)
-        self.chain = chain.Chain(self.chain_config, self.genesis_test, self.chain_id, os.path.join(self.config_dir, "protocol_features"), snapshot_dir)
+        self.chain = chain.Chain(self.chain_config, self.genesis_test, self.chain_id, os.path.join(self.config_dir, "protocol_features"), snapshot_dir, debug_producer_key)
         self.chain.startup(init_database)
         self.api = chainapi.ChainApi(self.chain)
 
