@@ -350,6 +350,15 @@ class PermissionObjectIndex(object):
         dec = Decoder(data)
         return PermissionObject.unpack(dec)
 
+    def modify(self, perm: PermissionObject):
+        key = i2b(perm.table_id)
+        enc = Encoder()
+        enc.pack(perm)
+        return self.db.modify(permission_object_type, PermissionObject.by_id, key, enc.get_bytes())
+
+    def row_count(self):
+        return self.db.row_count(permission_object_type)
+
     def on_object_data(self, tp, data, custom_data):
         cb, raw_data, user_data = custom_data
         if raw_data:
@@ -453,12 +462,6 @@ class PermissionObjectIndex(object):
             return None
         dec = Decoder(data)
         return PermissionObject.unpack(dec)
-
-    def modify(self, perm: PermissionObject):
-        key = i2b(perm.table_id)
-        enc = Encoder()
-        enc.pack(perm)
-        return self.db.modify(permission_object_type, PermissionObject.by_id, key, enc.get_bytes())
 
 # permission_usage_object_type = 4
 class PermissionUsageObjectIndex(object):

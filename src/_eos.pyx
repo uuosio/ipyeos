@@ -7,7 +7,7 @@ from libcpp.map cimport map
 from libcpp cimport bool
 from libc.stdlib cimport malloc
 from libc.stdlib cimport free
-
+from cpython.bytes cimport PyBytes_AsStringAndSize, PyBytes_FromStringAndSize
 
 cdef extern from * :
     ctypedef long long int64_t
@@ -16,14 +16,6 @@ cdef extern from * :
     ctypedef unsigned int uint32_t
     ctypedef unsigned short uint16_t
     ctypedef unsigned char uint8_t
-    ctypedef int __uint128_t
-
-cdef extern from "<Python.h>":
-    ctypedef long long PyLongObject
-
-    object PyBytes_FromStringAndSize(const char* str, int size)
-    int PyBytes_AsStringAndSize(object obj, char **buffer, Py_ssize_t *length)
-    int _PyLong_AsByteArray(PyLongObject* v, unsigned char* bytes, size_t n, int little_endian, int is_signed)
 
 cdef extern from "_ipyeos.hpp":
     void uuosext_init()

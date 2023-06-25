@@ -5,6 +5,7 @@ from typing import Dict, List, Optional, Union
 from . import _chain, _eos, log
 from .types import U8, U16, U32, U64, I64, Name, PublicKey
 from .block_log import BlockLog
+from .types import U128
 
 logger = log.get_logger(__name__)
 
@@ -430,8 +431,8 @@ class Chain(object):
             raise Exception("unknown error")
         return True
 
-    def get_scheduled_transaction(self, sender_id: int, sender: Name) -> dict:
-        ret = _chain.get_scheduled_transaction(self.ptr, sender_id, sender)
+    def get_scheduled_transaction(self, sender_id: U128, sender: Name) -> dict:
+        ret = _chain.get_scheduled_transaction(self.ptr, sender_id.to_bytes(16, 'little'), sender)
         if ret:
             return json.loads(ret)
 

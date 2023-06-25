@@ -7,6 +7,8 @@ from libcpp.map cimport map
 from libcpp cimport bool
 from libc.stdlib cimport malloc
 from libc.string cimport memcpy
+from cpython.bytes cimport PyBytes_AsStringAndSize, PyBytes_FromStringAndSize
+
 from typing import Union
 
 cdef extern from * :
@@ -16,14 +18,6 @@ cdef extern from * :
     ctypedef int          int32_t
     ctypedef unsigned short uint16_t
     ctypedef unsigned char uint8_t
-    ctypedef int __uint128_t #hacking
-
-cdef extern from "<Python.h>":
-    ctypedef long long PyLongObject
-
-    object PyBytes_FromStringAndSize(const char* str, int size)
-    int _PyLong_AsByteArray(PyLongObject* v, unsigned char* bytes, size_t n, int little_endian, int is_signed)
-    int PyBytes_AsStringAndSize(object obj, char **buffer, Py_ssize_t *length)
 
 cdef extern from "_ipyeos.hpp":
     chain_proxy *chain(uint64_t ptr)
@@ -116,7 +110,7 @@ cdef extern from "_ipyeos.hpp":
         bool push_raw_block(const vector[char]& raw_block)
 
         string get_scheduled_transactions()
-        string get_scheduled_transaction(__uint128_t sender_id, string& sender)
+        string get_scheduled_transaction(const char *sender_id, size_t sender_id_size, string& sender)
         string push_scheduled_transaction(string& scheduled_tx_id, string& deadline, uint32_t billed_cpu_time_us)
 
         bool pack_action_args(string& name, string& action, string& _args, vector[char]& result)
@@ -556,13 +550,8 @@ def push_raw_block(uint64_t ptr, raw_block: bytes):
 def get_scheduled_transactions(uint64_t ptr):
     return chain(ptr).get_scheduled_transactions()
 
-def get_scheduled_transaction(uint64_t ptr, object _sender_id, string& sender):
-    cdef string result
-    cdef __uint128_t sender_id
-
-    sender_id = 0
-    _PyLong_AsByteArray(<PyLongObject *><void *>_sender_id, <unsigned char *>&sender_id, sizeof(__uint128_t), 1, 0);
-    return chain(ptr).get_scheduled_transaction(sender_id, sender)
+def get_scheduled_transaction(uint64_t ptr, sender_id: bytes, string& sender):
+    return chain(ptr).get_scheduled_transaction(<const char *>sender_id, len(sender_id), sender)
 
 def push_scheduled_transaction(uint64_t ptr, string& scheduled_tx_id, string& deadline, uint32_t billed_cpu_time_us):
     return chain(ptr).push_scheduled_transaction(scheduled_tx_id, deadline, billed_cpu_time_us)
