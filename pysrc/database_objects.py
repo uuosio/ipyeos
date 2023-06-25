@@ -36,10 +36,14 @@ class AccountObject(object):
     by_id = 0
     by_name = 1
     def __init__(self, table_id: I64, name: Name, creation_date: U32, abi: bytes):
-        self.table_id = table_id
+        self._table_id = table_id
         self.name = name
         self.creation_date = creation_date
         self.abi = abi
+
+    @property
+    def table_id(self):
+        return self._table_id
 
     def __repr__(self):
         return f"{{name: {self.name}, creation_date: {self.creation_date}, abi: {self.abi}}}"
@@ -83,7 +87,7 @@ class AccountMetadataObject(object):
     by_name = 1
     def __init__(self, table_id: I64, name: Name, recv_sequence: U64, auth_sequence: U64, code_sequence: U64, abi_sequence: U64, \
                 code_hash: Checksum256, last_code_update: I64, flags: U32, vm_type: U8, vm_version: U8):
-        self.table_id = table_id
+        self._table_id = table_id
         self.name = name
         self.recv_sequence = recv_sequence
         self.auth_sequence = auth_sequence
@@ -94,6 +98,10 @@ class AccountMetadataObject(object):
         self.flags = flags
         self.vm_type = vm_type
         self.vm_version = vm_version
+
+    @property
+    def table_id(self):
+        return self._table_id
 
     def __repr__(self):
         return f"{{name: {self.name}, recv_sequence: {self.recv_sequence}, \
@@ -186,13 +194,17 @@ class PermissionObject(object):
     by_name = 3
 
     def __init__(self, table_id: I64, usage_id: I64, parent: I64, owner: Name, name: Name, last_updated: I64, auth: Authority):
-        self.table_id = table_id
+        self._table_id = table_id
         self.usage_id = usage_id
         self.parent = parent
         self.owner = owner
         self.name = name
         self.last_updated = last_updated
         self.auth = auth
+
+    @property
+    def table_id(self):
+        return self._table_id
 
     def __repr__(self):
         return f"{{table_id: {self.table_id}, usage_id: {self.usage_id}, parent: {self.parent}, owner: {self.owner}, name: {self.name}, last_updated: {self.last_updated}, auth: {self.auth}}}"
@@ -254,8 +266,12 @@ class PermissionObject(object):
 class PermissionUsageObject(object):
     by_id = 0
     def __init__(self, table_id: I64, last_used: I64):
-        self.table_id = table_id
+        self._table_id = table_id
         self.last_used = last_used
+
+    @property
+    def table_id(self):
+        return self._table_id
 
     def __repr__(self):
         return f"{{last_used: {self.last_used}}}"
@@ -290,12 +306,16 @@ class PermissionLinkObject(object):
     by_action_name = 1
     by_permission_name = 2
     def __init__(self, table_id: I64, account: Name, code: Name, message_type: Name, required_permission: Name):
-        self.table_id = table_id
+        self._table_id = table_id
         self.account = account
         self.code = code
         self.message_type = message_type
         self.required_permission = required_permission
     
+    @property
+    def table_id(self):
+        return self._table_id
+
     def __repr__(self):
         return f"{{account: {self.account}, code: {self.code}, message_type: {self.message_type}, required_permission: {self.required_permission}}}"
     
@@ -342,11 +362,15 @@ class KeyValueObject(object):
     by_id = 0
     by_scope_primary = 1
     def __init__(self, table_id: I64, t_id: I64, primary_key: U64, payer: Name, value: bytes):
-        self.table_id = table_id
+        self._table_id = table_id
         self.t_id = t_id
         self.primary_key = primary_key
         self.payer = payer
         self.value = value
+
+    @property
+    def table_id(self):
+        return self._table_id
 
     def __repr__(self):
         return f"{{t_id: {self.t_id}, primary_key: {self.primary_key}, payer: {self.payer}, value: {self.value}}}"
@@ -391,11 +415,15 @@ class Index64Object(object):
     by_secondary = 2
 
     def __init__(self, table_id: I64, t_id: I64, primary_key: U64, payer: Name, secondary_key: U64):
-        self.table_id = table_id
+        self._table_id = table_id
         self.t_id = t_id
         self.primary_key = primary_key
         self.payer = payer
         self.secondary_key = secondary_key
+
+    @property
+    def table_id(self):
+        return self._table_id
 
     def __repr__(self):
         return f"{{t_id: {self.t_id}, primary_key: {self.primary_key}, payer: {self.payer}, secondary_key: {self.secondary_key}}}"
@@ -443,11 +471,15 @@ class Index128Object(object):
     by_primary = 1
     by_secondary = 2
     def __init__(self, table_id: I64, t_id: I64, primary_key: U64, payer: Name, secondary_key: U128):
-        self.table_id = table_id
+        self._table_id = table_id
         self.t_id = t_id
         self.primary_key = primary_key
         self.payer = payer
         self.secondary_key = secondary_key
+
+    @property
+    def table_id(self):
+        return self._table_id
 
     def __repr__(self):
         return f"{{t_id: {self.t_id}, primary_key: {self.primary_key}, payer: {self.payer}, secondary_key: {self.secondary_key}}}"
@@ -496,11 +528,15 @@ class Index256Object(object):
     by_primary = 1
     by_secondary = 2
     def __init__(self, table_id: I64, t_id: I64, primary_key: U64, payer: Name, secondary_key: U256):
-        self.table_id = table_id
+        self._table_id = table_id
         self.t_id = t_id
         self.primary_key = primary_key
         self.payer = payer
         self.secondary_key = secondary_key
+
+    @property
+    def table_id(self):
+        return self._table_id
 
     def __repr__(self):
         return f"{{t_id: {self.t_id}, primary_key: {self.primary_key}, payer: {self.payer}, secondary_key: {self.secondary_key}}}"
@@ -549,11 +585,15 @@ class IndexDoubleObject(object):
     by_primary = 1
     by_secondary = 2
     def __init__(self, table_id: I64, t_id: I64, primary_key: U64, payer: Name, secondary_key: float):
-        self.table_id = table_id
+        self._table_id = table_id
         self.t_id = t_id
         self.primary_key = primary_key
         self.payer = payer
         self.secondary_key = secondary_key
+
+    @property
+    def table_id(self):
+        return self._table_id
 
     def __repr__(self):
         return f"{{t_id: {self.t_id}, primary_key: {self.primary_key}, payer: {self.payer}, secondary_key: {self.secondary_key}}}"
@@ -602,11 +642,15 @@ class IndexLongDoubleObject(object):
     by_primary = 1
     by_secondary = 2
     def __init__(self, table_id: I64, t_id: I64, primary_key: U64, payer: Name, secondary_key: F128):
-        self.table_id = table_id
+        self._table_id = table_id
         self.t_id = t_id
         self.primary_key = primary_key
         self.payer = payer
         self.secondary_key = secondary_key
+
+    @property
+    def table_id(self):
+        return self._table_id
 
     def __repr__(self):
         return f"{{t_id: {self.t_id}, primary_key: {self.primary_key}, payer: {self.payer}, secondary_key: {self.secondary_key}}}"
@@ -1061,8 +1105,12 @@ class GlobalPropertyObject(object):
 class DynamicGlobalPropertyObject(object):
     by_id = 0
     def __init__(self, table_id: I64, global_action_sequence: U64):
-        self.table_id = table_id
+        self._table_id = table_id
         self.global_action_sequence = global_action_sequence
+
+    @property
+    def table_id(self):
+        return self._table_id
 
     def __repr__(self):
         return f"{{global_action_sequence: {self.global_action_sequence}}}"
@@ -1089,8 +1137,12 @@ class DynamicGlobalPropertyObject(object):
 class BlockSummaryObject(object):
     by_id = 0
     def __init__(self, table_id: I64, block_id: Checksum256):
-        self.table_id = table_id
+        self._table_id = table_id
         self.block_id = block_id
+
+    @property
+    def table_id(self):
+        return self._table_id
 
     def __repr__(self):
         return f"{{block_id: {self.block_id}}}"
@@ -1119,9 +1171,13 @@ class TransactionObject(object):
     by_trx_id = 1
     by_expiration = 2
     def __init__(self, table_id: I64, expiration: TimePointSec, trx_id: Checksum256):
-        self.table_id = table_id
+        self._table_id = table_id
         self.expiration = expiration
         self.trx_id = trx_id
+
+    @property
+    def table_id(self):
+        return self._table_id
 
     def __repr__(self):
         return f"{{expiration: {self.expiration}, trx_id: {self.trx_id}}}"
@@ -1166,7 +1222,7 @@ class GeneratedTransactionObject(object):
     by_sender_id = 4
 
     def __init__(self, table_id: I64, trx_id: Checksum256, sender: Name, sender_id: U128, payer: Name, delay_until: TimePoint, expiration: TimePoint, published: TimePoint, packed_trx: bytes):
-        self.table_id = table_id
+        self._table_id = table_id
         self.trx_id = trx_id
         self.sender = sender
         self.sender_id = sender_id
@@ -1175,6 +1231,10 @@ class GeneratedTransactionObject(object):
         self.expiration = expiration
         self.published = published
         self.packed_trx = packed_trx
+
+    @property
+    def table_id(self):
+        return self._table_id
 
     def __repr__(self):
         return f"{{trx_id: {self.trx_id}, sender: {self.sender}, sender_id: {self.sender_id}, payer: {self.payer}, delay_until: {self.delay_until}, expiration: {self.expiration}, published: {self.published}, packed_trx: {self.packed_trx}}}"
@@ -1252,12 +1312,16 @@ class TableIdObject(object):
     by_id = 0
     by_code_scope_table = 1
     def __init__(self, table_id: I64, code: Name, scope: Name, table: Name, payer: Name, count: U32):
-        self.table_id = table_id
+        self._table_id = table_id
         self.code = code
         self.scope = scope
         self.table = table
         self.payer = payer
         self.count = count
+
+    @property
+    def table_id(self):
+        return self._table_id
 
     def __repr__(self):
         return f"{{code: {self.code}, scope: {self.scope}, table: {self.table}, payer: {self.payer}, count: {self.count}}}"
@@ -1305,12 +1369,16 @@ class ResourceLimitsObject(object):
     by_id = 0
     by_owner = 1
     def __init__(self, table_id: I64, owner: Name, pending: bool, net_weight: I64, cpu_weight: I64, ram_bytes: I64):
-        self.table_id = table_id
+        self._table_id = table_id
         self.owner = owner
         self.pending = pending
         self.net_weight = net_weight
         self.cpu_weight = cpu_weight
         self.ram_bytes = ram_bytes
+
+    @property
+    def table_id(self):
+        return self._table_id
 
     def __repr__(self):
         return f"{{owner: {self.owner}, pending: {self.pending}, net_weight: {self.net_weight}, cpu_weight: {self.cpu_weight}, ram_bytes: {self.ram_bytes}}}"
@@ -1392,11 +1460,15 @@ class ResourceUsageObject(object):
     by_id = 0
     by_owner = 1
     def __init__(self, table_id: I64, owner: Name, net_usage: UsageAccumulator, cpu_usage: UsageAccumulator, ram_usage: U64):
-        self.table_id = table_id
+        self._table_id = table_id
         self.owner = owner
         self.net_usage = net_usage
         self.cpu_usage = cpu_usage
         self.ram_usage = ram_usage
+
+    @property
+    def table_id(self):
+        return self._table_id
 
     def __repr__(self):
         return f"{{owner: {self.owner}, net_usage: {self.net_usage}, cpu_usage: {self.cpu_usage}, ram_usage: {self.ram_usage}}}"
@@ -1455,7 +1527,7 @@ class ResourceLimitsStateObject(object):
                 total_ram_bytes: U64,
                 virtual_net_limit: U64,
                 virtual_cpu_limit: U64):
-        self.table_id = table_id
+        self._table_id = table_id
         self.average_block_net_usage = average_block_net_usage
         self.average_block_cpu_usage = average_block_cpu_usage
         self.pending_net_usage = pending_net_usage
@@ -1465,6 +1537,10 @@ class ResourceLimitsStateObject(object):
         self.total_ram_bytes = total_ram_bytes
         self.virtual_net_limit = virtual_net_limit
         self.virtual_cpu_limit = virtual_cpu_limit
+
+    @property
+    def table_id(self):
+        return self._table_id
 
     def __repr__(self):
         return f"{{average_block_net_usage: {self.average_block_net_usage}, average_block_cpu_usage: {self.average_block_cpu_usage}, pending_net_usage: {self.pending_net_usage}, pending_cpu_usage: {self.pending_cpu_usage}, total_net_weight: {self.total_net_weight}, total_cpu_weight: {self.total_cpu_weight}, total_ram_bytes: {self.total_ram_bytes}, virtual_net_limit: {self.virtual_net_limit}, virtual_cpu_limit: {self.virtual_cpu_limit}}}"
@@ -1597,12 +1673,16 @@ class ElasticLimitParameters(object):
 class ResourceLimitsConfigObject(object):
     by_id = 0
     def __init__(self, table_id: I64, cpu_limit_parameters: ElasticLimitParameters, net_limit_parameters: ElasticLimitParameters, account_cpu_usage_average_window: U32, account_net_usage_average_window: U32):
-        self.table_id = table_id
+        self._table_id = table_id
         self.cpu_limit_parameters = cpu_limit_parameters
         self.net_limit_parameters = net_limit_parameters
         self.account_cpu_usage_average_window = account_cpu_usage_average_window
         self.account_net_usage_average_window = account_net_usage_average_window
     
+    @property
+    def table_id(self):
+        return self._table_id
+
     def __repr__(self):
         return f"{{cpu_limit_parameters: {self.cpu_limit_parameters}, net_limit_parameters: {self.net_limit_parameters}, account_cpu_usage_average_window: {self.account_cpu_usage_average_window}, account_net_usage_average_window: {self.account_net_usage_average_window}}}"
     
@@ -1667,12 +1747,16 @@ class ActivatedProtocolFeature(object):
 class ProtocolStateObject(object):
     by_id = 0
     def __init__(self, table_id: I64, activated_protocol_features: List[ActivatedProtocolFeature], preactivated_protocol_features: List[Checksum256], whitelisted_intrinsics: List[str], num_supported_key_types: U32):
-        self.table_id = table_id
+        self._table_id = table_id
         self.activated_protocol_features = activated_protocol_features
         self.preactivated_protocol_features = preactivated_protocol_features
         self.whitelisted_intrinsics = whitelisted_intrinsics
         self.num_supported_key_types = num_supported_key_types
     
+    @property
+    def table_id(self):
+        return self._table_id
+
     def __repr__(self):
         return f"{{activated_protocol_features: {self.activated_protocol_features}, preactivated_protocol_features: {self.preactivated_protocol_features}, whitelisted_intrinsics: {self.whitelisted_intrinsics}, num_supported_key_types: {self.num_supported_key_types}}}"
     
@@ -1712,10 +1796,14 @@ class ProtocolStateObject(object):
 class AccountRamCorrectionObject(object):
     by_id = 0
     def __init__(self, table_id: I64, name: Name, ram_correction: U64):
-        self.table_id = table_id
+        self._table_id = table_id
         self.name = name
         self.ram_correction = ram_correction
-    
+
+    @property
+    def table_id(self):
+        return self._table_id
+
     def __repr__(self):
         return f"{{name: {self.name}, ram_correction: {self.ram_correction}}}"
     
@@ -1749,14 +1837,18 @@ class CodeObject(object):
     by_id = 0
     by_code_hash = 1
     def __init__(self, table_id: I64, code_hash: Checksum256, code: List[str], code_ref_count: U64, first_block_used: U32, vm_type: U8, vm_version: U8):
-        self.table_id = table_id
+        self._table_id = table_id
         self.code_hash = code_hash
         self.code = code
         self.code_ref_count = code_ref_count
         self.first_block_used = first_block_used
         self.vm_type = vm_type
         self.vm_version = vm_version
-    
+
+    @property
+    def table_id(self):
+        return self._table_id
+
     def __repr__(self):
         return f"{{code_hash: {self.code_hash}, code: {self.code}, code_ref_count: {self.code_ref_count}, first_block_used: {self.first_block_used}, vm_type: {self.vm_type}, vm_version: {self.vm_version}}}"
     
@@ -1796,9 +1888,13 @@ class CodeObject(object):
 class DatabaseHeaderObject(object):
     by_id = 0
     def __init__(self, table_id: I64, version: U32):
-        self.table_id = table_id
+        self._table_id = table_id
         self.version = version
-    
+
+    @property
+    def table_id(self):
+        return self._table_id
+
     def __repr__(self):
         return f"{{version: {self.version}}}"
     
