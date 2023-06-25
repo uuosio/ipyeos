@@ -47,8 +47,7 @@ setup(
         'pytest>=6.2.5',
         'aiohttp>=3.8.4',
         'ipython',
-        'ipykernel',
-        'base58'
+        'ipykernel'
     ],
     tests_require=[],
     include_package_data=True

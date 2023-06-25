@@ -1,4 +1,3 @@
-import base58
 import hashlib
 from typing import NewType, List, TypeVar, Generic, Optional, Union
 
