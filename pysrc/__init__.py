@@ -10,37 +10,16 @@ from . import run
 
 __version__ = "0.4.4"
 
-class CustomImporter(object):
-    def find_module(self, fullname, mpath=None):
-#        print('+++find_module', fullname)
-        if fullname in ['_chain', '_chainapi', '_vm_api', '_database', '_block_log']:
-            return self
-        return
-
-    def load_module(self, module_name):
-#        print('+++load_module', module_name)
-        mod = sys.modules.get(module_name)
-        if mod is None:
-            ipyeos_module = sys.modules.get('ipyeos._eos')
-            if not ipyeos_module:
-                return
-            ipyeos_so = ipyeos_module.__file__
-            from importlib import util
-            spec = util.spec_from_file_location(module_name, ipyeos_so)
-            mod = util.module_from_spec(spec)
-            spec.loader.exec_module(mod)
-            sys.modules[module_name] = mod
-        return mod
-
 if 'RUN_IPYEOS' in os.environ:
     from . import _eos
-    sys.meta_path.append(CustomImporter())
+    from . import modules
+    modules.load_modules()
 
-    import _chain
-    import _chainapi
-    import _vm_api
-    import _database
-    import _block_log
+    from . import _chain
+    from . import _chainapi
+    from . import _vm_api
+    from . import _database
+    from . import _block_log
 
 def run_ipyeos(custom_cmds=[]):
     return run.run_ipyeos(custom_cmds)
