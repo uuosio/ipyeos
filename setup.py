@@ -1,11 +1,12 @@
 import os
 import sys
 import platform
-from setuptools import find_packages
-if platform.system() == 'Windows':
-    from distutils.core import setup
-else:
-    from skbuild import setup
+
+from setuptools import find_packages, setup, Extension
+from Cython.Build import cythonize
+
+os.environ["CC"] = "clang"
+os.environ["CXX"] = "clang++"
 
 release_files = []
 for root, dirs, files in os.walk("pysrc/release"):
@@ -26,6 +27,39 @@ release_files.extend([
     'tests/activate_kv.wasm',
 ])
 
+dir_name = os.path.dirname(os.path.realpath(__file__))
+
+if platform.system() == 'Darwin':
+    extra_link_args=[f'-Wl,-exported_symbols_list,{dir_name}/src/symbols.list']
+else:
+    extra_link_args=[f'-Wl,--version-script,{dir_name}/src/version.script']
+
+ext_modules = [
+    Extension(
+        'ipyeos._eos',
+        sources=[
+            'src/_ipyeos.cpp',
+            'src/_vm_api_.cpp',
+            'src/_block_log.pyx',
+            'src/_chain.pyx',
+            'src/_chainapi.pyx',
+            'src/_database.pyx',
+            'src/_eos.pyx',
+            'src/_vm_api.pyx',
+        ],
+        include_dirs=[
+            'src',
+            'leap/libraries/chain_api',
+            'leap/libraries/chain/chain_api',
+            'leap/libraries/chain/vm_api'
+        ],
+        language='c++',
+        extra_compile_args=['-std=c++17'],
+        extra_link_args=extra_link_args,
+        build_dir='build'
+    )
+]
+
 setup(
     name="ipyeos",
     version="0.4.4",
@@ -34,14 +68,27 @@ setup(
     license="MIT",
     packages=[
         'ipyeos',
-        'ipyeos.interfaces'
+        'ipyeos.interfaces',
+        'ipyeos.tests',
+        'ipyeos.tests.contracts',
+        'ipyeos.release.bin',
+        'ipyeos.release.lib',
+        'ipyeos.tests.contracts.micropython',
     ],
     package_dir={
         'ipyeos': 'pysrc',
-        'ipyeos.interfaces': 'pysrc/interfaces'
+        'ipyeos.interfaces': 'pysrc/interfaces',
+        'ipyeos.tests': 'pysrc/tests',
+        'ipyeos.tests.contracts': 'pysrc/tests/contracts',
+        'ipyeos.release.bin': 'pysrc/release/bin',
+        'ipyeos.release.lib': 'pysrc/release/lib',
+        'ipyeos.tests.contracts.micropython': 'pysrc/tests/contracts/micropython',
     },
     package_data={'ipyeos': release_files},
-
+    ext_modules=cythonize(
+        ext_modules,
+        compiler_directives={'language_level': 3, },
+    ),
     install_requires=[
         'thrift>=0.16.0',
         'pytest>=6.2.5',
