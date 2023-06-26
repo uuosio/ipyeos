@@ -2,7 +2,7 @@ import struct
 from typing import List, Type, Union, Any
 
 from . import eos
-from .types import U8, U16, U32, U64, I64, U128, U256, Name, Checksum256, PublicKey
+from .types import U8, I16, U16, U32, U64, I64, U128, U256, Name, Checksum256, PublicKey
 
 def pack_length(val: int):
     result = bytearray()
@@ -52,6 +52,11 @@ class Encoder(object):
         raw = int.to_bytes(n, 1, 'little')
         self.write_bytes(raw)
         return 1
+
+    def pack_i16(self, n: I16):
+        raw = int.to_bytes(n, 2, 'little', signed=True)
+        self.write_bytes(raw)
+        return 2
 
     def pack_u16(self, n: U16) -> int:
         raw = int.to_bytes(n, 2, 'little')
@@ -192,6 +197,10 @@ class Decoder(object):
 
     def unpack_u8(self):
         ret = self.read_bytes(1)[0]
+        return ret
+
+    def unpack_i16(self):
+        ret = int.from_bytes(self.read_bytes(2), 'little', signed=True)
         return ret
 
     def unpack_u16(self):

@@ -33,9 +33,7 @@ commands:
     return web.Response(text=commands)
 
 def print_help():
-    argv = sys.argv[1:]
-    argv[0] = 'ipyeos'
-    return eos.init(argv)
+    return eos.init(['ipyeos', '--help'])
 
 def _run_eos():
     argv = sys.argv[1:]
@@ -135,8 +133,9 @@ async def main():
 
 def run():
     if sys.argv[1] == 'eosnode':
-        if sys.argv[2] in ['-h', '--help']:
+        if len(sys.argv) <= 2 or sys.argv[2] in ['-h', '--help']:
             return print_help()
+
         def start():
             asyncio.run(main())
             thread_queue.put(None)

@@ -1,13 +1,15 @@
-import base58
 import hashlib
 from typing import NewType
-# from . import eos
+from . import eos
 
+I8 = NewType('I8', int)
 U8 = NewType('U8', int)
+I16 = NewType('I16', int)
 U16 = NewType('U16', int)
+I32 = NewType('I32', int)
 U32 = NewType('U32', int)
-U64 = NewType('U64', int)
 I64 = NewType('I64', int)
+U64 = NewType('U64', int)
 F64 = NewType('F64', float)
 U128 = NewType('U128', int)
 U256 = NewType('U256', int)
@@ -101,20 +103,25 @@ class PublicKey(object):
         self.raw = raw
 
     def __repr__(self):
-        return self.to_string()
+        return self.to_base58()
 
     def __eq__(self, other) -> bool:
         return self.raw == other.raw
 
-    def to_string(self):
+    def to_base58(self):
         hash = hashlib.new('ripemd160')
         hash.update(self.raw[1:])
-        ret = b'EOS' + base58.b58encode(self.raw[1:] + hash.digest()[:4])
-        return ret.decode()
+        ret = 'EOS' + eos.bytes_to_base58(self.raw[1:] + hash.digest()[:4])
+        return ret
 
     @classmethod
     def from_base58(cls, pub: str):
-        return PublicKey(b'\x00' + base58.b58decode(pub[3:])[:-4])
+        assert pub.startswith('EOS')
+        pub = eos.base58_to_bytes(pub[3:])
+        assert len(pub) == 37
+        digest = hashlib.new('ripemd160', pub[:-4]).digest()
+        assert pub[-4:] == digest[:4]
+        return PublicKey(b'\x00' + pub[:-4])
 
     def pack(self, enc):
         enc.write_bytes(self.raw)
@@ -124,3 +131,59 @@ class PublicKey(object):
     def unpack(cls, dec):
         raw =  dec.read_bytes(34)
         return PublicKey(raw)
+
+class Signature(object):
+    def __init__(self, raw: bytes):
+        assert len(raw) == 66, f'Signature should be 66 bytes long, got {len(raw)}'
+        self.raw = raw
+    
+    def pack(self, enc):
+        enc.write_bytes(self.raw)
+        return 66
+    
+    @classmethod
+    def unpack(cls, dec):
+        raw = dec.read_bytes(66)
+        return Signature(raw)
+
+    def __repr__(self):
+        return self.to_base58()
+    
+    def __eq__(self, other):
+        return self.raw == other.raw
+    
+    def pack(self, enc):
+        enc.write_bytes(self.raw)
+        return 66
+    
+    @classmethod
+    def unpack(cls, dec):
+        raw = dec.read_bytes(66)
+        return Signature(raw)
+
+    def to_base58(self):
+        #convert to base58 encoded string
+        assert self.raw[0] == 0
+        hash = hashlib.new('ripemd160')
+        hash.update(self.raw[1:])
+        hash.update(b'K1')
+        digest = hash.digest()
+        ret = 'SIG_K1_' + eos.bytes_to_base58(self.raw[1:] + digest[:4])
+        return ret
+ 
+    @classmethod
+    def from_base58(cls, sig: str):
+        if not sig.startswith('SIG_K1_'):
+            raise Exception('Signature should start with SIG_K1_')
+        sig = sig[7:]
+        sig = eos.base58_to_bytes(sig)
+        assert len(sig) == 65+4
+        hash = hashlib.new('ripemd160')
+        hash.update(sig[:65])
+        hash.update(b'K1')
+        digest = hash.digest()
+
+        if digest[:4] != sig[65:]:
+            raise Exception('Checksum mismatch')
+
+        return Signature(b'\x00' + sig[:65])

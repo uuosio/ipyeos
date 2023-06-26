@@ -1,3 +1,11 @@
+# generated source code by cython
+src/_block_log.cpp
+src/_chain.cpp
+src/_chainapi.cpp
+src/_database.cpp
+src/_eos.cpp
+src/_vm_api.cpp
+
 .vscode
 cp.sh
 pysrc/release
