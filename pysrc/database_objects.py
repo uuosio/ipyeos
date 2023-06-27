@@ -1818,7 +1818,7 @@ class AccountRamCorrectionObject(object):
     @classmethod
     def unpack(cls, dec: Decoder):
         table_id = dec.unpack_i64()
-        name = dec.unpack_name(dec)
+        name = dec.unpack_name()
         ram_correction = dec.unpack_u64()
         return AccountRamCorrectionObject(table_id, name, ram_correction)
 

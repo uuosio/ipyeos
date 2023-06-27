@@ -45,7 +45,7 @@ def update_auth(tester, account):
     tester.push_action('eosio', 'updateauth', a, {account:'active'})
 
 def init_tester(initialize=True):
-    tester = chaintester.ChainTester(initialize)
+    tester = chaintester.ChainTester(initialize, log_level=5)
     # update_auth(chain, 'hello')
     return tester
 
@@ -1104,16 +1104,16 @@ def test_dynamic_global_property_object(tester: ChainTester):
 #         id_type    id;
 #         uint64_t   global_action_sequence = 0;
     def on_dynamic_global_property_object(tp, data, custom_data):
-        print(data)
+        # print(data)
         dec = Decoder(data)
         table_id = dec.unpack_u64()
         global_action_sequence = dec.unpack_u64()
-        print(table_id, global_action_sequence)
+        # print(table_id, global_action_sequence)
         return 1
 
     tester.db.walk(database.dynamic_global_property_object_type, 0, on_dynamic_global_property_object)
     data = tester.db.find(database.dynamic_global_property_object_type, 0, int.to_bytes(0, 8, 'little'))
-    print(data)
+    # print(data)
 
     idx = DynamicGlobalPropertyObjectIndex(tester.db)
     obj = idx.find_by_id(0)
@@ -1984,7 +1984,7 @@ def test_protocol_state_object(tester: ChainTester):
 
     idx = ProtocolStateObjectIndex(tester.db)
     obj = idx.find_by_id(0)
-    logger.info(obj)
+    # logger.info(obj)
     obj.num_supported_key_types = 123
     # obj.whitelisted_intrinsics.append('zmyintrinsics')
     idx.modify(obj)
@@ -2012,10 +2012,10 @@ def test_account_ram_correction_object(tester: ChainTester):
         table_id = dec.unpack_i64()
         name = dec.unpack_name()
         ram_correction = dec.unpack_u64()
-        print(table_id, name, ram_correction)
+        # print(table_id, name, ram_correction)
 
     data = tester.db.find(database.account_ram_correction_object_type, 0, 0)
-    print(data)
+    # print(data)
     if data:
         parse_account_ram_correction_object(data)
 
@@ -2051,7 +2051,7 @@ def test_code_object(tester: ChainTester):
         first_block_used = dec.unpack_u32()
         vm_type = dec.unpack_u8()
         vm_version = dec.unpack_u8()
-        print(code_hash, code_ref_count, first_block_used)
+        # print(code_hash, code_ref_count, first_block_used)
 
     def on_data(tp, data, custom_data):
         parse_code_object(data)
@@ -2178,10 +2178,10 @@ def test_database_header_object(tester: ChainTester):
         dec = Decoder(data)
         table_id = dec.unpack_i64()
         version = dec.unpack_u32()
-        print(table_id, version)
+        # print(table_id, version)
 
     data = tester.db.find(database.database_header_object_type, 0, 0)
-    print(data)
+    # print(data)
     if data:
         parse_database_header_object(data)
 
@@ -2407,3 +2407,111 @@ def test_modify_permission_object(tester: ChainTester):
 
     perm = idx.find_by_id(perm.table_id)
     print(perm)
+
+@chain_test(False)
+def test_object_creation(tester: ChainTester):
+    # account_object_type = 1
+    dec = Decoder(b'\x00'*2048)
+    idx = AccountObjectIndex(tester.db)
+    assert idx.create(AccountObject.unpack(dec))
+    
+    # account_metadata_object_type = 2
+    dec.reset_pos()
+    idx = AccountMetadataObjectIndex(tester.db)
+    assert idx.create(AccountMetadataObject.unpack(dec))
+    # permission_object_type = 3
+    perm = PermissionObject(0, 0, 0, "hello", "active", 0, Authority(1, [], [], []))
+    idx = PermissionObjectIndex(tester.db)
+    assert idx.create(perm)
+
+    # permission_usage_object_type = 4
+    dec.reset_pos()
+    idx = PermissionUsageObjectIndex(tester.db)
+    assert idx.create(PermissionUsageObject.unpack(dec))
+    
+    # permission_link_object_type = 5
+    dec.reset_pos()
+    idx = PermissionLinkObjectIndex(tester.db)
+    assert idx.create(PermissionLinkObject.unpack(dec))
+    # key_value_object_type = 7
+    dec.reset_pos()
+    idx = KeyValueObjectIndex(tester.db)
+    assert idx.create(KeyValueObject.unpack(dec))
+    # index64_object_type = 8
+    dec.reset_pos()
+    idx = Index64ObjectIndex(tester.db)
+    assert idx.create(Index64Object.unpack(dec))
+    # index128_object_type = 9
+    dec.reset_pos()
+    idx = Index128ObjectIndex(tester.db)
+    assert idx.create(Index128Object.unpack(dec))
+    # index256_object_type = 10
+    dec.reset_pos()
+    idx = Index256ObjectIndex(tester.db)
+    assert idx.create(Index256Object.unpack(dec))
+
+    # index_double_object_type = 11
+    dec.reset_pos()
+    idx = IndexDoubleObjectIndex(tester.db)
+    assert idx.create(IndexDoubleObject.unpack(dec))
+
+    # index_long_double_object_type = 12
+    dec.reset_pos()
+    idx = IndexLongDoubleObjectIndex(tester.db)
+    assert idx.create(IndexLongDoubleObject.unpack(dec))
+    # global_property_object_type = 13
+    dec.reset_pos()
+    idx = GlobalPropertyObjectIndex(tester.db)
+    assert idx.create(GlobalPropertyObject.unpack(dec))
+    # dynamic_global_property_object_type = 14
+    dec.reset_pos()
+    idx = DynamicGlobalPropertyObjectIndex(tester.db)
+    assert idx.create(DynamicGlobalPropertyObject.unpack(dec))
+    # block_summary_object_type = 15
+    dec.reset_pos()
+    idx = BlockSummaryObjectIndex(tester.db)
+    assert idx.create(BlockSummaryObject.unpack(dec))
+    # transaction_object_type = 16
+    dec.reset_pos()
+    idx = TransactionObjectIndex(tester.db)
+    assert idx.create(TransactionObject.unpack(dec))
+    # generated_transaction_object_type = 17
+    dec.reset_pos()
+    idx = GeneratedTransactionObjectIndex(tester.db)
+    assert idx.create(GeneratedTransactionObject.unpack(dec))
+    # table_id_object_type = 30
+    dec.reset_pos()
+    idx = TableIdObjectIndex(tester.db)
+    assert idx.create(TableIdObject.unpack(dec))
+    # resource_limits_object_type = 31
+    dec.reset_pos()
+    idx = ResourceLimitsObjectIndex(tester.db)
+    assert idx.create(ResourceLimitsObject.unpack(dec))
+    # resource_usage_object_type = 32
+    dec.reset_pos()
+    idx = ResourceUsageObjectIndex(tester.db)
+    assert idx.create(ResourceUsageObject.unpack(dec))
+    # resource_limits_state_object_type = 33
+    dec.reset_pos()
+    idx = ResourceLimitsStateObjectIndex(tester.db)
+    assert idx.create(ResourceLimitsStateObject.unpack(dec))
+    # resource_limits_config_object_type = 34
+    dec.reset_pos()
+    idx = ResourceLimitsConfigObjectIndex(tester.db)
+    assert idx.create(ResourceLimitsConfigObject.unpack(dec))
+    # protocol_state_object_type = 38
+    dec.reset_pos()
+    idx = ProtocolStateObjectIndex(tester.db)
+    assert idx.create(ProtocolStateObject.unpack(dec))
+    # account_ram_correction_object_type = 39
+    dec.reset_pos()
+    idx = AccountRamCorrectionObjectIndex(tester.db)
+    assert idx.create(AccountRamCorrectionObject.unpack(dec))
+    # code_object_type = 40
+    dec.reset_pos()
+    idx = CodeObjectIndex(tester.db)
+    assert idx.create(CodeObject.unpack(dec))
+    # database_header_object_type = 41
+    dec.reset_pos()
+    idx = DatabaseHeaderObjectIndex(tester.db)
+    assert idx.create(DatabaseHeaderObject.unpack(dec))

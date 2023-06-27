@@ -55,20 +55,20 @@ cdef database_proxy *db(uint64_t ptr):
 def new() -> uint64_t:
     return <uint64_t>get_ipyeos_proxy().new_database_proxy()
 
-def create(ptr: uint64_t, db_ptr: uint64_t, int32_t tp, raw_data: bytes):
+def create(uint64_t ptr, uint64_t db_ptr, int32_t tp, raw_data: bytes):
     return db(ptr).create(<void *>db_ptr, tp, <const char *>raw_data, len(raw_data))
 
-def modify(ptr: uint64_t, db_ptr: uint64_t, int32_t tp, int32_t index_position, raw_key: bytes, raw_data: bytes):
+def modify(uint64_t ptr, uint64_t db_ptr, int32_t tp, int32_t index_position, raw_key: bytes, raw_data: bytes):
     return db(ptr).modify(<void *>db_ptr, tp, index_position, <const char *>raw_key, len(raw_key), <const char *>raw_data, len(raw_data))
 
-def walk(ptr: uint64_t, db_ptr: uint64_t, tp: int32_t, index_position: int32_t, cb, custom_data: object):
+def walk(uint64_t ptr, uint64_t db_ptr, tp: int32_t, index_position: int32_t, cb, custom_data: object):
     cdef python_custom_data data
     data.cb = <void *>cb
     data.custom_data = <void *>custom_data
     db(ptr).set_data_handler(database_on_data, <void *>&data)
     return db(ptr).walk(<void *>db_ptr, tp, index_position)
 
-def walk_range(ptr: uint64_t, db_ptr: uint64_t, tp: int32_t, index_position: int32_t, raw_lower_bound: bytes, raw_upper_bound: bytes, cb, custom_data: object):
+def walk_range(uint64_t ptr, uint64_t db_ptr, tp: int32_t, index_position: int32_t, raw_lower_bound: bytes, raw_upper_bound: bytes, cb, custom_data: object):
     cdef python_custom_data data
 
     data.cb = <void *>cb
@@ -78,7 +78,7 @@ def walk_range(ptr: uint64_t, db_ptr: uint64_t, tp: int32_t, index_position: int
     ret = db(ptr).walk_range(<void *>db_ptr, tp, index_position, <const char *>raw_lower_bound, len(raw_lower_bound), <const char *>raw_upper_bound, len(raw_upper_bound))
     return ret
 
-def find(ptr: uint64_t, db_ptr: uint64_t, tp: int32_t, index_position: int32_t, raw_data: bytes):
+def find(uint64_t ptr, uint64_t db_ptr, tp: int32_t, index_position: int32_t, raw_data: bytes):
     cdef vector[char] out
 
     ret = db(ptr).find(<void *>db_ptr, tp, index_position, <const char *>raw_data, len(raw_data), out)
@@ -89,7 +89,7 @@ def find(ptr: uint64_t, db_ptr: uint64_t, tp: int32_t, index_position: int32_t, 
     return (ret, raw_data)
 
 
-def lower_bound(ptr: uint64_t, db_ptr: uint64_t, tp: int32_t, index_position: int32_t, raw_data: bytes):
+def lower_bound(uint64_t ptr, uint64_t db_ptr, tp: int32_t, index_position: int32_t, raw_data: bytes):
     cdef vector[char] out
 
     ret = db(ptr).lower_bound(<void *>db_ptr, tp, index_position, <const char *>raw_data, len(raw_data), out)
@@ -99,7 +99,7 @@ def lower_bound(ptr: uint64_t, db_ptr: uint64_t, tp: int32_t, index_position: in
     raw_data = PyBytes_FromStringAndSize(out.data(), out.size())
     return (ret, raw_data)
 
-def upper_bound(ptr: uint64_t, db_ptr: uint64_t, tp: int32_t, index_position: int32_t, raw_data: bytes):
+def upper_bound(uint64_t ptr, uint64_t db_ptr, tp: int32_t, index_position: int32_t, raw_data: bytes):
     cdef vector[char] out
 
     ret = db(ptr).upper_bound(<void *>db_ptr, tp, index_position, <const char *>raw_data, len(raw_data), out)
@@ -109,5 +109,5 @@ def upper_bound(ptr: uint64_t, db_ptr: uint64_t, tp: int32_t, index_position: in
     raw_data = PyBytes_FromStringAndSize(out.data(), out.size())
     return (ret, raw_data)
 
-def row_count(ptr: uint64_t, db_ptr: uint64_t, tp: int32_t):
+def row_count(uint64_t ptr, uint64_t db_ptr, tp: int32_t):
     return db(ptr).row_count(<void *>db_ptr, tp)

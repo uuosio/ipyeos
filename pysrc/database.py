@@ -51,7 +51,15 @@ protocol_state_object_type = 38
 account_ram_correction_object_type = 39
 code_object_type = 40
 database_header_object_type = 41
-      
+
+def parse_return_value(ret: int):
+    if ret == -2:
+        raise Exception(_eos.get_last_error_and_clear())
+    assert ret in (0, 1)
+    if ret:
+        return True
+    return False
+
 class Database:
     def __init__(self, db_ptr: int = 0):
         if not db_ptr:
@@ -60,6 +68,15 @@ class Database:
         else:
             self.db_ptr = db_ptr
         self.ptr = _database.new()
+
+    def create(self, tp, raw_data: bytes):
+        ret = _database.create(self.ptr, self.db_ptr, tp, raw_data)
+        if ret == -2:
+            raise Exception(_eos.get_last_error_and_clear())
+        assert ret in (0, 1)
+        if ret:
+            return True
+        return False
 
     def modify(self, tp: int, index_position: int, raw_key: bytes, raw_data: bytes):
         ret = _database.modify(self.ptr, self.db_ptr, tp, index_position, raw_key, raw_data)
@@ -129,6 +146,12 @@ class Database:
 class AccountObjectIndex(object):
     def __init__(self, db: Database):
         self.db = db
+
+    def create(self, obj: AccountObject):
+        enc = Encoder()
+        enc.pack(obj)
+        ret = self.db.create(account_object_type, enc.get_bytes())
+        return parse_return_value(ret)
 
     def find(self, table_id: I64):
         return self.find_by_id(table_id)
@@ -219,6 +242,12 @@ class AccountMetadataObjectIndex(object):
     def __init__(self, db: Database):
         self.db = db
 
+    def create(self, obj: AccountMetadataObject):
+        enc = Encoder()
+        enc.pack(obj)
+        ret = self.db.create(account_metadata_object_type, enc.get_bytes())
+        return parse_return_value(ret)
+
     def find(self, table_id: I64):
         return self.find_by_id(table_id)
 
@@ -308,6 +337,12 @@ class PermissionObjectIndex(object):
     
     def __init__(self, db: Database):
         self.db = db
+
+    def create(self, obj: PermissionObject):
+        enc = Encoder()
+        enc.pack(obj)
+        ret = self.db.create(permission_object_type, enc.get_bytes())
+        return parse_return_value(ret)
 
     def find(self, table_id: I64):
         return self.find_by_id(table_id)
@@ -468,6 +503,12 @@ class PermissionUsageObjectIndex(object):
     def __init__(self, db: Database):
         self.db = db
 
+    def create(self, perm: PermissionUsageObject):
+        enc = Encoder()
+        enc.pack(perm)
+        ret = self.db.create(permission_usage_object_type, enc.get_bytes())
+        return parse_return_value(ret)
+
     def find(self, table_id: I64):
         return self.find_by_id(table_id)
 
@@ -524,6 +565,12 @@ class PermissionUsageObjectIndex(object):
 class PermissionLinkObjectIndex(object):
     def __init__(self, db: Database):
         self.db = db
+
+    def create(self, perm: PermissionLinkObject):
+        enc = Encoder()
+        enc.pack(perm)
+        ret = self.db.create(permission_link_object_type, enc.get_bytes())
+        return parse_return_value(ret)
 
     def find(self, table_id: I64):
         return self.find_by_id(table_id)
@@ -647,6 +694,12 @@ class KeyValueObjectIndex(object):
     def __init__(self, db: Database):
         self.db = db
 
+    def create(self, perm: KeyValueObject):
+        enc = Encoder()
+        perm.pack(enc)
+        ret = self.db.create(key_value_object_type, enc.get_bytes())
+        return parse_return_value(ret)
+
     def find(self, table_id: I64):
         return self.find_by_id(table_id)
 
@@ -735,6 +788,12 @@ class KeyValueObjectIndex(object):
 class Index64ObjectIndex(object):
     def __init__(self, db: Database):
         self.db = db
+
+    def create(self, obj: Index64Object):
+        enc = Encoder()
+        enc.pack(obj)
+        ret = self.db.create(index64_object_type, enc.get_bytes())
+        return parse_return_value(ret)
 
     def find(self, table_id: I64):
         return self.find_by_id(table_id)
@@ -857,6 +916,12 @@ class Index128ObjectIndex(object):
     def __init__(self, db: Database):
         self.db = db
 
+    def create(self, obj: Index128Object):
+        enc = Encoder()
+        obj.pack(enc)
+        ret = self.db.create(index128_object_type, enc.get_bytes())
+        return parse_return_value(ret)
+
     def find(self, table_id: I64):
         return self.find_by_id(table_id)
 
@@ -977,6 +1042,12 @@ class Index128ObjectIndex(object):
 class Index256ObjectIndex(object):
     def __init__(self, db: Database):
         self.db = db
+
+    def create(self, obj: Index256Object):
+        enc = Encoder()
+        obj.pack(enc)
+        ret = self.db.create(index256_object_type, enc.get_bytes())
+        return parse_return_value(ret)
 
     def find(self, table_id: I64):
         return self.find_by_id(table_id)
@@ -1099,6 +1170,12 @@ class IndexDoubleObjectIndex(object):
     def __init__(self, db: Database):
         self.db = db
 
+    def create(self, obj: IndexDoubleObject):
+        enc = Encoder()
+        obj.pack(enc)
+        ret = self.db.create(index_double_object_type, enc.get_bytes())
+        return parse_return_value(ret)
+
     def find(self, table_id: I64):
         return self.find_by_id(table_id)
 
@@ -1219,6 +1296,12 @@ class IndexDoubleObjectIndex(object):
 class IndexLongDoubleObjectIndex(object):
     def __init__(self, db: Database):
         self.db = db
+
+    def create(self, obj: IndexLongDoubleObject):
+        enc = Encoder()
+        obj.pack(enc)
+        ret = self.db.create(index_long_double_object_type, enc.get_bytes())
+        return parse_return_value(ret)
 
     def find(self, table_id: I64):
         return self.find_by_id(table_id)
@@ -1342,6 +1425,12 @@ class GlobalPropertyObjectIndex(object):
     def __init__(self, db: Database):
         self.db = db
 
+    def create(self, perm: GlobalPropertyObject):
+        enc = Encoder()
+        enc.pack(perm)
+        ret = self.db.create(global_property_object_type, enc.get_bytes())
+        return parse_return_value(ret)
+
     def get(self):
         return self.find_by_id(0)
 
@@ -1373,6 +1462,12 @@ class DynamicGlobalPropertyObjectIndex(object):
     def __init__(self, db: Database):
         self.db = db
 
+    def create(self, perm: DynamicGlobalPropertyObject):
+        enc = Encoder()
+        enc.pack(perm)
+        ret = self.db.create(dynamic_global_property_object_type, enc.get_bytes())
+        return parse_return_value(ret)
+
     def get(self):
         return self.find_by_id(0)
 
@@ -1403,6 +1498,12 @@ class DynamicGlobalPropertyObjectIndex(object):
 class BlockSummaryObjectIndex(object):
     def __init__(self, db: Database):
         self.db = db
+
+    def create(self, perm: BlockSummaryObject):
+        enc = Encoder()
+        enc.pack(perm)
+        ret = self.db.create(block_summary_object_type, enc.get_bytes())
+        return parse_return_value(ret)
 
     def find(self, table_id: I64):
         return self.find_by_id(table_id)
@@ -1455,6 +1556,12 @@ class BlockSummaryObjectIndex(object):
 class TransactionObjectIndex(object):
     def __init__(self, db: Database):
         self.db = db
+
+    def create(self, perm: TransactionObject):
+        enc = Encoder()
+        enc.pack(perm)
+        ret = self.db.create(transaction_object_type, enc.get_bytes())
+        return parse_return_value(ret)
 
     def find(self, table_id: I64):
         return self.find_by_id(table_id)
@@ -1576,6 +1683,12 @@ class TransactionObjectIndex(object):
 class GeneratedTransactionObjectIndex(object):
     def __init__(self, db: Database):
         self.db = db
+
+    def create(self, obj: GeneratedTransactionObject):
+        enc = Encoder()
+        obj.pack(enc)
+        ret = self.db.create(generated_transaction_object_type, enc.get_bytes())
+        return parse_return_value(ret)
 
     def find(self, table_id: I64):
         return self.find_by_id(table_id)
@@ -1776,6 +1889,12 @@ class TableIdObjectIndex(object):
     def __init__(self, db: Database):
         self.db = db
 
+    def create(self, perm: TableIdObject):
+        enc = Encoder()
+        perm.pack(enc)
+        ret = self.db.create(table_id_object_type, enc.get_bytes())
+        return parse_return_value(ret)
+
     def find(self, table_id: I64):
         return self.find_by_id(table_id)
 
@@ -1864,6 +1983,12 @@ class TableIdObjectIndex(object):
 class ResourceLimitsObjectIndex(object):
     def __init__(self, db: Database):
         self.db = db
+
+    def create(self, obj: ResourceLimitsObject):
+        enc = Encoder()
+        enc.pack(obj)
+        ret = self.db.create(resource_limits_object_type, enc.get_bytes())
+        return parse_return_value(ret)
 
     def find(self, table_id: I64):
         return self.find_by_id(table_id)
@@ -1954,6 +2079,12 @@ class ResourceUsageObjectIndex(object):
     def __init__(self, db: Database):
         self.db = db
 
+    def create(self, obj: ResourceUsageObject):
+        enc = Encoder()
+        enc.pack(obj)
+        ret = self.db.create(resource_usage_object_type, enc.get_bytes())
+        return parse_return_value(ret)
+
     def find(self, table_id: I64):
         return self.find_by_id(table_id)
 
@@ -2043,6 +2174,12 @@ class ResourceLimitsStateObjectIndex(object):
     def __init__(self, db: Database):
         self.db = db
 
+    def create(self, obj: ResourceLimitsStateObject):
+        enc = Encoder()
+        enc.pack(obj)
+        ret = self.db.create(resource_limits_state_object_type, enc.get_bytes())
+        return parse_return_value(ret)
+
     def get(self):
         return self.find_by_id(0)
 
@@ -2073,6 +2210,12 @@ class ResourceLimitsStateObjectIndex(object):
 class ResourceLimitsConfigObjectIndex(object):
     def __init__(self, db: Database):
         self.db = db
+
+    def create(self, obj: ResourceLimitsConfigObject):
+        enc = Encoder()
+        enc.pack(obj)
+        ret = self.db.create(resource_limits_config_object_type, enc.get_bytes())
+        return parse_return_value(ret)
 
     def get(self):
         return self.find_by_id(0)
@@ -2105,6 +2248,12 @@ class ProtocolStateObjectIndex(object):
     def __init__(self, db: Database):
         self.db = db
 
+    def create(self, obj: ProtocolStateObject):
+        enc = Encoder()
+        enc.pack(obj)
+        ret = self.db.create(protocol_state_object_type, enc.get_bytes())
+        return parse_return_value(ret)
+
     def get(self):
         return self.find_by_id(0)
 
@@ -2136,6 +2285,12 @@ class AccountRamCorrectionObjectIndex(object):
     def __init__(self, db: Database):
         self.db = db
 
+    def create(self, obj: AccountRamCorrectionObject):
+        enc = Encoder()
+        enc.pack(obj)
+        ret = self.db.create(account_ram_correction_object_type, enc.get_bytes())
+        return parse_return_value(ret)
+
     def find(self, table_id: I64):
         return self.find_by_id(table_id)
 
@@ -2160,6 +2315,12 @@ class AccountRamCorrectionObjectIndex(object):
 class CodeObjectIndex(object):
     def __init__(self, db: Database):
         self.db = db
+
+    def create(self, obj: CodeObject):
+        enc = Encoder()
+        enc.pack(obj)
+        ret = self.db.create(code_object_type, enc.get_bytes())
+        return parse_return_value(ret)
 
     def find(self, table_id: I64):
         return self.find_by_id(table_id)
@@ -2263,6 +2424,12 @@ class CodeObjectIndex(object):
 class DatabaseHeaderObjectIndex(object):
     def __init__(self, db: Database):
         self.db = db
+
+    def create(self, perm: DatabaseHeaderObject):
+        enc = Encoder()
+        enc.pack(perm)
+        ret = self.db.create(database_header_object_type, enc.get_bytes())
+        return parse_return_value(ret)
 
     def get(self):
         return self.find_by_id(0)
