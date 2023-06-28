@@ -1312,13 +1312,13 @@ static void __Pyx_CppExn2PyErr() {
 static CYTHON_INLINE uint32_t __Pyx_PyInt_As_uint32_t(PyObject *);
 
 /* CIntFromPy.proto */
-static CYTHON_INLINE uint16_t __Pyx_PyInt_As_uint16_t(PyObject *);
-
-/* CIntFromPy.proto */
 static CYTHON_INLINE uint8_t __Pyx_PyInt_As_uint8_t(PyObject *);
 
 /* CIntFromPy.proto */
 static CYTHON_INLINE uint64_t __Pyx_PyInt_As_uint64_t(PyObject *);
+
+/* CIntFromPy.proto */
+static CYTHON_INLINE int __Pyx_PyInt_As_int(PyObject *);
 
 /* CIntToPy.proto */
 static CYTHON_INLINE PyObject* __Pyx_PyInt_From_uint64_t(uint64_t value);
@@ -1328,9 +1328,6 @@ static CYTHON_INLINE PyObject* __Pyx_PyInt_From_long(long value);
 
 /* CIntFromPy.proto */
 static CYTHON_INLINE long __Pyx_PyInt_As_long(PyObject *);
-
-/* CIntFromPy.proto */
-static CYTHON_INLINE int __Pyx_PyInt_As_int(PyObject *);
 
 /* FastTypeChecks.proto */
 #if CYTHON_COMPILING_IN_CPYTHON
@@ -1393,29 +1390,33 @@ static const char __pyx_k_ptr[] = "ptr";
 static const char __pyx_k_List[] = "List";
 static const char __pyx_k_auth[] = "auth";
 static const char __pyx_k_data[] = "data";
+static const char __pyx_k_free[] = "free";
 static const char __pyx_k_main[] = "__main__";
 static const char __pyx_k_name[] = "name";
+static const char __pyx_k_pack[] = "pack";
+static const char __pyx_k_sign[] = "sign";
 static const char __pyx_k_test[] = "__test__";
 static const char __pyx_k_Union[] = "Union";
 static const char __pyx_k_auths[] = "auths";
 static const char __pyx_k_range[] = "range";
 static const char __pyx_k_import[] = "__import__";
 static const char __pyx_k_name_2[] = "__name__";
+static const char __pyx_k_result[] = "result";
 static const char __pyx_k_typing[] = "typing";
+static const char __pyx_k_unpack[] = "unpack";
 static const char __pyx_k_account[] = "account";
 static const char __pyx_k_auths_2[] = "_auths";
+static const char __pyx_k_chain_id[] = "chain_id";
+static const char __pyx_k_compress[] = "compress";
 static const char __pyx_k_delay_sec[] = "delay_sec";
 static const char __pyx_k_add_action[] = "add_action";
 static const char __pyx_k_expiration[] = "expiration";
 static const char __pyx_k_private_key[] = "private_key";
+static const char __pyx_k_result_type[] = "result_type";
 static const char __pyx_k_transaction[] = "_transaction";
-static const char __pyx_k_ref_block_num[] = "ref_block_num";
+static const char __pyx_k_ref_block_id[] = "ref_block_id";
 static const char __pyx_k_new_transaction[] = "new_transaction";
-static const char __pyx_k_free_transaction[] = "free_transaction";
 static const char __pyx_k_max_cpu_usage_ms[] = "max_cpu_usage_ms";
-static const char __pyx_k_pack_transaction[] = "pack_transaction";
-static const char __pyx_k_ref_block_prefix[] = "ref_block_prefix";
-static const char __pyx_k_sign_transaction[] = "sign_transaction";
 static const char __pyx_k_cline_in_traceback[] = "cline_in_traceback";
 static const char __pyx_k_packed_transaction[] = "packed_transaction";
 static const char __pyx_k_max_net_usage_words[] = "max_net_usage_words";
@@ -1427,11 +1428,13 @@ static PyObject *__pyx_n_s_add_action;
 static PyObject *__pyx_n_s_auth;
 static PyObject *__pyx_n_s_auths;
 static PyObject *__pyx_n_s_auths_2;
+static PyObject *__pyx_n_s_chain_id;
 static PyObject *__pyx_n_s_cline_in_traceback;
+static PyObject *__pyx_n_s_compress;
 static PyObject *__pyx_n_s_data;
 static PyObject *__pyx_n_s_delay_sec;
 static PyObject *__pyx_n_s_expiration;
-static PyObject *__pyx_n_s_free_transaction;
+static PyObject *__pyx_n_s_free;
 static PyObject *__pyx_n_s_i;
 static PyObject *__pyx_n_s_import;
 static PyObject *__pyx_n_s_main;
@@ -1440,40 +1443,45 @@ static PyObject *__pyx_n_s_max_net_usage_words;
 static PyObject *__pyx_n_s_name;
 static PyObject *__pyx_n_s_name_2;
 static PyObject *__pyx_n_s_new_transaction;
-static PyObject *__pyx_n_s_pack_transaction;
+static PyObject *__pyx_n_s_pack;
 static PyObject *__pyx_n_s_packed_transaction;
 static PyObject *__pyx_n_s_private_key;
 static PyObject *__pyx_n_s_ptr;
 static PyObject *__pyx_n_s_range;
-static PyObject *__pyx_n_s_ref_block_num;
-static PyObject *__pyx_n_s_ref_block_prefix;
-static PyObject *__pyx_n_s_sign_transaction;
+static PyObject *__pyx_n_s_ref_block_id;
+static PyObject *__pyx_n_s_result;
+static PyObject *__pyx_n_s_result_type;
+static PyObject *__pyx_n_s_sign;
 static PyObject *__pyx_kp_s_src__transaction_pyx;
 static PyObject *__pyx_n_s_test;
 static PyObject *__pyx_n_s_transaction;
 static PyObject *__pyx_n_s_typing;
-static PyObject *__pyx_pf_12_transaction_new_transaction(CYTHON_UNUSED PyObject *__pyx_self, uint32_t __pyx_v_expiration, uint16_t __pyx_v_ref_block_num, uint32_t __pyx_v_ref_block_prefix, uint32_t __pyx_v_max_net_usage_words, uint8_t __pyx_v_max_cpu_usage_ms, uint32_t __pyx_v_delay_sec); /* proto */
-static PyObject *__pyx_pf_12_transaction_2free_transaction(CYTHON_UNUSED PyObject *__pyx_self, uint64_t __pyx_v_ptr); /* proto */
+static PyObject *__pyx_n_s_unpack;
+static PyObject *__pyx_pf_12_transaction_new_transaction(CYTHON_UNUSED PyObject *__pyx_self, uint32_t __pyx_v_expiration, PyObject *__pyx_v_ref_block_id, uint32_t __pyx_v_max_net_usage_words, uint8_t __pyx_v_max_cpu_usage_ms, uint32_t __pyx_v_delay_sec); /* proto */
+static PyObject *__pyx_pf_12_transaction_2free(CYTHON_UNUSED PyObject *__pyx_self, uint64_t __pyx_v_ptr); /* proto */
 static PyObject *__pyx_pf_12_transaction_4add_action(CYTHON_UNUSED PyObject *__pyx_self, uint64_t __pyx_v_ptr, uint64_t __pyx_v_account, uint64_t __pyx_v_name, PyObject *__pyx_v_data, PyObject *__pyx_v_auths); /* proto */
-static PyObject *__pyx_pf_12_transaction_6sign_transaction(CYTHON_UNUSED PyObject *__pyx_self, uint64_t __pyx_v_ptr, PyObject *__pyx_v_private_key); /* proto */
-static PyObject *__pyx_pf_12_transaction_8pack_transaction(CYTHON_UNUSED PyObject *__pyx_self, uint64_t __pyx_v_ptr); /* proto */
+static PyObject *__pyx_pf_12_transaction_6sign(CYTHON_UNUSED PyObject *__pyx_self, uint64_t __pyx_v_ptr, PyObject *__pyx_v_private_key, PyObject *__pyx_v_chain_id); /* proto */
+static PyObject *__pyx_pf_12_transaction_8pack(CYTHON_UNUSED PyObject *__pyx_self, uint64_t __pyx_v_ptr, bool __pyx_v_compress); /* proto */
+static PyObject *__pyx_pf_12_transaction_10unpack(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_packed_transaction, int __pyx_v_result_type); /* proto */
 static PyObject *__pyx_tuple_;
 static PyObject *__pyx_tuple__3;
 static PyObject *__pyx_tuple__5;
 static PyObject *__pyx_tuple__7;
 static PyObject *__pyx_tuple__9;
+static PyObject *__pyx_tuple__11;
 static PyObject *__pyx_codeobj__2;
 static PyObject *__pyx_codeobj__4;
 static PyObject *__pyx_codeobj__6;
 static PyObject *__pyx_codeobj__8;
 static PyObject *__pyx_codeobj__10;
+static PyObject *__pyx_codeobj__12;
 /* Late includes */
 
-/* "_transaction.pyx":42
+/* "_transaction.pyx":41
+ *     transaction_proxy *get_transaction_proxy()
  * 
- * #void *new_transaction(uint32_t expiration, uint16_t ref_block_num, uint32_t ref_block_prefix, uint32_t max_net_usage_words, uint8_t  max_cpu_usage_ms, uint32_t delay_sec);
- * def new_transaction(uint32_t expiration, uint16_t ref_block_num, uint32_t ref_block_prefix, uint32_t max_net_usage_words, uint8_t  max_cpu_usage_ms, uint32_t delay_sec) -> uint64_t:             # <<<<<<<<<<<<<<
- *     return <uint64_t>get_transaction_proxy().new_transaction(expiration, ref_block_num, ref_block_prefix, max_net_usage_words, max_cpu_usage_ms, delay_sec)
+ * def new_transaction(uint32_t expiration, ref_block_id: bytes, uint32_t max_net_usage_words, uint8_t  max_cpu_usage_ms, uint32_t delay_sec) -> uint64_t:             # <<<<<<<<<<<<<<
+ *     return <uint64_t>get_transaction_proxy().new_transaction(expiration, <const char *>ref_block_id, len(ref_block_id), max_net_usage_words, max_cpu_usage_ms, delay_sec)
  * 
  */
 
@@ -1482,8 +1490,7 @@ static PyObject *__pyx_pw_12_transaction_1new_transaction(PyObject *__pyx_self, 
 static PyMethodDef __pyx_mdef_12_transaction_1new_transaction = {"new_transaction", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_12_transaction_1new_transaction, METH_VARARGS|METH_KEYWORDS, 0};
 static PyObject *__pyx_pw_12_transaction_1new_transaction(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   uint32_t __pyx_v_expiration;
-  uint16_t __pyx_v_ref_block_num;
-  uint32_t __pyx_v_ref_block_prefix;
+  PyObject *__pyx_v_ref_block_id = 0;
   uint32_t __pyx_v_max_net_usage_words;
   uint8_t __pyx_v_max_cpu_usage_ms;
   uint32_t __pyx_v_delay_sec;
@@ -1494,14 +1501,12 @@ static PyObject *__pyx_pw_12_transaction_1new_transaction(PyObject *__pyx_self, 
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("new_transaction (wrapper)", 0);
   {
-    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_expiration,&__pyx_n_s_ref_block_num,&__pyx_n_s_ref_block_prefix,&__pyx_n_s_max_net_usage_words,&__pyx_n_s_max_cpu_usage_ms,&__pyx_n_s_delay_sec,0};
-    PyObject* values[6] = {0,0,0,0,0,0};
+    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_expiration,&__pyx_n_s_ref_block_id,&__pyx_n_s_max_net_usage_words,&__pyx_n_s_max_cpu_usage_ms,&__pyx_n_s_delay_sec,0};
+    PyObject* values[5] = {0,0,0,0,0};
     if (unlikely(__pyx_kwds)) {
       Py_ssize_t kw_args;
       const Py_ssize_t pos_args = PyTuple_GET_SIZE(__pyx_args);
       switch (pos_args) {
-        case  6: values[5] = PyTuple_GET_ITEM(__pyx_args, 5);
-        CYTHON_FALLTHROUGH;
         case  5: values[4] = PyTuple_GET_ITEM(__pyx_args, 4);
         CYTHON_FALLTHROUGH;
         case  4: values[3] = PyTuple_GET_ITEM(__pyx_args, 3);
@@ -1522,39 +1527,33 @@ static PyObject *__pyx_pw_12_transaction_1new_transaction(PyObject *__pyx_self, 
         else goto __pyx_L5_argtuple_error;
         CYTHON_FALLTHROUGH;
         case  1:
-        if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_ref_block_num)) != 0)) kw_args--;
+        if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_ref_block_id)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("new_transaction", 1, 6, 6, 1); __PYX_ERR(0, 42, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("new_transaction", 1, 5, 5, 1); __PYX_ERR(0, 41, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  2:
-        if (likely((values[2] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_ref_block_prefix)) != 0)) kw_args--;
+        if (likely((values[2] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_max_net_usage_words)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("new_transaction", 1, 6, 6, 2); __PYX_ERR(0, 42, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("new_transaction", 1, 5, 5, 2); __PYX_ERR(0, 41, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  3:
-        if (likely((values[3] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_max_net_usage_words)) != 0)) kw_args--;
+        if (likely((values[3] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_max_cpu_usage_ms)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("new_transaction", 1, 6, 6, 3); __PYX_ERR(0, 42, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("new_transaction", 1, 5, 5, 3); __PYX_ERR(0, 41, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  4:
-        if (likely((values[4] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_max_cpu_usage_ms)) != 0)) kw_args--;
+        if (likely((values[4] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_delay_sec)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("new_transaction", 1, 6, 6, 4); __PYX_ERR(0, 42, __pyx_L3_error)
-        }
-        CYTHON_FALLTHROUGH;
-        case  5:
-        if (likely((values[5] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_delay_sec)) != 0)) kw_args--;
-        else {
-          __Pyx_RaiseArgtupleInvalid("new_transaction", 1, 6, 6, 5); __PYX_ERR(0, 42, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("new_transaction", 1, 5, 5, 4); __PYX_ERR(0, 41, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "new_transaction") < 0)) __PYX_ERR(0, 42, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "new_transaction") < 0)) __PYX_ERR(0, 41, __pyx_L3_error)
       }
-    } else if (PyTuple_GET_SIZE(__pyx_args) != 6) {
+    } else if (PyTuple_GET_SIZE(__pyx_args) != 5) {
       goto __pyx_L5_argtuple_error;
     } else {
       values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
@@ -1562,64 +1561,79 @@ static PyObject *__pyx_pw_12_transaction_1new_transaction(PyObject *__pyx_self, 
       values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
       values[3] = PyTuple_GET_ITEM(__pyx_args, 3);
       values[4] = PyTuple_GET_ITEM(__pyx_args, 4);
-      values[5] = PyTuple_GET_ITEM(__pyx_args, 5);
     }
-    __pyx_v_expiration = __Pyx_PyInt_As_uint32_t(values[0]); if (unlikely((__pyx_v_expiration == ((uint32_t)-1)) && PyErr_Occurred())) __PYX_ERR(0, 42, __pyx_L3_error)
-    __pyx_v_ref_block_num = __Pyx_PyInt_As_uint16_t(values[1]); if (unlikely((__pyx_v_ref_block_num == ((uint16_t)-1)) && PyErr_Occurred())) __PYX_ERR(0, 42, __pyx_L3_error)
-    __pyx_v_ref_block_prefix = __Pyx_PyInt_As_uint32_t(values[2]); if (unlikely((__pyx_v_ref_block_prefix == ((uint32_t)-1)) && PyErr_Occurred())) __PYX_ERR(0, 42, __pyx_L3_error)
-    __pyx_v_max_net_usage_words = __Pyx_PyInt_As_uint32_t(values[3]); if (unlikely((__pyx_v_max_net_usage_words == ((uint32_t)-1)) && PyErr_Occurred())) __PYX_ERR(0, 42, __pyx_L3_error)
-    __pyx_v_max_cpu_usage_ms = __Pyx_PyInt_As_uint8_t(values[4]); if (unlikely((__pyx_v_max_cpu_usage_ms == ((uint8_t)-1)) && PyErr_Occurred())) __PYX_ERR(0, 42, __pyx_L3_error)
-    __pyx_v_delay_sec = __Pyx_PyInt_As_uint32_t(values[5]); if (unlikely((__pyx_v_delay_sec == ((uint32_t)-1)) && PyErr_Occurred())) __PYX_ERR(0, 42, __pyx_L3_error)
+    __pyx_v_expiration = __Pyx_PyInt_As_uint32_t(values[0]); if (unlikely((__pyx_v_expiration == ((uint32_t)-1)) && PyErr_Occurred())) __PYX_ERR(0, 41, __pyx_L3_error)
+    __pyx_v_ref_block_id = ((PyObject*)values[1]);
+    __pyx_v_max_net_usage_words = __Pyx_PyInt_As_uint32_t(values[2]); if (unlikely((__pyx_v_max_net_usage_words == ((uint32_t)-1)) && PyErr_Occurred())) __PYX_ERR(0, 41, __pyx_L3_error)
+    __pyx_v_max_cpu_usage_ms = __Pyx_PyInt_As_uint8_t(values[3]); if (unlikely((__pyx_v_max_cpu_usage_ms == ((uint8_t)-1)) && PyErr_Occurred())) __PYX_ERR(0, 41, __pyx_L3_error)
+    __pyx_v_delay_sec = __Pyx_PyInt_As_uint32_t(values[4]); if (unlikely((__pyx_v_delay_sec == ((uint32_t)-1)) && PyErr_Occurred())) __PYX_ERR(0, 41, __pyx_L3_error)
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("new_transaction", 1, 6, 6, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 42, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("new_transaction", 1, 5, 5, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 41, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("_transaction.new_transaction", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_12_transaction_new_transaction(__pyx_self, __pyx_v_expiration, __pyx_v_ref_block_num, __pyx_v_ref_block_prefix, __pyx_v_max_net_usage_words, __pyx_v_max_cpu_usage_ms, __pyx_v_delay_sec);
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_ref_block_id), (&PyBytes_Type), 1, "ref_block_id", 1))) __PYX_ERR(0, 41, __pyx_L1_error)
+  __pyx_r = __pyx_pf_12_transaction_new_transaction(__pyx_self, __pyx_v_expiration, __pyx_v_ref_block_id, __pyx_v_max_net_usage_words, __pyx_v_max_cpu_usage_ms, __pyx_v_delay_sec);
 
   /* function exit code */
+  goto __pyx_L0;
+  __pyx_L1_error:;
+  __pyx_r = NULL;
+  __pyx_L0:;
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_12_transaction_new_transaction(CYTHON_UNUSED PyObject *__pyx_self, uint32_t __pyx_v_expiration, uint16_t __pyx_v_ref_block_num, uint32_t __pyx_v_ref_block_prefix, uint32_t __pyx_v_max_net_usage_words, uint8_t __pyx_v_max_cpu_usage_ms, uint32_t __pyx_v_delay_sec) {
+static PyObject *__pyx_pf_12_transaction_new_transaction(CYTHON_UNUSED PyObject *__pyx_self, uint32_t __pyx_v_expiration, PyObject *__pyx_v_ref_block_id, uint32_t __pyx_v_max_net_usage_words, uint8_t __pyx_v_max_cpu_usage_ms, uint32_t __pyx_v_delay_sec) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
-  PyObject *__pyx_t_1 = NULL;
+  char const *__pyx_t_1;
+  Py_ssize_t __pyx_t_2;
+  PyObject *__pyx_t_3 = NULL;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("new_transaction", 0);
 
-  /* "_transaction.pyx":43
- * #void *new_transaction(uint32_t expiration, uint16_t ref_block_num, uint32_t ref_block_prefix, uint32_t max_net_usage_words, uint8_t  max_cpu_usage_ms, uint32_t delay_sec);
- * def new_transaction(uint32_t expiration, uint16_t ref_block_num, uint32_t ref_block_prefix, uint32_t max_net_usage_words, uint8_t  max_cpu_usage_ms, uint32_t delay_sec) -> uint64_t:
- *     return <uint64_t>get_transaction_proxy().new_transaction(expiration, ref_block_num, ref_block_prefix, max_net_usage_words, max_cpu_usage_ms, delay_sec)             # <<<<<<<<<<<<<<
- * 
- * #void free_transaction(void *transaction);
- */
-  __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __Pyx_PyInt_From_uint64_t(((uint64_t)get_transaction_proxy()->new_transaction(__pyx_v_expiration, __pyx_v_ref_block_num, __pyx_v_ref_block_prefix, __pyx_v_max_net_usage_words, __pyx_v_max_cpu_usage_ms, __pyx_v_delay_sec))); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 43, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  __pyx_r = __pyx_t_1;
-  __pyx_t_1 = 0;
-  goto __pyx_L0;
-
   /* "_transaction.pyx":42
  * 
- * #void *new_transaction(uint32_t expiration, uint16_t ref_block_num, uint32_t ref_block_prefix, uint32_t max_net_usage_words, uint8_t  max_cpu_usage_ms, uint32_t delay_sec);
- * def new_transaction(uint32_t expiration, uint16_t ref_block_num, uint32_t ref_block_prefix, uint32_t max_net_usage_words, uint8_t  max_cpu_usage_ms, uint32_t delay_sec) -> uint64_t:             # <<<<<<<<<<<<<<
- *     return <uint64_t>get_transaction_proxy().new_transaction(expiration, ref_block_num, ref_block_prefix, max_net_usage_words, max_cpu_usage_ms, delay_sec)
+ * def new_transaction(uint32_t expiration, ref_block_id: bytes, uint32_t max_net_usage_words, uint8_t  max_cpu_usage_ms, uint32_t delay_sec) -> uint64_t:
+ *     return <uint64_t>get_transaction_proxy().new_transaction(expiration, <const char *>ref_block_id, len(ref_block_id), max_net_usage_words, max_cpu_usage_ms, delay_sec)             # <<<<<<<<<<<<<<
+ * 
+ * def free(uint64_t ptr):
+ */
+  __Pyx_XDECREF(__pyx_r);
+  if (unlikely(__pyx_v_ref_block_id == Py_None)) {
+    PyErr_SetString(PyExc_TypeError, "expected bytes, NoneType found");
+    __PYX_ERR(0, 42, __pyx_L1_error)
+  }
+  __pyx_t_1 = __Pyx_PyBytes_AsString(__pyx_v_ref_block_id); if (unlikely((!__pyx_t_1) && PyErr_Occurred())) __PYX_ERR(0, 42, __pyx_L1_error)
+  if (unlikely(__pyx_v_ref_block_id == Py_None)) {
+    PyErr_SetString(PyExc_TypeError, "object of type 'NoneType' has no len()");
+    __PYX_ERR(0, 42, __pyx_L1_error)
+  }
+  __pyx_t_2 = PyBytes_GET_SIZE(__pyx_v_ref_block_id); if (unlikely(__pyx_t_2 == ((Py_ssize_t)-1))) __PYX_ERR(0, 42, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyInt_From_uint64_t(((uint64_t)get_transaction_proxy()->new_transaction(__pyx_v_expiration, ((char const *)__pyx_t_1), __pyx_t_2, __pyx_v_max_net_usage_words, __pyx_v_max_cpu_usage_ms, __pyx_v_delay_sec))); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 42, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __pyx_r = __pyx_t_3;
+  __pyx_t_3 = 0;
+  goto __pyx_L0;
+
+  /* "_transaction.pyx":41
+ *     transaction_proxy *get_transaction_proxy()
+ * 
+ * def new_transaction(uint32_t expiration, ref_block_id: bytes, uint32_t max_net_usage_words, uint8_t  max_cpu_usage_ms, uint32_t delay_sec) -> uint64_t:             # <<<<<<<<<<<<<<
+ *     return <uint64_t>get_transaction_proxy().new_transaction(expiration, <const char *>ref_block_id, len(ref_block_id), max_net_usage_words, max_cpu_usage_ms, delay_sec)
  * 
  */
 
   /* function exit code */
   __pyx_L1_error:;
-  __Pyx_XDECREF(__pyx_t_1);
+  __Pyx_XDECREF(__pyx_t_3);
   __Pyx_AddTraceback("_transaction.new_transaction", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
@@ -1628,60 +1642,60 @@ static PyObject *__pyx_pf_12_transaction_new_transaction(CYTHON_UNUSED PyObject 
   return __pyx_r;
 }
 
-/* "_transaction.pyx":46
+/* "_transaction.pyx":44
+ *     return <uint64_t>get_transaction_proxy().new_transaction(expiration, <const char *>ref_block_id, len(ref_block_id), max_net_usage_words, max_cpu_usage_ms, delay_sec)
  * 
- * #void free_transaction(void *transaction);
- * def free_transaction(uint64_t ptr):             # <<<<<<<<<<<<<<
- *     get_transaction_proxy().free_transaction(<void *>ptr)
+ * def free(uint64_t ptr):             # <<<<<<<<<<<<<<
+ *     get_transaction_proxy().free(<void *>ptr)
  * 
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_12_transaction_3free_transaction(PyObject *__pyx_self, PyObject *__pyx_arg_ptr); /*proto*/
-static PyMethodDef __pyx_mdef_12_transaction_3free_transaction = {"free_transaction", (PyCFunction)__pyx_pw_12_transaction_3free_transaction, METH_O, 0};
-static PyObject *__pyx_pw_12_transaction_3free_transaction(PyObject *__pyx_self, PyObject *__pyx_arg_ptr) {
+static PyObject *__pyx_pw_12_transaction_3free(PyObject *__pyx_self, PyObject *__pyx_arg_ptr); /*proto*/
+static PyMethodDef __pyx_mdef_12_transaction_3free = {"free", (PyCFunction)__pyx_pw_12_transaction_3free, METH_O, 0};
+static PyObject *__pyx_pw_12_transaction_3free(PyObject *__pyx_self, PyObject *__pyx_arg_ptr) {
   uint64_t __pyx_v_ptr;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
-  __Pyx_RefNannySetupContext("free_transaction (wrapper)", 0);
+  __Pyx_RefNannySetupContext("free (wrapper)", 0);
   assert(__pyx_arg_ptr); {
-    __pyx_v_ptr = __Pyx_PyInt_As_uint64_t(__pyx_arg_ptr); if (unlikely((__pyx_v_ptr == ((uint64_t)-1)) && PyErr_Occurred())) __PYX_ERR(0, 46, __pyx_L3_error)
+    __pyx_v_ptr = __Pyx_PyInt_As_uint64_t(__pyx_arg_ptr); if (unlikely((__pyx_v_ptr == ((uint64_t)-1)) && PyErr_Occurred())) __PYX_ERR(0, 44, __pyx_L3_error)
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
-  __Pyx_AddTraceback("_transaction.free_transaction", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("_transaction.free", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_12_transaction_2free_transaction(__pyx_self, ((uint64_t)__pyx_v_ptr));
+  __pyx_r = __pyx_pf_12_transaction_2free(__pyx_self, ((uint64_t)__pyx_v_ptr));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_12_transaction_2free_transaction(CYTHON_UNUSED PyObject *__pyx_self, uint64_t __pyx_v_ptr) {
+static PyObject *__pyx_pf_12_transaction_2free(CYTHON_UNUSED PyObject *__pyx_self, uint64_t __pyx_v_ptr) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
-  __Pyx_RefNannySetupContext("free_transaction", 0);
+  __Pyx_RefNannySetupContext("free", 0);
 
-  /* "_transaction.pyx":47
- * #void free_transaction(void *transaction);
- * def free_transaction(uint64_t ptr):
- *     get_transaction_proxy().free_transaction(<void *>ptr)             # <<<<<<<<<<<<<<
+  /* "_transaction.pyx":45
  * 
- * #void add_action(void *transaction, uint64_t account, uint64_t name, const char *data, size_t size, vector[pair[uint64_t, uint64_t]]& auths);
+ * def free(uint64_t ptr):
+ *     get_transaction_proxy().free(<void *>ptr)             # <<<<<<<<<<<<<<
+ * 
+ * def add_action(uint64_t ptr, uint64_t account, uint64_t name, data: bytes, auths: List):
  */
-  get_transaction_proxy()->free_transaction(((void *)__pyx_v_ptr));
+  get_transaction_proxy()->free(((void *)__pyx_v_ptr));
 
-  /* "_transaction.pyx":46
+  /* "_transaction.pyx":44
+ *     return <uint64_t>get_transaction_proxy().new_transaction(expiration, <const char *>ref_block_id, len(ref_block_id), max_net_usage_words, max_cpu_usage_ms, delay_sec)
  * 
- * #void free_transaction(void *transaction);
- * def free_transaction(uint64_t ptr):             # <<<<<<<<<<<<<<
- *     get_transaction_proxy().free_transaction(<void *>ptr)
+ * def free(uint64_t ptr):             # <<<<<<<<<<<<<<
+ *     get_transaction_proxy().free(<void *>ptr)
  * 
  */
 
@@ -1692,9 +1706,9 @@ static PyObject *__pyx_pf_12_transaction_2free_transaction(CYTHON_UNUSED PyObjec
   return __pyx_r;
 }
 
-/* "_transaction.pyx":50
+/* "_transaction.pyx":47
+ *     get_transaction_proxy().free(<void *>ptr)
  * 
- * #void add_action(void *transaction, uint64_t account, uint64_t name, const char *data, size_t size, vector[pair[uint64_t, uint64_t]]& auths);
  * def add_action(uint64_t ptr, uint64_t account, uint64_t name, data: bytes, auths: List):             # <<<<<<<<<<<<<<
  *     cdef vector[pair[uint64_t, uint64_t]] _auths
  *     _auths.resize(len(auths))
@@ -1744,29 +1758,29 @@ static PyObject *__pyx_pw_12_transaction_5add_action(PyObject *__pyx_self, PyObj
         case  1:
         if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_account)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("add_action", 1, 5, 5, 1); __PYX_ERR(0, 50, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("add_action", 1, 5, 5, 1); __PYX_ERR(0, 47, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  2:
         if (likely((values[2] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_name)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("add_action", 1, 5, 5, 2); __PYX_ERR(0, 50, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("add_action", 1, 5, 5, 2); __PYX_ERR(0, 47, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  3:
         if (likely((values[3] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_data)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("add_action", 1, 5, 5, 3); __PYX_ERR(0, 50, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("add_action", 1, 5, 5, 3); __PYX_ERR(0, 47, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  4:
         if (likely((values[4] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_auths)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("add_action", 1, 5, 5, 4); __PYX_ERR(0, 50, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("add_action", 1, 5, 5, 4); __PYX_ERR(0, 47, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "add_action") < 0)) __PYX_ERR(0, 50, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "add_action") < 0)) __PYX_ERR(0, 47, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 5) {
       goto __pyx_L5_argtuple_error;
@@ -1777,21 +1791,21 @@ static PyObject *__pyx_pw_12_transaction_5add_action(PyObject *__pyx_self, PyObj
       values[3] = PyTuple_GET_ITEM(__pyx_args, 3);
       values[4] = PyTuple_GET_ITEM(__pyx_args, 4);
     }
-    __pyx_v_ptr = __Pyx_PyInt_As_uint64_t(values[0]); if (unlikely((__pyx_v_ptr == ((uint64_t)-1)) && PyErr_Occurred())) __PYX_ERR(0, 50, __pyx_L3_error)
-    __pyx_v_account = __Pyx_PyInt_As_uint64_t(values[1]); if (unlikely((__pyx_v_account == ((uint64_t)-1)) && PyErr_Occurred())) __PYX_ERR(0, 50, __pyx_L3_error)
-    __pyx_v_name = __Pyx_PyInt_As_uint64_t(values[2]); if (unlikely((__pyx_v_name == ((uint64_t)-1)) && PyErr_Occurred())) __PYX_ERR(0, 50, __pyx_L3_error)
+    __pyx_v_ptr = __Pyx_PyInt_As_uint64_t(values[0]); if (unlikely((__pyx_v_ptr == ((uint64_t)-1)) && PyErr_Occurred())) __PYX_ERR(0, 47, __pyx_L3_error)
+    __pyx_v_account = __Pyx_PyInt_As_uint64_t(values[1]); if (unlikely((__pyx_v_account == ((uint64_t)-1)) && PyErr_Occurred())) __PYX_ERR(0, 47, __pyx_L3_error)
+    __pyx_v_name = __Pyx_PyInt_As_uint64_t(values[2]); if (unlikely((__pyx_v_name == ((uint64_t)-1)) && PyErr_Occurred())) __PYX_ERR(0, 47, __pyx_L3_error)
     __pyx_v_data = ((PyObject*)values[3]);
     __pyx_v_auths = values[4];
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("add_action", 1, 5, 5, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 50, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("add_action", 1, 5, 5, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 47, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("_transaction.add_action", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_data), (&PyBytes_Type), 1, "data", 1))) __PYX_ERR(0, 50, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_data), (&PyBytes_Type), 1, "data", 1))) __PYX_ERR(0, 47, __pyx_L1_error)
   __pyx_r = __pyx_pf_12_transaction_4add_action(__pyx_self, __pyx_v_ptr, __pyx_v_account, __pyx_v_name, __pyx_v_data, __pyx_v_auths);
 
   /* function exit code */
@@ -1822,91 +1836,91 @@ static PyObject *__pyx_pf_12_transaction_4add_action(CYTHON_UNUSED PyObject *__p
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("add_action", 0);
 
-  /* "_transaction.pyx":52
+  /* "_transaction.pyx":49
  * def add_action(uint64_t ptr, uint64_t account, uint64_t name, data: bytes, auths: List):
  *     cdef vector[pair[uint64_t, uint64_t]] _auths
  *     _auths.resize(len(auths))             # <<<<<<<<<<<<<<
  *     for i in range(len(auths)):
  *         auth = auths[i]
  */
-  __pyx_t_1 = PyObject_Length(__pyx_v_auths); if (unlikely(__pyx_t_1 == ((Py_ssize_t)-1))) __PYX_ERR(0, 52, __pyx_L1_error)
+  __pyx_t_1 = PyObject_Length(__pyx_v_auths); if (unlikely(__pyx_t_1 == ((Py_ssize_t)-1))) __PYX_ERR(0, 49, __pyx_L1_error)
   try {
     __pyx_v__auths.resize(__pyx_t_1);
   } catch(...) {
     __Pyx_CppExn2PyErr();
-    __PYX_ERR(0, 52, __pyx_L1_error)
+    __PYX_ERR(0, 49, __pyx_L1_error)
   }
 
-  /* "_transaction.pyx":53
+  /* "_transaction.pyx":50
  *     cdef vector[pair[uint64_t, uint64_t]] _auths
  *     _auths.resize(len(auths))
  *     for i in range(len(auths)):             # <<<<<<<<<<<<<<
  *         auth = auths[i]
  *         _auths[i] = pair[uint64_t, uint64_t](auth[0], auth[1])
  */
-  __pyx_t_1 = PyObject_Length(__pyx_v_auths); if (unlikely(__pyx_t_1 == ((Py_ssize_t)-1))) __PYX_ERR(0, 53, __pyx_L1_error)
+  __pyx_t_1 = PyObject_Length(__pyx_v_auths); if (unlikely(__pyx_t_1 == ((Py_ssize_t)-1))) __PYX_ERR(0, 50, __pyx_L1_error)
   __pyx_t_2 = __pyx_t_1;
   for (__pyx_t_3 = 0; __pyx_t_3 < __pyx_t_2; __pyx_t_3+=1) {
     __pyx_v_i = __pyx_t_3;
 
-    /* "_transaction.pyx":54
+    /* "_transaction.pyx":51
  *     _auths.resize(len(auths))
  *     for i in range(len(auths)):
  *         auth = auths[i]             # <<<<<<<<<<<<<<
  *         _auths[i] = pair[uint64_t, uint64_t](auth[0], auth[1])
  *     get_transaction_proxy().add_action(<void *>ptr, account, name, <const char *>data, len(data), _auths)
  */
-    __pyx_t_4 = __Pyx_GetItemInt(__pyx_v_auths, __pyx_v_i, Py_ssize_t, 1, PyInt_FromSsize_t, 0, 1, 1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 54, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_GetItemInt(__pyx_v_auths, __pyx_v_i, Py_ssize_t, 1, PyInt_FromSsize_t, 0, 1, 1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 51, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_XDECREF_SET(__pyx_v_auth, __pyx_t_4);
     __pyx_t_4 = 0;
 
-    /* "_transaction.pyx":55
+    /* "_transaction.pyx":52
  *     for i in range(len(auths)):
  *         auth = auths[i]
  *         _auths[i] = pair[uint64_t, uint64_t](auth[0], auth[1])             # <<<<<<<<<<<<<<
  *     get_transaction_proxy().add_action(<void *>ptr, account, name, <const char *>data, len(data), _auths)
  * 
  */
-    __pyx_t_4 = __Pyx_GetItemInt(__pyx_v_auth, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 55, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_GetItemInt(__pyx_v_auth, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 52, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_5 = __Pyx_PyInt_As_uint64_t(__pyx_t_4); if (unlikely((__pyx_t_5 == ((uint64_t)-1)) && PyErr_Occurred())) __PYX_ERR(0, 55, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyInt_As_uint64_t(__pyx_t_4); if (unlikely((__pyx_t_5 == ((uint64_t)-1)) && PyErr_Occurred())) __PYX_ERR(0, 52, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_t_4 = __Pyx_GetItemInt(__pyx_v_auth, 1, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 55, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_GetItemInt(__pyx_v_auth, 1, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 52, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_6 = __Pyx_PyInt_As_uint64_t(__pyx_t_4); if (unlikely((__pyx_t_6 == ((uint64_t)-1)) && PyErr_Occurred())) __PYX_ERR(0, 55, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyInt_As_uint64_t(__pyx_t_4); if (unlikely((__pyx_t_6 == ((uint64_t)-1)) && PyErr_Occurred())) __PYX_ERR(0, 52, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     try {
       __pyx_t_7 = std::pair<uint64_t,uint64_t> (__pyx_t_5, __pyx_t_6);
     } catch(...) {
       __Pyx_CppExn2PyErr();
-      __PYX_ERR(0, 55, __pyx_L1_error)
+      __PYX_ERR(0, 52, __pyx_L1_error)
     }
     (__pyx_v__auths[__pyx_v_i]) = __pyx_t_7;
   }
 
-  /* "_transaction.pyx":56
+  /* "_transaction.pyx":53
  *         auth = auths[i]
  *         _auths[i] = pair[uint64_t, uint64_t](auth[0], auth[1])
  *     get_transaction_proxy().add_action(<void *>ptr, account, name, <const char *>data, len(data), _auths)             # <<<<<<<<<<<<<<
  * 
- * #void sign_transaction(void *transaction, const char *private_key, size_t size)
+ * def sign(uint64_t ptr, private_key: bytes, chain_id: bytes) -> bool:
  */
   if (unlikely(__pyx_v_data == Py_None)) {
     PyErr_SetString(PyExc_TypeError, "expected bytes, NoneType found");
-    __PYX_ERR(0, 56, __pyx_L1_error)
+    __PYX_ERR(0, 53, __pyx_L1_error)
   }
-  __pyx_t_8 = __Pyx_PyBytes_AsString(__pyx_v_data); if (unlikely((!__pyx_t_8) && PyErr_Occurred())) __PYX_ERR(0, 56, __pyx_L1_error)
+  __pyx_t_8 = __Pyx_PyBytes_AsString(__pyx_v_data); if (unlikely((!__pyx_t_8) && PyErr_Occurred())) __PYX_ERR(0, 53, __pyx_L1_error)
   if (unlikely(__pyx_v_data == Py_None)) {
     PyErr_SetString(PyExc_TypeError, "object of type 'NoneType' has no len()");
-    __PYX_ERR(0, 56, __pyx_L1_error)
+    __PYX_ERR(0, 53, __pyx_L1_error)
   }
-  __pyx_t_1 = PyBytes_GET_SIZE(__pyx_v_data); if (unlikely(__pyx_t_1 == ((Py_ssize_t)-1))) __PYX_ERR(0, 56, __pyx_L1_error)
+  __pyx_t_1 = PyBytes_GET_SIZE(__pyx_v_data); if (unlikely(__pyx_t_1 == ((Py_ssize_t)-1))) __PYX_ERR(0, 53, __pyx_L1_error)
   get_transaction_proxy()->add_action(((void *)__pyx_v_ptr), __pyx_v_account, __pyx_v_name, ((char const *)__pyx_t_8), __pyx_t_1, __pyx_v__auths);
 
-  /* "_transaction.pyx":50
+  /* "_transaction.pyx":47
+ *     get_transaction_proxy().free(<void *>ptr)
  * 
- * #void add_action(void *transaction, uint64_t account, uint64_t name, const char *data, size_t size, vector[pair[uint64_t, uint64_t]]& auths);
  * def add_action(uint64_t ptr, uint64_t account, uint64_t name, data: bytes, auths: List):             # <<<<<<<<<<<<<<
  *     cdef vector[pair[uint64_t, uint64_t]] _auths
  *     _auths.resize(len(auths))
@@ -1926,28 +1940,184 @@ static PyObject *__pyx_pf_12_transaction_4add_action(CYTHON_UNUSED PyObject *__p
   return __pyx_r;
 }
 
-/* "_transaction.pyx":59
+/* "_transaction.pyx":55
+ *     get_transaction_proxy().add_action(<void *>ptr, account, name, <const char *>data, len(data), _auths)
  * 
- * #void sign_transaction(void *transaction, const char *private_key, size_t size)
- * def sign_transaction(uint64_t ptr, private_key: bytes):             # <<<<<<<<<<<<<<
- *     get_transaction_proxy().sign_transaction(<void *>ptr, <const char *>private_key, len(private_key))
+ * def sign(uint64_t ptr, private_key: bytes, chain_id: bytes) -> bool:             # <<<<<<<<<<<<<<
+ *     return get_transaction_proxy().sign(<void *>ptr, <const char *>private_key, len(private_key), <const char *>chain_id, len(chain_id))
  * 
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_12_transaction_7sign_transaction(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static PyMethodDef __pyx_mdef_12_transaction_7sign_transaction = {"sign_transaction", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_12_transaction_7sign_transaction, METH_VARARGS|METH_KEYWORDS, 0};
-static PyObject *__pyx_pw_12_transaction_7sign_transaction(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_12_transaction_7sign(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyMethodDef __pyx_mdef_12_transaction_7sign = {"sign", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_12_transaction_7sign, METH_VARARGS|METH_KEYWORDS, 0};
+static PyObject *__pyx_pw_12_transaction_7sign(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   uint64_t __pyx_v_ptr;
   PyObject *__pyx_v_private_key = 0;
+  PyObject *__pyx_v_chain_id = 0;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
-  __Pyx_RefNannySetupContext("sign_transaction (wrapper)", 0);
+  __Pyx_RefNannySetupContext("sign (wrapper)", 0);
   {
-    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_ptr,&__pyx_n_s_private_key,0};
+    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_ptr,&__pyx_n_s_private_key,&__pyx_n_s_chain_id,0};
+    PyObject* values[3] = {0,0,0};
+    if (unlikely(__pyx_kwds)) {
+      Py_ssize_t kw_args;
+      const Py_ssize_t pos_args = PyTuple_GET_SIZE(__pyx_args);
+      switch (pos_args) {
+        case  3: values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
+        CYTHON_FALLTHROUGH;
+        case  2: values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
+        CYTHON_FALLTHROUGH;
+        case  1: values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
+        CYTHON_FALLTHROUGH;
+        case  0: break;
+        default: goto __pyx_L5_argtuple_error;
+      }
+      kw_args = PyDict_Size(__pyx_kwds);
+      switch (pos_args) {
+        case  0:
+        if (likely((values[0] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_ptr)) != 0)) kw_args--;
+        else goto __pyx_L5_argtuple_error;
+        CYTHON_FALLTHROUGH;
+        case  1:
+        if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_private_key)) != 0)) kw_args--;
+        else {
+          __Pyx_RaiseArgtupleInvalid("sign", 1, 3, 3, 1); __PYX_ERR(0, 55, __pyx_L3_error)
+        }
+        CYTHON_FALLTHROUGH;
+        case  2:
+        if (likely((values[2] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_chain_id)) != 0)) kw_args--;
+        else {
+          __Pyx_RaiseArgtupleInvalid("sign", 1, 3, 3, 2); __PYX_ERR(0, 55, __pyx_L3_error)
+        }
+      }
+      if (unlikely(kw_args > 0)) {
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "sign") < 0)) __PYX_ERR(0, 55, __pyx_L3_error)
+      }
+    } else if (PyTuple_GET_SIZE(__pyx_args) != 3) {
+      goto __pyx_L5_argtuple_error;
+    } else {
+      values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
+      values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
+      values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
+    }
+    __pyx_v_ptr = __Pyx_PyInt_As_uint64_t(values[0]); if (unlikely((__pyx_v_ptr == ((uint64_t)-1)) && PyErr_Occurred())) __PYX_ERR(0, 55, __pyx_L3_error)
+    __pyx_v_private_key = ((PyObject*)values[1]);
+    __pyx_v_chain_id = ((PyObject*)values[2]);
+  }
+  goto __pyx_L4_argument_unpacking_done;
+  __pyx_L5_argtuple_error:;
+  __Pyx_RaiseArgtupleInvalid("sign", 1, 3, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 55, __pyx_L3_error)
+  __pyx_L3_error:;
+  __Pyx_AddTraceback("_transaction.sign", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_RefNannyFinishContext();
+  return NULL;
+  __pyx_L4_argument_unpacking_done:;
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_private_key), (&PyBytes_Type), 1, "private_key", 1))) __PYX_ERR(0, 55, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_chain_id), (&PyBytes_Type), 1, "chain_id", 1))) __PYX_ERR(0, 55, __pyx_L1_error)
+  __pyx_r = __pyx_pf_12_transaction_6sign(__pyx_self, __pyx_v_ptr, __pyx_v_private_key, __pyx_v_chain_id);
+
+  /* function exit code */
+  goto __pyx_L0;
+  __pyx_L1_error:;
+  __pyx_r = NULL;
+  __pyx_L0:;
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static PyObject *__pyx_pf_12_transaction_6sign(CYTHON_UNUSED PyObject *__pyx_self, uint64_t __pyx_v_ptr, PyObject *__pyx_v_private_key, PyObject *__pyx_v_chain_id) {
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  char const *__pyx_t_1;
+  Py_ssize_t __pyx_t_2;
+  char const *__pyx_t_3;
+  Py_ssize_t __pyx_t_4;
+  PyObject *__pyx_t_5 = NULL;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  __Pyx_RefNannySetupContext("sign", 0);
+
+  /* "_transaction.pyx":56
+ * 
+ * def sign(uint64_t ptr, private_key: bytes, chain_id: bytes) -> bool:
+ *     return get_transaction_proxy().sign(<void *>ptr, <const char *>private_key, len(private_key), <const char *>chain_id, len(chain_id))             # <<<<<<<<<<<<<<
+ * 
+ * def pack(uint64_t ptr, bool compress):
+ */
+  __Pyx_XDECREF(__pyx_r);
+  if (unlikely(__pyx_v_private_key == Py_None)) {
+    PyErr_SetString(PyExc_TypeError, "expected bytes, NoneType found");
+    __PYX_ERR(0, 56, __pyx_L1_error)
+  }
+  __pyx_t_1 = __Pyx_PyBytes_AsString(__pyx_v_private_key); if (unlikely((!__pyx_t_1) && PyErr_Occurred())) __PYX_ERR(0, 56, __pyx_L1_error)
+  if (unlikely(__pyx_v_private_key == Py_None)) {
+    PyErr_SetString(PyExc_TypeError, "object of type 'NoneType' has no len()");
+    __PYX_ERR(0, 56, __pyx_L1_error)
+  }
+  __pyx_t_2 = PyBytes_GET_SIZE(__pyx_v_private_key); if (unlikely(__pyx_t_2 == ((Py_ssize_t)-1))) __PYX_ERR(0, 56, __pyx_L1_error)
+  if (unlikely(__pyx_v_chain_id == Py_None)) {
+    PyErr_SetString(PyExc_TypeError, "expected bytes, NoneType found");
+    __PYX_ERR(0, 56, __pyx_L1_error)
+  }
+  __pyx_t_3 = __Pyx_PyBytes_AsString(__pyx_v_chain_id); if (unlikely((!__pyx_t_3) && PyErr_Occurred())) __PYX_ERR(0, 56, __pyx_L1_error)
+  if (unlikely(__pyx_v_chain_id == Py_None)) {
+    PyErr_SetString(PyExc_TypeError, "object of type 'NoneType' has no len()");
+    __PYX_ERR(0, 56, __pyx_L1_error)
+  }
+  __pyx_t_4 = PyBytes_GET_SIZE(__pyx_v_chain_id); if (unlikely(__pyx_t_4 == ((Py_ssize_t)-1))) __PYX_ERR(0, 56, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyBool_FromLong(get_transaction_proxy()->sign(((void *)__pyx_v_ptr), ((char const *)__pyx_t_1), __pyx_t_2, ((char const *)__pyx_t_3), __pyx_t_4)); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 56, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_5);
+  __pyx_r = __pyx_t_5;
+  __pyx_t_5 = 0;
+  goto __pyx_L0;
+
+  /* "_transaction.pyx":55
+ *     get_transaction_proxy().add_action(<void *>ptr, account, name, <const char *>data, len(data), _auths)
+ * 
+ * def sign(uint64_t ptr, private_key: bytes, chain_id: bytes) -> bool:             # <<<<<<<<<<<<<<
+ *     return get_transaction_proxy().sign(<void *>ptr, <const char *>private_key, len(private_key), <const char *>chain_id, len(chain_id))
+ * 
+ */
+
+  /* function exit code */
+  __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_5);
+  __Pyx_AddTraceback("_transaction.sign", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = NULL;
+  __pyx_L0:;
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* "_transaction.pyx":58
+ *     return get_transaction_proxy().sign(<void *>ptr, <const char *>private_key, len(private_key), <const char *>chain_id, len(chain_id))
+ * 
+ * def pack(uint64_t ptr, bool compress):             # <<<<<<<<<<<<<<
+ *     cdef vector[char] packed_transaction
+ *     get_transaction_proxy().pack(<void *>ptr, compress, packed_transaction)
+ */
+
+/* Python wrapper */
+static PyObject *__pyx_pw_12_transaction_9pack(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyMethodDef __pyx_mdef_12_transaction_9pack = {"pack", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_12_transaction_9pack, METH_VARARGS|METH_KEYWORDS, 0};
+static PyObject *__pyx_pw_12_transaction_9pack(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+  uint64_t __pyx_v_ptr;
+  bool __pyx_v_compress;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  PyObject *__pyx_r = 0;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("pack (wrapper)", 0);
+  {
+    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_ptr,&__pyx_n_s_compress,0};
     PyObject* values[2] = {0,0};
     if (unlikely(__pyx_kwds)) {
       Py_ssize_t kw_args;
@@ -1967,13 +2137,13 @@ static PyObject *__pyx_pw_12_transaction_7sign_transaction(PyObject *__pyx_self,
         else goto __pyx_L5_argtuple_error;
         CYTHON_FALLTHROUGH;
         case  1:
-        if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_private_key)) != 0)) kw_args--;
+        if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_compress)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("sign_transaction", 1, 2, 2, 1); __PYX_ERR(0, 59, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("pack", 1, 2, 2, 1); __PYX_ERR(0, 58, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "sign_transaction") < 0)) __PYX_ERR(0, 59, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "pack") < 0)) __PYX_ERR(0, 58, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 2) {
       goto __pyx_L5_argtuple_error;
@@ -1981,71 +2151,69 @@ static PyObject *__pyx_pw_12_transaction_7sign_transaction(PyObject *__pyx_self,
       values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
       values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
     }
-    __pyx_v_ptr = __Pyx_PyInt_As_uint64_t(values[0]); if (unlikely((__pyx_v_ptr == ((uint64_t)-1)) && PyErr_Occurred())) __PYX_ERR(0, 59, __pyx_L3_error)
-    __pyx_v_private_key = ((PyObject*)values[1]);
+    __pyx_v_ptr = __Pyx_PyInt_As_uint64_t(values[0]); if (unlikely((__pyx_v_ptr == ((uint64_t)-1)) && PyErr_Occurred())) __PYX_ERR(0, 58, __pyx_L3_error)
+    __pyx_v_compress = __Pyx_PyObject_IsTrue(values[1]); if (unlikely((__pyx_v_compress == ((bool)-1)) && PyErr_Occurred())) __PYX_ERR(0, 58, __pyx_L3_error)
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("sign_transaction", 1, 2, 2, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 59, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("pack", 1, 2, 2, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 58, __pyx_L3_error)
   __pyx_L3_error:;
-  __Pyx_AddTraceback("_transaction.sign_transaction", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("_transaction.pack", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_private_key), (&PyBytes_Type), 1, "private_key", 1))) __PYX_ERR(0, 59, __pyx_L1_error)
-  __pyx_r = __pyx_pf_12_transaction_6sign_transaction(__pyx_self, __pyx_v_ptr, __pyx_v_private_key);
+  __pyx_r = __pyx_pf_12_transaction_8pack(__pyx_self, __pyx_v_ptr, __pyx_v_compress);
 
   /* function exit code */
-  goto __pyx_L0;
-  __pyx_L1_error:;
-  __pyx_r = NULL;
-  __pyx_L0:;
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_12_transaction_6sign_transaction(CYTHON_UNUSED PyObject *__pyx_self, uint64_t __pyx_v_ptr, PyObject *__pyx_v_private_key) {
+static PyObject *__pyx_pf_12_transaction_8pack(CYTHON_UNUSED PyObject *__pyx_self, uint64_t __pyx_v_ptr, bool __pyx_v_compress) {
+  std::vector<char>  __pyx_v_packed_transaction;
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
-  char const *__pyx_t_1;
-  Py_ssize_t __pyx_t_2;
+  PyObject *__pyx_t_1 = NULL;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
-  __Pyx_RefNannySetupContext("sign_transaction", 0);
+  __Pyx_RefNannySetupContext("pack", 0);
 
   /* "_transaction.pyx":60
- * #void sign_transaction(void *transaction, const char *private_key, size_t size)
- * def sign_transaction(uint64_t ptr, private_key: bytes):
- *     get_transaction_proxy().sign_transaction(<void *>ptr, <const char *>private_key, len(private_key))             # <<<<<<<<<<<<<<
+ * def pack(uint64_t ptr, bool compress):
+ *     cdef vector[char] packed_transaction
+ *     get_transaction_proxy().pack(<void *>ptr, compress, packed_transaction)             # <<<<<<<<<<<<<<
+ *     return PyBytes_FromStringAndSize(packed_transaction.data(), packed_transaction.size())
  * 
- * #void pack_transaction(void *transaction, );
  */
-  if (unlikely(__pyx_v_private_key == Py_None)) {
-    PyErr_SetString(PyExc_TypeError, "expected bytes, NoneType found");
-    __PYX_ERR(0, 60, __pyx_L1_error)
-  }
-  __pyx_t_1 = __Pyx_PyBytes_AsString(__pyx_v_private_key); if (unlikely((!__pyx_t_1) && PyErr_Occurred())) __PYX_ERR(0, 60, __pyx_L1_error)
-  if (unlikely(__pyx_v_private_key == Py_None)) {
-    PyErr_SetString(PyExc_TypeError, "object of type 'NoneType' has no len()");
-    __PYX_ERR(0, 60, __pyx_L1_error)
-  }
-  __pyx_t_2 = PyBytes_GET_SIZE(__pyx_v_private_key); if (unlikely(__pyx_t_2 == ((Py_ssize_t)-1))) __PYX_ERR(0, 60, __pyx_L1_error)
-  get_transaction_proxy()->sign_transaction(((void *)__pyx_v_ptr), ((char const *)__pyx_t_1), __pyx_t_2);
+  get_transaction_proxy()->pack(((void *)__pyx_v_ptr), __pyx_v_compress, __pyx_v_packed_transaction);
 
-  /* "_transaction.pyx":59
+  /* "_transaction.pyx":61
+ *     cdef vector[char] packed_transaction
+ *     get_transaction_proxy().pack(<void *>ptr, compress, packed_transaction)
+ *     return PyBytes_FromStringAndSize(packed_transaction.data(), packed_transaction.size())             # <<<<<<<<<<<<<<
  * 
- * #void sign_transaction(void *transaction, const char *private_key, size_t size)
- * def sign_transaction(uint64_t ptr, private_key: bytes):             # <<<<<<<<<<<<<<
- *     get_transaction_proxy().sign_transaction(<void *>ptr, <const char *>private_key, len(private_key))
+ * def unpack(packed_transaction: bytes, int result_type):
+ */
+  __Pyx_XDECREF(__pyx_r);
+  __pyx_t_1 = PyBytes_FromStringAndSize(__pyx_v_packed_transaction.data(), __pyx_v_packed_transaction.size()); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 61, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_r = __pyx_t_1;
+  __pyx_t_1 = 0;
+  goto __pyx_L0;
+
+  /* "_transaction.pyx":58
+ *     return get_transaction_proxy().sign(<void *>ptr, <const char *>private_key, len(private_key), <const char *>chain_id, len(chain_id))
  * 
+ * def pack(uint64_t ptr, bool compress):             # <<<<<<<<<<<<<<
+ *     cdef vector[char] packed_transaction
+ *     get_transaction_proxy().pack(<void *>ptr, compress, packed_transaction)
  */
 
   /* function exit code */
-  __pyx_r = Py_None; __Pyx_INCREF(Py_None);
-  goto __pyx_L0;
   __pyx_L1_error:;
-  __Pyx_AddTraceback("_transaction.sign_transaction", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_XDECREF(__pyx_t_1);
+  __Pyx_AddTraceback("_transaction.pack", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -2054,82 +2222,137 @@ static PyObject *__pyx_pf_12_transaction_6sign_transaction(CYTHON_UNUSED PyObjec
 }
 
 /* "_transaction.pyx":63
+ *     return PyBytes_FromStringAndSize(packed_transaction.data(), packed_transaction.size())
  * 
- * #void pack_transaction(void *transaction, );
- * def pack_transaction(uint64_t ptr):             # <<<<<<<<<<<<<<
- *     cdef vector[char] packed_transaction
- *     get_transaction_proxy().pack_transaction(<void *>ptr, packed_transaction)
+ * def unpack(packed_transaction: bytes, int result_type):             # <<<<<<<<<<<<<<
+ *     cdef string result
+ *     get_transaction_proxy().unpack(<const char *>packed_transaction, len(packed_transaction), result_type, result)
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_12_transaction_9pack_transaction(PyObject *__pyx_self, PyObject *__pyx_arg_ptr); /*proto*/
-static PyMethodDef __pyx_mdef_12_transaction_9pack_transaction = {"pack_transaction", (PyCFunction)__pyx_pw_12_transaction_9pack_transaction, METH_O, 0};
-static PyObject *__pyx_pw_12_transaction_9pack_transaction(PyObject *__pyx_self, PyObject *__pyx_arg_ptr) {
-  uint64_t __pyx_v_ptr;
+static PyObject *__pyx_pw_12_transaction_11unpack(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyMethodDef __pyx_mdef_12_transaction_11unpack = {"unpack", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_12_transaction_11unpack, METH_VARARGS|METH_KEYWORDS, 0};
+static PyObject *__pyx_pw_12_transaction_11unpack(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+  PyObject *__pyx_v_packed_transaction = 0;
+  int __pyx_v_result_type;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
-  __Pyx_RefNannySetupContext("pack_transaction (wrapper)", 0);
-  assert(__pyx_arg_ptr); {
-    __pyx_v_ptr = __Pyx_PyInt_As_uint64_t(__pyx_arg_ptr); if (unlikely((__pyx_v_ptr == ((uint64_t)-1)) && PyErr_Occurred())) __PYX_ERR(0, 63, __pyx_L3_error)
+  __Pyx_RefNannySetupContext("unpack (wrapper)", 0);
+  {
+    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_packed_transaction,&__pyx_n_s_result_type,0};
+    PyObject* values[2] = {0,0};
+    if (unlikely(__pyx_kwds)) {
+      Py_ssize_t kw_args;
+      const Py_ssize_t pos_args = PyTuple_GET_SIZE(__pyx_args);
+      switch (pos_args) {
+        case  2: values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
+        CYTHON_FALLTHROUGH;
+        case  1: values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
+        CYTHON_FALLTHROUGH;
+        case  0: break;
+        default: goto __pyx_L5_argtuple_error;
+      }
+      kw_args = PyDict_Size(__pyx_kwds);
+      switch (pos_args) {
+        case  0:
+        if (likely((values[0] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_packed_transaction)) != 0)) kw_args--;
+        else goto __pyx_L5_argtuple_error;
+        CYTHON_FALLTHROUGH;
+        case  1:
+        if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_result_type)) != 0)) kw_args--;
+        else {
+          __Pyx_RaiseArgtupleInvalid("unpack", 1, 2, 2, 1); __PYX_ERR(0, 63, __pyx_L3_error)
+        }
+      }
+      if (unlikely(kw_args > 0)) {
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "unpack") < 0)) __PYX_ERR(0, 63, __pyx_L3_error)
+      }
+    } else if (PyTuple_GET_SIZE(__pyx_args) != 2) {
+      goto __pyx_L5_argtuple_error;
+    } else {
+      values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
+      values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
+    }
+    __pyx_v_packed_transaction = ((PyObject*)values[0]);
+    __pyx_v_result_type = __Pyx_PyInt_As_int(values[1]); if (unlikely((__pyx_v_result_type == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 63, __pyx_L3_error)
   }
   goto __pyx_L4_argument_unpacking_done;
+  __pyx_L5_argtuple_error:;
+  __Pyx_RaiseArgtupleInvalid("unpack", 1, 2, 2, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 63, __pyx_L3_error)
   __pyx_L3_error:;
-  __Pyx_AddTraceback("_transaction.pack_transaction", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("_transaction.unpack", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_12_transaction_8pack_transaction(__pyx_self, ((uint64_t)__pyx_v_ptr));
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_packed_transaction), (&PyBytes_Type), 1, "packed_transaction", 1))) __PYX_ERR(0, 63, __pyx_L1_error)
+  __pyx_r = __pyx_pf_12_transaction_10unpack(__pyx_self, __pyx_v_packed_transaction, __pyx_v_result_type);
 
   /* function exit code */
+  goto __pyx_L0;
+  __pyx_L1_error:;
+  __pyx_r = NULL;
+  __pyx_L0:;
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_12_transaction_8pack_transaction(CYTHON_UNUSED PyObject *__pyx_self, uint64_t __pyx_v_ptr) {
-  std::vector<char>  __pyx_v_packed_transaction;
+static PyObject *__pyx_pf_12_transaction_10unpack(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_packed_transaction, int __pyx_v_result_type) {
+  std::string __pyx_v_result;
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
-  PyObject *__pyx_t_1 = NULL;
+  char const *__pyx_t_1;
+  Py_ssize_t __pyx_t_2;
+  PyObject *__pyx_t_3 = NULL;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
-  __Pyx_RefNannySetupContext("pack_transaction", 0);
+  __Pyx_RefNannySetupContext("unpack", 0);
 
   /* "_transaction.pyx":65
- * def pack_transaction(uint64_t ptr):
- *     cdef vector[char] packed_transaction
- *     get_transaction_proxy().pack_transaction(<void *>ptr, packed_transaction)             # <<<<<<<<<<<<<<
- *     return PyBytes_FromStringAndSize(packed_transaction.data(), packed_transaction.size())
+ * def unpack(packed_transaction: bytes, int result_type):
+ *     cdef string result
+ *     get_transaction_proxy().unpack(<const char *>packed_transaction, len(packed_transaction), result_type, result)             # <<<<<<<<<<<<<<
+ *     return PyBytes_FromStringAndSize(result.c_str(), result.size())
  */
-  get_transaction_proxy()->pack_transaction(((void *)__pyx_v_ptr), __pyx_v_packed_transaction);
+  if (unlikely(__pyx_v_packed_transaction == Py_None)) {
+    PyErr_SetString(PyExc_TypeError, "expected bytes, NoneType found");
+    __PYX_ERR(0, 65, __pyx_L1_error)
+  }
+  __pyx_t_1 = __Pyx_PyBytes_AsString(__pyx_v_packed_transaction); if (unlikely((!__pyx_t_1) && PyErr_Occurred())) __PYX_ERR(0, 65, __pyx_L1_error)
+  if (unlikely(__pyx_v_packed_transaction == Py_None)) {
+    PyErr_SetString(PyExc_TypeError, "object of type 'NoneType' has no len()");
+    __PYX_ERR(0, 65, __pyx_L1_error)
+  }
+  __pyx_t_2 = PyBytes_GET_SIZE(__pyx_v_packed_transaction); if (unlikely(__pyx_t_2 == ((Py_ssize_t)-1))) __PYX_ERR(0, 65, __pyx_L1_error)
+  (void)(get_transaction_proxy()->unpack(((char const *)__pyx_t_1), __pyx_t_2, __pyx_v_result_type, __pyx_v_result));
 
   /* "_transaction.pyx":66
- *     cdef vector[char] packed_transaction
- *     get_transaction_proxy().pack_transaction(<void *>ptr, packed_transaction)
- *     return PyBytes_FromStringAndSize(packed_transaction.data(), packed_transaction.size())             # <<<<<<<<<<<<<<
+ *     cdef string result
+ *     get_transaction_proxy().unpack(<const char *>packed_transaction, len(packed_transaction), result_type, result)
+ *     return PyBytes_FromStringAndSize(result.c_str(), result.size())             # <<<<<<<<<<<<<<
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = PyBytes_FromStringAndSize(__pyx_v_packed_transaction.data(), __pyx_v_packed_transaction.size()); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 66, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  __pyx_r = __pyx_t_1;
-  __pyx_t_1 = 0;
+  __pyx_t_3 = PyBytes_FromStringAndSize(__pyx_v_result.c_str(), __pyx_v_result.size()); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 66, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __pyx_r = __pyx_t_3;
+  __pyx_t_3 = 0;
   goto __pyx_L0;
 
   /* "_transaction.pyx":63
+ *     return PyBytes_FromStringAndSize(packed_transaction.data(), packed_transaction.size())
  * 
- * #void pack_transaction(void *transaction, );
- * def pack_transaction(uint64_t ptr):             # <<<<<<<<<<<<<<
- *     cdef vector[char] packed_transaction
- *     get_transaction_proxy().pack_transaction(<void *>ptr, packed_transaction)
+ * def unpack(packed_transaction: bytes, int result_type):             # <<<<<<<<<<<<<<
+ *     cdef string result
+ *     get_transaction_proxy().unpack(<const char *>packed_transaction, len(packed_transaction), result_type, result)
  */
 
   /* function exit code */
   __pyx_L1_error:;
-  __Pyx_XDECREF(__pyx_t_1);
-  __Pyx_AddTraceback("_transaction.pack_transaction", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_XDECREF(__pyx_t_3);
+  __Pyx_AddTraceback("_transaction.unpack", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -2190,11 +2413,13 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_auth, __pyx_k_auth, sizeof(__pyx_k_auth), 0, 0, 1, 1},
   {&__pyx_n_s_auths, __pyx_k_auths, sizeof(__pyx_k_auths), 0, 0, 1, 1},
   {&__pyx_n_s_auths_2, __pyx_k_auths_2, sizeof(__pyx_k_auths_2), 0, 0, 1, 1},
+  {&__pyx_n_s_chain_id, __pyx_k_chain_id, sizeof(__pyx_k_chain_id), 0, 0, 1, 1},
   {&__pyx_n_s_cline_in_traceback, __pyx_k_cline_in_traceback, sizeof(__pyx_k_cline_in_traceback), 0, 0, 1, 1},
+  {&__pyx_n_s_compress, __pyx_k_compress, sizeof(__pyx_k_compress), 0, 0, 1, 1},
   {&__pyx_n_s_data, __pyx_k_data, sizeof(__pyx_k_data), 0, 0, 1, 1},
   {&__pyx_n_s_delay_sec, __pyx_k_delay_sec, sizeof(__pyx_k_delay_sec), 0, 0, 1, 1},
   {&__pyx_n_s_expiration, __pyx_k_expiration, sizeof(__pyx_k_expiration), 0, 0, 1, 1},
-  {&__pyx_n_s_free_transaction, __pyx_k_free_transaction, sizeof(__pyx_k_free_transaction), 0, 0, 1, 1},
+  {&__pyx_n_s_free, __pyx_k_free, sizeof(__pyx_k_free), 0, 0, 1, 1},
   {&__pyx_n_s_i, __pyx_k_i, sizeof(__pyx_k_i), 0, 0, 1, 1},
   {&__pyx_n_s_import, __pyx_k_import, sizeof(__pyx_k_import), 0, 0, 1, 1},
   {&__pyx_n_s_main, __pyx_k_main, sizeof(__pyx_k_main), 0, 0, 1, 1},
@@ -2203,22 +2428,24 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_name, __pyx_k_name, sizeof(__pyx_k_name), 0, 0, 1, 1},
   {&__pyx_n_s_name_2, __pyx_k_name_2, sizeof(__pyx_k_name_2), 0, 0, 1, 1},
   {&__pyx_n_s_new_transaction, __pyx_k_new_transaction, sizeof(__pyx_k_new_transaction), 0, 0, 1, 1},
-  {&__pyx_n_s_pack_transaction, __pyx_k_pack_transaction, sizeof(__pyx_k_pack_transaction), 0, 0, 1, 1},
+  {&__pyx_n_s_pack, __pyx_k_pack, sizeof(__pyx_k_pack), 0, 0, 1, 1},
   {&__pyx_n_s_packed_transaction, __pyx_k_packed_transaction, sizeof(__pyx_k_packed_transaction), 0, 0, 1, 1},
   {&__pyx_n_s_private_key, __pyx_k_private_key, sizeof(__pyx_k_private_key), 0, 0, 1, 1},
   {&__pyx_n_s_ptr, __pyx_k_ptr, sizeof(__pyx_k_ptr), 0, 0, 1, 1},
   {&__pyx_n_s_range, __pyx_k_range, sizeof(__pyx_k_range), 0, 0, 1, 1},
-  {&__pyx_n_s_ref_block_num, __pyx_k_ref_block_num, sizeof(__pyx_k_ref_block_num), 0, 0, 1, 1},
-  {&__pyx_n_s_ref_block_prefix, __pyx_k_ref_block_prefix, sizeof(__pyx_k_ref_block_prefix), 0, 0, 1, 1},
-  {&__pyx_n_s_sign_transaction, __pyx_k_sign_transaction, sizeof(__pyx_k_sign_transaction), 0, 0, 1, 1},
+  {&__pyx_n_s_ref_block_id, __pyx_k_ref_block_id, sizeof(__pyx_k_ref_block_id), 0, 0, 1, 1},
+  {&__pyx_n_s_result, __pyx_k_result, sizeof(__pyx_k_result), 0, 0, 1, 1},
+  {&__pyx_n_s_result_type, __pyx_k_result_type, sizeof(__pyx_k_result_type), 0, 0, 1, 1},
+  {&__pyx_n_s_sign, __pyx_k_sign, sizeof(__pyx_k_sign), 0, 0, 1, 1},
   {&__pyx_kp_s_src__transaction_pyx, __pyx_k_src__transaction_pyx, sizeof(__pyx_k_src__transaction_pyx), 0, 0, 1, 0},
   {&__pyx_n_s_test, __pyx_k_test, sizeof(__pyx_k_test), 0, 0, 1, 1},
   {&__pyx_n_s_transaction, __pyx_k_transaction, sizeof(__pyx_k_transaction), 0, 0, 1, 1},
   {&__pyx_n_s_typing, __pyx_k_typing, sizeof(__pyx_k_typing), 0, 0, 1, 1},
+  {&__pyx_n_s_unpack, __pyx_k_unpack, sizeof(__pyx_k_unpack), 0, 0, 1, 1},
   {0, 0, 0, 0, 0, 0, 0}
 };
 static CYTHON_SMALL_CODE int __Pyx_InitCachedBuiltins(void) {
-  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) __PYX_ERR(0, 53, __pyx_L1_error)
+  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) __PYX_ERR(0, 50, __pyx_L1_error)
   return 0;
   __pyx_L1_error:;
   return -1;
@@ -2228,65 +2455,77 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__Pyx_InitCachedConstants", 0);
 
-  /* "_transaction.pyx":42
+  /* "_transaction.pyx":41
+ *     transaction_proxy *get_transaction_proxy()
  * 
- * #void *new_transaction(uint32_t expiration, uint16_t ref_block_num, uint32_t ref_block_prefix, uint32_t max_net_usage_words, uint8_t  max_cpu_usage_ms, uint32_t delay_sec);
- * def new_transaction(uint32_t expiration, uint16_t ref_block_num, uint32_t ref_block_prefix, uint32_t max_net_usage_words, uint8_t  max_cpu_usage_ms, uint32_t delay_sec) -> uint64_t:             # <<<<<<<<<<<<<<
- *     return <uint64_t>get_transaction_proxy().new_transaction(expiration, ref_block_num, ref_block_prefix, max_net_usage_words, max_cpu_usage_ms, delay_sec)
+ * def new_transaction(uint32_t expiration, ref_block_id: bytes, uint32_t max_net_usage_words, uint8_t  max_cpu_usage_ms, uint32_t delay_sec) -> uint64_t:             # <<<<<<<<<<<<<<
+ *     return <uint64_t>get_transaction_proxy().new_transaction(expiration, <const char *>ref_block_id, len(ref_block_id), max_net_usage_words, max_cpu_usage_ms, delay_sec)
  * 
  */
-  __pyx_tuple_ = PyTuple_Pack(6, __pyx_n_s_expiration, __pyx_n_s_ref_block_num, __pyx_n_s_ref_block_prefix, __pyx_n_s_max_net_usage_words, __pyx_n_s_max_cpu_usage_ms, __pyx_n_s_delay_sec); if (unlikely(!__pyx_tuple_)) __PYX_ERR(0, 42, __pyx_L1_error)
+  __pyx_tuple_ = PyTuple_Pack(5, __pyx_n_s_expiration, __pyx_n_s_ref_block_id, __pyx_n_s_max_net_usage_words, __pyx_n_s_max_cpu_usage_ms, __pyx_n_s_delay_sec); if (unlikely(!__pyx_tuple_)) __PYX_ERR(0, 41, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple_);
   __Pyx_GIVEREF(__pyx_tuple_);
-  __pyx_codeobj__2 = (PyObject*)__Pyx_PyCode_New(6, 0, 6, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple_, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_src__transaction_pyx, __pyx_n_s_new_transaction, 42, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__2)) __PYX_ERR(0, 42, __pyx_L1_error)
+  __pyx_codeobj__2 = (PyObject*)__Pyx_PyCode_New(5, 0, 5, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple_, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_src__transaction_pyx, __pyx_n_s_new_transaction, 41, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__2)) __PYX_ERR(0, 41, __pyx_L1_error)
 
-  /* "_transaction.pyx":46
+  /* "_transaction.pyx":44
+ *     return <uint64_t>get_transaction_proxy().new_transaction(expiration, <const char *>ref_block_id, len(ref_block_id), max_net_usage_words, max_cpu_usage_ms, delay_sec)
  * 
- * #void free_transaction(void *transaction);
- * def free_transaction(uint64_t ptr):             # <<<<<<<<<<<<<<
- *     get_transaction_proxy().free_transaction(<void *>ptr)
+ * def free(uint64_t ptr):             # <<<<<<<<<<<<<<
+ *     get_transaction_proxy().free(<void *>ptr)
  * 
  */
-  __pyx_tuple__3 = PyTuple_Pack(2, __pyx_n_s_ptr, __pyx_n_s_ptr); if (unlikely(!__pyx_tuple__3)) __PYX_ERR(0, 46, __pyx_L1_error)
+  __pyx_tuple__3 = PyTuple_Pack(2, __pyx_n_s_ptr, __pyx_n_s_ptr); if (unlikely(!__pyx_tuple__3)) __PYX_ERR(0, 44, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__3);
   __Pyx_GIVEREF(__pyx_tuple__3);
-  __pyx_codeobj__4 = (PyObject*)__Pyx_PyCode_New(1, 0, 2, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__3, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_src__transaction_pyx, __pyx_n_s_free_transaction, 46, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__4)) __PYX_ERR(0, 46, __pyx_L1_error)
+  __pyx_codeobj__4 = (PyObject*)__Pyx_PyCode_New(1, 0, 2, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__3, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_src__transaction_pyx, __pyx_n_s_free, 44, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__4)) __PYX_ERR(0, 44, __pyx_L1_error)
 
-  /* "_transaction.pyx":50
+  /* "_transaction.pyx":47
+ *     get_transaction_proxy().free(<void *>ptr)
  * 
- * #void add_action(void *transaction, uint64_t account, uint64_t name, const char *data, size_t size, vector[pair[uint64_t, uint64_t]]& auths);
  * def add_action(uint64_t ptr, uint64_t account, uint64_t name, data: bytes, auths: List):             # <<<<<<<<<<<<<<
  *     cdef vector[pair[uint64_t, uint64_t]] _auths
  *     _auths.resize(len(auths))
  */
-  __pyx_tuple__5 = PyTuple_Pack(8, __pyx_n_s_ptr, __pyx_n_s_account, __pyx_n_s_name, __pyx_n_s_data, __pyx_n_s_auths, __pyx_n_s_auths_2, __pyx_n_s_i, __pyx_n_s_auth); if (unlikely(!__pyx_tuple__5)) __PYX_ERR(0, 50, __pyx_L1_error)
+  __pyx_tuple__5 = PyTuple_Pack(8, __pyx_n_s_ptr, __pyx_n_s_account, __pyx_n_s_name, __pyx_n_s_data, __pyx_n_s_auths, __pyx_n_s_auths_2, __pyx_n_s_i, __pyx_n_s_auth); if (unlikely(!__pyx_tuple__5)) __PYX_ERR(0, 47, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__5);
   __Pyx_GIVEREF(__pyx_tuple__5);
-  __pyx_codeobj__6 = (PyObject*)__Pyx_PyCode_New(5, 0, 8, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__5, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_src__transaction_pyx, __pyx_n_s_add_action, 50, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__6)) __PYX_ERR(0, 50, __pyx_L1_error)
+  __pyx_codeobj__6 = (PyObject*)__Pyx_PyCode_New(5, 0, 8, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__5, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_src__transaction_pyx, __pyx_n_s_add_action, 47, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__6)) __PYX_ERR(0, 47, __pyx_L1_error)
 
-  /* "_transaction.pyx":59
+  /* "_transaction.pyx":55
+ *     get_transaction_proxy().add_action(<void *>ptr, account, name, <const char *>data, len(data), _auths)
  * 
- * #void sign_transaction(void *transaction, const char *private_key, size_t size)
- * def sign_transaction(uint64_t ptr, private_key: bytes):             # <<<<<<<<<<<<<<
- *     get_transaction_proxy().sign_transaction(<void *>ptr, <const char *>private_key, len(private_key))
+ * def sign(uint64_t ptr, private_key: bytes, chain_id: bytes) -> bool:             # <<<<<<<<<<<<<<
+ *     return get_transaction_proxy().sign(<void *>ptr, <const char *>private_key, len(private_key), <const char *>chain_id, len(chain_id))
  * 
  */
-  __pyx_tuple__7 = PyTuple_Pack(2, __pyx_n_s_ptr, __pyx_n_s_private_key); if (unlikely(!__pyx_tuple__7)) __PYX_ERR(0, 59, __pyx_L1_error)
+  __pyx_tuple__7 = PyTuple_Pack(3, __pyx_n_s_ptr, __pyx_n_s_private_key, __pyx_n_s_chain_id); if (unlikely(!__pyx_tuple__7)) __PYX_ERR(0, 55, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__7);
   __Pyx_GIVEREF(__pyx_tuple__7);
-  __pyx_codeobj__8 = (PyObject*)__Pyx_PyCode_New(2, 0, 2, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__7, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_src__transaction_pyx, __pyx_n_s_sign_transaction, 59, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__8)) __PYX_ERR(0, 59, __pyx_L1_error)
+  __pyx_codeobj__8 = (PyObject*)__Pyx_PyCode_New(3, 0, 3, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__7, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_src__transaction_pyx, __pyx_n_s_sign, 55, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__8)) __PYX_ERR(0, 55, __pyx_L1_error)
 
-  /* "_transaction.pyx":63
+  /* "_transaction.pyx":58
+ *     return get_transaction_proxy().sign(<void *>ptr, <const char *>private_key, len(private_key), <const char *>chain_id, len(chain_id))
  * 
- * #void pack_transaction(void *transaction, );
- * def pack_transaction(uint64_t ptr):             # <<<<<<<<<<<<<<
+ * def pack(uint64_t ptr, bool compress):             # <<<<<<<<<<<<<<
  *     cdef vector[char] packed_transaction
- *     get_transaction_proxy().pack_transaction(<void *>ptr, packed_transaction)
+ *     get_transaction_proxy().pack(<void *>ptr, compress, packed_transaction)
  */
-  __pyx_tuple__9 = PyTuple_Pack(3, __pyx_n_s_ptr, __pyx_n_s_ptr, __pyx_n_s_packed_transaction); if (unlikely(!__pyx_tuple__9)) __PYX_ERR(0, 63, __pyx_L1_error)
+  __pyx_tuple__9 = PyTuple_Pack(3, __pyx_n_s_ptr, __pyx_n_s_compress, __pyx_n_s_packed_transaction); if (unlikely(!__pyx_tuple__9)) __PYX_ERR(0, 58, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__9);
   __Pyx_GIVEREF(__pyx_tuple__9);
-  __pyx_codeobj__10 = (PyObject*)__Pyx_PyCode_New(1, 0, 3, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__9, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_src__transaction_pyx, __pyx_n_s_pack_transaction, 63, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__10)) __PYX_ERR(0, 63, __pyx_L1_error)
+  __pyx_codeobj__10 = (PyObject*)__Pyx_PyCode_New(2, 0, 3, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__9, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_src__transaction_pyx, __pyx_n_s_pack, 58, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__10)) __PYX_ERR(0, 58, __pyx_L1_error)
+
+  /* "_transaction.pyx":63
+ *     return PyBytes_FromStringAndSize(packed_transaction.data(), packed_transaction.size())
+ * 
+ * def unpack(packed_transaction: bytes, int result_type):             # <<<<<<<<<<<<<<
+ *     cdef string result
+ *     get_transaction_proxy().unpack(<const char *>packed_transaction, len(packed_transaction), result_type, result)
+ */
+  __pyx_tuple__11 = PyTuple_Pack(3, __pyx_n_s_packed_transaction, __pyx_n_s_result_type, __pyx_n_s_result); if (unlikely(!__pyx_tuple__11)) __PYX_ERR(0, 63, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__11);
+  __Pyx_GIVEREF(__pyx_tuple__11);
+  __pyx_codeobj__12 = (PyObject*)__Pyx_PyCode_New(2, 0, 3, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__11, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_src__transaction_pyx, __pyx_n_s_unpack, 63, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__12)) __PYX_ERR(0, 63, __pyx_L1_error)
   __Pyx_RefNannyFinishContext();
   return 0;
   __pyx_L1_error:;
@@ -2612,64 +2851,76 @@ if (!__Pyx_RefNanny) {
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "_transaction.pyx":42
+  /* "_transaction.pyx":41
+ *     transaction_proxy *get_transaction_proxy()
  * 
- * #void *new_transaction(uint32_t expiration, uint16_t ref_block_num, uint32_t ref_block_prefix, uint32_t max_net_usage_words, uint8_t  max_cpu_usage_ms, uint32_t delay_sec);
- * def new_transaction(uint32_t expiration, uint16_t ref_block_num, uint32_t ref_block_prefix, uint32_t max_net_usage_words, uint8_t  max_cpu_usage_ms, uint32_t delay_sec) -> uint64_t:             # <<<<<<<<<<<<<<
- *     return <uint64_t>get_transaction_proxy().new_transaction(expiration, ref_block_num, ref_block_prefix, max_net_usage_words, max_cpu_usage_ms, delay_sec)
- * 
- */
-  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_12_transaction_1new_transaction, NULL, __pyx_n_s_transaction); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 42, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_new_transaction, __pyx_t_2) < 0) __PYX_ERR(0, 42, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-
-  /* "_transaction.pyx":46
- * 
- * #void free_transaction(void *transaction);
- * def free_transaction(uint64_t ptr):             # <<<<<<<<<<<<<<
- *     get_transaction_proxy().free_transaction(<void *>ptr)
+ * def new_transaction(uint32_t expiration, ref_block_id: bytes, uint32_t max_net_usage_words, uint8_t  max_cpu_usage_ms, uint32_t delay_sec) -> uint64_t:             # <<<<<<<<<<<<<<
+ *     return <uint64_t>get_transaction_proxy().new_transaction(expiration, <const char *>ref_block_id, len(ref_block_id), max_net_usage_words, max_cpu_usage_ms, delay_sec)
  * 
  */
-  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_12_transaction_3free_transaction, NULL, __pyx_n_s_transaction); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 46, __pyx_L1_error)
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_12_transaction_1new_transaction, NULL, __pyx_n_s_transaction); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 41, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_free_transaction, __pyx_t_2) < 0) __PYX_ERR(0, 46, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_new_transaction, __pyx_t_2) < 0) __PYX_ERR(0, 41, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "_transaction.pyx":50
+  /* "_transaction.pyx":44
+ *     return <uint64_t>get_transaction_proxy().new_transaction(expiration, <const char *>ref_block_id, len(ref_block_id), max_net_usage_words, max_cpu_usage_ms, delay_sec)
  * 
- * #void add_action(void *transaction, uint64_t account, uint64_t name, const char *data, size_t size, vector[pair[uint64_t, uint64_t]]& auths);
+ * def free(uint64_t ptr):             # <<<<<<<<<<<<<<
+ *     get_transaction_proxy().free(<void *>ptr)
+ * 
+ */
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_12_transaction_3free, NULL, __pyx_n_s_transaction); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 44, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_free, __pyx_t_2) < 0) __PYX_ERR(0, 44, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+
+  /* "_transaction.pyx":47
+ *     get_transaction_proxy().free(<void *>ptr)
+ * 
  * def add_action(uint64_t ptr, uint64_t account, uint64_t name, data: bytes, auths: List):             # <<<<<<<<<<<<<<
  *     cdef vector[pair[uint64_t, uint64_t]] _auths
  *     _auths.resize(len(auths))
  */
-  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_12_transaction_5add_action, NULL, __pyx_n_s_transaction); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 50, __pyx_L1_error)
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_12_transaction_5add_action, NULL, __pyx_n_s_transaction); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 47, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_add_action, __pyx_t_2) < 0) __PYX_ERR(0, 50, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_add_action, __pyx_t_2) < 0) __PYX_ERR(0, 47, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "_transaction.pyx":59
+  /* "_transaction.pyx":55
+ *     get_transaction_proxy().add_action(<void *>ptr, account, name, <const char *>data, len(data), _auths)
  * 
- * #void sign_transaction(void *transaction, const char *private_key, size_t size)
- * def sign_transaction(uint64_t ptr, private_key: bytes):             # <<<<<<<<<<<<<<
- *     get_transaction_proxy().sign_transaction(<void *>ptr, <const char *>private_key, len(private_key))
+ * def sign(uint64_t ptr, private_key: bytes, chain_id: bytes) -> bool:             # <<<<<<<<<<<<<<
+ *     return get_transaction_proxy().sign(<void *>ptr, <const char *>private_key, len(private_key), <const char *>chain_id, len(chain_id))
  * 
  */
-  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_12_transaction_7sign_transaction, NULL, __pyx_n_s_transaction); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 59, __pyx_L1_error)
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_12_transaction_7sign, NULL, __pyx_n_s_transaction); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 55, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_sign_transaction, __pyx_t_2) < 0) __PYX_ERR(0, 59, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_sign, __pyx_t_2) < 0) __PYX_ERR(0, 55, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+
+  /* "_transaction.pyx":58
+ *     return get_transaction_proxy().sign(<void *>ptr, <const char *>private_key, len(private_key), <const char *>chain_id, len(chain_id))
+ * 
+ * def pack(uint64_t ptr, bool compress):             # <<<<<<<<<<<<<<
+ *     cdef vector[char] packed_transaction
+ *     get_transaction_proxy().pack(<void *>ptr, compress, packed_transaction)
+ */
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_12_transaction_9pack, NULL, __pyx_n_s_transaction); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 58, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_pack, __pyx_t_2) < 0) __PYX_ERR(0, 58, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
   /* "_transaction.pyx":63
+ *     return PyBytes_FromStringAndSize(packed_transaction.data(), packed_transaction.size())
  * 
- * #void pack_transaction(void *transaction, );
- * def pack_transaction(uint64_t ptr):             # <<<<<<<<<<<<<<
- *     cdef vector[char] packed_transaction
- *     get_transaction_proxy().pack_transaction(<void *>ptr, packed_transaction)
+ * def unpack(packed_transaction: bytes, int result_type):             # <<<<<<<<<<<<<<
+ *     cdef string result
+ *     get_transaction_proxy().unpack(<const char *>packed_transaction, len(packed_transaction), result_type, result)
  */
-  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_12_transaction_9pack_transaction, NULL, __pyx_n_s_transaction); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 63, __pyx_L1_error)
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_12_transaction_11unpack, NULL, __pyx_n_s_transaction); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 63, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_pack_transaction, __pyx_t_2) < 0) __PYX_ERR(0, 63, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_unpack, __pyx_t_2) < 0) __PYX_ERR(0, 63, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
   /* "_transaction.pyx":1
@@ -3659,202 +3910,6 @@ raise_neg_overflow:
 }
 
 /* CIntFromPy */
-static CYTHON_INLINE uint16_t __Pyx_PyInt_As_uint16_t(PyObject *x) {
-#ifdef __Pyx_HAS_GCC_DIAGNOSTIC
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wconversion"
-#endif
-    const uint16_t neg_one = (uint16_t) -1, const_zero = (uint16_t) 0;
-#ifdef __Pyx_HAS_GCC_DIAGNOSTIC
-#pragma GCC diagnostic pop
-#endif
-    const int is_unsigned = neg_one > const_zero;
-#if PY_MAJOR_VERSION < 3
-    if (likely(PyInt_Check(x))) {
-        if (sizeof(uint16_t) < sizeof(long)) {
-            __PYX_VERIFY_RETURN_INT(uint16_t, long, PyInt_AS_LONG(x))
-        } else {
-            long val = PyInt_AS_LONG(x);
-            if (is_unsigned && unlikely(val < 0)) {
-                goto raise_neg_overflow;
-            }
-            return (uint16_t) val;
-        }
-    } else
-#endif
-    if (likely(PyLong_Check(x))) {
-        if (is_unsigned) {
-#if CYTHON_USE_PYLONG_INTERNALS
-            const digit* digits = ((PyLongObject*)x)->ob_digit;
-            switch (Py_SIZE(x)) {
-                case  0: return (uint16_t) 0;
-                case  1: __PYX_VERIFY_RETURN_INT(uint16_t, digit, digits[0])
-                case 2:
-                    if (8 * sizeof(uint16_t) > 1 * PyLong_SHIFT) {
-                        if (8 * sizeof(unsigned long) > 2 * PyLong_SHIFT) {
-                            __PYX_VERIFY_RETURN_INT(uint16_t, unsigned long, (((((unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0])))
-                        } else if (8 * sizeof(uint16_t) >= 2 * PyLong_SHIFT) {
-                            return (uint16_t) (((((uint16_t)digits[1]) << PyLong_SHIFT) | (uint16_t)digits[0]));
-                        }
-                    }
-                    break;
-                case 3:
-                    if (8 * sizeof(uint16_t) > 2 * PyLong_SHIFT) {
-                        if (8 * sizeof(unsigned long) > 3 * PyLong_SHIFT) {
-                            __PYX_VERIFY_RETURN_INT(uint16_t, unsigned long, (((((((unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0])))
-                        } else if (8 * sizeof(uint16_t) >= 3 * PyLong_SHIFT) {
-                            return (uint16_t) (((((((uint16_t)digits[2]) << PyLong_SHIFT) | (uint16_t)digits[1]) << PyLong_SHIFT) | (uint16_t)digits[0]));
-                        }
-                    }
-                    break;
-                case 4:
-                    if (8 * sizeof(uint16_t) > 3 * PyLong_SHIFT) {
-                        if (8 * sizeof(unsigned long) > 4 * PyLong_SHIFT) {
-                            __PYX_VERIFY_RETURN_INT(uint16_t, unsigned long, (((((((((unsigned long)digits[3]) << PyLong_SHIFT) | (unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0])))
-                        } else if (8 * sizeof(uint16_t) >= 4 * PyLong_SHIFT) {
-                            return (uint16_t) (((((((((uint16_t)digits[3]) << PyLong_SHIFT) | (uint16_t)digits[2]) << PyLong_SHIFT) | (uint16_t)digits[1]) << PyLong_SHIFT) | (uint16_t)digits[0]));
-                        }
-                    }
-                    break;
-            }
-#endif
-#if CYTHON_COMPILING_IN_CPYTHON && PY_VERSION_HEX < 0x030C00A7
-            if (unlikely(Py_SIZE(x) < 0)) {
-                goto raise_neg_overflow;
-            }
-#else
-            {
-                int result = PyObject_RichCompareBool(x, Py_False, Py_LT);
-                if (unlikely(result < 0))
-                    return (uint16_t) -1;
-                if (unlikely(result == 1))
-                    goto raise_neg_overflow;
-            }
-#endif
-            if (sizeof(uint16_t) <= sizeof(unsigned long)) {
-                __PYX_VERIFY_RETURN_INT_EXC(uint16_t, unsigned long, PyLong_AsUnsignedLong(x))
-#ifdef HAVE_LONG_LONG
-            } else if (sizeof(uint16_t) <= sizeof(unsigned PY_LONG_LONG)) {
-                __PYX_VERIFY_RETURN_INT_EXC(uint16_t, unsigned PY_LONG_LONG, PyLong_AsUnsignedLongLong(x))
-#endif
-            }
-        } else {
-#if CYTHON_USE_PYLONG_INTERNALS
-            const digit* digits = ((PyLongObject*)x)->ob_digit;
-            switch (Py_SIZE(x)) {
-                case  0: return (uint16_t) 0;
-                case -1: __PYX_VERIFY_RETURN_INT(uint16_t, sdigit, (sdigit) (-(sdigit)digits[0]))
-                case  1: __PYX_VERIFY_RETURN_INT(uint16_t,  digit, +digits[0])
-                case -2:
-                    if (8 * sizeof(uint16_t) - 1 > 1 * PyLong_SHIFT) {
-                        if (8 * sizeof(unsigned long) > 2 * PyLong_SHIFT) {
-                            __PYX_VERIFY_RETURN_INT(uint16_t, long, -(long) (((((unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0])))
-                        } else if (8 * sizeof(uint16_t) - 1 > 2 * PyLong_SHIFT) {
-                            return (uint16_t) (((uint16_t)-1)*(((((uint16_t)digits[1]) << PyLong_SHIFT) | (uint16_t)digits[0])));
-                        }
-                    }
-                    break;
-                case 2:
-                    if (8 * sizeof(uint16_t) > 1 * PyLong_SHIFT) {
-                        if (8 * sizeof(unsigned long) > 2 * PyLong_SHIFT) {
-                            __PYX_VERIFY_RETURN_INT(uint16_t, unsigned long, (((((unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0])))
-                        } else if (8 * sizeof(uint16_t) - 1 > 2 * PyLong_SHIFT) {
-                            return (uint16_t) ((((((uint16_t)digits[1]) << PyLong_SHIFT) | (uint16_t)digits[0])));
-                        }
-                    }
-                    break;
-                case -3:
-                    if (8 * sizeof(uint16_t) - 1 > 2 * PyLong_SHIFT) {
-                        if (8 * sizeof(unsigned long) > 3 * PyLong_SHIFT) {
-                            __PYX_VERIFY_RETURN_INT(uint16_t, long, -(long) (((((((unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0])))
-                        } else if (8 * sizeof(uint16_t) - 1 > 3 * PyLong_SHIFT) {
-                            return (uint16_t) (((uint16_t)-1)*(((((((uint16_t)digits[2]) << PyLong_SHIFT) | (uint16_t)digits[1]) << PyLong_SHIFT) | (uint16_t)digits[0])));
-                        }
-                    }
-                    break;
-                case 3:
-                    if (8 * sizeof(uint16_t) > 2 * PyLong_SHIFT) {
-                        if (8 * sizeof(unsigned long) > 3 * PyLong_SHIFT) {
-                            __PYX_VERIFY_RETURN_INT(uint16_t, unsigned long, (((((((unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0])))
-                        } else if (8 * sizeof(uint16_t) - 1 > 3 * PyLong_SHIFT) {
-                            return (uint16_t) ((((((((uint16_t)digits[2]) << PyLong_SHIFT) | (uint16_t)digits[1]) << PyLong_SHIFT) | (uint16_t)digits[0])));
-                        }
-                    }
-                    break;
-                case -4:
-                    if (8 * sizeof(uint16_t) - 1 > 3 * PyLong_SHIFT) {
-                        if (8 * sizeof(unsigned long) > 4 * PyLong_SHIFT) {
-                            __PYX_VERIFY_RETURN_INT(uint16_t, long, -(long) (((((((((unsigned long)digits[3]) << PyLong_SHIFT) | (unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0])))
-                        } else if (8 * sizeof(uint16_t) - 1 > 4 * PyLong_SHIFT) {
-                            return (uint16_t) (((uint16_t)-1)*(((((((((uint16_t)digits[3]) << PyLong_SHIFT) | (uint16_t)digits[2]) << PyLong_SHIFT) | (uint16_t)digits[1]) << PyLong_SHIFT) | (uint16_t)digits[0])));
-                        }
-                    }
-                    break;
-                case 4:
-                    if (8 * sizeof(uint16_t) > 3 * PyLong_SHIFT) {
-                        if (8 * sizeof(unsigned long) > 4 * PyLong_SHIFT) {
-                            __PYX_VERIFY_RETURN_INT(uint16_t, unsigned long, (((((((((unsigned long)digits[3]) << PyLong_SHIFT) | (unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0])))
-                        } else if (8 * sizeof(uint16_t) - 1 > 4 * PyLong_SHIFT) {
-                            return (uint16_t) ((((((((((uint16_t)digits[3]) << PyLong_SHIFT) | (uint16_t)digits[2]) << PyLong_SHIFT) | (uint16_t)digits[1]) << PyLong_SHIFT) | (uint16_t)digits[0])));
-                        }
-                    }
-                    break;
-            }
-#endif
-            if (sizeof(uint16_t) <= sizeof(long)) {
-                __PYX_VERIFY_RETURN_INT_EXC(uint16_t, long, PyLong_AsLong(x))
-#ifdef HAVE_LONG_LONG
-            } else if (sizeof(uint16_t) <= sizeof(PY_LONG_LONG)) {
-                __PYX_VERIFY_RETURN_INT_EXC(uint16_t, PY_LONG_LONG, PyLong_AsLongLong(x))
-#endif
-            }
-        }
-        {
-#if CYTHON_COMPILING_IN_PYPY && !defined(_PyLong_AsByteArray)
-            PyErr_SetString(PyExc_RuntimeError,
-                            "_PyLong_AsByteArray() not available in PyPy, cannot convert large numbers");
-#else
-            uint16_t val;
-            PyObject *v = __Pyx_PyNumber_IntOrLong(x);
- #if PY_MAJOR_VERSION < 3
-            if (likely(v) && !PyLong_Check(v)) {
-                PyObject *tmp = v;
-                v = PyNumber_Long(tmp);
-                Py_DECREF(tmp);
-            }
- #endif
-            if (likely(v)) {
-                int one = 1; int is_little = (int)*(unsigned char *)&one;
-                unsigned char *bytes = (unsigned char *)&val;
-                int ret = _PyLong_AsByteArray((PyLongObject *)v,
-                                              bytes, sizeof(val),
-                                              is_little, !is_unsigned);
-                Py_DECREF(v);
-                if (likely(!ret))
-                    return val;
-            }
-#endif
-            return (uint16_t) -1;
-        }
-    } else {
-        uint16_t val;
-        PyObject *tmp = __Pyx_PyNumber_IntOrLong(x);
-        if (!tmp) return (uint16_t) -1;
-        val = __Pyx_PyInt_As_uint16_t(tmp);
-        Py_DECREF(tmp);
-        return val;
-    }
-raise_overflow:
-    PyErr_SetString(PyExc_OverflowError,
-        "value too large to convert to uint16_t");
-    return (uint16_t) -1;
-raise_neg_overflow:
-    PyErr_SetString(PyExc_OverflowError,
-        "can't convert negative value to uint16_t");
-    return (uint16_t) -1;
-}
-
-/* CIntFromPy */
 static CYTHON_INLINE uint8_t __Pyx_PyInt_As_uint8_t(PyObject *x) {
 #ifdef __Pyx_HAS_GCC_DIAGNOSTIC
 #pragma GCC diagnostic push
@@ -4246,6 +4301,202 @@ raise_neg_overflow:
     return (uint64_t) -1;
 }
 
+/* CIntFromPy */
+static CYTHON_INLINE int __Pyx_PyInt_As_int(PyObject *x) {
+#ifdef __Pyx_HAS_GCC_DIAGNOSTIC
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+#endif
+    const int neg_one = (int) -1, const_zero = (int) 0;
+#ifdef __Pyx_HAS_GCC_DIAGNOSTIC
+#pragma GCC diagnostic pop
+#endif
+    const int is_unsigned = neg_one > const_zero;
+#if PY_MAJOR_VERSION < 3
+    if (likely(PyInt_Check(x))) {
+        if (sizeof(int) < sizeof(long)) {
+            __PYX_VERIFY_RETURN_INT(int, long, PyInt_AS_LONG(x))
+        } else {
+            long val = PyInt_AS_LONG(x);
+            if (is_unsigned && unlikely(val < 0)) {
+                goto raise_neg_overflow;
+            }
+            return (int) val;
+        }
+    } else
+#endif
+    if (likely(PyLong_Check(x))) {
+        if (is_unsigned) {
+#if CYTHON_USE_PYLONG_INTERNALS
+            const digit* digits = ((PyLongObject*)x)->ob_digit;
+            switch (Py_SIZE(x)) {
+                case  0: return (int) 0;
+                case  1: __PYX_VERIFY_RETURN_INT(int, digit, digits[0])
+                case 2:
+                    if (8 * sizeof(int) > 1 * PyLong_SHIFT) {
+                        if (8 * sizeof(unsigned long) > 2 * PyLong_SHIFT) {
+                            __PYX_VERIFY_RETURN_INT(int, unsigned long, (((((unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0])))
+                        } else if (8 * sizeof(int) >= 2 * PyLong_SHIFT) {
+                            return (int) (((((int)digits[1]) << PyLong_SHIFT) | (int)digits[0]));
+                        }
+                    }
+                    break;
+                case 3:
+                    if (8 * sizeof(int) > 2 * PyLong_SHIFT) {
+                        if (8 * sizeof(unsigned long) > 3 * PyLong_SHIFT) {
+                            __PYX_VERIFY_RETURN_INT(int, unsigned long, (((((((unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0])))
+                        } else if (8 * sizeof(int) >= 3 * PyLong_SHIFT) {
+                            return (int) (((((((int)digits[2]) << PyLong_SHIFT) | (int)digits[1]) << PyLong_SHIFT) | (int)digits[0]));
+                        }
+                    }
+                    break;
+                case 4:
+                    if (8 * sizeof(int) > 3 * PyLong_SHIFT) {
+                        if (8 * sizeof(unsigned long) > 4 * PyLong_SHIFT) {
+                            __PYX_VERIFY_RETURN_INT(int, unsigned long, (((((((((unsigned long)digits[3]) << PyLong_SHIFT) | (unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0])))
+                        } else if (8 * sizeof(int) >= 4 * PyLong_SHIFT) {
+                            return (int) (((((((((int)digits[3]) << PyLong_SHIFT) | (int)digits[2]) << PyLong_SHIFT) | (int)digits[1]) << PyLong_SHIFT) | (int)digits[0]));
+                        }
+                    }
+                    break;
+            }
+#endif
+#if CYTHON_COMPILING_IN_CPYTHON && PY_VERSION_HEX < 0x030C00A7
+            if (unlikely(Py_SIZE(x) < 0)) {
+                goto raise_neg_overflow;
+            }
+#else
+            {
+                int result = PyObject_RichCompareBool(x, Py_False, Py_LT);
+                if (unlikely(result < 0))
+                    return (int) -1;
+                if (unlikely(result == 1))
+                    goto raise_neg_overflow;
+            }
+#endif
+            if (sizeof(int) <= sizeof(unsigned long)) {
+                __PYX_VERIFY_RETURN_INT_EXC(int, unsigned long, PyLong_AsUnsignedLong(x))
+#ifdef HAVE_LONG_LONG
+            } else if (sizeof(int) <= sizeof(unsigned PY_LONG_LONG)) {
+                __PYX_VERIFY_RETURN_INT_EXC(int, unsigned PY_LONG_LONG, PyLong_AsUnsignedLongLong(x))
+#endif
+            }
+        } else {
+#if CYTHON_USE_PYLONG_INTERNALS
+            const digit* digits = ((PyLongObject*)x)->ob_digit;
+            switch (Py_SIZE(x)) {
+                case  0: return (int) 0;
+                case -1: __PYX_VERIFY_RETURN_INT(int, sdigit, (sdigit) (-(sdigit)digits[0]))
+                case  1: __PYX_VERIFY_RETURN_INT(int,  digit, +digits[0])
+                case -2:
+                    if (8 * sizeof(int) - 1 > 1 * PyLong_SHIFT) {
+                        if (8 * sizeof(unsigned long) > 2 * PyLong_SHIFT) {
+                            __PYX_VERIFY_RETURN_INT(int, long, -(long) (((((unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0])))
+                        } else if (8 * sizeof(int) - 1 > 2 * PyLong_SHIFT) {
+                            return (int) (((int)-1)*(((((int)digits[1]) << PyLong_SHIFT) | (int)digits[0])));
+                        }
+                    }
+                    break;
+                case 2:
+                    if (8 * sizeof(int) > 1 * PyLong_SHIFT) {
+                        if (8 * sizeof(unsigned long) > 2 * PyLong_SHIFT) {
+                            __PYX_VERIFY_RETURN_INT(int, unsigned long, (((((unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0])))
+                        } else if (8 * sizeof(int) - 1 > 2 * PyLong_SHIFT) {
+                            return (int) ((((((int)digits[1]) << PyLong_SHIFT) | (int)digits[0])));
+                        }
+                    }
+                    break;
+                case -3:
+                    if (8 * sizeof(int) - 1 > 2 * PyLong_SHIFT) {
+                        if (8 * sizeof(unsigned long) > 3 * PyLong_SHIFT) {
+                            __PYX_VERIFY_RETURN_INT(int, long, -(long) (((((((unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0])))
+                        } else if (8 * sizeof(int) - 1 > 3 * PyLong_SHIFT) {
+                            return (int) (((int)-1)*(((((((int)digits[2]) << PyLong_SHIFT) | (int)digits[1]) << PyLong_SHIFT) | (int)digits[0])));
+                        }
+                    }
+                    break;
+                case 3:
+                    if (8 * sizeof(int) > 2 * PyLong_SHIFT) {
+                        if (8 * sizeof(unsigned long) > 3 * PyLong_SHIFT) {
+                            __PYX_VERIFY_RETURN_INT(int, unsigned long, (((((((unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0])))
+                        } else if (8 * sizeof(int) - 1 > 3 * PyLong_SHIFT) {
+                            return (int) ((((((((int)digits[2]) << PyLong_SHIFT) | (int)digits[1]) << PyLong_SHIFT) | (int)digits[0])));
+                        }
+                    }
+                    break;
+                case -4:
+                    if (8 * sizeof(int) - 1 > 3 * PyLong_SHIFT) {
+                        if (8 * sizeof(unsigned long) > 4 * PyLong_SHIFT) {
+                            __PYX_VERIFY_RETURN_INT(int, long, -(long) (((((((((unsigned long)digits[3]) << PyLong_SHIFT) | (unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0])))
+                        } else if (8 * sizeof(int) - 1 > 4 * PyLong_SHIFT) {
+                            return (int) (((int)-1)*(((((((((int)digits[3]) << PyLong_SHIFT) | (int)digits[2]) << PyLong_SHIFT) | (int)digits[1]) << PyLong_SHIFT) | (int)digits[0])));
+                        }
+                    }
+                    break;
+                case 4:
+                    if (8 * sizeof(int) > 3 * PyLong_SHIFT) {
+                        if (8 * sizeof(unsigned long) > 4 * PyLong_SHIFT) {
+                            __PYX_VERIFY_RETURN_INT(int, unsigned long, (((((((((unsigned long)digits[3]) << PyLong_SHIFT) | (unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0])))
+                        } else if (8 * sizeof(int) - 1 > 4 * PyLong_SHIFT) {
+                            return (int) ((((((((((int)digits[3]) << PyLong_SHIFT) | (int)digits[2]) << PyLong_SHIFT) | (int)digits[1]) << PyLong_SHIFT) | (int)digits[0])));
+                        }
+                    }
+                    break;
+            }
+#endif
+            if (sizeof(int) <= sizeof(long)) {
+                __PYX_VERIFY_RETURN_INT_EXC(int, long, PyLong_AsLong(x))
+#ifdef HAVE_LONG_LONG
+            } else if (sizeof(int) <= sizeof(PY_LONG_LONG)) {
+                __PYX_VERIFY_RETURN_INT_EXC(int, PY_LONG_LONG, PyLong_AsLongLong(x))
+#endif
+            }
+        }
+        {
+#if CYTHON_COMPILING_IN_PYPY && !defined(_PyLong_AsByteArray)
+            PyErr_SetString(PyExc_RuntimeError,
+                            "_PyLong_AsByteArray() not available in PyPy, cannot convert large numbers");
+#else
+            int val;
+            PyObject *v = __Pyx_PyNumber_IntOrLong(x);
+ #if PY_MAJOR_VERSION < 3
+            if (likely(v) && !PyLong_Check(v)) {
+                PyObject *tmp = v;
+                v = PyNumber_Long(tmp);
+                Py_DECREF(tmp);
+            }
+ #endif
+            if (likely(v)) {
+                int one = 1; int is_little = (int)*(unsigned char *)&one;
+                unsigned char *bytes = (unsigned char *)&val;
+                int ret = _PyLong_AsByteArray((PyLongObject *)v,
+                                              bytes, sizeof(val),
+                                              is_little, !is_unsigned);
+                Py_DECREF(v);
+                if (likely(!ret))
+                    return val;
+            }
+#endif
+            return (int) -1;
+        }
+    } else {
+        int val;
+        PyObject *tmp = __Pyx_PyNumber_IntOrLong(x);
+        if (!tmp) return (int) -1;
+        val = __Pyx_PyInt_As_int(tmp);
+        Py_DECREF(tmp);
+        return val;
+    }
+raise_overflow:
+    PyErr_SetString(PyExc_OverflowError,
+        "value too large to convert to int");
+    return (int) -1;
+raise_neg_overflow:
+    PyErr_SetString(PyExc_OverflowError,
+        "can't convert negative value to int");
+    return (int) -1;
+}
+
 /* CIntToPy */
 static CYTHON_INLINE PyObject* __Pyx_PyInt_From_uint64_t(uint64_t value) {
 #ifdef __Pyx_HAS_GCC_DIAGNOSTIC
@@ -4516,202 +4767,6 @@ raise_neg_overflow:
     PyErr_SetString(PyExc_OverflowError,
         "can't convert negative value to long");
     return (long) -1;
-}
-
-/* CIntFromPy */
-static CYTHON_INLINE int __Pyx_PyInt_As_int(PyObject *x) {
-#ifdef __Pyx_HAS_GCC_DIAGNOSTIC
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wconversion"
-#endif
-    const int neg_one = (int) -1, const_zero = (int) 0;
-#ifdef __Pyx_HAS_GCC_DIAGNOSTIC
-#pragma GCC diagnostic pop
-#endif
-    const int is_unsigned = neg_one > const_zero;
-#if PY_MAJOR_VERSION < 3
-    if (likely(PyInt_Check(x))) {
-        if (sizeof(int) < sizeof(long)) {
-            __PYX_VERIFY_RETURN_INT(int, long, PyInt_AS_LONG(x))
-        } else {
-            long val = PyInt_AS_LONG(x);
-            if (is_unsigned && unlikely(val < 0)) {
-                goto raise_neg_overflow;
-            }
-            return (int) val;
-        }
-    } else
-#endif
-    if (likely(PyLong_Check(x))) {
-        if (is_unsigned) {
-#if CYTHON_USE_PYLONG_INTERNALS
-            const digit* digits = ((PyLongObject*)x)->ob_digit;
-            switch (Py_SIZE(x)) {
-                case  0: return (int) 0;
-                case  1: __PYX_VERIFY_RETURN_INT(int, digit, digits[0])
-                case 2:
-                    if (8 * sizeof(int) > 1 * PyLong_SHIFT) {
-                        if (8 * sizeof(unsigned long) > 2 * PyLong_SHIFT) {
-                            __PYX_VERIFY_RETURN_INT(int, unsigned long, (((((unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0])))
-                        } else if (8 * sizeof(int) >= 2 * PyLong_SHIFT) {
-                            return (int) (((((int)digits[1]) << PyLong_SHIFT) | (int)digits[0]));
-                        }
-                    }
-                    break;
-                case 3:
-                    if (8 * sizeof(int) > 2 * PyLong_SHIFT) {
-                        if (8 * sizeof(unsigned long) > 3 * PyLong_SHIFT) {
-                            __PYX_VERIFY_RETURN_INT(int, unsigned long, (((((((unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0])))
-                        } else if (8 * sizeof(int) >= 3 * PyLong_SHIFT) {
-                            return (int) (((((((int)digits[2]) << PyLong_SHIFT) | (int)digits[1]) << PyLong_SHIFT) | (int)digits[0]));
-                        }
-                    }
-                    break;
-                case 4:
-                    if (8 * sizeof(int) > 3 * PyLong_SHIFT) {
-                        if (8 * sizeof(unsigned long) > 4 * PyLong_SHIFT) {
-                            __PYX_VERIFY_RETURN_INT(int, unsigned long, (((((((((unsigned long)digits[3]) << PyLong_SHIFT) | (unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0])))
-                        } else if (8 * sizeof(int) >= 4 * PyLong_SHIFT) {
-                            return (int) (((((((((int)digits[3]) << PyLong_SHIFT) | (int)digits[2]) << PyLong_SHIFT) | (int)digits[1]) << PyLong_SHIFT) | (int)digits[0]));
-                        }
-                    }
-                    break;
-            }
-#endif
-#if CYTHON_COMPILING_IN_CPYTHON && PY_VERSION_HEX < 0x030C00A7
-            if (unlikely(Py_SIZE(x) < 0)) {
-                goto raise_neg_overflow;
-            }
-#else
-            {
-                int result = PyObject_RichCompareBool(x, Py_False, Py_LT);
-                if (unlikely(result < 0))
-                    return (int) -1;
-                if (unlikely(result == 1))
-                    goto raise_neg_overflow;
-            }
-#endif
-            if (sizeof(int) <= sizeof(unsigned long)) {
-                __PYX_VERIFY_RETURN_INT_EXC(int, unsigned long, PyLong_AsUnsignedLong(x))
-#ifdef HAVE_LONG_LONG
-            } else if (sizeof(int) <= sizeof(unsigned PY_LONG_LONG)) {
-                __PYX_VERIFY_RETURN_INT_EXC(int, unsigned PY_LONG_LONG, PyLong_AsUnsignedLongLong(x))
-#endif
-            }
-        } else {
-#if CYTHON_USE_PYLONG_INTERNALS
-            const digit* digits = ((PyLongObject*)x)->ob_digit;
-            switch (Py_SIZE(x)) {
-                case  0: return (int) 0;
-                case -1: __PYX_VERIFY_RETURN_INT(int, sdigit, (sdigit) (-(sdigit)digits[0]))
-                case  1: __PYX_VERIFY_RETURN_INT(int,  digit, +digits[0])
-                case -2:
-                    if (8 * sizeof(int) - 1 > 1 * PyLong_SHIFT) {
-                        if (8 * sizeof(unsigned long) > 2 * PyLong_SHIFT) {
-                            __PYX_VERIFY_RETURN_INT(int, long, -(long) (((((unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0])))
-                        } else if (8 * sizeof(int) - 1 > 2 * PyLong_SHIFT) {
-                            return (int) (((int)-1)*(((((int)digits[1]) << PyLong_SHIFT) | (int)digits[0])));
-                        }
-                    }
-                    break;
-                case 2:
-                    if (8 * sizeof(int) > 1 * PyLong_SHIFT) {
-                        if (8 * sizeof(unsigned long) > 2 * PyLong_SHIFT) {
-                            __PYX_VERIFY_RETURN_INT(int, unsigned long, (((((unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0])))
-                        } else if (8 * sizeof(int) - 1 > 2 * PyLong_SHIFT) {
-                            return (int) ((((((int)digits[1]) << PyLong_SHIFT) | (int)digits[0])));
-                        }
-                    }
-                    break;
-                case -3:
-                    if (8 * sizeof(int) - 1 > 2 * PyLong_SHIFT) {
-                        if (8 * sizeof(unsigned long) > 3 * PyLong_SHIFT) {
-                            __PYX_VERIFY_RETURN_INT(int, long, -(long) (((((((unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0])))
-                        } else if (8 * sizeof(int) - 1 > 3 * PyLong_SHIFT) {
-                            return (int) (((int)-1)*(((((((int)digits[2]) << PyLong_SHIFT) | (int)digits[1]) << PyLong_SHIFT) | (int)digits[0])));
-                        }
-                    }
-                    break;
-                case 3:
-                    if (8 * sizeof(int) > 2 * PyLong_SHIFT) {
-                        if (8 * sizeof(unsigned long) > 3 * PyLong_SHIFT) {
-                            __PYX_VERIFY_RETURN_INT(int, unsigned long, (((((((unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0])))
-                        } else if (8 * sizeof(int) - 1 > 3 * PyLong_SHIFT) {
-                            return (int) ((((((((int)digits[2]) << PyLong_SHIFT) | (int)digits[1]) << PyLong_SHIFT) | (int)digits[0])));
-                        }
-                    }
-                    break;
-                case -4:
-                    if (8 * sizeof(int) - 1 > 3 * PyLong_SHIFT) {
-                        if (8 * sizeof(unsigned long) > 4 * PyLong_SHIFT) {
-                            __PYX_VERIFY_RETURN_INT(int, long, -(long) (((((((((unsigned long)digits[3]) << PyLong_SHIFT) | (unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0])))
-                        } else if (8 * sizeof(int) - 1 > 4 * PyLong_SHIFT) {
-                            return (int) (((int)-1)*(((((((((int)digits[3]) << PyLong_SHIFT) | (int)digits[2]) << PyLong_SHIFT) | (int)digits[1]) << PyLong_SHIFT) | (int)digits[0])));
-                        }
-                    }
-                    break;
-                case 4:
-                    if (8 * sizeof(int) > 3 * PyLong_SHIFT) {
-                        if (8 * sizeof(unsigned long) > 4 * PyLong_SHIFT) {
-                            __PYX_VERIFY_RETURN_INT(int, unsigned long, (((((((((unsigned long)digits[3]) << PyLong_SHIFT) | (unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0])))
-                        } else if (8 * sizeof(int) - 1 > 4 * PyLong_SHIFT) {
-                            return (int) ((((((((((int)digits[3]) << PyLong_SHIFT) | (int)digits[2]) << PyLong_SHIFT) | (int)digits[1]) << PyLong_SHIFT) | (int)digits[0])));
-                        }
-                    }
-                    break;
-            }
-#endif
-            if (sizeof(int) <= sizeof(long)) {
-                __PYX_VERIFY_RETURN_INT_EXC(int, long, PyLong_AsLong(x))
-#ifdef HAVE_LONG_LONG
-            } else if (sizeof(int) <= sizeof(PY_LONG_LONG)) {
-                __PYX_VERIFY_RETURN_INT_EXC(int, PY_LONG_LONG, PyLong_AsLongLong(x))
-#endif
-            }
-        }
-        {
-#if CYTHON_COMPILING_IN_PYPY && !defined(_PyLong_AsByteArray)
-            PyErr_SetString(PyExc_RuntimeError,
-                            "_PyLong_AsByteArray() not available in PyPy, cannot convert large numbers");
-#else
-            int val;
-            PyObject *v = __Pyx_PyNumber_IntOrLong(x);
- #if PY_MAJOR_VERSION < 3
-            if (likely(v) && !PyLong_Check(v)) {
-                PyObject *tmp = v;
-                v = PyNumber_Long(tmp);
-                Py_DECREF(tmp);
-            }
- #endif
-            if (likely(v)) {
-                int one = 1; int is_little = (int)*(unsigned char *)&one;
-                unsigned char *bytes = (unsigned char *)&val;
-                int ret = _PyLong_AsByteArray((PyLongObject *)v,
-                                              bytes, sizeof(val),
-                                              is_little, !is_unsigned);
-                Py_DECREF(v);
-                if (likely(!ret))
-                    return val;
-            }
-#endif
-            return (int) -1;
-        }
-    } else {
-        int val;
-        PyObject *tmp = __Pyx_PyNumber_IntOrLong(x);
-        if (!tmp) return (int) -1;
-        val = __Pyx_PyInt_As_int(tmp);
-        Py_DECREF(tmp);
-        return val;
-    }
-raise_overflow:
-    PyErr_SetString(PyExc_OverflowError,
-        "value too large to convert to int");
-    return (int) -1;
-raise_neg_overflow:
-    PyErr_SetString(PyExc_OverflowError,
-        "can't convert negative value to int");
-    return (int) -1;
 }
 
 /* FastTypeChecks */

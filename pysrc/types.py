@@ -115,6 +115,9 @@ class PublicKey(object):
     def __eq__(self, other) -> bool:
         return self.raw == other.raw
 
+    def to_bytes(self):
+        return self.raw
+
     def to_base58(self):
         hash = hashlib.new('ripemd160')
         hash.update(self.raw[1:])
@@ -138,6 +141,55 @@ class PublicKey(object):
     def unpack(cls, dec):
         raw =  dec.read_bytes(34)
         return cls(raw)
+
+class PrivateKey(object):
+
+    def __init__(self, raw: bytes):
+        assert len(raw) == 33
+        self.raw = raw
+
+    def to_bytes(self):
+        return self.raw
+
+    def __repr__(self):
+        return self.to_base58()
+
+    def __eq__(self, other) -> bool:
+        return self.raw == other.raw
+
+    def to_base58(self):
+        hash = hashlib.sha256()
+        raw = b'\x80' + self.raw[1:]
+        hash.update(raw)
+        digest = hash.digest()
+        hash = hashlib.sha256()
+        hash.update(digest)
+        digest = hash.digest()
+        ret = eos.bytes_to_base58(raw + hash.digest()[:4])
+        return ret
+
+    @classmethod
+    def from_base58(cls, pub: str):
+        pub = eos.base58_to_bytes(pub)
+        assert len(pub) == 37
+        h = hashlib.sha256()
+        h.update(pub[:-4])
+        digest = h.digest()
+        h = hashlib.sha256()
+        h.update(digest)
+        digest = h.digest()
+        assert pub[-4:] == digest[:4], f'invalid checksum: {pub[-4:]} != {digest[:4]}'
+        return cls(b'\x00' + pub[1:-4])
+
+    def pack(self, enc):
+        enc.write_bytes(self.raw)
+        return 34
+
+    @classmethod
+    def unpack(cls, dec):
+        raw =  dec.read_bytes(34)
+        return cls(raw)
+
 
 class Signature(object):
     def __init__(self, raw: bytes):
