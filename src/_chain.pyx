@@ -43,7 +43,7 @@ cdef extern from "_ipyeos.hpp":
         void set_action_blacklist(string& params)
         void set_key_blacklist(string& params)
         uint32_t head_block_num()
-        string head_block_time()
+        int64_t head_block_time()
         string head_block_id()
         string head_block_producer()
         string head_block_header()
@@ -104,7 +104,7 @@ cdef extern from "_ipyeos.hpp":
         bool all_subjective_mitigations_disabled()
         string get_scheduled_producer(string& _block_time)
 
-        void gen_transaction(bool json, string& _actions, string& expiration, string& reference_block_id, string& _chain_id, bool compress, string& _private_keys, vector[char]& result)
+        void gen_transaction(bool json, string& _actions, int64_t expiration, string& reference_block_id, string& _chain_id, bool compress, string& _private_keys, vector[char]& result)
         string push_transaction(string& _packed_trx, string& deadline, uint32_t billed_cpu_time_us, bool explicit_cpu_bill, uint32_t subjective_cpu_bill_us)
         bool push_block(void *block_log_ptr, uint32_t block_num)
         bool push_raw_block(const vector[char]& raw_block)
@@ -194,9 +194,9 @@ def head_block_num(uint64_t ptr):
     '''
     return chain(ptr).head_block_num()
 
-def head_block_time(uint64_t ptr):
+def head_block_time(uint64_t ptr) -> int:
     '''
-    returns: str
+    returns: int
     '''
     return chain(ptr).head_block_time()
 
@@ -533,7 +533,7 @@ def get_scheduled_producer(uint64_t ptr, string& block_time):
     '''
     return chain(ptr).get_scheduled_producer(block_time)
 
-def gen_transaction(uint64_t ptr, bool json, string& _actions, string& expiration, string& reference_block_id, string& _chain_id, bool compress, string& _private_keys):
+def gen_transaction(uint64_t ptr, bool json, string& _actions,  int64_t expiration, string& reference_block_id, string& _chain_id, bool compress, string& _private_keys):
     cdef vector[char] result
     chain(ptr).gen_transaction(json, _actions, expiration, reference_block_id, _chain_id, compress, _private_keys, result)
     return PyBytes_FromStringAndSize(result.data(), result.size())

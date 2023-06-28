@@ -46,6 +46,7 @@ ext_modules = [
             'src/_database.pyx',
             'src/_eos.pyx',
             'src/_vm_api.pyx',
+            'src/_transaction.pyx'
         ],
         include_dirs=[
             'src',

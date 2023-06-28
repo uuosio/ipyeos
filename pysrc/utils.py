@@ -26,4 +26,4 @@ def f2b(value: float) -> bytes:
 def get_block_num_from_block_id(block_id: str) -> int:
     assert len(block_id) == 64
     assert isinstance(block_id, str)
-    return int.from_bytes(bytes.fromhex(block_id[:8]), 'big')
+    return int.from_bytes(bytes.fromhex(block_id[:4]), 'big')

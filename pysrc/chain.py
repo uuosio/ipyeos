@@ -5,7 +5,7 @@ from typing import Dict, List, Optional, Union
 from . import _chain, _eos, log
 from .types import U8, U16, U32, U64, I64, Name, PublicKey
 from .block_log import BlockLog
-from .types import U128
+from .types import U128, Checksum256
 
 logger = log.get_logger(__name__)
 
@@ -175,15 +175,18 @@ class Chain(object):
         blacklist = json.dumps(blacklist)
         _chain.set_key_blacklist(self.ptr, blacklist)
 
+    @property
     def head_block_num(self) -> int:
         return _chain.head_block_num(self.ptr)
 
-    def head_block_time(self) -> datetime:
-        iso_time = _chain.head_block_time(self.ptr)
-        return datetime.strptime(iso_time, "%Y-%m-%dT%H:%M:%S.%f")
+    @property
+    def head_block_time(self) -> int:
+        return _chain.head_block_time(self.ptr)
 
-    def head_block_id(self) -> str:
-        return _chain.head_block_id(self.ptr)
+    @property
+    def head_block_id(self) -> Checksum256:
+        block_id = _chain.head_block_id(self.ptr)
+        return Checksum256.from_string(block_id)
 
     def head_block_producer(self) -> Name:
         return _chain.head_block_producer(self.ptr)
@@ -201,24 +204,6 @@ class Chain(object):
 
     def fork_db_head_block_id(self) -> str:
         return _chain.fork_db_head_block_id(self.ptr)
-
-    def fork_db_head_block_time(self) -> str:
-        return _chain.fork_db_head_block_time(self.ptr)
-
-    def fork_db_head_block_producer(self) -> Name:
-        return _chain.fork_db_head_block_producer(self.ptr)
-
-    def fork_db_pending_head_block_num(self) -> int:
-        return _chain.fork_db_pending_head_block_num(self.ptr)
-
-    def fork_db_pending_head_block_id(self) -> str:
-        return _chain.fork_db_pending_head_block_id(self.ptr)
-
-    def fork_db_pending_head_block_time(self) -> str:
-        return _chain.fork_db_pending_head_block_time(self.ptr)
-
-    def fork_db_pending_head_block_producer(self) -> Name:
-        return _chain.fork_db_pending_head_block_producer(self.ptr)
 
     def pending_block_time(self) -> int:
         return _chain.pending_block_time(self.ptr)
@@ -248,11 +233,14 @@ class Chain(object):
         ret = _chain.proposed_producers(self.ptr)
         return json.loads(ret)
 
+    @property
     def last_irreversible_block_num(self) -> int:
         return _chain.last_irreversible_block_num(self.ptr)
 
-    def last_irreversible_block_id(self) -> str:
-        return _chain.last_irreversible_block_id(self.ptr)
+    @property
+    def last_irreversible_block_id(self) -> Checksum256:
+        block_id = _chain.last_irreversible_block_id(self.ptr)
+        return Checksum256.from_string(block_id)
 
     def fetch_block_by_number(self, block_num) -> bytes:
         return _chain.fetch_block_by_number(self.ptr, block_num, raw_block)
@@ -489,10 +477,7 @@ class Chain(object):
         ret = _chain.unpack_action_args(self.ptr, name, action, raw_args)
         return json.loads(ret)
 
-    def gen_transaction(self, json_str, _actions: List, expiration: datetime, reference_block_id: str, _id: str, compress: bool, _private_keys: List) -> str:
-        if isinstance(expiration, datetime):
-            expiration = isoformat(expiration)
-
+    def gen_transaction(self, json_str, _actions: List, expiration: int, reference_block_id: str, _id: str, compress: bool, _private_keys: List) -> str:
         if isinstance(_actions, list):
             _actions = json.dumps(_actions)
 

@@ -66,6 +66,7 @@ def quit_app():
                 command = result.subparser
             else:
                 print('unknow command', sys.argv)
+                return
 
             if command == 'eosdebugger':
                 result = args.parse_parent_process_args()

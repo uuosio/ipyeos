@@ -1,4 +1,4 @@
 CODEABI_1.0 {
-    global: PyInit__chain;PyInit__chainapi;PyInit__eos;PyInit__vm_api;PyInit__database;PyInit__block_log;native_apply;
+    global: PyInit__chain;PyInit__chainapi;PyInit__eos;PyInit__vm_api;PyInit__database;PyInit__block_log;PyInit__transaction;native_apply;
     local: *;
 };

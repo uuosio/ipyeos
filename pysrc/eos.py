@@ -14,14 +14,12 @@ class NativeType:
     notice_message = 4
     request_message = 5
     sync_request_message = 6
-    signed_block_v0 = 7         # which = 7
-    packed_transaction_v0 = 8   # which = 8
-    signed_block = 9            # which = 9
-    trx_message_v1 = 10         # which = 10
-    genesis_state = 11
-    abi_def = 12
-    transaction_type = 13
-    global_property_type = 14
+    signed_block = 7         # which = 7
+    packed_transaction = 8   # which = 8
+    genesis_state = 9
+    abi_def = 10
+    transaction_type = 11
+    global_property_type = 12
 
 class LogLevel(Enum):
     ALL = 0
@@ -66,7 +64,10 @@ def pack_native_object(_type: int, obj: Union[dict, str]) -> bytes:
     return _eos.pack_native_object(_type, obj)
 
 def unpack_native_object(_type: int, packed_obj: bytes) -> dict:
-    return _eos.unpack_native_object(_type, packed_obj)
+    ret = _eos.unpack_native_object(_type, packed_obj)
+    if not ret:
+        raise Exception(_eos.get_last_error_and_clear())
+    return ret
 
 def pack_block(obj: Union[dict, str]) -> bytes:
     if isinstance(obj, dict):
@@ -79,7 +80,7 @@ def unpack_block(packed_obj: bytes) -> dict:
     return _eos.unpack_native_object(NativeType.signed_block, packed_obj)
 
 def unpack_transaction(packed_obj: bytes) -> dict:
-    return _eos.unpack_native_object(NativeType.packed_transaction_v0, packed_obj)
+    return _eos.unpack_native_object(NativeType.packed_transaction, packed_obj)
 
 def pack_abi(abi: str) -> bytes:
     if not abi:

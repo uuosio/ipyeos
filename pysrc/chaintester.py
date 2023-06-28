@@ -10,7 +10,8 @@ import tempfile
 from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional, Union
 
-import pytest
+from .modules import load_modules
+load_modules()
 
 from ipyeos import chain, chainapi, database, config
 
@@ -80,22 +81,21 @@ genesis_test = {
   "initial_configuration": {
     "max_block_net_usage": 1048576,
     "target_block_net_usage_pct": 1000,
-    "max_transaction_net_usage": 652441,
+    "max_transaction_net_usage": 524288,
     "base_per_transaction_net_usage": 12,
     "net_usage_leeway": 500,
     "context_free_discount_net_usage_num": 20,
     "context_free_discount_net_usage_den": 100,
-    "max_block_cpu_usage": 450000,
+    "max_block_cpu_usage": 200000,
     "target_block_cpu_usage_pct": 1000,
-    "max_transaction_cpu_usage": 300000,
+    "max_transaction_cpu_usage": 150000,
     "min_transaction_cpu_usage": 100,
     "max_transaction_lifetime": 3600,
     "deferred_trx_expiration_window": 600,
     "max_transaction_delay": 3888000,
     "max_inline_action_size": 524288,
     "max_inline_action_depth": 4,
-    "max_authority_depth": 6,
-    "max_action_return_value_size": 256,
+    "max_authority_depth": 6
   }
 }
 
@@ -499,11 +499,11 @@ class ChainTester(object):
         #     logger.info(f'+++++{account} {action} {elapsed}')
         return ret
 
-    def gen_transaction(self, actions: List, json_str=False):
+    def gen_transaction(self, actions: List, json_str=False, compress=False):
         _actions = []
         for a in actions:
             _actions.append(self.gen_action(*a))
-        return self.gen_transaction_ex(_actions, json_str)
+        return self.gen_transaction_ex(_actions, json_str, compress)
 
     def get_required_keys(self, actions):
         fake_tx = {
@@ -538,9 +538,9 @@ class ChainTester(object):
             priv_keys.append(key_map[key])
         return priv_keys
 
-    def gen_transaction_ex(self, actions: List, json_str=False):
+    def gen_transaction_ex(self, actions: List, json_str=False, compress=False):
         chain_id = self.chain.id()
-        ref_block_id = self.chain.last_irreversible_block_id()
+        ref_block_id = self.chain.last_irreversible_block_id.to_string()
 
         priv_keys = self.get_required_private_keys(actions)
 
@@ -556,12 +556,12 @@ class ChainTester(object):
         actions = json.dumps(actions)
         # expiration = datetime.utcnow() + timedelta(seconds=60*60)
 
-        expiration = self.chain.head_block_time()
+        expiration = self.chain.head_block_time
         # now = datetime.utcnow()
         # if expiration < now:
         #     expiration = now
-        expiration = expiration + timedelta(seconds=60)
-        ret = self.chain.gen_transaction(json_str, actions, expiration, ref_block_id, chain_id, False, priv_keys)
+        expiration = expiration + 60*1e6
+        ret = self.chain.gen_transaction(json_str, actions, expiration, ref_block_id, chain_id, compress, priv_keys)
         if json_str:
             return json.loads(ret)
         return ret
@@ -589,7 +589,7 @@ class ChainTester(object):
 
 #        self.chain.abort_block()
         now = datetime.utcnow()
-        base = self.chain.head_block_time()
+        base = self.chain.head_block_time
         if base < now:
             base = now
         min_time_to_next_block = config.block_interval_us - int(base.timestamp()*1e6) % config.block_interval_us

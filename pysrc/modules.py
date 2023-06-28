@@ -6,7 +6,7 @@ def load_modules():
 
     from . import _eos
 
-    modules = ['_chain', '_chainapi', '_vm_api', '_database', '_block_log']
+    modules = ['_chain', '_chainapi', '_vm_api', '_database', '_block_log', '_transaction']
     ipyeos_module = sys.modules.get('ipyeos._eos')
     assert ipyeos_module, 'ipyeos._eos module not found'
     ipyeos_eos_so = ipyeos_module.__file__

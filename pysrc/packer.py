@@ -29,6 +29,14 @@ def unpack_length(val: bytes):
             break
     return v, n
 
+class Packer(object):
+    def pack(self, enc):
+        assert False, "Not implemented"
+
+    @classmethod
+    def unpack(cls, dec):
+        assert False, "Not implemented"
+
 class Encoder(object):
 
     def __init__(self):
@@ -145,11 +153,15 @@ class Encoder(object):
                 self.pack(item)
         return self.get_pos() - pos
 
-    def pack_optional(self, value: Any, tp: Type):
+    def pack_optional(self, value: Any, tp: Type=None):
         if value is None:
             self.pack_u8(0)
             return 1
         self.pack_u8(1)
+
+        if isinstance(value, Packer):
+            return self.pack(value) + 1
+
         if tp is U32:
             return self.pack_u32(value) + 1
         elif tp is U64:
@@ -175,12 +187,12 @@ class Encoder(object):
 class Decoder(object):
     def __init__(self, raw_data: bytes):
         self.raw_data = raw_data
-        self.pos = 0
+        self._pos = 0
 
     def read_bytes(self, size):
-        assert len(self.raw_data) >= self.pos + size
-        ret = self.raw_data[self.pos:self.pos+size]
-        self.pos += size
+        assert len(self.raw_data) >= self._pos + size
+        ret = self.raw_data[self._pos:self._pos+size]
+        self._pos += size
         return ret
 
     def unpack(self, unpacker):
@@ -286,7 +298,14 @@ class Decoder(object):
     def get_bytes(self, size):
         ret = self.read_bytes(size)
         return ret
+    
+    @property
+    def pos(self):
+        return self._pos
+
+    def reset_pos(self):
+        self._pos = 0
 
     def get_pos(self):
-        return self.pos
+        return self._pos
 

@@ -82,9 +82,16 @@ class Checksum256(object):
     def to_bytes(self):
         return self.raw
 
+    def to_string(self):
+        return self.raw.hex()
+
     @classmethod
-    def from_str(cls, s: str):
-        assert len(s) == 64
+    def empty(cls):
+        return Checksum256(bytes(32))
+
+    @classmethod
+    def from_string(cls, s: str):
+        assert len(s) == 64, f'invalid checksum256 string: length is {len(s)}, should be 64'
         return Checksum256(bytes.fromhex(s))
 
     def pack(self, enc) -> int:
@@ -121,7 +128,7 @@ class PublicKey(object):
         assert len(pub) == 37
         digest = hashlib.new('ripemd160', pub[:-4]).digest()
         assert pub[-4:] == digest[:4]
-        return PublicKey(b'\x00' + pub[:-4])
+        return cls(b'\x00' + pub[:-4])
 
     def pack(self, enc):
         enc.write_bytes(self.raw)
@@ -130,7 +137,7 @@ class PublicKey(object):
     @classmethod
     def unpack(cls, dec):
         raw =  dec.read_bytes(34)
-        return PublicKey(raw)
+        return cls(raw)
 
 class Signature(object):
     def __init__(self, raw: bytes):
@@ -186,4 +193,8 @@ class Signature(object):
         if digest[:4] != sig[65:]:
             raise Exception('Checksum mismatch')
 
-        return Signature(b'\x00' + sig[:65])
+        return cls(b'\x00' + sig[:65])
+
+    @classmethod
+    def empty(cls):
+        return cls(bytes(66))
