@@ -162,7 +162,7 @@ def test_find(tester: ChainTester):
 @chain_test(True)
 def test_lower_bound(tester: ChainTester):
     object_types = [1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 30, 31, 32, 33, 34, 38, 39, 40, 41]
-    start = time.time()
+    start = time.monotonic()
     for tp in object_types:
         if tp in [15, ]: #block_summary_object, code_object
             continue
@@ -182,7 +182,7 @@ def test_lower_bound(tester: ChainTester):
     raw_data = tester.db.upper_bound(40, 0, int.to_bytes(0, 8, 'little'))
     print(40, len(raw_data))
     
-    print(time.time() - start)
+    print(time.monotonic() - start)
 
 def parse_account_object(data: bytes):
     #class account_object:

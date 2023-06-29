@@ -1,6 +1,6 @@
 import hashlib
 from typing import NewType
-from . import eos
+from . import eos, log
 
 I8 = NewType('I8', int)
 U8 = NewType('U8', int)
@@ -15,35 +15,6 @@ U128 = NewType('U128', int)
 U256 = NewType('U256', int)
 Name = NewType('Name', str)
 TimePointSec = NewType('U32', int)
-
-# class Name(object):
-#     def __init__(self, s: str, raw = None):
-#         self.s = s
-#         if not raw:
-#             self.raw = eos.s2b(s)
-#         else:
-#             self.raw = raw
-
-#     def n2b(self):
-#         return self.raw
-
-#     def __repr__(self):
-#         return self.s
-    
-#     def __eq__(self, other):
-#         return self.s == other.s
-    
-#     def pack(self, enc):
-#         enc.write_bytes(self.raw)
-#         return len(self.raw)
-    
-#     @classmethod
-#     def unpack(cls, dec):
-#         raw = dec.read_bytes(8)
-#         return Name(eos.b2s(raw), raw)
-
-#    def to_bytes(self):
-#        return self.raw
 
 class F128(object):
     def __init__(self, raw: bytes):
@@ -188,8 +159,8 @@ class PrivateKey(object):
     @classmethod
     def unpack(cls, dec):
         raw =  dec.read_bytes(34)
+        assert raw[0] == 0x00, f'invalid private key type: {raw[0]}'
         return cls(raw)
-
 
 class Signature(object):
     def __init__(self, raw: bytes):

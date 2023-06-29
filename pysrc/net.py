@@ -5,6 +5,7 @@ from typing import List, Type, Union, Any
 from .packer import Encoder, Decoder
 from .types import *
 from . import log
+from .transaction import Transaction
 
 handshake_message = 0
 chain_size_message = 1
@@ -13,7 +14,7 @@ time_message = 3
 notice_message = 4
 request_message = 5
 sync_request_message = 6
-signed_block = 7         # which = 7
+signed_block_message = 7         # which = 7
 packed_transaction = 8   # which = 8
 genesis_state = 9
 abi_def = 10
@@ -46,6 +47,12 @@ class NetMessage(object):
     msg_type = None
 
     def pack_message(self):
+        """
+        Packs the message into a binary format that can be sent over the network.
+
+        Returns:
+            A bytes object containing the packed message.
+        """
         enc = Encoder()
         enc.pack(self)
         raw_msg = enc.get_bytes()
@@ -60,6 +67,29 @@ class HandshakeMessage(NetMessage):
     msg_type = handshake_message
 
     def __init__(self, network_version: U16, chain_id: Checksum256, node_id: Checksum256, key: PublicKey, time: I64, token: Checksum256, sig: Signature, p2p_address: str, last_irreversible_block_num: U32, last_irreversible_block_id: Checksum256, head_num: U32, head_id: Checksum256, os: str, agent: str, generation: I16):
+        """
+        Initializes a new `NetPlugin` object with the specified parameters.
+
+        Args:
+            network_version (U16): The network version.
+            chain_id (Checksum256): The chain ID.
+            node_id (Checksum256): The node ID.
+            key (PublicKey): The public key.
+            time (I64): The time.
+            token (Checksum256): The token.
+            sig (Signature): The signature.
+            p2p_address (str): The P2P address.
+            last_irreversible_block_num (U32): The last irreversible block number.
+            last_irreversible_block_id (Checksum256): The last irreversible block ID.
+            head_num (U32): The head block number.
+            head_id (Checksum256): The head block ID.
+            os (str): The operating system.
+            agent (str): The agent.
+            generation (I16): The generation.
+
+        Returns:
+            None
+        """
         self.network_version = network_version
         self.chain_id = chain_id
         self.node_id = node_id
@@ -186,6 +216,15 @@ class ChainSizeMessage(NetMessage):
     msg_type = chain_size_message
 
     def __init__(self, last_irreversible_block_num: U32, last_irreversible_block_id: Checksum256, head_num: U32, head_id: Checksum256):
+        """
+        Represents the current state of the network.
+
+        Args:
+            last_irreversible_block_num (int): The block number of the last irreversible block.
+            last_irreversible_block_id (bytes): The ID of the last irreversible block.
+            head_num (int): The block number of the current head block.
+            head_id (bytes): The ID of the current head block.
+        """
         self.last_irreversible_block_num = last_irreversible_block_num
         self.last_irreversible_block_id = last_irreversible_block_id
         self.head_num = head_num
@@ -274,6 +313,13 @@ class GoAwayMessage(NetMessage):
     msg_type = go_away_message
 
     def __init__(self, reason: GoAwayReadon, node_id: Checksum256):
+        """
+        Initializes a new GoAwayMessage object with the given reason and node ID.
+
+        Args:
+            reason (GoAwayReason): The reason for the GoAway message.
+            node_id (Checksum256): The ID of the node that is being disconnected.
+        """
         self.reason = reason
         self.node_id = node_id
 
@@ -319,8 +365,20 @@ class GoAwayMessage(NetMessage):
 # };
 
 class TimeMessage(NetMessage):
+    """
+    A message that contains time synchronization information.
+    """
     msg_type = time_message
     def __init__(self, org: I64, rec: I64, xmt: I64, dst: I64):
+        """
+        Initializes a new TimeMessage object.
+
+        Args:
+            org (int): The origin timestamp of the message.
+            rec (int): The receive timestamp of the message.
+            xmt (int): The transmit timestamp of the message.
+            dst (int): The destination timestamp of the message.
+        """
         self.org = org
         self.rec = rec
         self.xmt = xmt
@@ -446,9 +504,19 @@ class OrderedIds(object):
 # }
 
 class RequestMessage(NetMessage):
+    """
+    A message requesting specific transactions and blocks.
+    """
     msg_type = request_message
 
     def __init__(self, req_trx: OrderedIds, req_blocks: OrderedIds):
+        """
+        Initializes a new RequestMessage object.
+
+        Args:
+            req_trx (OrderedIds): An ordered list of transaction IDs to request.
+            req_blocks (OrderedIds): An ordered list of block IDs to request.
+        """
         self.req_trx = req_trx
         self.req_blocks = req_blocks
 
@@ -493,8 +561,18 @@ class RequestMessage(NetMessage):
 #   };
 
 class NoticeMessage(NetMessage):
+    """
+    A message sent by a node to notify other nodes of known transactions and blocks.
+    """
     msg_type = notice_message
     def __init__(self, known_trx: OrderedIds, known_blocks: OrderedIds):
+        """
+        Initializes a new NoticeMessage object.
+
+        Args:
+            known_trx (OrderedIds): A list of transaction IDs known by the node.
+            known_blocks (OrderedIds): A list of block IDs known by the node.
+        """
         self.known_trx = known_trx
         self.known_blocks = known_blocks
 
@@ -538,8 +616,18 @@ class NoticeMessage(NetMessage):
 #    };
 
 class SyncRequestMessage(NetMessage):
+    """
+    A message that requests synchronization of blocks between two nodes.
+    """
     msg_type = sync_request_message
     def __init__(self, start_block: U32, end_block: U32):
+        """
+        Initializes a new SyncRequestMessage object.
+
+        Args:
+            start_block (U32): The starting block number to synchronize from.
+            end_block (U32): The ending block number to synchronize to.
+        """
         self.start_block = start_block
         self.end_block = end_block
 
@@ -580,8 +668,8 @@ class SyncRequestMessage(NetMessage):
 # signed_block,         // which = 7
 # packed_transaction>;  // which = 8
 
-class SignedBlock(NetMessage):
-    msg_type = signed_block
+class SignedBlockMessage(NetMessage):
+    msg_type = signed_block_message
     def __init__(self, raw_block: bytes):
         self._raw_block = raw_block
         self._block = None
@@ -607,7 +695,7 @@ class SignedBlock(NetMessage):
         enc.write_bytes(self.raw_block)
         return enc.get_pos() - pos
 
-class PackedTransaction(NetMessage):
+class PackedTransactionMessage(NetMessage):
     msg_type = packed_transaction
 
     def __init__(self, raw_trx: bytes):
@@ -692,8 +780,9 @@ class Connection(object):
             return
         self.writer.write(data)
 
-    def send_message(self, msg: NetMessage):
+    async def send_message(self, msg: NetMessage):
         self.write(msg.pack_message())
+        return await self.writer.drain()
 
     def close(self):
         self.closed = True

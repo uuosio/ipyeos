@@ -33,6 +33,11 @@ class Packer(object):
     def pack(self, enc):
         assert False, "Not implemented"
 
+    def get_bytes(self):
+        enc = Encoder()
+        self.pack(enc)
+        return enc.get_bytes()
+
     @classmethod
     def unpack(cls, dec):
         assert False, "Not implemented"

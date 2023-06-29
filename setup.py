@@ -57,7 +57,6 @@ ext_modules = [
         language='c++',
         extra_compile_args=['-std=c++17'],
         extra_link_args=extra_link_args,
-        build_dir='build'
     )
 ]
 

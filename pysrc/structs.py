@@ -1,11 +1,11 @@
 from typing import List, Type, TypeVar, Generic
 
 from .types import U8, U16, U32, U64, I64, Name, PublicKey
-from .packer import Encoder, Decoder
+from .packer import Encoder, Decoder, Packer
 
 T = TypeVar('T')
 
-class KeyWeight(object):
+class KeyWeight(Packer):
     #           shared_public_key key;
     #           weight_type       weight;
     def __init__(self, key: PublicKey, weight: U16):
@@ -29,7 +29,7 @@ class KeyWeight(object):
         weight = dec.unpack_u16()
         return KeyWeight(key, weight)
 
-class PermissionLevel(object):
+class PermissionLevel(Packer):
 
     def __init__(self, actor: Name, permission: Name):
         self.actor = actor
@@ -50,7 +50,7 @@ class PermissionLevel(object):
         permission = dec.unpack_name()
         return PermissionLevel(actor, permission)
 
-class PermissionLevelWeight(object):
+class PermissionLevelWeight(Packer):
     #       shared_vector<permission_level_weight>     accounts;
     #           permission_level  permission;
     #           weight_type       weight;
@@ -73,7 +73,7 @@ class PermissionLevelWeight(object):
         weight = dec.unpack_u16()
         return PermissionLevelWeight(permission, weight)
 
-class WaitWeight(object):
+class WaitWeight(Packer):
     #           uint32_t     wait_sec;
     #           weight_type  weight;
     def __init__(self, wait_sec: U32, weight: U16):
@@ -97,7 +97,7 @@ class WaitWeight(object):
         weight = dec.unpack_u16()
         return WaitWeight(wait_sec, weight)
 
-class Authority(object):
+class Authority(Packer):
 #       uint32_t                                   threshold = 0;
 #       shared_vector<shared_key_weight>           keys;
 #           shared_public_key key;
@@ -179,7 +179,7 @@ class Variant(Generic[T]):
         return Variant(type_id, value)
 
 
-class TimePoint(object):
+class TimePoint(Packer):
     def __init__(self, time: I64):
         self.time = time
 
@@ -214,3 +214,82 @@ class TimePoint(object):
 #     def unpack(cls, dec: Decoder):
 #         utc_seconds = dec.unpack_u32()
 #         return TimePointSec(utc_seconds)
+
+class Symbol(Packer):
+    def __init__(self, precision: U8, name: str):
+        assert len(name) <= 7 and name.isupper()
+        assert precision <= 18
+        self.precision = precision
+        self.name = name
+
+    def __repr__(self):
+        return f"{{precision: {self.precision}, name: {self.name}}}"
+
+    def __eq__(self, other) -> bool:
+        return self.precision == other.precision and self.name == other.name
+    
+    def pack(self, enc: Encoder):
+        pos = enc.get_pos()
+        enc.pack_u8(self.precision)
+        name = self.name.encode()
+        enc.write_bytes(name + b'\x00' * (7 - len(name)))
+        return enc.get_pos() - pos
+
+    @classmethod
+    def unpack(self, dec: Decoder):
+        precision = dec.unpack_u8()
+        name = dec.read_bytes(7)
+        name = name.rstrip(b'\x00').decode()
+        return Symbol(precision, name)
+
+class Asset(Packer):
+    def __init__(self, amount: I64, symbol: Symbol):
+        self.amount = amount
+        self.symbol = symbol
+
+    def __repr__(self):
+        return f"{{amount: {self.amount}, symbol: {self.symbol}}}"
+
+    def __eq__(self, other) -> bool:
+        return self.amount == other.amount and self.symbol == other.symbol
+
+    def pack(self, enc: Encoder) -> int:
+        pos = enc.get_pos()
+        enc.pack_i64(self.amount)
+        enc.pack(self.symbol)
+        return enc.get_pos() - pos
+
+    def unpack(dec: Decoder):
+        amount = dec.unpack_i64()
+        symbol = Symbol.unpack(dec)
+        return Asset(amount, symbol)
+
+class Transfer(Packer):
+    def __init__(self, sender: Name, recipient: Name, quantity: Asset, memo: str):
+        self.sender = sender
+        self.recipient = recipient
+        self.quantity = quantity
+        self.memo = memo
+
+    def __repr__(self):
+        return f"{{sender: {self.sender}, recipient: {self.recipient}, quantity: {self.quantity}, memo: {self.memo}}}"
+    
+    def __eq__(self, other) -> bool:
+        return self.sender == other.sender and self.recipient == other.recipient \
+                and self.quantity == other.quantity and self.memo == other.memo
+    
+    def pack(self, enc: Encoder) -> int:
+        pos = enc.get_pos()
+        enc.pack_name(self.sender)
+        enc.pack_name(self.recipient)
+        enc.pack(self.quantity)
+        enc.pack_string(self.memo)
+        return enc.get_pos() - pos
+    
+    @classmethod
+    def unpack(cls, dec: Decoder):
+        sender = dec.unpack_name()
+        recipient = dec.unpack_name()
+        quantity = Asset.unpack(dec)
+        memo = dec.unpack_string()
+        return cls(sender, recipient, quantity, memo)
