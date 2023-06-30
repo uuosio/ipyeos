@@ -1078,13 +1078,13 @@ def test_find_all_table_in_contract(tester: ChainTester):
 def test_global_property_object(tester: ChainTester):
     def on_global_property_object_data(tp, data, custom_data):
         print(data)
-        obj = eos.unpack_native_object(14, data)
+        obj = eos.unpack_native_object(eos.NativeType.global_property_type, data)
         print(json.loads(obj))
         return 1
 
     tester.db.walk(database.global_property_object_type, 0, on_global_property_object_data)
     data = tester.db.find(database.global_property_object_type, 0, int.to_bytes(0, 8, 'little'))
-    logger.info(eos.unpack_native_object(14, data[8:]))
+    logger.info(eos.unpack_native_object(eos.NativeType.global_property_type, data[8:]))
 
     idx = GlobalPropertyObjectIndex(tester.db)
     obj = idx.find_by_id(0)

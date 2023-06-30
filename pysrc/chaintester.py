@@ -539,8 +539,8 @@ class ChainTester(object):
         return priv_keys
 
     def gen_transaction_ex(self, actions: List, json_str=False, compress=False):
-        chain_id = self.chain.chain_id
-        ref_block_id = self.chain.last_irreversible_block_id.to_string()
+        chain_id = self.chain.chain_id()
+        ref_block_id = self.chain.last_irreversible_block_id().to_string()
 
         priv_keys = self.get_required_private_keys(actions)
 
@@ -556,7 +556,7 @@ class ChainTester(object):
         actions = json.dumps(actions)
         # expiration = datetime.utcnow() + timedelta(seconds=60*60)
 
-        expiration = self.chain.head_block_time
+        expiration = self.chain.head_block_time()
         # now = datetime.utcnow()
         # if expiration < now:
         #     expiration = now
