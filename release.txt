@@ -1,4 +1,5 @@
-v0.4.4 release
+v0.4.5 release
 
-1. Add support for accessing database object from python
-2. Add support for recover for snapshot in chaintester
+1. Improve setting debug producer key
+2. implemented transaction proxy
+3. primary support for p2p network

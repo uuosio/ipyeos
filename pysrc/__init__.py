@@ -8,7 +8,7 @@ import sysconfig
 
 from . import run
 
-__version__ = "0.4.4"
+__version__ = "0.4.5"
 
 if 'RUN_IPYEOS' in os.environ:
     from . import _eos

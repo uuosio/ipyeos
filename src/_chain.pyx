@@ -26,7 +26,7 @@ cdef extern from "_ipyeos.hpp":
     ctypedef struct chain_proxy:
         void say_hello()
 
-        void id(string& chain_id)
+        void chain_id(string& result)
         int start_block(string& _time, uint16_t confirm_block_count, string& _new_features)
         int abort_block()
         bool startup(bool initdb)
@@ -48,6 +48,9 @@ cdef extern from "_ipyeos.hpp":
         string head_block_producer()
         string head_block_header()
         string head_block_state()
+        uint32_t earliest_available_block_num()
+        int64_t last_irreversible_block_time()
+
         uint32_t fork_db_head_block_num()
         string fork_db_head_block_id()
         string fork_db_head_block_time()
@@ -94,7 +97,6 @@ cdef extern from "_ipyeos.hpp":
         bool skip_db_sessions()
         bool skip_trx_checks()
         bool contracts_console()
-        void get_chain_id(string& result)
         int get_read_mode()
         int get_validation_mode()
         void set_subjective_cpu_leeway(uint64_t leeway)
@@ -141,10 +143,10 @@ def chain_free(uint64_t ptr):
 def chain_say_hello(uint64_t ptr):
     chain(ptr).say_hello()
 
-def id(uint64_t ptr):
-    cdef string chain_id
-    chain(ptr).id(chain_id)
-    return chain_id
+def chain_id(uint64_t ptr):
+    cdef string result
+    chain(ptr).chain_id(result)
+    return result
 
 def start_block(uint64_t ptr, string& _time, uint16_t confirm_block_count, string& _new_features):
     return chain(ptr).start_block(_time, confirm_block_count, _new_features)
@@ -223,6 +225,12 @@ def head_block_state(uint64_t ptr):
     returns: str
     '''
     return chain(ptr).head_block_state()
+
+def earliest_available_block_num(uint64_t ptr) -> uint32_t:
+    return chain(ptr).earliest_available_block_num()
+
+def last_irreversible_block_time(uint64_t ptr) -> int64_t:
+    return chain(ptr).last_irreversible_block_time()
 
 def fork_db_head_block_num(uint64_t ptr):
     '''

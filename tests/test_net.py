@@ -12,7 +12,7 @@ from ipyeos.net import HandshakeMessage, ChainSizeMessage, GoAwayMessage, GoAway
 from ipyeos.net import RequestMessage, NoticeMessage, OrderedIds, IdListModes
 from ipyeos.net import SyncRequestMessage
 from ipyeos.net import PackedTransactionMessage
-from ipyeos.net import Connection
+from ipyeos.net import Connection, Network
 
 from ipyeos.packer import Encoder, Decoder
 from ipyeos import utils
@@ -253,157 +253,9 @@ def test_block_header():
     logger.info(block)
     logger.info(eos.unpack_block(raw_block))
 
-def build_handshake_message(t):
-    msg = HandshakeMessage(
-        network_version=123,
-        chain_id=Checksum256(bytes.fromhex('8a34ec7df1b8cd06ff4a8abbaa7cc50300823350cadc59ab296cb00d104d2b8f')),
-        node_id=Checksum256(bytes.fromhex('0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef')),
-        key=PublicKey(b'\x00'*34),
-        time=int(time.time()*1e9),
-        token=Checksum256.empty(),
-        sig=Signature.empty(),
-        p2p_address='127.0.0.1:9876',
-        last_irreversible_block_num=t.chain.last_irreversible_block_num,
-        last_irreversible_block_id=t.chain.last_irreversible_block_id,
-        head_num=t.chain.head_block_num,
-        head_id=Checksum256.empty(),
-        os='Linux',
-        agent='ipyeos',
-        generation=0
-    )
-    return msg
-# print(os.getpid())
-# input('press enter to continue')
-
 def test_connection():
     state_size=100*1024*1024
     t = ChainTester(False, state_size=state_size, data_dir=os.path.join(dir_name, 'dd'), config_dir=os.path.join(dir_name, 'cd'), log_level=5)
-    action = ['eosio', 'sayhello', b'hello, world', {'eosio':'active'}]
-    tx = t.gen_transaction([action], json_str=True)
     t.chain.abort_block()
-    async def run():
-        reader, writer = await asyncio.open_connection('127.0.0.1', 9100)
-        conn = Connection(reader, writer)
-        async def heart_beat():
-            while True:
-                await asyncio.sleep(1.0)
-                msg = TimeMessage(0, 0, int(time.time()*1e9), 0)
-                # logger.info(msg)
-                await conn.send_message(msg)
-                priv_key = PrivateKey.from_base58('5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3')
-                logger.info('send transaction')
-                for i in range(10):
-                    if i % 100 == 0:
-                        tx = Transaction(int(time.time())+10, t.chain.head_block_id)
-                        # tx.add_action('eosio.token', 'transfer', b'hello, world', {'eosio': 'active'})
-                        tx.add_action('eosio', 'transfer', b'hello, world' + i.to_bytes(4, 'little'), {'eosio': 'active'})
-                        priv_key = PrivateKey.from_base58('5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3')
-                        tx.sign(priv_key, t.chain.chain_id)
-                        raw_tx = tx.pack()
-                        tx.free()
-                        msg = PackedTransactionMessage(raw_tx)
-                        await conn.send_message(msg)
-
-                    tx = Transaction(int(time.time())+10, t.chain.head_block_id)
-                    # tx.add_action('eosio.token', 'transfer', b'hello, world', {'eosio': 'active'})
-                    a = Asset(1, Symbol(4, 'EOS'))
-                    transfer = Transfer('eosio', 'eosio.token', a, 'test transfer' + str(i))
-                    tx.add_action('hello', 'transfer', transfer, {'eosio': 'active'})
-                    # tx.add_action('eosio.token', 'transfer', transfer, {'eosio': 'active'})
-                    tx.sign(priv_key, t.chain.chain_id)
-                    raw_tx = tx.pack()
-                    tx.free()
-
-                    msg = PackedTransactionMessage(raw_tx)
-                    await conn.send_message(msg)
-                    # if i % 1000 == 0:
-                    #     asyncio.sleep(0)
-                logger.info('+++++++=balance(eosio.token): %s', t.get_balance('eosio.token'))
-        asyncio.ensure_future(heart_beat())
-        msg = build_handshake_message(t)
-
-        # logger.info(msg.pack_message())
-        # msg = SyncRequestMessage(100, 200)
-        # logger.info(msg.pack_message())
-        await conn.send_message(msg)
-        head_block_num = 0
-        last_handshake = None
-
-        while True:
-            tp, raw_msg = await conn.read_message()
-            if not raw_msg:
-                break
-            if tp == net.handshake_message:
-                message = HandshakeMessage.unpack_bytes(raw_msg)
-                last_handshake = message
-                logger.info(message)
-                head_block_num = message.head_num
-                start_block = t.chain.head_block_num + 1
-                logger.info("+++++start_block: %s", start_block)
-                if start_block < message.head_num:
-                    msg = SyncRequestMessage(start_block, message.head_num)
-                    logger.info("+++++SyncRequestMessage %s", msg)
-                    await conn.send_message(msg)
-                elif message.head_num == t.chain.head_block_num:
-                    # last_irr_catch_up catch_up
-                    logger.info('+++++++sync finished, request catch up')
-                    req_trx = OrderedIds(net.IdListModes.none, 0, [])
-                    req_blocks = OrderedIds(net.IdListModes.catch_up, t.chain.head_block_num + 1, [])
-                    msg = RequestMessage(req_trx, req_blocks)
-                    logger.info(msg)
-                    # await conn.send_message(msg)
-                # await conn.send_message(SyncRequestMessage(start_block=2, end_block=10))
-            elif tp == net.go_away_message:
-                message = GoAwayMessage.unpack_bytes(raw_msg)
-                logger.info(message)
-                break
-            elif tp == net.request_message:
-                message = RequestMessage.unpack_bytes(raw_msg)
-                logger.info(message)
-            elif tp == net.signed_block_message:
-                header = BlockHeader.unpack_bytes(raw_msg)
-                received_block_num = header.block_num
-                head_block_num = t.chain.head_block_num
-                logger.info("++++++++head_block_num: %s, received_block_num: %s", head_block_num, received_block_num)
-                if not head_block_num +1 == received_block_num:
-                    logger.info("++++++++++invalid incomming block number: head: %s: received: %s", head_block_num, received_block_num)
-                    continue
-                ret = t.chain.push_raw_block(raw_msg)
-                assert ret
-                # if received_block_num % 100 == 0:
-                #     logger.info("%s", raw_msg)
-                #     msg = eos.unpack_block(raw_msg)
-                #     msg = json.loads(msg)
-                #     logger.info("%s", msg)
-                #     logger.info("++++++++++%s: %s", received_block_num, head_block_num)
-                if last_handshake.head_num == received_block_num:
-                    msg = build_handshake_message(t)
-                    await conn.send_message(msg)
-                    logger.info("++++++++++++++send handshake message")
-            elif tp == net.time_message:
-                message = TimeMessage.unpack_bytes(raw_msg)
-                # logger.info(message)
-                now_time = int(time.time()*1e9)
-                if not message.is_valid():
-                    logger.info("invalid time message")
-                    continue
-                reply_message = TimeMessage(message.xmt, message.dst, now_time, 0)
-                await conn.send_message(message)
-            elif tp == net.sync_request_message:
-                message = SyncRequestMessage.unpack_bytes(raw_msg)
-                logger.info(message)
-            else:
-                print(tp, raw_msg)
-
-    async def try_run():
-        try:
-            await run()
-        except asyncio.exceptions.CancelledError:
-            logger.info("CancelledError")
-            t.free()
-
-    try:
-        asyncio.run(try_run())
-    except KeyboardInterrupt:
-        logger.info("KeyboardInterrupt")
-        t.free()
+    network = Network(t.chain)
+    network.start()

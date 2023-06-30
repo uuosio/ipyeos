@@ -76,12 +76,13 @@ class Chain(object):
         _chain.chain_free(self.ptr)
         self.ptr = 0
 
-    def id(self) -> str:
+
+    def chain_id(self) -> str:
         """
         Get chain id
         :returns str: Return the chain id
         """
-        return _chain.id(self.ptr)
+        return Checksum256.from_string(_chain.chain_id(self.ptr))
 
     def get_database(self):
         return _chain.get_database(self.ptr)
@@ -175,15 +176,13 @@ class Chain(object):
         blacklist = json.dumps(blacklist)
         _chain.set_key_blacklist(self.ptr, blacklist)
 
-    @property
+
     def head_block_num(self) -> int:
         return _chain.head_block_num(self.ptr)
 
-    @property
     def head_block_time(self) -> int:
         return _chain.head_block_time(self.ptr)
 
-    @property
     def head_block_id(self) -> Checksum256:
         block_id = _chain.head_block_id(self.ptr)
         return Checksum256.from_string(block_id)
@@ -198,6 +197,12 @@ class Chain(object):
     def head_block_state(self) -> dict:
         ret = _chain.head_block_state(self.ptr)
         return json.loads(ret)
+
+    def earliest_available_block_num(self) -> U32:
+        return _chain.earliest_available_block_num(self.ptr)
+
+    def last_irreversible_block_time(self) -> I64:
+        return _chain.last_irreversible_block_time(self.ptr)
 
     def fork_db_head_block_num(self) -> int:
         return _chain.fork_db_head_block_num(self.ptr)
@@ -233,11 +238,10 @@ class Chain(object):
         ret = _chain.proposed_producers(self.ptr)
         return json.loads(ret)
 
-    @property
+
     def last_irreversible_block_num(self) -> int:
         return _chain.last_irreversible_block_num(self.ptr)
 
-    @property
     def last_irreversible_block_id(self) -> Checksum256:
         block_id = _chain.last_irreversible_block_id(self.ptr)
         return Checksum256.from_string(block_id)
@@ -347,9 +351,6 @@ class Chain(object):
 
     def is_uuos_mainnet(self) -> bool:
         return _chain.is_uuos_mainnet(self.ptr)
-
-    def id(self) -> str:
-        return _chain.id(self.ptr)
 
     def get_read_mode(self) -> int:
         return _chain.get_read_mode(self.ptr)
@@ -477,13 +478,14 @@ class Chain(object):
         ret = _chain.unpack_action_args(self.ptr, name, action, raw_args)
         return json.loads(ret)
 
-    def gen_transaction(self, json_str, _actions: List, expiration: int, reference_block_id: str, _id: str, compress: bool, _private_keys: List) -> str:
+    def gen_transaction(self, json_str, _actions: List, expiration: int, reference_block_id: str, _id: Union[str, Checksum256], compress: bool, _private_keys: List) -> str:
         if isinstance(_actions, list):
             _actions = json.dumps(_actions)
 
         if isinstance(_private_keys, list):
             _private_keys = json.dumps(_private_keys)
-
+        if isinstance(_id, Checksum256):
+            _id = _id.to_string()
         return _chain.gen_transaction(self.ptr, json_str, _actions, expiration, reference_block_id, _id, compress, _private_keys)
 
     def get_last_error(self) -> str:

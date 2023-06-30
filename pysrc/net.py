@@ -1,9 +1,12 @@
+import asyncio
 import io
 from enum import Enum
+import time
 from typing import List, Type, Union, Any
 
+from .blocks import BlockHeader
 from .packer import Encoder, Decoder
-from .types import *
+from .types import I16, U16, U32, I64, U64, PublicKey, Signature, Checksum256
 from . import log
 from .transaction import Transaction
 
@@ -787,3 +790,130 @@ class Connection(object):
     def close(self):
         self.closed = True
         self.writer.close()
+
+# print(os.getpid())
+# input('press enter to continue')
+
+class Network(object):
+    def __init__(self, chain):
+        self.chain = chain
+        self.conn = None
+
+    def build_handshake_message(self):
+        msg = HandshakeMessage(
+            network_version=123,
+            chain_id=self.chain.chain_id(),
+            node_id=Checksum256(bytes.fromhex('0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef')),
+            key=PublicKey(b'\x00'*34),
+            time=int(time.time()*1e9),
+            token=Checksum256.empty(),
+            sig=Signature.empty(),
+            p2p_address='127.0.0.1:9876',
+            last_irreversible_block_num=self.chain.last_irreversible_block_num(),
+            last_irreversible_block_id=self.chain.last_irreversible_block_id(),
+            head_num=self.chain.head_block_num(),
+            head_id=Checksum256.empty(),
+            os='Linux',
+            agent='ipyeos',
+            generation=0
+        )
+        return msg
+
+    async def heart_beat(self):
+        while True:
+            await asyncio.sleep(1.0)
+            msg = TimeMessage(0, 0, int(time.time()*1e9), 0)
+            await self.conn.send_message(msg)
+
+    async def run(self):
+        reader, writer = await asyncio.open_connection('127.0.0.1', 9100)
+        self.conn = Connection(reader, writer)
+
+        asyncio.ensure_future(self.heart_beat())
+        msg = self.build_handshake_message()
+
+        # logger.info(msg.pack_message())
+        # msg = SyncRequestMessage(100, 200)
+        # logger.info(msg.pack_message())
+        await self.conn.send_message(msg)
+        head_block_num = 0
+        last_handshake = None
+
+        while True:
+            tp, raw_msg = await self.conn.read_message()
+            if not raw_msg:
+                break
+            if tp == handshake_message:
+                message = HandshakeMessage.unpack_bytes(raw_msg)
+                last_handshake = message
+                logger.info(message)
+                head_block_num = message.head_num
+                start_block = self.chain.head_block_num() + 1
+                logger.info("+++++start_block: %s", start_block)
+                if self.chain.head_block_num() + 2 < message.head_num:
+                    msg = SyncRequestMessage(start_block, message.head_num)
+                    logger.info("+++++SyncRequestMessage %s", msg)
+                    await self.conn.send_message(msg)
+                else:
+                    # last_irr_catch_up catch_up
+                    logger.info('+++++++sync finished, request catch up')
+                    req_trx = OrderedIds(IdListModes.none, 0, [])
+                    req_blocks = OrderedIds(IdListModes.catch_up, self.chain.head_block_num() + 1, [])
+                    msg = RequestMessage(req_trx, req_blocks)
+                    logger.info(msg)
+                    # await self.conn.send_message(msg)
+                # await self.conn.send_message(SyncRequestMessage(start_block=2, end_block=10))
+            elif tp == go_away_message:
+                message = GoAwayMessage.unpack_bytes(raw_msg)
+                logger.info(message)
+                break
+            elif tp == request_message:
+                message = RequestMessage.unpack_bytes(raw_msg)
+                logger.info(message)
+            elif tp == signed_block_message:
+                header = BlockHeader.unpack_bytes(raw_msg)
+                received_block_num = header.block_num
+                head_block_num = self.chain.head_block_num()
+                logger.info("++++++++head_block_num: %s, received_block_num: %s", head_block_num, received_block_num)
+                if not head_block_num +1 == received_block_num:
+                    logger.info("++++++++++invalid incomming block number: head: %s: received: %s", head_block_num, received_block_num)
+                    continue
+                ret = self.chain.push_raw_block(raw_msg)
+                assert ret
+                # if received_block_num % 100 == 0:
+                #     logger.info("%s", raw_msg)
+                #     msg = eos.unpack_block(raw_msg)
+                #     msg = json.loads(msg)
+                #     logger.info("%s", msg)
+                #     logger.info("++++++++++%s: %s", received_block_num, head_block_num)
+                if last_handshake.head_num == received_block_num:
+                    msg = self.build_handshake_message()
+                    await self.conn.send_message(msg)
+                    logger.info("++++++++++++++send handshake message")
+            elif tp == time_message:
+                message = TimeMessage.unpack_bytes(raw_msg)
+                # logger.info(message)
+                now_time = int(time.time()*1e9)
+                if not message.is_valid():
+                    logger.info("invalid time message")
+                    continue
+                if message.org == 0:
+                    reply_message = TimeMessage(message.xmt, now_time, now_time, 0)
+                    await self.conn.send_message(message)
+            elif tp == sync_request_message:
+                message = SyncRequestMessage.unpack_bytes(raw_msg)
+                logger.info(message)
+            else:
+                print(tp, raw_msg)
+
+    async def try_run(self):
+        try:
+            await self.run()
+        except asyncio.exceptions.CancelledError:
+            logger.info("CancelledError")
+
+    def start(self):
+        try:
+            asyncio.run(self.try_run())
+        except KeyboardInterrupt:
+            logger.info("KeyboardInterrupt")

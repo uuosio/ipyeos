@@ -539,7 +539,7 @@ class ChainTester(object):
         return priv_keys
 
     def gen_transaction_ex(self, actions: List, json_str=False, compress=False):
-        chain_id = self.chain.id()
+        chain_id = self.chain.chain_id
         ref_block_id = self.chain.last_irreversible_block_id.to_string()
 
         priv_keys = self.get_required_private_keys(actions)
