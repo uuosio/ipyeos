@@ -26,6 +26,9 @@ jobs:
         with:
           submodules: recursive
           fetch-depth: 0
+      - name: install ninja
+        run: |
+          sudo apt-get install ninja-build
       - name: download prebuild binarys
         run: |
           wget https://github.com/uuosio/leap/releases/download/${{ env.PREBUILD_BINARY_VERSION }}/release-linux.tar.gz
@@ -36,9 +39,10 @@ jobs:
           python-version: "3.8"
       - name: build python3.8 wheel package
         run: |
-          python3.8 -m pip install scikit-build cython auditwheel==5.1.2
+          python3.8 -m pip install scikit-build cython eoscdt auditwheel==5.1.2
           python3.8 setup.py sdist bdist_wheel
           python3.8 -m auditwheel repair --plat manylinux_2_31_x86_64 dist/ipyeos-${{ env.IPYEOS_VERSION }}-cp38-cp38-linux_x86_64.whl
+          eoscdt check
       - name: Set up Python 3.9
         uses: actions/setup-python@v2
         with:
@@ -73,18 +77,18 @@ jobs:
           python3.10 -m pip install ./wheelhouse/ipyeos-${{ env.IPYEOS_VERSION }}-cp310-cp310-manylinux_2_31_x86_64.whl
           python3.11 -m pip install ./wheelhouse/ipyeos-${{ env.IPYEOS_VERSION }}-cp311-cp311-manylinux_2_31_x86_64.whl
       - name: run tests
+        working-directory: tests
         run: |
-          ls ./wheelhouse
-          PYTHON_SHARED_LIB_PATH=${{ env.pythonLocation }}/lib/libpython3.8.so python3.8 -m ipyeos -m pytest -s -x tests/test.py
-          PYTHON_SHARED_LIB_PATH=${{ env.pythonLocation }}/lib/libpython3.9.so python3.9 -m ipyeos -m pytest -s -x tests/test.py
+          PYTHON_SHARED_LIB_PATH=${{ env.pythonLocation }}/lib/libpython3.8.so python3.8 -m ipyeos -m pytest -s -x test.py || exit 1
+          PYTHON_SHARED_LIB_PATH=${{ env.pythonLocation }}/lib/libpython3.9.so python3.9 -m ipyeos -m pytest -s -x test.py || exit 1
           PYTHON_SHARED_LIB_PATH=${{ env.pythonLocation }}/lib/libpython3.10.so eosdebugger &
-          PYTHON_SHARED_LIB_PATH=${{ env.pythonLocation }}/lib/libpython3.10.so python3.10 -m ipyeos -m pytest -s -x tests/test.py
-          PYTHON_SHARED_LIB_PATH=${{ env.pythonLocation }}/lib/libpython3.11.so python3.11 -m ipyeos -m pytest -s -x tests/test.py
+          PYTHON_SHARED_LIB_PATH=${{ env.pythonLocation }}/lib/libpython3.10.so python3.10 -m ipyeos -m pytest -s -x test.py || exit 1
+          PYTHON_SHARED_LIB_PATH=${{ env.pythonLocation }}/lib/libpython3.11.so python3.11 -m ipyeos -m pytest -s -x test.py || exit 1
 
-          PYTHON_SHARED_LIB_PATH=${{ env.pythonLocation }}/lib/libpython3.8.so python3.8 -m ipyeos -m pytest -s -x tests/test_database.py
-          PYTHON_SHARED_LIB_PATH=${{ env.pythonLocation }}/lib/libpython3.9.so python3.9 -m ipyeos -m pytest -s -x tests/test_database.py
-          PYTHON_SHARED_LIB_PATH=${{ env.pythonLocation }}/lib/libpython3.10.so python3.10 -m ipyeos -m pytest -s -x tests/test_database.py
-          PYTHON_SHARED_LIB_PATH=${{ env.pythonLocation }}/lib/libpython3.11.so python3.11 -m ipyeos -m pytest -s -x tests/test_database.py
+          PYTHON_SHARED_LIB_PATH=${{ env.pythonLocation }}/lib/libpython3.8.so python3.8 -m ipyeos -m pytest -s -x test_database.py || exit 1
+          PYTHON_SHARED_LIB_PATH=${{ env.pythonLocation }}/lib/libpython3.9.so python3.9 -m ipyeos -m pytest -s -x test_database.py || exit 1
+          PYTHON_SHARED_LIB_PATH=${{ env.pythonLocation }}/lib/libpython3.10.so python3.10 -m ipyeos -m pytest -s -x test_database.py || exit 1
+          PYTHON_SHARED_LIB_PATH=${{ env.pythonLocation }}/lib/libpython3.11.so python3.11 -m ipyeos -m pytest -s -x test_database.py || exit 1
 
       - name: release-pyeos
         uses: softprops/action-gh-release@v1
