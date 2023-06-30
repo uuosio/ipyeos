@@ -60,21 +60,27 @@ ext_modules = [
     )
 ]
 
+packages=[
+    'ipyeos',
+    'ipyeos.interfaces',
+    'ipyeos.tests',
+    'ipyeos.tests.contracts',
+    'ipyeos.tests.contracts.micropython',
+]
+
+if os.path.exists('pysrc/release'):
+    packages.extend([
+        'ipyeos.release.bin',
+        'ipyeos.release.lib',
+    ])
+
 setup(
     name="ipyeos",
     version="0.4.5",
     description="IPYEOS project",
     author='The IPYEOS Team',
     license="MIT",
-    packages=[
-        'ipyeos',
-        'ipyeos.interfaces',
-        'ipyeos.tests',
-        'ipyeos.tests.contracts',
-        'ipyeos.release.bin',
-        'ipyeos.release.lib',
-        'ipyeos.tests.contracts.micropython',
-    ],
+    packages=packages,
     package_dir={
         'ipyeos': 'pysrc',
         'ipyeos.interfaces': 'pysrc/interfaces',
