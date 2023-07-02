@@ -19,7 +19,7 @@ cdef extern from * :
     ctypedef unsigned char uint8_t
 
 cdef extern from "_ipyeos.hpp":
-    void uuosext_init()
+    void eosext_init()
 
     ctypedef struct eos_cb:
         int init(int argc, char** argv) nogil
@@ -80,7 +80,7 @@ cdef extern from "_ipyeos.hpp":
     void app_quit()
 
 def init_chain():
-    uuosext_init()
+    eosext_init()
 
 init_chain()
 

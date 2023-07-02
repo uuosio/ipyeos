@@ -16,8 +16,6 @@ cdef extern from * :
     ctypedef unsigned char uint8_t
 
 cdef extern from "_ipyeos.hpp":
-    void uuosext_init()
-
     ctypedef struct chain_rpc_api_proxy:
         int get_info(string& result);
         int get_activated_protocol_features(string& params, string& result);

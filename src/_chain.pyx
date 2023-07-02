@@ -21,10 +21,10 @@ cdef extern from * :
 
 cdef extern from "_ipyeos.hpp":
     chain_proxy *chain(uint64_t ptr)
-    void uuosext_init()
 
     ctypedef struct chain_proxy:
         void say_hello()
+        void *get_controller()
 
         void chain_id(string& result)
         int start_block(string& _time, uint16_t confirm_block_count, string& _new_features)
@@ -139,6 +139,9 @@ def chain_new(string& config, string& _genesis, string& chain_id, string& protoc
 
 def chain_free(uint64_t ptr):
     get_ipyeos_proxy().chain_free(<chain_proxy*>ptr)
+
+def get_controller(uint64_t ptr):
+    return <uint64_t>chain(ptr).get_controller()
 
 def chain_say_hello(uint64_t ptr):
     chain(ptr).say_hello()

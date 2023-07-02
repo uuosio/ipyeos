@@ -24,6 +24,9 @@ abi_def = 10
 transaction_type = 11
 global_property_type = 12
 
+net_version_base = 0x04b5
+net_version_range = 106
+
 # struct handshake_message {
 #     uint16_t                   network_version = 0; ///< incremental value above a computed base
 #     chain_id_type              chain_id; ///< used to identify chain
@@ -795,47 +798,59 @@ class Connection(object):
 # input('press enter to continue')
 
 class Network(object):
-    def __init__(self, chain):
+    def __init__(self, chain, peer_host: str, peer_port: int):
         self.chain = chain
         self.conn = None
+        self.generation = 1
+        self.last_time_message = None
+        self.peer_host=peer_host
+        self.peer_port=peer_port
 
     def build_handshake_message(self):
         msg = HandshakeMessage(
-            network_version=123,
+            network_version=net_version_base + 7,
             chain_id=self.chain.chain_id(),
             node_id=Checksum256(bytes.fromhex('0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef')),
             key=PublicKey(b'\x00'*34),
             time=int(time.time()*1e9),
             token=Checksum256.empty(),
             sig=Signature.empty(),
-            p2p_address='127.0.0.1:9876',
+            p2p_address=f'127.0.0.1:9876',
             last_irreversible_block_num=self.chain.last_irreversible_block_num(),
             last_irreversible_block_id=self.chain.last_irreversible_block_id(),
             head_num=self.chain.head_block_num(),
-            head_id=Checksum256.empty(),
+            head_id=self.chain.head_block_id(),
             os='Linux',
             agent='ipyeos',
-            generation=0
+            generation=self.generation
         )
+        self.generation += 1
         return msg
 
     async def heart_beat(self):
         while True:
-            await asyncio.sleep(1.0)
-            msg = TimeMessage(0, 0, int(time.time()*1e9), 0)
-            await self.conn.send_message(msg)
+            try:
+                await asyncio.sleep(30.0)
+                self.last_time_message = TimeMessage(0, 0, int(time.time()*1e9), 0)
+                await self.conn.send_message(self.last_time_message)
+            except ConnectionResetError:
+                logger.error('connection reset')
+                break
+            except asyncio.exceptions.CancelledError:
+                logger.info("CancelledError")
+                break
 
     async def run(self):
-        reader, writer = await asyncio.open_connection('127.0.0.1', 9100)
+        reader, writer = await asyncio.open_connection(self.peer_host, self.peer_port)
         self.conn = Connection(reader, writer)
 
-        asyncio.ensure_future(self.heart_beat())
+        asyncio.create_task(self.heart_beat())
         msg = self.build_handshake_message()
-
-        # logger.info(msg.pack_message())
-        # msg = SyncRequestMessage(100, 200)
-        # logger.info(msg.pack_message())
         await self.conn.send_message(msg)
+
+        # msg = SyncRequestMessage(100, 200)
+        # await self.conn.send_message(msg)
+
         head_block_num = 0
         last_handshake = None
 
@@ -846,7 +861,7 @@ class Network(object):
             if tp == handshake_message:
                 message = HandshakeMessage.unpack_bytes(raw_msg)
                 last_handshake = message
-                logger.info(message)
+                logger.info("received handshake message: %s", message)
                 head_block_num = message.head_num
                 start_block = self.chain.head_block_num() + 1
                 logger.info("+++++start_block: %s", start_block)
@@ -886,10 +901,11 @@ class Network(object):
                 #     msg = json.loads(msg)
                 #     logger.info("%s", msg)
                 #     logger.info("++++++++++%s: %s", received_block_num, head_block_num)
-                if last_handshake.head_num == received_block_num:
+                if last_handshake and last_handshake.head_num == received_block_num:
+                    # await asyncio.sleep(3.0)
                     msg = self.build_handshake_message()
                     await self.conn.send_message(msg)
-                    logger.info("++++++++++++++send handshake message")
+                    logger.info("++++++++++++++send handshake message: %s", msg)
             elif tp == time_message:
                 message = TimeMessage.unpack_bytes(raw_msg)
                 # logger.info(message)
@@ -900,17 +916,41 @@ class Network(object):
                 if message.org == 0:
                     reply_message = TimeMessage(message.xmt, now_time, now_time, 0)
                     await self.conn.send_message(message)
+                else:
+                    if self.last_time_message and self.last_time_message.xmt == message.org:
+                        message.dst = now_time
+                        delay = (message.dst - message.org)
+                        logger.info("delay: %s", delay)
             elif tp == sync_request_message:
                 message = SyncRequestMessage.unpack_bytes(raw_msg)
                 logger.info(message)
+            elif tp == notice_message:
+                message = NoticeMessage.unpack_bytes(raw_msg)
+                logger.info(message)
+                if message.known_blocks.mode == IdListModes.last_irr_catch_up:
+                    pending = message.known_blocks.pending
+                    msg = SyncRequestMessage(self.chain.head_block_num() + 1, pending)
+                    logger.info("+++++SyncRequestMessage %s", msg)
+                    await self.conn.send_message(msg)
             else:
-                print(tp, raw_msg)
+                logger.info("%s %s", tp, raw_msg)
 
     async def try_run(self):
-        try:
-            await self.run()
-        except asyncio.exceptions.CancelledError:
-            logger.info("CancelledError")
+        while True:
+            try:
+                await self.run()
+            except BrokenPipeError:
+                logger.info("BrokenPipeError")
+                await asyncio.sleep(3.0)
+            except ConnectionResetError:
+                logger.info("ConnectionResetError")
+                await asyncio.sleep(3.0)
+            except asyncio.exceptions.CancelledError:
+                logger.info("CancelledError")
+                break
+            except Exception as e:
+                logger.info(e)
+                break
 
     def start(self):
         try:

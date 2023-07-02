@@ -5,4 +5,5 @@ _PyInit__eos
 _PyInit__database
 _PyInit__block_log
 _PyInit__transaction
+_PyInit__trace_api
 _native_apply

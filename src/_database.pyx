@@ -18,8 +18,6 @@ cdef extern from * :
     ctypedef unsigned char uint8_t
 
 cdef extern from "_ipyeos.hpp":
-    void uuosext_init()
-
     ctypedef struct database_proxy:
         int32_t set_data_handler(int32_t (*)(int32_t tp, char *data, size_t size, void* custom_data), void *custom_data)
         int32_t walk(void *db, int32_t tp, int32_t index_position)

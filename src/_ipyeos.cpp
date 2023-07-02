@@ -7,7 +7,7 @@ using namespace std;
 
 static fn_get_ipyeos_proxy s_get_ipyeos_proxy = nullptr;
 
-void uuosext_init() {
+void eosext_init() {
     const char * chain_api_lib = getenv("CHAIN_API_LIB");
     // printf("\n++++chain_api_lib %s\n", chain_api_lib);
     if (chain_api_lib == nullptr) {

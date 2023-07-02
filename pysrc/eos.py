@@ -29,6 +29,12 @@ class LogLevel(Enum):
     ERROR = 4
     OFF = 5
 
+# "net_plugin_impl"
+# "http_plugin"
+# "producer_plugin"
+# "trace_api"
+# "state_history"
+
 def set_log_level(logger_name: str, level: Union[int, LogLevel]) -> None:
     if isinstance(level, LogLevel):
         level = level.value

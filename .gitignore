@@ -6,6 +6,7 @@ src/_database.cpp
 src/_eos.cpp
 src/_vm_api.cpp
 src/_transaction.cpp
+src/_trace_api.cpp
 
 .vscode
 cp.sh

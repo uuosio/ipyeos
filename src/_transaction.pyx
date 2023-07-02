@@ -21,8 +21,6 @@ cdef extern from * :
     ctypedef unsigned char uint8_t
 
 cdef extern from "_ipyeos.hpp":
-    void uuosext_init()
-
     ctypedef struct transaction_proxy:
         void *new_transaction(uint32_t expiration, const char *ref_block_id, size_t ref_block_id_size, uint32_t max_net_usage_words, uint8_t  max_cpu_usage_ms, uint32_t delay_sec);
         void free(void *transaction);

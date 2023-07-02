@@ -18,8 +18,6 @@ cdef extern from * :
     ctypedef unsigned char uint8_t
 
 cdef extern from "_ipyeos.hpp":
-    void uuosext_init()
-
     ctypedef struct block_log_proxy:
         void *get_block_log_ptr()
         string read_block_by_num(uint32_t block_num)

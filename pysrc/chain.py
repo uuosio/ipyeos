@@ -76,6 +76,8 @@ class Chain(object):
         _chain.chain_free(self.ptr)
         self.ptr = 0
 
+    def get_controller(self):
+        return _chain.get_controller(self.ptr)
 
     def chain_id(self) -> str:
         """
