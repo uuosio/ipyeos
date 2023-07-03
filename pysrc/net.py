@@ -811,7 +811,7 @@ class Network(object):
             network_version=net_version_base + 7,
             chain_id=self.chain.chain_id(),
             node_id=Checksum256(bytes.fromhex('0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef')),
-            key=PublicKey(b'\x00'*34),
+            key=PublicKey.empty(),
             time=int(time.time()*1e9),
             token=Checksum256.empty(),
             sig=Signature.empty(),
@@ -840,9 +840,12 @@ class Network(object):
                 logger.info("CancelledError")
                 break
 
-    async def run(self):
+    async def open(self):
         reader, writer = await asyncio.open_connection(self.peer_host, self.peer_port)
         self.conn = Connection(reader, writer)
+
+    async def run(self):
+        await self.open()
 
         asyncio.create_task(self.heart_beat())
         msg = self.build_handshake_message()
@@ -949,7 +952,7 @@ class Network(object):
                 logger.info("CancelledError")
                 break
             except Exception as e:
-                logger.info(e)
+                logger.exception(e)
                 break
 
     def start(self):

@@ -24,10 +24,10 @@ def handle_error(fn):
 
 class Chain(object):
 
-    def __init__(self, config: dict, genesis: dict, chain_id: str, protocol_features_dir: str, snapshot_dir: str, debug_producer_key: str = ''):
-        self.new(config, genesis, chain_id, protocol_features_dir, snapshot_dir, debug_producer_key)
+    def __init__(self, config: dict, genesis: dict, chain_id: str, protocol_features_dir: str, snapshot_file: str, debug_producer_key: str = ''):
+        self.new(config, genesis, chain_id, protocol_features_dir, snapshot_file, debug_producer_key)
 
-    def new(self, config: dict, genesis: dict, chain_id: str, protocol_features_dir: str, snapshot_dir: str, debug_producer_key: str='') -> None:
+    def new(self, config: dict, genesis: dict, chain_id: str, protocol_features_dir: str, snapshot_file: str, debug_producer_key: str='') -> None:
         """
         Create a new Chain instance
         Code example::
@@ -38,7 +38,7 @@ class Chain(object):
         :param dict config: Parameter example
         :param dict genesis: Parameter example
         :param str protocol_features_dir: Parameter example
-        :param str snapshot_dir: Parameter example
+        :param str snapshot_file: Parameter example
         :returns str: Return statement
         :raises ValueError: Raises example
         """
@@ -49,7 +49,7 @@ class Chain(object):
         assert isinstance(config, str)
         assert isinstance(genesis, str)
 
-        self.ptr = _chain.chain_new(config, genesis, chain_id, protocol_features_dir, snapshot_dir, debug_producer_key)
+        self.ptr = _chain.chain_new(config, genesis, chain_id, protocol_features_dir, snapshot_file, debug_producer_key)
         if not self.ptr:
             error = _eos.get_last_error_and_clear()
             raise Exception(error)

@@ -160,8 +160,10 @@ def run_eosnode():
             eos.post(eos.quit)
 
 def run_pyeosnode():
-    config_file = sys.argv[2]
-    return node.start(config_file)
+    result = args.parse_args()
+    assert result.subparser == 'pyeosnode'
+    print(result)
+    return node.start(result.config_file, result.genesis_file, result.snapshot_file)
 
 def run():
     if sys.argv[1] == 'eosnode':
@@ -171,7 +173,6 @@ def run():
     else:
         result = args.parse_args()
         if result.subparser == 'eosdebugger':
-            result = args.parse_args()
             server.start_debug_server(result.addr, result.server_port, result.vm_api_port, result.apply_request_addr, result.apply_request_port, result.addr,result.rpc_server_port)
         else:
             parser.print_help()

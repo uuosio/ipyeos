@@ -119,7 +119,12 @@ def read_chain_id_from_block_log(data_dir):
 
 class Node(object):
 
-    def __init__(self, initialize=True, data_dir=None, config_dir=None, genesis: Union[str, Dict] = None, snapshot_dir='', state_size=10*1024*1024, log_level=log_level_debug, debug_producer_key=''):
+    def __init__(self, initialize=True, data_dir=None, config_dir=None, genesis: Union[str, Dict] = None, snapshot_file='', state_size=10*1024*1024, log_level=log_level_debug, debug_producer_key=''):
+        if snapshot_file:
+            if not os.path.exists(snapshot_file):
+                raise Exception(f'snapshot file {snapshot_file} does not exist')
+            if os.path.exists(f'{data_dir}/state/shared_memory.bin'):
+                raise Exception(f'{data_dir}/state/shared_memory.bin already exists while trying to restore the network state from snapshot')
         atexit.register(self.free)
         self.is_temp_data_dir = True
         self.is_temp_config_dir = True
@@ -147,15 +152,15 @@ class Node(object):
 
         eos.set_log_level('default', log_level)
         
-        if snapshot_dir:
+        if snapshot_file:
             initialize = False
             init_database = False
-            self.genesis_test = ''
-            self.chain_id = eos.extract_chain_id_from_snapshot(snapshot_dir)
+            self.genesis = ''
+            self.chain_id = eos.extract_chain_id_from_snapshot(snapshot_file)
         elif os.path.exists(os.path.join(chain_config['state_dir'], 'shared_memory.bin')):
             initialize = False
             init_database = False
-            self.genesis_test = ''
+            self.genesis = ''
             self.chain_id = read_chain_id_from_block_log(self.data_dir)
         else:
             init_database = True
@@ -165,13 +170,12 @@ class Node(object):
 
         if genesis:
             if isinstance(genesis, dict):
-                self.genesis_test = json.dumps(genesis)
+                self.genesis = json.dumps(genesis)
             else:
-                self.genesis_test = genesis
+                self.genesis = genesis
         else:
-            self.genesis_test = json.dumps(genesis_test)
-
-        self.chain = chain.Chain(self.chain_config, self.genesis_test, self.chain_id, os.path.join(self.config_dir, "protocol_features"), snapshot_dir, debug_producer_key)
+            self.genesis = ''
+        self.chain = chain.Chain(self.chain_config, self.genesis, self.chain_id, os.path.join(self.config_dir, "protocol_features"), snapshot_file, debug_producer_key)
         self.chain.startup(init_database)
         self.api = chainapi.ChainApi(self.chain)
 
@@ -197,7 +201,7 @@ class Node(object):
     def __del__(self):
         self.free()
 
-def start(config_file):
+def start(config_file: str, genesis_file: str, snapshot_file: str):
     with open(config_file) as f:
         config = yaml.safe_load(f)
 
@@ -206,9 +210,27 @@ def start(config_file):
     state_size=chain_config['state_size']
     data_dir = chain_config['data_dir']
     config_dir = chain_config['config_dir']
-    genesis = config['genesis']
+    genesis: Optional[Dict] = None
+    if genesis_file:
+        try:
+            with open(genesis_file) as f:
+                genesis = json.load(f)
+        except FileNotFoundError:
+            logger.error('genesis file not found: %s', genesis_file)
+            return
+        except JSONDecodeError:
+            logger.error('genesis file is not a valid json file: %s', genesis_file)
+            return
+        if 'genesis' in config:
+            logger.warning(f'genesis in config file {config_file} will be overwrite by genesis file {genesis_file}')
+    else:
+        try:
+            genesis = config['genesis']
+        except KeyError:
+            pass
+    # assert genesis, 'genesis is empty'
 
-    node = Node(False, data_dir=data_dir, config_dir=config_dir, genesis = genesis, state_size=state_size, log_level=default_log_level)
+    node = Node(False, data_dir=data_dir, config_dir=config_dir, genesis = genesis, state_size=state_size, snapshot_file=snapshot_file, log_level=default_log_level)
     peer = config['peers'][0]
     host, port = peer.split(':')
     network = net.Network(node.chain, host, port)

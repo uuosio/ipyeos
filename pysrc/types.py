@@ -89,6 +89,10 @@ class PublicKey(object):
     def to_bytes(self):
         return self.raw
 
+    @classmethod
+    def empty(cls):
+        return PublicKey(bytes(34))
+
     def to_base58(self):
         hash = hashlib.new('ripemd160')
         hash.update(self.raw[1:])

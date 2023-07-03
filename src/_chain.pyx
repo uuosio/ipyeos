@@ -128,14 +128,14 @@ cdef extern from "_ipyeos.hpp":
         string get_debug_producer_key()
 
     ctypedef struct ipyeos_proxy:
-        chain_proxy* chain_new(string& config, string& _genesis, string& chain_id, string& protocol_features_dir, string& snapshot_dir, string& debug_producer_key)
+        chain_proxy* chain_new(string& config, string& _genesis, string& chain_id, string& protocol_features_dir, string& snapshot_file, string& debug_producer_key)
         void chain_free(chain_proxy* api)
 
     ipyeos_proxy *get_ipyeos_proxy()
 
 
-def chain_new(string& config, string& _genesis, string& chain_id, string& protocol_features_dir, string& snapshot_dir, string& debug_producer_key):
-    return <uint64_t>get_ipyeos_proxy().chain_new(config, _genesis, chain_id, protocol_features_dir, snapshot_dir, debug_producer_key)
+def chain_new(string& config, string& _genesis, string& chain_id, string& protocol_features_dir, string& snapshot_file, string& debug_producer_key):
+    return <uint64_t>get_ipyeos_proxy().chain_new(config, _genesis, chain_id, protocol_features_dir, snapshot_file, debug_producer_key)
 
 def chain_free(uint64_t ptr):
     get_ipyeos_proxy().chain_free(<chain_proxy*>ptr)

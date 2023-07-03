@@ -18,6 +18,11 @@ def parse_args(cmds=None):
 
     start_eos_parser = subparser.add_parser('eosnode', help='run a eos node')
 
+    pyeos_parser = subparser.add_parser('pyeosnode', help='run a eos node in python')
+    pyeos_parser.add_argument('-c', '--config-file', default="config.yaml", help="config file for pyeosnode, default to config.yaml")
+    pyeos_parser.add_argument('-s', '--snapshot-file', default="", help="snapshot file for quick restore network state, default to empty string")
+    pyeos_parser.add_argument('-g', '--genesis-file', default="", help="genesis file, default to empty string")
+
     result, _ = parser.parse_known_args(cmds)
     return result
 
