@@ -7,6 +7,8 @@ if(CDT_ROOT STREQUAL "" OR NOT CDT_ROOT)
    find_package(cdt)
 endif()
 
+add_subdirectory(native)
+
 ExternalProject_Add(
    hello_project
    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src

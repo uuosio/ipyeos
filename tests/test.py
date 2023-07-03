@@ -78,9 +78,21 @@ def test_load_native_lib():
         so_file = 'native/build/libnative.dylib'
     else:
         so_file = 'native/build/libnative.so'
-    t = ChainTester(False, log_level=5)
+    t = ChainTester(True, log_level=1)
     os.system('cd native;./build.sh')
     assert t.chain.set_native_contract("hello", so_file)
+    with open('./hello/build/hello/hello.wasm', 'rb') as f:
+        code = f.read()
+    with open('./hello/build/hello/hello.abi', 'rb') as f:
+        abi = f.read()
+    t.deploy_contract('hello', code, abi)
+    t.produce_block()
+
+    eos.enable_debug(True)
+    t.push_action('hello', 'hi', {'nm': 'alice'}, {'hello': 'active'})
+    t.produce_block()
+
+
     assert not t.chain.set_native_contract("hello", so_file + 'xx')
     assert t.chain.set_native_contract("alice", so_file)
     os.system('cd native;touch native.c;./build.sh')
