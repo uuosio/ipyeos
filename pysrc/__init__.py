@@ -10,6 +10,8 @@ from . import run
 
 __version__ = "0.4.5"
 
+cur_dir = os.path.dirname(os.path.realpath(__file__))
+
 if 'RUN_IPYEOS' in os.environ:
     from . import _eos
     from . import modules
@@ -26,6 +28,11 @@ def run_ipyeos(custom_cmds=[]):
 
 def run_eosnode():
     custom_cmds=['-m', 'ipyeos', 'eosnode']
+    custom_cmds.extend(sys.argv[1:])
+    return run.run_ipyeos(custom_cmds)
+
+def run_pyeosnode():
+    custom_cmds=['-m', 'ipyeos', 'pyeosnode']
     custom_cmds.extend(sys.argv[1:])
     return run.run_ipyeos(custom_cmds)
 
@@ -58,3 +65,9 @@ def run_test():
     print(cmd)
     cmd = shlex.split(cmd)
     return subprocess.call(cmd, stdout=sys.stdout, stderr=sys.stderr)
+
+def ipyeos_get_dir():
+    print(cur_dir)
+
+def ipyeos_get_lib_dir():
+    print(f'{cur_dir}/release/lib')

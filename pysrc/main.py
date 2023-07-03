@@ -1,8 +1,10 @@
+import os
 import argparse
 import asyncio
 import atexit
 import concurrent.futures
 import queue
+import yaml
 import signal
 import sys
 import time
@@ -11,8 +13,13 @@ import threading
 from aiohttp import web
 from IPython.terminal.embed import InteractiveShellEmbed
 
-from ipyeos import eos, server
+from . import eos, server
 from . import args
+from . import node
+
+if not 'RUN_IPYEOS' in os.environ:
+    print('main module can only be load by ipyeos')
+    sys.exit(0)
 
 executor = concurrent.futures.ThreadPoolExecutor(max_workers=10)
 async_queue = asyncio.Queue()
@@ -131,27 +138,36 @@ async def main():
     # print("Result: ", result)
     print('all done!')
 
+def run_eosnode():
+    if len(sys.argv) <= 2 or sys.argv[2] in ['-h', '--help']:
+        return print_help()
+
+    def start():
+        asyncio.run(main())
+        thread_queue.put(None)
+    t = threading.Thread(target=start, daemon=True)
+    t.start()
+    while True:
+        try:
+            cmd = thread_queue.get()
+            if cmd == None:
+                break
+            if cmd == 'ikernel':
+                _run_ikernel()
+            elif cmd == 'ipython':
+                _run_ipython()
+        except KeyboardInterrupt:
+            eos.post(eos.quit)
+
+def run_pyeosnode():
+    config_file = sys.argv[2]
+    return node.start(config_file)
+
 def run():
     if sys.argv[1] == 'eosnode':
-        if len(sys.argv) <= 2 or sys.argv[2] in ['-h', '--help']:
-            return print_help()
-
-        def start():
-            asyncio.run(main())
-            thread_queue.put(None)
-        t = threading.Thread(target=start, daemon=True)
-        t.start()
-        while True:
-            try:
-                cmd = thread_queue.get()
-                if cmd == None:
-                    break
-                if cmd == 'ikernel':
-                    _run_ikernel()
-                elif cmd == 'ipython':
-                    _run_ipython()
-            except KeyboardInterrupt:
-                eos.post(eos.quit)
+        return run_eosnode()
+    elif sys.argv[1] == 'pyeosnode':
+        return run_pyeosnode()
     else:
         result = args.parse_args()
         if result.subparser == 'eosdebugger':

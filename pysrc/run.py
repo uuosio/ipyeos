@@ -119,9 +119,6 @@ def run_ipyeos(custom_cmds=None):
         ret = p.wait()
         return ret
 
-def run_eosnode(custom_cmds=None):
-    run_ipyeos(custom_cmds)
-
 def start_debug_server():
     if platform.system() == 'Windows':
         cmd = f'docker run --rm -it -w /root/dev -v "{os.getcwd()}:/root/dev" -p 9090:9090 -p 9092:9092 -p 9093:9093 -t ghcr.io/uuosio/ipyeos'

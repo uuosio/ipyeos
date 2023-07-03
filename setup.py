@@ -100,6 +100,7 @@ setup(
         'thrift>=0.16.0',
         'pytest>=6.2.5',
         'aiohttp>=3.8.4',
+        'pyyaml',
         'ipython',
         'ipykernel'
     ],
