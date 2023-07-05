@@ -213,8 +213,8 @@ def start(config_file: str, genesis_file: str, snapshot_file: str):
 
     peers = config['peers']
     logger.error(f'peers: {peers}')
-    for peer in self.peers:
-        if self.peers.count(peer) > 1:
+    for peer in peers:
+        if peers.count(peer) > 1:
             logger.error(f'duplicated peer: {peer} in config file {config_file}')
             return
 
@@ -238,7 +238,6 @@ def start(config_file: str, genesis_file: str, snapshot_file: str):
     # assert genesis, 'genesis is empty'
 
     node = Node(False, data_dir=data_dir, config_dir=config_dir, genesis = genesis, state_size=state_size, snapshot_file=snapshot_file, log_level=default_log_level)
-    peer = config['peers'][0]
-    host, port = peer.split(':')
-    network = net.Network(node.chain, host, port)
+    network = net.Network(node.chain, config['peers'])
+
     network.start()

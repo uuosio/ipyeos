@@ -1,3 +1,4 @@
+import time
 from typing import Optional, List
 
 from .packer import Encoder, Decoder
@@ -7,6 +8,9 @@ from .types import U16, U32, U64, Name, Checksum256, PublicKey
 #     account_name      producer_name;
 #     public_key_type   block_signing_key;
 # };
+
+block_timestamp_epoch = 946684800000
+block_interval_ms = 500
 
 class ProducerKey(object):
     def __init__(self, producer_name: Name, block_signing_key: PublicKey):
@@ -132,9 +136,13 @@ class BlockHeader(object):
         self.new_producers = new_producers
         self.header_extensions = header_extensions
     
-    @property
     def block_num(self):
         return int.from_bytes(self.previous.to_bytes()[:4], 'big') + 1
+
+    def block_time(self):
+        msec = self.timestamp * block_interval_ms
+        msec += block_timestamp_epoch
+        return time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(msec / 1000))
 
     def __repr__(self):
         return f'BlockHeader(timestamp: {self.timestamp}, producer: {self.producer}, confirmed: {self.confirmed}, previous: {self.previous}, transaction_mroot: {self.transaction_mroot}, action_mroot: {self.action_mroot}, schedule_version: {self.schedule_version}, new_producers: {self.new_producers}, header_extensions: {self.header_extensions})'

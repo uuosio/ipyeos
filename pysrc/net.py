@@ -762,6 +762,11 @@ class Connection(object):
         self.peer = peer
         self.chain = chain
         self.set_default()
+        self.goway_listeners = []
+        self.last_time_message = None
+
+    def add_goway_listener(self, listener):
+        self.goway_listeners.append(listener)
 
     def set_default(self):
         self.connected = False
@@ -773,47 +778,16 @@ class Connection(object):
         self.busy = True
         self.closed = False
         self.avg_block_time = 0.0
-        self.request_blocks_start_time = 0.0
         self.last_handshake_cost_time = 0.0
+
+        self.block_counter = 0
+        self.block_counter_start_time = 0.0
 
     def __repr__(self):
         return f'Connection(peer={self.peer})'
 
     def __str__(self):
         return self.__repr__()
-
-    async def _connect(self):
-        self.set_default()
-        logger.info('connecting to %s', self.peer)
-        try:
-            host, port = self.peer.split(':')
-            if port in ('443', 443):
-                logger.info('+++++++connect to ssl')
-                context = ssl.create_default_context()
-                self.reader, self.writer = await asyncio.open_connection(host, port, ssl=context, limit=100*1024*1024)
-            else:
-                self.reader, self.writer = await asyncio.open_connection(host, port, limit=100*1024*1024)
-
-            if await self.handshake(self.chain):
-                logger.info('handshake success')
-                return self
-            else:
-                logger.info(f'connect to {self.peer} failed')
-                return None
-        except Exception as e:
-            logger.info(f'connect to {self.peer} error:')
-            logger.exception(e)
-        return None
-
-    async def connect(self):
-        ret = await self._connect()
-        if not ret:
-            self.closed = True
-            self.connected = False
-        else:
-            self.connected = True
-        self.busy = False
-        return ret
 
     def close(self):
         if self.closed:
@@ -839,7 +813,7 @@ class Connection(object):
                 if length <= 0:
                     break
             except Exception as e:
-                logger.error(f'error in {self} : {e}')
+                logger.exception(e)
                 self.close()
                 return None
         return buffer.getvalue()
@@ -888,20 +862,20 @@ class Connection(object):
             self.close()
             return False
 
-    def build_handshake_message(self, chain: Chain):
+    def build_handshake_message(self):
         msg = HandshakeMessage(
             network_version=net_version_base + 7,
-            chain_id=chain.chain_id(),
+            chain_id=self.chain.chain_id(),
             node_id=Checksum256(secrets.token_bytes(32)),
             key=PublicKey.empty(),
             time=int(time.time()*1e9),
             token=Checksum256.empty(),
             sig=Signature.empty(),
             p2p_address=f'127.0.0.1:9876',
-            last_irreversible_block_num=chain.last_irreversible_block_num(),
-            last_irreversible_block_id=chain.last_irreversible_block_id(),
-            head_num=chain.head_block_num(),
-            head_id=chain.head_block_id(),
+            last_irreversible_block_num=self.chain.last_irreversible_block_num(),
+            last_irreversible_block_id=self.chain.last_irreversible_block_id(),
+            head_num=self.chain.head_block_num(),
+            head_id=self.chain.head_block_id(),
             os='Linux',
             agent='EOS Agent',
             generation=self.generation
@@ -909,13 +883,33 @@ class Connection(object):
         self.generation += 1
         return msg
 
-    async def handshake(self, chain: Chain):
-        start_time = time.monotonic()
-        msg = self.build_handshake_message(chain)
+    async def handle_time_message(self, message: TimeMessage):
+        now_time = int(time.time()*1e9)
+        if not message.is_valid():
+            logger.info("invalid time message")
+            return False
+        if message.org == 0:
+            reply_message = TimeMessage(message.xmt, now_time, now_time, 0)
+            await self.send_message(message)
+        else:
+            if self.last_time_message and self.last_time_message.xmt == message.org:
+                message.dst = now_time
+                delay = (message.dst - message.org)
+                logger.info("delay: %s", delay)
+
+    async def send_handshake_message(self):
+        msg = self.build_handshake_message()
         if not await self.send_message(msg):
+            return False
+        return True
+
+    async def handshake(self):
+        start_time = time.monotonic()
+        if not await self.send_handshake_message():
             logger.info(f'fail to send handshake message: {self.peer}')
             return False
-        timeout = 10.0
+
+        timeout = 30.0
         start = time.time()
         while timeout > 0.0:
             try:
@@ -937,10 +931,62 @@ class Connection(object):
                 asyncio.create_task(self.heart_beat())
                 return True
             elif tp == go_away_message:
+                for listener in self.goway_listeners:
+                    listener(self, GoAwayMessage.unpack_bytes(raw_msg))
+                self.close()
                 return False
+            elif tp == time_message:
+                message = TimeMessage.unpack_bytes(raw_msg)
+                # logger.info(message)
+                await self.handle_time_message(message)
             else:
                 logger.error("receive message during handshake: %s", tp)
         return False
+
+    async def estimate_peer_speed(self):
+        return True
+
+    async def estimate_peer_speed_bk(self):
+        start_time = time.monotonic()
+        start_block = 2
+        end_block = start_block + 10 - 1
+        current_block = start_block
+        msg = SyncRequestMessage(start_block, end_block)
+        try:
+            if not await self.send_message(msg):
+                return False
+        except asyncio.CancelledError as e:
+            logger.info("CancelledError in request blocks, peer: %s", self.peer)
+            return False
+        except Exception as e:
+            logger.exception(e)
+            return False
+
+        while current_block <= end_block:
+            try:
+                tp, raw_msg = await self.read_message()
+                if not raw_msg:
+                    return info
+                if tp == signed_block_message:
+                    header = BlockHeader.unpack_bytes(raw_msg)
+                    received_block_num = header.block_num()
+                    if not current_block == received_block_num:
+                        logger.error(f'received block num {received_block_num} not equal to current block num {current_block}')
+                    current_block += 1
+                elif tp == go_away_message:
+                    for listener in self.goway_listeners:
+                        listener(self, GoAwayMessage.unpack_bytes(raw_msg))
+                    self.close()
+                    return False
+            except Exception as e:
+                logger.error(f'error when receiving blocks from {self.peer}:')
+                logger.exception(e)
+                return False
+            except asyncio.CancelledError as e:
+                logger.info("CancelledError in request blocks, peer: %s", self.peer)
+                return False
+        self.avg_block_time = (time.monotonic() - start_time) / 10
+        return True
 
     async def heart_beat(self):
         while True:
@@ -959,76 +1005,125 @@ class Connection(object):
                 logger.info("CancelledError")
                 break
 
-    async def _request_blocks(self, info: SyncBlockInfo, blocks: Dict[int, bytes]):
-        logger.info(f'request blocks from {info.start_block} to {info.end_block} in peer: {self.peer}')
-        msg = SyncRequestMessage(info.start_block, info.end_block)
-        try:
-            if not await self.send_message(msg):
-                return info
-        except asyncio.CancelledError as e:
-            logger.info("CancelledError in request blocks, peer: %s", self.peer)
-            return info
-        except Exception as e:
-            logger.exception(e)
-            return info
+    async def send_sync_request_message(self):
+        start_block = self.chain.head_block_num() + 1
+        end_block = self.last_handshake.head_num
+        msg = SyncRequestMessage(start_block, end_block)
+        logger.info("+++++send sync request message %s", msg)
+        return await self.send_message(msg)
+
+    async def _handle_message(self):
+        tp, raw_msg = await self.read_message()
+        if not raw_msg:
+            return False
+        if tp == handshake_message:
+            message = HandshakeMessage.unpack_bytes(raw_msg)
+            self.last_handshake = message
+            logger.info("received handshake message: %s", message)
+            if self.chain.head_block_num() + 2 < message.head_num:
+                if not await self.send_sync_request_message():
+                    return False
+            # else:
+            #     # last_irr_catch_up catch_up
+            #     req_trx = OrderedIds(IdListModes.none, 0, [])
+            #     req_blocks = OrderedIds(IdListModes.catch_up, self.chain.head_block_num() + 1, [])
+            #     msg = RequestMessage(req_trx, req_blocks)
+            #     logger.info(msg)
+        elif tp == go_away_message:
+            message = GoAwayMessage.unpack_bytes(raw_msg)
+            logger.info(message)
+            for listener in self.goway_listeners:
+                listener(self, GoAwayMessage.unpack_bytes(raw_msg))
+            self.close()
+            return False
+        elif tp == request_message:
+            message = RequestMessage.unpack_bytes(raw_msg)
+            logger.info(message)
+        elif tp == signed_block_message:
+            header = BlockHeader.unpack_bytes(raw_msg)
+            received_block_num = header.block_num()
+            head_block_num = self.chain.head_block_num()
+            # logger.info("++++++++head_block_num: %s, received_block_num: %s, last handshake head block num: %s", head_block_num, received_block_num, self.last_handshake.head_num)
+            # if received_block_num % 100 == 0:
+            #     logger.info("++++++++head_block_num: %s, received_block_num: %s", head_block_num, received_block_num)
+            if not head_block_num +1 == received_block_num:
+                logger.info("++++++++++invalid incomming block number: expected: %s: received: %s", head_block_num + 1, received_block_num)
+                if not await self.send_handshake_message():
+                    return False
+                return True
+            ret = self.chain.push_raw_block(raw_msg)
+            assert ret
+
+            if self.last_handshake and self.last_handshake.head_num == received_block_num:
+                # await asyncio.sleep(3.0)
+                msg = self.build_handshake_message()
+                await self.send_message(msg)
+                logger.info("++++++++++++++send handshake message: %s", msg)
+
+            if self.block_counter == 0:
+                self.block_counter_start_time = time.monotonic()
+            self.block_counter += 1
+            duration = time.monotonic() - self.block_counter_start_time
+            if duration >= 30:
+                if self.last_handshake.head_num > received_block_num:
+                    remain_blocks = self.last_handshake.head_num - received_block_num
+                    remain_time = round(remain_blocks * (duration/self.block_counter)/60/60, 2)
+                    logger.info("current peer: %s, current block num: %s, current block time: %s, remain blocks: %s, block speed: %s b/s, estimate remain time: %s hours", self.peer, received_block_num, header.block_time(), remain_blocks, round(self.block_counter / duration, 1), remain_time)
+                else:
+                    logger.info("current peer: %s, current block num: %s, current block time: %s, block speed: %s b/s", self.peer, received_block_num, header.block_time(), round(self.block_counter / duration, 1))
+                self.block_counter = 0
+                self.block_counter_start_time = time.monotonic()
+        elif tp == time_message:
+            message = TimeMessage.unpack_bytes(raw_msg)
+            # logger.info(message)
+            await self.handle_time_message(message)
+        elif tp == sync_request_message:
+            message = SyncRequestMessage.unpack_bytes(raw_msg)
+            logger.info(message)
+            #TODO: create a task to send blocks
+        elif tp == notice_message:
+            message = NoticeMessage.unpack_bytes(raw_msg)
+            logger.info(message)
+
+            # TODO: verify catch_up
+            # if message.known_blocks.mode == IdListModes.catch_up:
+            #     req_trx = OrderedIds(IdListModes.none, 0, [])
+            #     req_blocks = OrderedIds(IdListModes.catch_up, 0, [self.chain.head_block_id()])
+            #     msg = RequestMessage(req_trx, req_blocks)
+            #     logger.info(msg)
+            #     self.send_message(msg)
+
+            if message.known_blocks.mode in (IdListModes.last_irr_catch_up, IdListModes.catch_up):
+                pending = message.known_blocks.pending
+                msg = SyncRequestMessage(self.chain.head_block_num() + 1, pending)
+                logger.info("+++++send sync request message %s", msg)
+                await self.send_message(msg)
+        else:
+            logger.info("++++%s %s", tp, raw_msg)
+        return True
+
+    async def handle_messages(self):
+        # if not await self.send_handshake_message():
+        #     logger.info(f'send handshake message to {self.peer} failed')
+        #     return False
+        if not await self.send_sync_request_message():
+            logger.info(f'send sync request message to {self.peer} failed')
+            return False
+
         while True:
             try:
-                tp, raw_msg = await self.read_message()
-                if not raw_msg:
-                    return info
-                if tp == signed_block_message:
-                    header = BlockHeader.unpack_bytes(raw_msg)
-                    received_block_num = header.block_num
-                    if not info.current_block == received_block_num:
-                        logger.error(f'received block num {received_block_num} not equal to current block num {info.current_block}')
-                    if received_block_num in blocks:
-                        logger.error(f'received duplicated block from {self.peer}: {received_block_num}')
-                    blocks[received_block_num] = raw_msg
-                    if info.current_block >= info.end_block:
-                        logger.info(f'received blocks in range {info.start_block} to {info.end_block} with total {info.end_block - info.start_block + 1} blocks from {self.peer} finished')
-                        return info
-                    info.current_block += 1
+                if not await self._handle_message():
+                    return False
             except Exception as e:
-                logger.error(f'error when receiving blocks from {self.peer}:')
                 logger.exception(e)
-                return info
-            except asyncio.CancelledError as e:
-                logger.info("CancelledError in request blocks, peer: %s", self.peer)
-                return info
-
-    async def request_blocks(self, info: SyncBlockInfo, blocks: Dict[int, bytes]):
-        self.request_blocks_start_time = time.monotonic()
-        ret = await self._request_blocks(info, blocks)
-        duration = time.monotonic() - self.request_blocks_start_time
-        if not info.end_block == info.current_block:
-            logger.error(f'request blocks from {info.start_block} to {info.end_block} in peer: {self.peer} failed, end at {info.current_block}')
-        self.avg_block_time = duration / (info.current_block - info.start_block + 1)
-        self.busy = False
-        self.request_blocks_start_time = 0.0
-        return info
-
-    def is_request_blocks_timeout(self):
-        if self.request_blocks_start_time == 0.0:
-            return False
-        return time.monotonic() - self.request_blocks_start_time > 30.0
+                return False
 
 class OutConnection(Connection):
     def __init__(self, chain: Chain, peer: str = ''):
+        super().__init__(chain, peer)
         self.peer = peer
         self.chain = chain
         self.set_default()
-
-    def set_default(self):
-        self.connected = False
-        self.reader = None
-        self.writer = None
-        self.last_handshake = None
-        self.generation = 0
-
-        self.busy = True
-        self.closed = False
-        self.avg_block_time = 0.0
-        self.request_blocks_start_time = 0.0
 
     async def _connect(self):
         self.set_default()
@@ -1042,12 +1137,15 @@ class OutConnection(Connection):
             else:
                 self.reader, self.writer = await asyncio.open_connection(host, port, limit=100*1024*1024)
 
-            if await self.handshake(self.chain):
+            if await self.handshake():
                 logger.info('handshake success')
-                return self
             else:
                 logger.info(f'connect to {self.peer} failed')
                 return None
+            if await self.estimate_peer_speed():
+                logger.info('average block time: %s', self.avg_block_time)
+                return self
+            return None
         except Exception as e:
             logger.info(f'connect to {self.peer} error:')
             logger.exception(e)
@@ -1075,11 +1173,28 @@ class Network(object):
         self.peers = peers
         self.sync_tasks = {}
         self.unfinished_sync_requests = []
+        self.sync_finished = False
 
-    async def init(self):
+    def on_goway(self, conn: Connection, msg: GoAwayMessage):
+        logger.info(f'connection {conn.peer} sent a going away message: {msg}')
+        try:
+            self.connections.remove(conn)
+        except ValueError:
+            logger.info(f'connection {conn.peer} not in connections')
+            pass
+
+        # try:
+        #     self.peers.remove(conn.peer)
+        # except ValueError:
+        #     logger.info(f'peer {conn.peer} not in peers')
+        #     pass
+
+    async def _init(self):
+        self.connections = []
         tasks = []
         for peer in self.peers:
             conn = OutConnection(self.chain, peer)
+            conn.add_goway_listener(self.on_goway)
             task = asyncio.create_task(conn.connect())
             tasks.append(task)
 
@@ -1090,240 +1205,55 @@ class Network(object):
             logger.info(f'connected to {conn.peer}, handshake time: {conn.last_handshake_cost_time}')
             self.connections.append(conn)
 
-    async def apply_blocks(self, blocks: Dict[int, bytes]):
-        next_block_num = self.chain.head_block_num() + 1
+        if self.connections:
+            return True
+        return False
+
+    async def init(self):
         while True:
             try:
-                raw_msg = blocks.pop(next_block_num)
-                if next_block_num % 100 == 0:
-                    logger.info(f'push block {next_block_num}')
-                ret = self.chain.push_raw_block(raw_msg)
-                assert ret
-                next_block_num += 1
-            except KeyError:
-                logger.info('next_block_num: %s not found', next_block_num)
-                # for c in self.sync_tasks:
-                #     if not c.start_block:
-                #         continue
-                #     if c.start_block <= next_block_num <= c.end_block:
-                #         logger.info('next_block_num %s in sync: %s, range %s:%s, current: %s, total: %s, running time: %s', next_block_num, c.peer, c.start_block, c.end_block, c.current_block, c.end_block - c.start_block + 1, time.monotonic() - c.request_blocks_start_time)
-                # else:
-                #     logger.info('next_block_num %s not in any sync', next_block_num)
-                for i in range(5):
-                    logger.info('++++++block_num: %s, in blocks: %s', next_block_num + i, next_block_num + i in blocks)
-                await asyncio.sleep(5.0)
-                continue
+                if await self._init():
+                    logger.info('+++++++_init success')
+                    return True
+            except Exception as e:
+                logger.exception(e)
+            await asyncio.sleep(10.0)
+        
+    async def get_fastest_connection(self):
+        connections = [c for c in self.connections if c.connected]
+        if not connections:
+            while True:
+                await self.init()
+                connections = [c for c in self.connections if c.connected]
+                if connections:
+                    for c in connections:
+                        logger.info('++++++connection: %s, avg_block_time: %s', c.peer, c.avg_block_time)
+                    break
+                logger.error('no available connection')
+                await asyncio.sleep(10.0)
 
-    async def get_idle_connection(self):
-        conn = self.connections[0]
-        for c in self.connections[1:]:
+        conn = connections[0]
+        for c in connections[1:]:
             if not c.connected:
                 continue
-            if c.last_handshake_cost_time < conn.last_handshake_cost_time:
+            if c.avg_block_time < conn.avg_block_time:
                 conn = c
-
-        if conn in self.sync_tasks:
-            await self.sync_tasks[conn]
-            del self.sync_tasks[conn]
         return conn
-
-        finished_tasks = []
-        for c in self.sync_tasks:
-            task = self.sync_tasks[c]
-            if not task.done():
-                if c.is_request_blocks_timeout():
-                    logger.info(f'request blocks in {c.peer} timeout, cancel it')
-                    task.cancel()
-                    info = await task
-                    assert info.conn == c
-                    finished_tasks.append(info.conn)
-                continue
-            info = await task
-            assert info.conn == c
-            finished_tasks.append(info.conn)
-
-        for c in finished_tasks:
-            del self.sync_tasks[c]
-
-        for i in range(len(self.connections)):
-            c = self.connections[i]
-            if not c.connected:
-                # await c.connect()
-                continue
-            if not c.busy:
-                return c
-        conn = None
-        #no idle connection, try to wait for a task to finish
-        finished_tasks = []
-        for future in asyncio.as_completed(list(self.sync_tasks.values())):
-            info = await future
-            finished_tasks.append(info.conn)
-            logger.info('+++++++sync block finished: %s', info)
-            assert not info.conn.busy
-            if info.conn.connected:
-                conn = info.conn
-                break
-
-        for c in finished_tasks:
-            del self.sync_tasks[c]
-
-        if conn:
-            assert not conn.busy, f'{conn.peer} is busy'
-            if conn.connected:
-                return conn
-
-        return None
-
-    async def request_blocks(self, info: SyncBlockInfo, blocks: Dict[int, bytes]):
-        # ret = asyncio.wait_for(conn.request_blocks(start_block, end_block, blocks), timeout=30.0)
-        ret = await info.conn.request_blocks(info, blocks)
-        start, end, cur = ret.start_block, ret.end_block, ret.current_block
-        if not end == cur:
-            self.unfinished_sync_requests.append((cur, end))
-        return info
-
-    def create_sync_task(self, conn, start_block: U32, end_block: U32, blocks: Dict[int, bytes]):
-        logger.info('+++++++++create_sync_task for %s', conn.peer)
-        assert not conn in self.sync_tasks
-        conn.busy = True
-        info = SyncBlockInfo(conn, None, start_block, end_block)
-        task = asyncio.create_task(self.request_blocks(info, blocks))
-        info.task = task
-        self.sync_tasks[conn] = task
-
-    async def sync_blocks(self):
-        blocks = {}
-        asyncio.create_task(self.apply_blocks(blocks))
-
-        start_block = self.chain.head_block_num() + 1
-        minimal_head_block_num = 0xffffffffffffffff
-        for conn in self.connections:
-            if minimal_head_block_num > conn.last_handshake.head_num:
-                minimal_head_block_num = conn.last_handshake.head_num
-        block_count = 100
-        tasks = []
-        while start_block < minimal_head_block_num:
-            conn = await self.get_idle_connection()
-            if not conn:
-                logger.error('no idle connection, wait 5 seconds')
-                await asyncio.sleep(5.0)
-                continue
-
-            if self.unfinished_sync_requests:
-                start, end = self.unfinished_sync_requests.pop(0)
-                self.create_sync_task(conn, start, end, blocks)
-                continue
-
-            if len(blocks) > 5000:
-                logger.info('too many blocks in queue, wait 5 seconds')
-                await asyncio.sleep(5.0)
-                continue
-
-            if conn.avg_block_time:
-                block_count = int(10.0/conn.avg_block_time)
-                if block_count > 1000:
-                    block_count = 1000
-            else:
-                block_count = 100
-            logger.info('++++++request %s blocks from %s', block_count, conn.peer)
-            self.create_sync_task(conn, start_block, start_block + block_count - 1, blocks)
-            start_block += block_count
 
     async def _run(self):
         head_block_num = 0
         self.last_handshake = None
         await self.init()
-        logger.info('begin sync block')
-        try:
-            await self.sync_blocks()
-        except Exception as e:
-            logger.exception(e)
-        return
 
         while True:
-            tp, raw_msg = await self.conn.read_message()
-            if not raw_msg:
-                return False
-            if tp == handshake_message:
-                message = HandshakeMessage.unpack_bytes(raw_msg)
-                self.last_handshake = message
-                logger.info("received handshake message: %s", message)
-                head_block_num = message.head_num
-                start_block = self.chain.head_block_num() + 1
-                logger.info("+++++start_block: %s", start_block)
-                if self.chain.head_block_num() + 2 < message.head_num:
-                    end_block = message.head_num
-                    # end_block = start_block + 100
-                    # if end_block > message.head_num:
-                    #     end_block = message.head_num
-                    msg = SyncRequestMessage(start_block, end_block)
-                    logger.info("+++++SyncRequestMessage %s", msg)
-                    await self.conn.send_message(msg)
-                else:
-                    # last_irr_catch_up catch_up
-                    logger.info('+++++++sync finished, request catch up')
-                    req_trx = OrderedIds(IdListModes.none, 0, [])
-                    req_blocks = OrderedIds(IdListModes.catch_up, self.chain.head_block_num() + 1, [])
-                    msg = RequestMessage(req_trx, req_blocks)
-                    logger.info(msg)
-                    # await self.conn.send_message(msg)
-                # await self.conn.send_message(SyncRequestMessage(start_block=2, end_block=10))
-            elif tp == go_away_message:
-                message = GoAwayMessage.unpack_bytes(raw_msg)
-                logger.info(message)
-                return False
-            elif tp == request_message:
-                message = RequestMessage.unpack_bytes(raw_msg)
-                logger.info(message)
-            elif tp == signed_block_message:
-                header = BlockHeader.unpack_bytes(raw_msg)
-                received_block_num = header.block_num
-                head_block_num = self.chain.head_block_num()
-                logger.info("++++++++head_block_num: %s, received_block_num: %s", head_block_num, received_block_num)
-                if not head_block_num +1 == received_block_num:
-                    logger.info("++++++++++invalid incomming block number: head: %s: received: %s", head_block_num, received_block_num)
-                    continue
-                ret = self.chain.push_raw_block(raw_msg)
-                assert ret
-                # if received_block_num % 100 == 0:
-                #     logger.info("%s", raw_msg)
-                #     msg = eos.unpack_block(raw_msg)
-                #     msg = json.loads(msg)
-                #     logger.info("%s", msg)
-                #     logger.info("++++++++++%s: %s", received_block_num, head_block_num)
-                if self.last_handshake and self.last_handshake.head_num == received_block_num:
-                    # await asyncio.sleep(3.0)
-                    msg = self.build_handshake_message()
-                    await self.conn.send_message(msg)
-                    logger.info("++++++++++++++send handshake message: %s", msg)
-            elif tp == time_message:
-                message = TimeMessage.unpack_bytes(raw_msg)
-                # logger.info(message)
-                now_time = int(time.time()*1e9)
-                if not message.is_valid():
-                    logger.info("invalid time message")
-                    continue
-                if message.org == 0:
-                    reply_message = TimeMessage(message.xmt, now_time, now_time, 0)
-                    await self.conn.send_message(message)
-                else:
-                    if self.last_time_message and self.last_time_message.xmt == message.org:
-                        message.dst = now_time
-                        delay = (message.dst - message.org)
-                        logger.info("delay: %s", delay)
-            elif tp == sync_request_message:
-                message = SyncRequestMessage.unpack_bytes(raw_msg)
-                logger.info(message)
-            elif tp == notice_message:
-                message = NoticeMessage.unpack_bytes(raw_msg)
-                logger.info(message)
-                if message.known_blocks.mode == IdListModes.last_irr_catch_up:
-                    pending = message.known_blocks.pending
-                    msg = SyncRequestMessage(self.chain.head_block_num() + 1, pending)
-                    logger.info("+++++SyncRequestMessage %s", msg)
-                    await self.conn.send_message(msg)
-            else:
-                logger.info("++++%s %s", tp, raw_msg)
+            try:
+                self.conn = await self.get_fastest_connection()
+                logger.info('+++++choose fastest connection: %s', self.conn.peer)
+                await self.conn.handle_messages()
+            except Exception as e:
+                logger.exception(e)
+                asyncio.sleep(5.0)
+
         return False
 
     async def handle_signal(self, signum):
