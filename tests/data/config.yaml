@@ -38,5 +38,8 @@ chain_config:
 
 peers:
   [
-    'peer.eosn.io:9876'
+    'peer.eosn.io:9876',
+    'peer.main.alohaeos.com:9876',
+    # 'bp.cryptolions.io:9876',
+    # 'peer.eosio.sg:9876'
   ]

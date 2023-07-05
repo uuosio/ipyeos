@@ -3,11 +3,16 @@ import asyncio
 import secrets
 import json
 import time
+import pickle
+import yaml
+import pytest
+import tempfile
 
 from ipyeos.chaintester import ChainTester
 from ipyeos.types import *
 from ipyeos import eos, net, log
 from ipyeos.transaction import Transaction
+from ipyeos import net
 from ipyeos.net import HandshakeMessage, ChainSizeMessage, GoAwayMessage, GoAwayReadon, TimeMessage
 from ipyeos.net import RequestMessage, NoticeMessage, OrderedIds, IdListModes
 from ipyeos.net import SyncRequestMessage
@@ -18,6 +23,9 @@ from ipyeos.packer import Encoder, Decoder
 from ipyeos import utils
 from ipyeos.blocks import BlockHeader
 from ipyeos.structs import Symbol, Asset, Transfer
+from ipyeos.trace_api import TraceAPI
+from ipyeos.database import TableIdObjectIndex, KeyValueObjectIndex
+from ipyeos.node import Node
 
 logger = log.get_logger(__name__)
 dir_name = os.path.dirname(__file__)
@@ -253,9 +261,126 @@ def test_block_header():
     logger.info(block)
     logger.info(eos.unpack_block(raw_block))
 
+# print(os.getpid())
+# input('Press enter to continue: ')
+
+def test_config_file():
+    with open('./data/config.yaml') as f:
+        config = yaml.safe_load(f)
+    default_log_level = config['default_log_level']
+    chain_config = config['chain_config']
+    state_size=chain_config['state_size']
+    data_dir = chain_config['data_dir']
+    config_dir = chain_config['config_dir']
+    genesis = config['genesis']
+    print(json.dumps(genesis, indent=4))
+
 def test_connection():
-    state_size=100*1024*1024
-    t = ChainTester(False, state_size=state_size, data_dir=os.path.join(dir_name, 'dd'), config_dir=os.path.join(dir_name, 'cd'), log_level=5)
-    t.chain.abort_block()
-    network = Network(t.chain)
-    network.start()
+    with open('./data/config.yaml') as f:
+        config = yaml.safe_load(f)
+    default_log_level = config['default_log_level']
+    chain_config = config['chain_config']
+    state_size=chain_config['state_size']
+    data_dir = chain_config['data_dir']
+    config_dir = chain_config['config_dir']
+
+    peers = config['peers']
+    logger.error(f'peers: {peers}')
+    for peer in peers:
+        if peers.count(peer) > 1:
+            logger.error(f'duplicated peer: {peer}')
+            return
+
+    genesis = {
+        "initial_timestamp": "2018-06-08T08:08:08.888",
+        "initial_key": "EOS7EarnUhcyYqmdnPon8rm7mBCTnBoot6o7fE2WzjvEX2TdggbL3",
+        "initial_configuration": {
+            "max_block_net_usage": 1048576,
+            "target_block_net_usage_pct": 1000,
+            "max_transaction_net_usage": 524288,
+            "base_per_transaction_net_usage": 12,
+            "net_usage_leeway": 500,
+            "context_free_discount_net_usage_num": 20,
+            "context_free_discount_net_usage_den": 100,
+            "max_block_cpu_usage": 200000,
+            "target_block_cpu_usage_pct": 1000,
+            "max_transaction_cpu_usage": 150000,
+            "min_transaction_cpu_usage": 100,
+            "max_transaction_lifetime": 3600,
+            "deferred_trx_expiration_window": 600,
+            "max_transaction_delay": 3888000,
+            "max_inline_action_size": 4096,
+            "max_inline_action_depth": 4,
+            "max_authority_depth": 6
+        }
+    }
+
+    node = Node(False, data_dir=data_dir, config_dir=config_dir, genesis = genesis, state_size=state_size, log_level=default_log_level)
+    # trace = TraceAPI(node.chain, 'dd/trace')
+
+    # trace = trace.get_block_trace(10)
+
+    node.chain.abort_block()
+    print(node.chain.chain_id())
+    # peer.eosio.sg:9876
+    # eu1.eosdac.io:49876
+    network = Network(node.chain, config['peers'])
+    # network = Network(node.chain, 'peer.main.alohaeos.com', '9876')
+    try:
+        asyncio.run(network.run())
+    except KeyboardInterrupt:
+        pass
+
+def test_snapshot():
+    data_dir = tempfile.mkdtemp()
+    config_dir = tempfile.mkdtemp()
+    snapshot_file = './data/snapshot-0000001ba25b3b5af4ba6cacecb68ef4238a50bb7134e56fe985b4355fbf7488.bin'
+    node = Node(False, data_dir=data_dir, config_dir=config_dir, genesis = None, state_size=10*1024*1024, snapshot_file=snapshot_file, log_level=5)
+    assert node.chain.head_block_num() == 27
+
+async def run_time_message_test(peer):
+    host, port = peer.split(':')
+    reader, writer = await asyncio.open_connection(host, port)
+    conn = Connection(reader, writer)
+    count = 10
+    total_delay = 0.0
+    for i in range(count):
+        org = int(time.time()*1e9)
+        last_time_message = TimeMessage(0, 0, org, 0)
+        await conn.send_message(last_time_message)
+
+        tp, raw_msg = await conn.read_message()
+        if not raw_msg:
+            break
+        if not tp == net.time_message:
+            print(tp, raw_msg)
+            continue
+        message = TimeMessage.unpack_bytes(raw_msg)
+        # logger.info(message)
+        now_time = int(time.time()*1e9)
+        if not message.is_valid():
+            logger.info("invalid time message")
+            continue
+        if last_time_message and last_time_message.xmt == message.org:
+            message.dst = now_time
+            delay = (message.dst - message.org)
+            # logger.info("delay: %s", delay/1e9)
+            total_delay += delay/1e9
+    print(f"avg delay of {host}:{port}: {total_delay/count}")
+
+@pytest.mark.asyncio
+async def test_time_message():
+    peers = [
+        "peer.main.alohaeos.com:9876",
+        "bp.cryptolions.io:9876",
+        "p2p.eosdetroit.io:3018",
+        "peer.eosn.io:9876",
+        "boot.eostitan.com:9876",
+        "peer.eosio.sg:9876",
+    ]
+    tasks = []
+    for peer in peers:
+        task = asyncio.create_task(run_time_message_test(peer))
+        tasks.append(task)
+
+    await asyncio.gather(*tasks)

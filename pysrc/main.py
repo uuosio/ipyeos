@@ -162,7 +162,6 @@ def run_eosnode():
 def run_pyeosnode():
     result = args.parse_args()
     assert result.subparser == 'pyeosnode'
-    print(result)
     return node.start(result.config_file, result.genesis_file, result.snapshot_file)
 
 def run():

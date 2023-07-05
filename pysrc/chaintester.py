@@ -197,6 +197,7 @@ class ChainTester(object):
 
     def __init__(self, initialize=True, data_dir=None, config_dir=None, genesis: Union[str, Dict] = None, snapshot_file='', state_size=10*1024*1024, log_level=log_level_debug, debug_producer_key=''):
         atexit.register(self.free)
+        self.chain = None
         self.is_temp_data_dir = True
         self.is_temp_config_dir = True
         self.debug_producer_key=debug_producer_key
@@ -425,9 +426,6 @@ class ChainTester(object):
     #     self.chain.start_block(self.calc_pending_block_time(), 0, self.feature_digests)
 
     def free(self):
-        # in case of exception throw from __init__, chain may not be initialized
-        if not hasattr(self, 'chain'):
-            return
         if not self.chain:
             return
         self.chain.free()

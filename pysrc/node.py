@@ -120,6 +120,8 @@ def read_chain_id_from_block_log(data_dir):
 class Node(object):
 
     def __init__(self, initialize=True, data_dir=None, config_dir=None, genesis: Union[str, Dict] = None, snapshot_file='', state_size=10*1024*1024, log_level=log_level_debug, debug_producer_key=''):
+        self.chain = None
+
         if snapshot_file:
             if not os.path.exists(snapshot_file):
                 raise Exception(f'snapshot file {snapshot_file} does not exist')
@@ -182,14 +184,11 @@ class Node(object):
         self.db = database.Database(self.chain.get_database())
 
     def free(self):
-        # in case of exception throw from __init__, chain may not be initialized
-        if not hasattr(self, 'chain'):
-            return
         if not self.chain:
             return
         self.chain.free()
         self.chain = None
-            
+
         if self.is_temp_data_dir and self.data_dir:
             shutil.rmtree(self.data_dir)
             self.data_dir = None
@@ -211,6 +210,14 @@ def start(config_file: str, genesis_file: str, snapshot_file: str):
     data_dir = chain_config['data_dir']
     config_dir = chain_config['config_dir']
     genesis: Optional[Dict] = None
+
+    peers = config['peers']
+    logger.error(f'peers: {peers}')
+    for peer in self.peers:
+        if self.peers.count(peer) > 1:
+            logger.error(f'duplicated peer: {peer} in config file {config_file}')
+            return
+
     if genesis_file:
         try:
             with open(genesis_file) as f:
@@ -234,5 +241,4 @@ def start(config_file: str, genesis_file: str, snapshot_file: str):
     peer = config['peers'][0]
     host, port = peer.split(':')
     network = net.Network(node.chain, host, port)
-    # network = Network(t.chain, 'peer.main.alohaeos.com', '9876')
     network.start()
