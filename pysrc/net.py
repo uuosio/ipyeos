@@ -31,6 +31,9 @@ global_property_type = 12
 net_version_base = 0x04b5
 net_version_range = 106
 
+block_time_window_size = 60 * 24 # one day
+block_count_per_slot = 2*60 # one minute per slot
+
 # struct handshake_message {
 #     uint16_t                   network_version = 0; ///< incremental value above a computed base
 #     chain_id_type              chain_id; ///< used to identify chain
@@ -642,10 +645,7 @@ class SyncRequestMessage(NetMessage):
         self.end_block = end_block
 
     def __repr__(self):
-        return f"""SyncRequestMessage(
-            start_block: {self.start_block},
-            end_block: {self.end_block}
-        )"""
+        return f"""SyncRequestMessage(start_block: {self.start_block}, end_block: {self.end_block})"""
 
     def __str__(self):
         return self.__repr__()
@@ -764,6 +764,7 @@ class Connection(object):
         self.set_default()
         self.goway_listeners = []
         self.last_time_message = None
+        self.last_sync_request = None
 
     def add_goway_listener(self, listener):
         self.goway_listeners.append(listener)
@@ -782,6 +783,8 @@ class Connection(object):
 
         self.block_counter = 0
         self.block_counter_start_time = 0.0
+        self.block_times = []
+        self.print_block_start_time = 0.0
 
     def __repr__(self):
         return f'Connection(peer={self.peer})'
@@ -799,7 +802,8 @@ class Connection(object):
         self.reader = None
 
     async def read(self, length):
-        assert self.reader is not None
+        if self.closed:
+            return None
         buffer = io.BytesIO()
         while True:
             try:
@@ -895,7 +899,7 @@ class Connection(object):
             if self.last_time_message and self.last_time_message.xmt == message.org:
                 message.dst = now_time
                 delay = (message.dst - message.org)
-                logger.info("delay: %s", delay)
+                logger.info("latency: %s", delay)
 
     async def send_handshake_message(self):
         msg = self.build_handshake_message()
@@ -928,7 +932,7 @@ class Connection(object):
                 self.last_handshake = message
                 logger.info("received handshake message: %s", message)
                 self.last_handshake_cost_time = time.monotonic() - start_time
-                asyncio.create_task(self.heart_beat())
+                # asyncio.create_task(self.heart_beat())
                 return True
             elif tp == go_away_message:
                 for listener in self.goway_listeners:
@@ -944,9 +948,6 @@ class Connection(object):
         return False
 
     async def estimate_peer_speed(self):
-        return True
-
-    async def estimate_peer_speed_bk(self):
         start_time = time.monotonic()
         start_block = 2
         end_block = start_block + 10 - 1
@@ -1007,10 +1008,57 @@ class Connection(object):
 
     async def send_sync_request_message(self):
         start_block = self.chain.head_block_num() + 1
-        end_block = self.last_handshake.head_num
+        end_block = start_block + 1000 - 1
+        if end_block > self.last_handshake.head_num:
+            end_block = self.last_handshake.head_num
+        if end_block < start_block:
+            logger.error('no blocks to sync')
+            self.last_sync_request = None
+            return True
         msg = SyncRequestMessage(start_block, end_block)
-        logger.info("+++++send sync request message %s", msg)
+        self.last_sync_request = msg
+        # logger.info("+++++send sync request message %s", msg)
         return await self.send_message(msg)
+
+    def calculate_block_sync_info(self, header: BlockHeader):
+        if not self.block_counter_start_time:
+            self.block_counter_start_time = time.monotonic()
+            return
+
+        self.block_counter += 1
+        if self.block_counter == block_count_per_slot:
+            duration = time.monotonic() - self.block_counter_start_time
+            self.block_times.append(duration)
+            if len(self.block_times) >= block_time_window_size:
+                self.block_times.pop(0)
+
+            self.block_counter = 0
+            self.block_counter_start_time = time.monotonic()
+
+        if not self.print_block_start_time:
+            self.print_block_start_time = time.monotonic()
+
+        interval = time.monotonic() - self.print_block_start_time
+        if interval < 30:
+            return
+
+        self.print_block_start_time = time.monotonic()
+
+        if len(self.block_times) == 0:
+            return
+
+        total_block_time = sum(self.block_times)
+        total_blcoks = len(self.block_times) * block_count_per_slot
+        block_sync_speed = round(total_blcoks / total_block_time, 1)
+
+        received_block_num: U32 = header.block_num()
+
+        if self.last_handshake and self.last_handshake.head_num > received_block_num:
+            remain_blocks = self.last_handshake.head_num - received_block_num
+            remain_time = round(remain_blocks/block_sync_speed/60/60, 2)
+            logger.info("current peer: %s, current block num: %s, current block time: %s, remaining blocks: %s, block sync speed: %s b/s, estimate remaining time: %s hours", self.peer, received_block_num, header.block_time(), remain_blocks, block_sync_speed, remain_time)
+        else:
+            logger.info("current peer: %s, current block num: %s, current block time: %s, block speed: %s b/s", self.peer, received_block_num, header.block_time(), block_sync_speed)
 
     async def _handle_message(self):
         tp, raw_msg = await self.read_message()
@@ -1054,25 +1102,18 @@ class Connection(object):
             ret = self.chain.push_raw_block(raw_msg)
             assert ret
 
+            self.calculate_block_sync_info(header)
+
             if self.last_handshake and self.last_handshake.head_num == received_block_num:
                 # await asyncio.sleep(3.0)
                 msg = self.build_handshake_message()
                 await self.send_message(msg)
-                logger.info("++++++++++++++send handshake message: %s", msg)
+                self.last_sync_request = None
+                logger.info(f"++++++++++++++sync to head block num {received_block_num} in handshake finished, send handshake message: %s", msg)
+            elif self.last_sync_request and self.last_sync_request.end_block == received_block_num:
+                if not await self.send_sync_request_message():
+                    return False
 
-            if self.block_counter == 0:
-                self.block_counter_start_time = time.monotonic()
-            self.block_counter += 1
-            duration = time.monotonic() - self.block_counter_start_time
-            if duration >= 30:
-                if self.last_handshake.head_num > received_block_num:
-                    remain_blocks = self.last_handshake.head_num - received_block_num
-                    remain_time = round(remain_blocks * (duration/self.block_counter)/60/60, 2)
-                    logger.info("current peer: %s, current block num: %s, current block time: %s, remain blocks: %s, block speed: %s b/s, estimate remain time: %s hours", self.peer, received_block_num, header.block_time(), remain_blocks, round(self.block_counter / duration, 1), remain_time)
-                else:
-                    logger.info("current peer: %s, current block num: %s, current block time: %s, block speed: %s b/s", self.peer, received_block_num, header.block_time(), round(self.block_counter / duration, 1))
-                self.block_counter = 0
-                self.block_counter_start_time = time.monotonic()
         elif tp == time_message:
             message = TimeMessage.unpack_bytes(raw_msg)
             # logger.info(message)
@@ -1202,7 +1243,7 @@ class Network(object):
             conn = await task
             if not conn:
                 continue
-            logger.info(f'connected to {conn.peer}, handshake time: {conn.last_handshake_cost_time}')
+            logger.info(f'connected to {conn.peer}, handshake time: {conn.last_handshake_cost_time}, average block time: {conn.avg_block_time}')
             self.connections.append(conn)
 
         if self.connections:
