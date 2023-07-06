@@ -200,7 +200,11 @@ class Node(object):
     def __del__(self):
         self.free()
 
-def start(config_file: str, genesis_file: str, snapshot_file: str):
+network: Optional[net.Network] = None
+
+async def start(config_file: str, genesis_file: str, snapshot_file: str):
+    global network
+
     with open(config_file) as f:
         config = yaml.safe_load(f)
 
@@ -240,4 +244,4 @@ def start(config_file: str, genesis_file: str, snapshot_file: str):
     node = Node(False, data_dir=data_dir, config_dir=config_dir, genesis = genesis, state_size=state_size, snapshot_file=snapshot_file, log_level=default_log_level)
     network = net.Network(node.chain, config['peers'])
 
-    network.start()
+    await network.run()

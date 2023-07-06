@@ -5,7 +5,7 @@ import ssl
 import time
 import secrets
 import signal
-from typing import List, Dict, Type, Union, Any
+from typing import List, Dict, Type, Union, Any, Optional
 
 from .blocks import BlockHeader
 from .packer import Encoder, Decoder
@@ -782,9 +782,9 @@ class Connection(object):
         self.last_handshake_cost_time = 0.0
 
         self.block_counter = 0
-        self.block_counter_start_time = 0.0
+        self.block_counter_start_time: Optional[float] = None
         self.block_times = []
-        self.print_block_start_time = 0.0
+        self.print_block_start_time: Optional[float] = None
 
     def __repr__(self):
         return f'Connection(peer={self.peer})'
@@ -794,7 +794,7 @@ class Connection(object):
 
     def close(self):
         if self.closed:
-            logger.info('+++++++++%s already closed', self.peer)
+            logger.info(f'+++++++++{self.peer} already closed')
             return
         self.connected = False
         self.closed = True
@@ -829,19 +829,19 @@ class Connection(object):
         msg_len = int.from_bytes(msg_len, 'little')
         if msg_len >= max_package_size or msg_len < 2:
             self.close()
-            raise Exception(f'bad message length: {msg_len}')
+            raise Exception(f'{self.peer} bad message length: {msg_len}')
             return (None, None)
 
         msg_type = await self.read(1)
         if not msg_type:
-            logger.error('fail to read msg type')
+            logger.error(f'{self.peer} fail to read msg type')
             # self.close()
             return (None, None)
         msg_type = msg_type[0]
         # logger.info(f'+++{msg_type}, {msg_len}')
         msg = await self.read(msg_len-1)
         if not msg:
-            logger.error('fail to read msg')
+            logger.error(f'{self.peer} fail to read msg')
             # self.close()
             return (None, None)
         return msg_type, msg
@@ -861,7 +861,7 @@ class Connection(object):
             await self.writer.drain()
             return True
         except Exception as e:
-            logger.error(f'connection error when sending message {msg} to {self.peer}:')
+            logger.error(f'{self.peer} connection error when sending message {msg}')
             logger.exception(e)
             self.close()
             return False
@@ -890,7 +890,7 @@ class Connection(object):
     async def handle_time_message(self, message: TimeMessage):
         now_time = int(time.time()*1e9)
         if not message.is_valid():
-            logger.info("invalid time message")
+            logger.info(f"{self.peer} invalid time message")
             return False
         if message.org == 0:
             reply_message = TimeMessage(message.xmt, now_time, now_time, 0)
@@ -899,7 +899,7 @@ class Connection(object):
             if self.last_time_message and self.last_time_message.xmt == message.org:
                 message.dst = now_time
                 delay = (message.dst - message.org)
-                logger.info("latency: %s", delay)
+                logger.info(f"{self.peer} latency: %s", delay)
 
     async def send_handshake_message(self):
         msg = self.build_handshake_message()
@@ -910,7 +910,7 @@ class Connection(object):
     async def handshake(self):
         start_time = time.monotonic()
         if not await self.send_handshake_message():
-            logger.info(f'fail to send handshake message: {self.peer}')
+            logger.info(f'{self.peer} fail to send handshake message')
             return False
 
         timeout = 30.0
@@ -930,7 +930,7 @@ class Connection(object):
             if tp == handshake_message:
                 message = HandshakeMessage.unpack_bytes(raw_msg)
                 self.last_handshake = message
-                logger.info("received handshake message: %s", message)
+                logger.info(f"{self.peer} received handshake message: {message}")
                 self.last_handshake_cost_time = time.monotonic() - start_time
                 # asyncio.create_task(self.heart_beat())
                 return True
@@ -944,7 +944,7 @@ class Connection(object):
                 # logger.info(message)
                 await self.handle_time_message(message)
             else:
-                logger.error("receive message during handshake: %s", tp)
+                logger.error(f"{self.peer} receive message during handshake: {tp}")
         return False
 
     async def estimate_peer_speed(self):
@@ -957,7 +957,7 @@ class Connection(object):
             if not await self.send_message(msg):
                 return False
         except asyncio.CancelledError as e:
-            logger.info("CancelledError in request blocks, peer: %s", self.peer)
+            logger.info(f"{self.peer} CancelledError in request blocks")
             return False
         except Exception as e:
             logger.exception(e)
@@ -980,11 +980,11 @@ class Connection(object):
                     self.close()
                     return False
             except Exception as e:
-                logger.error(f'error when receiving blocks from {self.peer}:')
+                logger.error(f'{self.peer} error when receiving blocks')
                 logger.exception(e)
                 return False
             except asyncio.CancelledError as e:
-                logger.info("CancelledError in request blocks, peer: %s", self.peer)
+                logger.info(f"{self.peer} CancelledError in request blocks")
                 return False
         self.avg_block_time = (time.monotonic() - start_time) / 10
         return True
@@ -997,13 +997,13 @@ class Connection(object):
                 if not self.connected:
                     return
                 if not await self.send_message(self.last_time_message):
-                    logger.error('fail to send time message')
+                    logger.error(f'{self.peer} fail to send time message')
                     return False
             except ConnectionResetError:
-                logger.error('connection reset')
+                logger.error(f'{self.peer} connection reset')
                 break
             except asyncio.exceptions.CancelledError:
-                logger.info("CancelledError")
+                logger.info(f"{self.peer} CancelledError")
                 break
 
     async def send_sync_request_message(self):
@@ -1012,13 +1012,19 @@ class Connection(object):
         if end_block > self.last_handshake.head_num:
             end_block = self.last_handshake.head_num
         if end_block < start_block:
-            logger.error('no blocks to sync')
+            logger.error(f'{self.peer} no blocks to sync')
             self.last_sync_request = None
             return True
         msg = SyncRequestMessage(start_block, end_block)
         self.last_sync_request = msg
         # logger.info("+++++send sync request message %s", msg)
         return await self.send_message(msg)
+
+    def reset_block_sync_info(self):
+        self.block_counter = 0
+        self.block_counter_start_time: Optional[float] = None
+        self.block_times = []
+        self.print_block_start_time: Optional[float] = None
 
     def calculate_block_sync_info(self, header: BlockHeader):
         if not self.block_counter_start_time:
@@ -1056,9 +1062,9 @@ class Connection(object):
         if self.last_handshake and self.last_handshake.head_num > received_block_num:
             remain_blocks = self.last_handshake.head_num - received_block_num
             remain_time = round(remain_blocks/block_sync_speed/60/60, 2)
-            logger.info("current peer: %s, current block num: %s, current block time: %s, remaining blocks: %s, block sync speed: %s b/s, estimate remaining time: %s hours", self.peer, received_block_num, header.block_time(), remain_blocks, block_sync_speed, remain_time)
+            logger.info(f"current peer: {self.peer}, current block num: {received_block_num}, current block time: {header.block_time()}, remaining blocks: {remain_blocks}, block sync speed: {block_sync_speed} b/s, estimated remaining time: {remain_time} hours")
         else:
-            logger.info("current peer: %s, current block num: %s, current block time: %s, block speed: %s b/s", self.peer, received_block_num, header.block_time(), block_sync_speed)
+            logger.info(f"current peer: {self.peer}, current block num: {received_block_num}, current block time: {header.block_time()}, block speed: {block_sync_speed} b/s")
 
     async def _handle_message(self):
         tp, raw_msg = await self.read_message()
@@ -1109,6 +1115,7 @@ class Connection(object):
                 msg = self.build_handshake_message()
                 await self.send_message(msg)
                 self.last_sync_request = None
+                self.reset_block_sync_info()
                 logger.info(f"++++++++++++++sync to head block num {received_block_num} in handshake finished, send handshake message: %s", msg)
             elif self.last_sync_request and self.last_sync_request.end_block == received_block_num:
                 if not await self.send_sync_request_message():
@@ -1215,13 +1222,14 @@ class Network(object):
         self.sync_tasks = {}
         self.unfinished_sync_requests = []
         self.sync_finished = False
+        self.conn: Optional[Connection] = None
 
     def on_goway(self, conn: Connection, msg: GoAwayMessage):
-        logger.info(f'connection {conn.peer} sent a going away message: {msg}')
+        logger.info(f'connection {conn.peer} sent a go away message: {msg}')
         try:
             self.connections.remove(conn)
         except ValueError:
-            logger.info(f'connection {conn.peer} not in connections')
+            logger.info(f'{conn.peer} not in connections')
             pass
 
         # try:
@@ -1283,7 +1291,6 @@ class Network(object):
 
     async def _run(self):
         head_block_num = 0
-        self.last_handshake = None
         await self.init()
 
         while True:

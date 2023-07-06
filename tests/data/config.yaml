@@ -27,7 +27,7 @@ genesis:
 # log_level_error = 4
 # log_level_off = 5
 
-default_log_level: 5
+default_log_level: 2
 
 chain_config:
   state_size: 2147483648 # 2048*1024*1024
