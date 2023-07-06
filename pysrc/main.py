@@ -7,6 +7,7 @@ import queue
 import yaml
 import signal
 import sys
+import socket
 import time
 import threading
 
@@ -16,10 +17,13 @@ from IPython.terminal.embed import InteractiveShellEmbed
 from . import eos, server
 from . import args
 from . import node
+from . import log
 
 if not 'RUN_IPYEOS' in os.environ:
     print('main module can only be load by ipyeos')
     sys.exit(0)
+
+logger = log.get_logger(__name__)
 
 executor = concurrent.futures.ThreadPoolExecutor(max_workers=10)
 async_queue = asyncio.Queue()
@@ -73,7 +77,8 @@ def _run_ipython():
 
 async def run_ipython(request):
     # await async_queue.put("ipython")
-    thread_queue.put("ipython")
+    # thread_queue.put("ipython")
+    future = asyncio.get_event_loop().run_in_executor(executor, _run_ipython)
     return web.Response(text=f'done! {time.time()}')
 
 def _run_ikernel():
@@ -91,8 +96,12 @@ async def run_ikernel(request):
 
 async def set_warn_level():
     await asyncio.sleep(3.0)
-    eos.post(eos.set_warn_level, 'default')
+    eos.post(eos.set_info_level, 'default')
     print('set default log level to warn')
+
+def is_port_in_use(port):
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        return s.connect_ex(('localhost', port)) == 0
 
 async def start_webserver():
     app = web.Application()
@@ -102,13 +111,16 @@ async def start_webserver():
     app.router.add_get('/', hello)
     runner = web.AppRunner(app)
     await runner.setup()
-    try:
-        site = web.TCPSite(runner, host='127.0.0.1', port=7777)
-    except Exception as e:
-        print(e)
-        site = web.TCPSite(runner, host='127.0.0.1', port=7778)
-    await site.start()
-    print('++++++++++++server started!!')
+
+    for i in range(10):
+        port = 7777 + i
+        if is_port_in_use(port):
+            continue
+        site = web.TCPSite(runner, host='127.0.0.1', port=port)
+        await site.start()
+        logger.info(f'++++++++++++debugging server started at port {port}!!')
+        break
+
     while True:
         await asyncio.sleep(3600) # serve forever
 
@@ -159,10 +171,24 @@ def run_eosnode():
         except KeyboardInterrupt:
             eos.post(eos.quit)
 
-def run_pyeosnode():
+
+async def pyeosnode_main():
     result = args.parse_args()
-    assert result.subparser == 'pyeosnode'
-    return node.start(result.config_file, result.genesis_file, result.snapshot_file)
+    asyncio.create_task(start_webserver())
+    asyncio.create_task(node.start(result.config_file, result.genesis_file, result.snapshot_file))
+    while True:
+        try:
+            await asyncio.sleep(3600)
+        except asyncio.CancelledError:
+            logger.info('main task cancelled')
+            break
+    print('all done!')
+
+def run_pyeosnode():
+    try:
+        asyncio.run(pyeosnode_main())
+    except KeyboardInterrupt:
+        logger.info("KeyboardInterrupt")
 
 def run():
     if sys.argv[1] == 'eosnode':
