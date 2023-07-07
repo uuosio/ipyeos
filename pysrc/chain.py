@@ -241,8 +241,7 @@ class Chain(object):
         ret = _chain.proposed_producers(self.ptr)
         return json.loads(ret)
 
-
-    def last_irreversible_block_num(self) -> int:
+    def last_irreversible_block_num(self) -> U32:
         return _chain.last_irreversible_block_num(self.ptr)
 
     def last_irreversible_block_id(self) -> Checksum256:
@@ -261,8 +260,12 @@ class Chain(object):
     def fetch_block_state_by_id(self, block_id) -> bytes:
         return _chain.fetch_block_state_by_id(self.ptr, block_id)
 
-    def get_block_id_for_num(self, block_num) -> str:
-        return _chain.get_block_id_for_num(self.ptr, block_num)
+    def get_block_id_for_num(self, block_num) -> Optional[Checksum256]:
+        ret = _chain.get_block_id_for_num(self.ptr, block_num)
+        if not ret:
+            logger.info(f"block_num {block_num} not found")
+            return None
+        return Checksum256.from_string(ret)
 
     def calculate_integrity_hash(self) -> str:
         return _chain.calculate_integrity_hash(self.ptr)
@@ -379,9 +382,6 @@ class Chain(object):
     def fork_db_pending_head_block_num(self) -> int:
         return _chain.fork_db_pending_head_block_num(self.ptr)
 
-    def get_block_id_for_num(self, num) -> str:
-        return _chain.get_block_id_for_num(self.ptr, num)
-
     def fetch_block_by_number(self, block_num) -> bytes:
         return _chain.fetch_block_by_number(self.ptr, block_num)
 
@@ -417,10 +417,7 @@ class Chain(object):
     def push_raw_block(self, raw_block: bytes) -> bool:
         ret = _chain.push_raw_block(self.ptr, raw_block)
         if not ret:
-            err = _eos.get_last_error_and_clear()
-            if err:
-                raise Exception(err)
-            raise Exception("unknown error")
+            raise Exception(self.get_last_error())
         return True
 
     def get_scheduled_transaction(self, sender_id: U128, sender: Name) -> dict:
@@ -494,10 +491,9 @@ class Chain(object):
     def get_last_error(self) -> str:
         err = _eos.get_last_error_and_clear()
         try:
-            return {'except': json.loads(err)}
+            return json.loads(err)
         except json.JSONDecodeError:        
-            err = json.dumps(err)
-            return f'{{"except": {err}}}'
+            return err
 
     def get_native_contract(self, contract: str) -> str:
         return _chain.get_native_contract(self.ptr, contract)

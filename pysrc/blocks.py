@@ -1,7 +1,8 @@
+import hashlib
 import time
 from typing import Optional, List
 
-from .packer import Encoder, Decoder
+from .packer import Encoder, Decoder, Packer
 from .types import U16, U32, U64, Name, Checksum256, PublicKey
 
 # struct producer_key {
@@ -116,7 +117,7 @@ class Pair(object):
         second = dec.unpack_bytes()
         return cls(first, second)
 
-class BlockHeader(object):
+class BlockHeader(Packer):
     def __init__(self, timestamp: U32,
                     producer: Name,
                     confirmed: U16,
@@ -174,6 +175,17 @@ class BlockHeader(object):
         header_extensions = dec.unpack_list(Pair)
         return cls(timestamp, producer, confirmed, previous, transaction_mroot, action_mroot, schedule_version, new_producers, header_extensions)
     
+    def digest(self) -> bytes:
+        h = hashlib.sha256()
+        h.update(self.get_bytes())
+        return h.digest()
+
+    def calculate_id(self) -> Checksum256:
+        block_num = self.block_num()
+        block_num_bytes = block_num.to_bytes(4, 'big')
+        digest = self.digest()
+        return Checksum256(block_num_bytes + digest[4:])
+
     @classmethod
     def unpack_bytes(cls, data: bytes):
         return cls.unpack(Decoder(data))
