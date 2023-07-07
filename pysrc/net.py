@@ -641,6 +641,7 @@ class SyncRequestMessage(NetMessage):
             start_block (U32): The starting block number to synchronize from.
             end_block (U32): The ending block number to synchronize to.
         """
+        assert start_block <= end_block
         self.start_block = start_block
         self.end_block = end_block
 
@@ -1054,19 +1055,26 @@ class Connection(object):
                 logger.info(f"{self.peer} CancelledError")
                 break
 
-    async def send_sync_request_message(self):
-        start_block = self.chain.head_block_num() + 1
-        end_block = start_block + 1000 - 1
-        if end_block > self.last_handshake.head_num:
-            end_block = self.last_handshake.head_num
-        if end_block < start_block:
-            logger.error(f'{self.peer} no blocks to sync')
-            self.last_sync_request = None
-            return True
+    async def send_sync_request_message(self, start_block: Optional[U32] = None, end_block: Optional[U32] = None):
+        if start_block is None:
+            start_block = self.chain.head_block_num() + 1
+        if end_block is None:
+            end_block = start_block + 1000 - 1
+            if end_block > self.last_handshake.head_num:
+                end_block = self.last_handshake.head_num
+            if end_block < start_block:
+                logger.error(f'{self.peer} no blocks to sync')
+                # self.last_sync_request = None
+                return True
         msg = SyncRequestMessage(start_block, end_block)
         self.last_sync_request = msg
-        # logger.info("+++++send sync request message %s", msg)
+        logger.info("+++++send sync request message %s", msg)
         return await self.send_message(msg)
+
+    async def resync_from_irreversible_block_num_plus_one(self):
+        start_block = self.chain.last_irreversible_block_num() + 1
+        end_block = self.chain.head_block_num()
+        await self.send_sync_request_message(start_block, end_block)
 
     def reset_block_sync_info(self):
         self.block_counter = 0
@@ -1123,6 +1131,7 @@ class Connection(object):
             self.last_handshake = message
             logger.info("received handshake message: %s", message)
             if self.chain.head_block_num() + 2 < message.head_num:
+                logger.info('send_sync_request_message')
                 if not await self.send_sync_request_message():
                     return False
             # else:
@@ -1144,17 +1153,39 @@ class Connection(object):
         elif tp == signed_block_message:
             header = BlockHeader.unpack_bytes(raw_msg)
             received_block_num = header.block_num()
+            # logger.info(f"{self.peer}: ++++++++received block num: {received_block_num}, block_id: {block_id}")
             head_block_num = self.chain.head_block_num()
             # logger.info(f"{self.peer}: ++++++++head_block_num: {head_block_num}, received_block_num: {received_block_num}")
             # if received_block_num % 100 == 0:
             #     logger.info("++++++++head_block_num: %s, received_block_num: %s", head_block_num, received_block_num)
-            if not head_block_num +1 == received_block_num:
+            if head_block_num >= received_block_num:
+                received_block_id = header.calculate_id()
+                block_id = self.chain.get_block_id_for_num(received_block_num)
+                if block_id == received_block_id:
+                    logger.warning(f"{self.peer}: ++++++++receive dumplicated block: head_block_num: {head_block_num}, received_block_num: {received_block_num}, received block_id: {received_block_id}")
+                    return True
+                else:
+                    logger.info(f"{self.peer}: ++++++++receive invalid block, maybe fork happened: {received_block_num}, block_id: {block_id}, received block_id: {received_block_id}")
+            elif head_block_num +1 < received_block_num:
                 logger.info("++++++++++invalid incomming block number: expected: %s: received: %s", head_block_num + 1, received_block_num)
                 if not await self.send_handshake_message():
                     return False
                 return True
-            ret = self.chain.push_raw_block(raw_msg)
-            assert ret
+            try:
+                ret = self.chain.push_raw_block(raw_msg)
+            except Exception as e:
+                # fork_database_exception
+                # unlinkable_block_exception
+                exception = e.args[0]
+                if exception['name'] == 'unlinkable_block_exception':
+                    logger.warning(f"{self.peer}: ++++++++receive unlinkable block: {received_block_num}, block_id: {block_id}")
+                    await self.resync_from_irreversible_block_num_plus_one()
+                    return True
+                elif exception['name'] == 'fork_database_exception' and exception['stack'][0]['format'].startswith('we already know about this block'):
+                    logger.warning(f"{self.peer}: ++++++++receive dumplicated block: {received_block_num}, block_id: {block_id}")
+                    return True
+                logger.info(e)
+                raise e
 
             self.calculate_block_sync_info(header)
 
@@ -1162,10 +1193,11 @@ class Connection(object):
                 # await asyncio.sleep(3.0)
                 msg = self.build_handshake_message()
                 await self.send_message(msg)
-                self.last_sync_request = None
+                # self.last_sync_request = None
                 self.reset_block_sync_info()
                 logger.info(f"++++++++++++++sync to head block num {received_block_num} in handshake finished, send handshake message: %s", msg)
             elif self.last_sync_request and self.last_sync_request.end_block == received_block_num:
+                logger.info('send_sync_request_message')
                 if not await self.send_sync_request_message():
                     return False
 
@@ -1191,7 +1223,11 @@ class Connection(object):
 
             if message.known_blocks.mode in (IdListModes.last_irr_catch_up, IdListModes.catch_up):
                 pending = message.known_blocks.pending
-                msg = SyncRequestMessage(self.chain.head_block_num() + 1, pending)
+                start_block = self.chain.head_block_num() + 1
+                if start_block > pending:
+                    logger.info(f"++++++++++already in sync, start_block: {start_block}, pending: {pending}")
+                    return True
+                msg = SyncRequestMessage(start_block, pending)
                 logger.info("+++++send sync request message %s", msg)
                 await self.send_message(msg)
         elif tp == packed_transaction_message:
