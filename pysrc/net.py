@@ -1145,7 +1145,7 @@ class Connection(object):
             header = BlockHeader.unpack_bytes(raw_msg)
             received_block_num = header.block_num()
             head_block_num = self.chain.head_block_num()
-            logger.info(f"{self.peer}: ++++++++head_block_num: {head_block_num}, received_block_num: {received_block_num}")
+            # logger.info(f"{self.peer}: ++++++++head_block_num: {head_block_num}, received_block_num: {received_block_num}")
             # if received_block_num % 100 == 0:
             #     logger.info("++++++++head_block_num: %s, received_block_num: %s", head_block_num, received_block_num)
             if not head_block_num +1 == received_block_num:

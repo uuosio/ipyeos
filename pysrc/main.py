@@ -179,7 +179,7 @@ async def pyeosnode_main():
     while True:
         try:
             await asyncio.sleep(3600)
-        except asyncio.CancelledError:
+        except asyncio.exceptions.CancelledError:
             logger.info('main task cancelled')
             break
     print('all done!')

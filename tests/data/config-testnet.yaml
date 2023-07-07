@@ -20,14 +20,7 @@ genesis:
     max_inline_action_depth: 4
     max_authority_depth: 6
 
-# log_level_all = 0
-# log_level_debug = 1
-# log_level_info = 2
-# log_level_warn = 3
-# log_level_error = 4
-# log_level_off = 5
-
-default_log_level: 2
+logging_config_file: "logging.json"
 
 chain_config:
   state_size: 2147483648 # 2048*1024*1024

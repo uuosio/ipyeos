@@ -26,11 +26,14 @@ cdef extern from "_ipyeos.hpp":
         int exec() nogil
         int exec_once() nogil
         void quit() nogil
+        void initialize_logging(string& config_path)
+        void print_log(int level, string& logger_name, string& message)
         void *post(void *(*fn)(void *), void *args) nogil
         void *get_database()
 
         void set_log_level(string& logger_name, int level)
         int get_log_level(string& logger_name)
+        void enable_deep_mind(void *controller)
 
     ctypedef struct database_proxy:
         void set_database(void *db)
@@ -83,6 +86,12 @@ def init_chain():
     eosext_init()
 
 init_chain()
+
+def initialize_logging(string& config_path):
+    get_ipyeos_proxy().cb.initialize_logging(config_path)
+
+def print_log(int level, string& logger_name, string& message):
+    get_ipyeos_proxy().cb.print_log(level, logger_name, message)
 
 def set_log_level(string& logger_name, int level):
     get_ipyeos_proxy().cb.set_log_level(logger_name, level)
@@ -204,3 +213,6 @@ def bytes_to_base58(data: bytes) -> str:
         return out
     else:
         return None
+
+def _enable_deep_mind(uint64_t controller):
+    get_ipyeos_proxy().cb.enable_deep_mind(<void *>controller)

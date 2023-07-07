@@ -29,11 +29,14 @@ class LogLevel(Enum):
     ERROR = 4
     OFF = 5
 
-# "net_plugin_impl"
+# "net_plugin"
 # "http_plugin"
 # "producer_plugin"
 # "trace_api"
 # "state_history"
+
+def initialize_logging(logging_config_file: str="logging.json") -> None:
+    _eos.initialize_logging(logging_config_file)
 
 def set_log_level(logger_name: str, level: Union[int, LogLevel]) -> None:
     if isinstance(level, LogLevel):

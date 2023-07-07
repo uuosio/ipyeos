@@ -54,6 +54,7 @@ class Chain(object):
             error = _eos.get_last_error_and_clear()
             raise Exception(error)
 
+        # self.enable_deep_mind()
     def startup(self, initdb: bool) -> bool:
         """
         Startup a chain
@@ -509,3 +510,6 @@ class Chain(object):
 
     def get_debug_producer_key(self) -> str:
         return _chain(self.ptr).get_debug_producer_key()
+
+    def enable_deep_mind(self):
+        return _eos._enable_deep_mind(self.get_controller())

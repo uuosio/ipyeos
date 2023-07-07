@@ -119,7 +119,7 @@ def read_chain_id_from_block_log(data_dir):
 
 class Node(object):
 
-    def __init__(self, initialize=True, data_dir=None, config_dir=None, genesis: Union[str, Dict] = None, snapshot_file='', state_size=10*1024*1024, log_level=log_level_debug, debug_producer_key=''):
+    def __init__(self, initialize=True, data_dir=None, config_dir=None, genesis: Union[str, Dict] = None, snapshot_file='', state_size=10*1024*1024, debug_producer_key=''):
         self.chain = None
 
         if snapshot_file:
@@ -151,8 +151,6 @@ class Node(object):
 
         chain_config['blocks_dir'] = os.path.join(self.data_dir, 'blocks')
         chain_config['state_dir'] = os.path.join(self.data_dir, 'state')
-
-        eos.set_log_level('default', log_level)
         
         if snapshot_file:
             initialize = False
@@ -204,11 +202,11 @@ network: Optional[net.Network] = None
 
 async def start(config_file: str, genesis_file: str, snapshot_file: str):
     global network
-
     with open(config_file) as f:
         config = yaml.safe_load(f)
+    logger.info(f'config: {config}')
 
-    default_log_level = config['default_log_level']
+    logging_config_file = config['logging_config_file']
     chain_config = config['chain_config']
     state_size=chain_config['state_size']
     data_dir = chain_config['data_dir']
@@ -240,8 +238,9 @@ async def start(config_file: str, genesis_file: str, snapshot_file: str):
         except KeyError:
             pass
     # assert genesis, 'genesis is empty'
+    eos.initialize_logging(logging_config_file)
 
-    node = Node(False, data_dir=data_dir, config_dir=config_dir, genesis = genesis, state_size=state_size, snapshot_file=snapshot_file, log_level=default_log_level)
+    node = Node(False, data_dir=data_dir, config_dir=config_dir, genesis = genesis, state_size=state_size, snapshot_file=snapshot_file)
     network = net.Network(node.chain, config['peers'])
 
     await network.run()
