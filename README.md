@@ -172,7 +172,7 @@ cd ipyeos
 4. Install the Python package
 
 ```bash
-python3 -m pip install dist/pyeos-0.4.5**.whl
+python3 -m pip install dist/pyeos-0.4.6**.whl
 ```
 
 ## Run a Node

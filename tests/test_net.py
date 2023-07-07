@@ -267,7 +267,7 @@ def test_block_header():
 def test_config_file():
     with open('./data/config.yaml') as f:
         config = yaml.safe_load(f)
-    default_log_level = config['default_log_level']
+    logging_config_file = config['logging_config_file']
     chain_config = config['chain_config']
     state_size=chain_config['state_size']
     data_dir = chain_config['data_dir']
@@ -278,7 +278,7 @@ def test_config_file():
 def test_connection():
     with open('./data/config.yaml') as f:
         config = yaml.safe_load(f)
-    default_log_level = config['default_log_level']
+    logging_config_file = config['logging_config_file']
     chain_config = config['chain_config']
     state_size=chain_config['state_size']
     data_dir = chain_config['data_dir']
@@ -291,31 +291,9 @@ def test_connection():
             logger.error(f'duplicated peer: {peer}')
             return
 
-    genesis = {
-        "initial_timestamp": "2018-06-08T08:08:08.888",
-        "initial_key": "EOS7EarnUhcyYqmdnPon8rm7mBCTnBoot6o7fE2WzjvEX2TdggbL3",
-        "initial_configuration": {
-            "max_block_net_usage": 1048576,
-            "target_block_net_usage_pct": 1000,
-            "max_transaction_net_usage": 524288,
-            "base_per_transaction_net_usage": 12,
-            "net_usage_leeway": 500,
-            "context_free_discount_net_usage_num": 20,
-            "context_free_discount_net_usage_den": 100,
-            "max_block_cpu_usage": 200000,
-            "target_block_cpu_usage_pct": 1000,
-            "max_transaction_cpu_usage": 150000,
-            "min_transaction_cpu_usage": 100,
-            "max_transaction_lifetime": 3600,
-            "deferred_trx_expiration_window": 600,
-            "max_transaction_delay": 3888000,
-            "max_inline_action_size": 4096,
-            "max_inline_action_depth": 4,
-            "max_authority_depth": 6
-        }
-    }
+    genesis = config['genesis']
 
-    node = Node(False, data_dir=data_dir, config_dir=config_dir, genesis = genesis, state_size=state_size, log_level=default_log_level)
+    node = Node(False, data_dir=data_dir, config_dir=config_dir, genesis = genesis, state_size=state_size)
     # trace = TraceAPI(node.chain, 'dd/trace')
 
     # trace = trace.get_block_trace(10)

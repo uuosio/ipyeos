@@ -1,5 +1,3 @@
-v0.4.5 release
+v0.4.6 release
 
-1. Improve setting debug producer key
-2. implemented transaction proxy
-3. primary support for p2p network
+1. Improving p2p network
