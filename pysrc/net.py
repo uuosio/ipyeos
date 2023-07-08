@@ -302,7 +302,7 @@ class ChainSizeMessage(NetMessage):
 #     authentication ///< peer failed authenicatio
 # };
 
-class GoAwayReadon(Enum):
+class GoAwayReason(Enum):
     no_reason = 0
     self_ = 1
     duplicate = 2
@@ -325,7 +325,7 @@ class GoAwayReadon(Enum):
 class GoAwayMessage(NetMessage):
     msg_type = go_away_message
 
-    def __init__(self, reason: GoAwayReadon, node_id: Checksum256):
+    def __init__(self, reason: GoAwayReason, node_id: Checksum256):
         """
         Initializes a new GoAwayMessage object with the given reason and node ID.
 
@@ -359,7 +359,7 @@ class GoAwayMessage(NetMessage):
 
     @classmethod
     def unpack(cls, dec: Decoder):
-        reason = GoAwayReadon(dec.unpack_u32())
+        reason = GoAwayReason(dec.unpack_u32())
         node_id = Checksum256.unpack(dec)
         return cls(
             reason,
@@ -1057,7 +1057,10 @@ class Connection(object):
 
     async def send_sync_request_message(self, start_block: Optional[U32] = None, end_block: Optional[U32] = None):
         if start_block is None:
-            start_block = self.chain.head_block_num() + 1
+            if self.last_sync_request is None:
+                start_block = self.chain.last_irreversible_block_num() + 1
+            else:
+                start_block = self.chain.head_block_num() + 1
         if end_block is None:
             end_block = start_block + 1000 - 1
             if end_block > self.last_handshake.head_num:
@@ -1168,9 +1171,14 @@ class Connection(object):
                     logger.info(f"{self.peer}: ++++++++receive invalid block, maybe fork happened: {received_block_num}, block_id: {block_id}, received block_id: {received_block_id}")
             elif head_block_num +1 < received_block_num:
                 logger.info("++++++++++invalid incomming block number: expected: %s: received: %s", head_block_num + 1, received_block_num)
-                if not await self.send_handshake_message():
-                    return False
-                return True
+                msg = GoAwayMessage(GoAwayReason.benign_other, self.last_handshake.node_id)
+                await self.send_message(msg)
+                logger.info("++++++++++send go away message: %s", msg)
+                self.close()
+                return False
+                # if not await self.send_handshake_message():
+                #     return False
+                # return True
             try:
                 ret = self.chain.push_raw_block(raw_msg)
             except Exception as e:
@@ -1178,9 +1186,13 @@ class Connection(object):
                 # unlinkable_block_exception
                 exception = e.args[0]
                 if exception['name'] == 'unlinkable_block_exception':
-                    logger.warning(f"{self.peer}: ++++++++receive unlinkable block: {received_block_num}, block_id: {block_id}")
-                    await self.resync_from_irreversible_block_num_plus_one()
-                    return True
+                    received_block_id = header.calculate_id()
+                    logger.warning(f"{self.peer}: ++++++++receive unlinkable block: {received_block_num}, received_block_id: {received_block_id}")
+                    msg = GoAwayMessage(GoAwayReason.unlinkable, self.last_handshake.node_id)
+                    await self.send_message(msg)
+                    logger.info("++++++++++send go away message: %s", msg)
+                    self.close()
+                    return False
                 elif exception['name'] == 'fork_database_exception' and exception['stack'][0]['format'].startswith('we already know about this block'):
                     logger.warning(f"{self.peer}: ++++++++receive dumplicated block: {received_block_num}, block_id: {block_id}")
                     return True
@@ -1248,6 +1260,8 @@ class Connection(object):
         # if not await self.send_sync_request_message():
         #     logger.info(f'send sync request message to {self.peer} failed')
         #     return False
+
+        self.last_sync_request = None
 
         while True:
             try:
