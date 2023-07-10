@@ -243,4 +243,8 @@ async def start(config_file: str, genesis_file: str, snapshot_file: str):
     node = Node(False, data_dir=data_dir, config_dir=config_dir, genesis = genesis, state_size=state_size, snapshot_file=snapshot_file)
     network = net.Network(node.chain, config['peers'])
 
-    await network.run()
+    try:
+        await network.run()
+    except asyncio.exceptions.CancelledError:
+        for conn in network.connections:
+            conn.close()

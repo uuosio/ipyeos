@@ -23,8 +23,8 @@ genesis:
 logging_config_file: "logging.json"
 
 chain_config:
-  state_size: 2147483648 # 2048*1024*1024
-  state_guard_size: 10485760 # 10*1024*1024
+  state_size: 34359738368 # 32*1024*1024*1024 (32GB)
+  state_guard_size: 10485760 # 10*1024*1024 (10MB)
   contracts_console: false
   data_dir: "dd"
   config_dir: "cd"  
