@@ -14,10 +14,11 @@ from typing import Dict, List, Optional, Union
 from .modules import load_modules
 load_modules()
 
-from ipyeos import chain, chainapi, database, config
+from ipyeos import chain, chainapi, database
 
 from . import eos, log
 from . import net
+from . import node_config
 from .types import Name
 
 from .packer import Decoder
@@ -206,18 +207,17 @@ network: Optional[net.Network] = None
 
 async def start(config_file: str, genesis_file: str, snapshot_file: str):
     global network
-    with open(config_file) as f:
-        config = yaml.safe_load(f)
-    logger.info(f'config: {config}')
 
+    config = node_config.load_config(config_file)
     logging_config_file = config['logging_config_file']
-    chain_config = config['chain_config']
+    chain_config = config['chain']
     state_size=chain_config['state_size']
     data_dir = chain_config['data_dir']
     config_dir = chain_config['config_dir']
     genesis: Optional[Dict] = None
 
-    peers = config['peers']
+    net_config = config['net']
+    peers = net_config['peers']
     logger.error(f'peers: {peers}')
     for peer in peers:
         if peers.count(peer) > 1:
@@ -245,7 +245,7 @@ async def start(config_file: str, genesis_file: str, snapshot_file: str):
     eos.initialize_logging(logging_config_file)
 
     node = Node(False, data_dir=data_dir, config_dir=config_dir, genesis = genesis, state_size=state_size, snapshot_file=snapshot_file)
-    network = net.Network(node.chain, config['peers'])
+    network = net.Network(node.chain, net_config['peers'])
 
     try:
         await network.run()

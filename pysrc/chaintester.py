@@ -13,7 +13,7 @@ from typing import Dict, List, Optional, Union
 from .modules import load_modules
 load_modules()
 
-from ipyeos import chain, chainapi, database, config
+from ipyeos import chain, chainapi, database, node_config
 
 from . import eos, log
 from .types import Name
@@ -598,10 +598,10 @@ class ChainTester(object):
         base = self.chain.head_block_time
         if base < now:
             base = now
-        min_time_to_next_block = config.block_interval_us - int(base.timestamp()*1e6) % config.block_interval_us
+        min_time_to_next_block = node_config.block_interval_us - int(base.timestamp()*1e6) % node_config.block_interval_us
         # print('min_time_to_next_block:', min_time_to_next_block)
         block_time = base + timedelta(microseconds=min_time_to_next_block)
-        if block_time - now < timedelta(microseconds=config.block_interval_us/10):
+        if block_time - now < timedelta(microseconds=node_config.block_interval_us/10):
             # block_time += timedelta(microseconds=config.block_interval_us)
             logger.warning("++++block time too small!")
         return block_time

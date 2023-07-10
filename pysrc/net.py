@@ -13,6 +13,7 @@ from .types import I16, U16, U32, I64, U64, PublicKey, Signature, Checksum256
 from . import log, debug
 from .transaction import Transaction
 from .chain import Chain
+from . import node_config
 
 handshake_message = 0
 chain_size_message = 1
@@ -33,6 +34,7 @@ net_version_range = 106
 
 block_time_window_size = 60 * 24 # one day
 block_count_per_slot = 2*60 # one minute per slot
+default_sync_fetch_span = 100
 
 # struct handshake_message {
 #     uint16_t                   network_version = 0; ///< incremental value above a computed base
@@ -770,6 +772,12 @@ class Connection(object):
         self.last_handshake = None
         self.lock = asyncio.Lock()
 
+        net_config = node_config.get_net_config()
+        try:
+            self.sync_fetch_span = net_config['sync_fetch_span']
+        except KeyError:
+            self.sync_fetch_span = default_sync_fetch_span
+
     def add_goway_listener(self, listener):
         self.goway_listeners.append(listener)
 
@@ -1071,14 +1079,16 @@ class Connection(object):
 
         if start_block is None:
             if self.last_sync_request is None:
+                logger.info('get start_block from last_irreversible_block_num')
                 start_block = self.chain.last_irreversible_block_num() + 1
             else:
+                logger.info('get start_block from head_block_num')
                 start_block = self.chain.head_block_num() + 1
         if end_block is None:
             if not self.last_handshake:
                 logger.error(f'+++++no handshake info')
                 return True
-            end_block = start_block + 100 - 1
+            end_block = start_block + self.sync_fetch_span - 1
             if end_block > self.last_handshake.head_num:
                 end_block = self.last_handshake.head_num
             if end_block < start_block:
