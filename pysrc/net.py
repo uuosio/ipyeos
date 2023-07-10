@@ -1490,9 +1490,3 @@ class Network(object):
                 logger.info(type(e))
                 logger.exception(e)
                 break
-
-    def start(self):
-        try:
-            asyncio.run(self.run())
-        except KeyboardInterrupt:
-            logger.info("KeyboardInterrupt")

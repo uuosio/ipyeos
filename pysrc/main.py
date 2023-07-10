@@ -18,8 +18,9 @@ from IPython.terminal.embed import InteractiveShellEmbed
 
 from . import eos, server
 from . import args
-from . import node
+from . import helper
 from . import log
+from . import node
 from .debug import is_port_in_use
 
 if not 'RUN_IPYEOS' in os.environ:
@@ -46,17 +47,8 @@ class Main(object):
         asyncio.create_task(self.shutdown())
         return web.Response(text="Done!\n"+ str(time.time()))
 
-
     async def show_commands(self, request):
-        commands = f'''
-    commands:
-    exec(code): execute code
-    ipython(): start ipython
-    ikernel(): start ikernel
-    quit() quit app
-    {time.time()}
-        '''
-        return web.Response(text=commands)
+        return web.Response(text=helper.html, content_type='text/html')
 
     def _run_eos(self):
         argv = sys.argv[1:]
@@ -105,7 +97,6 @@ class Main(object):
         # thread_queue.put("ikernel")
         future = asyncio.get_event_loop().run_in_executor(self.executor, self._run_ikernel)
         return web.Response(text=f'done! {time.time()}')
-
 
     async def exec_code(self, request):
         data = await request.post()
@@ -202,8 +193,6 @@ class Main(object):
 
         loop.add_signal_handler(signal.SIGINT, self.handle_signal, signal.SIGINT, loop)
         loop.add_signal_handler(signal.SIGTERM, self.handle_signal, signal.SIGTERM, loop)
-
-
 
         result = args.parse_args()
         asyncio.create_task(self.start_webserver(self.quit_pyeosnode))
