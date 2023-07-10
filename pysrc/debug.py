@@ -1,5 +1,7 @@
 import inspect
 import os
+import socket
+
 from . import log
 
 logger = log.get_logger(__name__)
@@ -21,3 +23,8 @@ def print_caller_info():
     caller_frame = current_frame.f_back.f_back
     module_name = os.path.basename(inspect.getmodule(caller_frame).__name__)
     logger.info(f"called from {module_name} at {line_num}:")
+
+def is_port_in_use(port):
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        return s.connect_ex(('localhost', port)) == 0
+

@@ -1083,8 +1083,7 @@ class Connection(object):
                 end_block = self.last_handshake.head_num
             if end_block < start_block:
                 logger.error(f'+++++no blocks to sync')
-                # self.last_sync_request = None
-                return True
+                return await self.send_handshake_message()
         msg = SyncRequestMessage(start_block, end_block)
         self.last_sync_request = msg
         logger.info(f"+++++{msg}")
@@ -1183,7 +1182,7 @@ class Connection(object):
             received_block_num = header.block_num()
             # logger.info(f"{self.peer}: ++++++++received block num: {received_block_num}, block_id: {block_id}")
             head_block_num = self.chain.head_block_num()
-            logger.info(f"{self.peer}: ++++++++head_block_num: {head_block_num}, received_block_num: {received_block_num}")
+            logger.info(f"{self.peer}: ++++++++head_block_num: {head_block_num}, received_block_num: {received_block_num}, received_block_time: {header.block_time()}")
             # if received_block_num % 100 == 0:
             #     logger.info("++++++++head_block_num: %s, received_block_num: %s", head_block_num, received_block_num)
             if head_block_num >= received_block_num:
@@ -1196,17 +1195,13 @@ class Connection(object):
                     logger.info(f"{self.peer}: ++++++++receive invalid block, maybe fork happened: {received_block_num}, block_id: {block_id}, received block_id: {received_block_id}")
             elif head_block_num +1 < received_block_num:
                 logger.info(f"++++++++++{self.peer}: invalid incomming block number: expected: {head_block_num + 1}: received: {received_block_num}")
-                # self.last_sync_request = None
-                if not await self.send_sync_request_message(end_block=0):
-                    return False
-                return await self.send_handshake_message()
 
-                node_id = self.last_handshake.node_id if self.last_handshake else Checksum256.empty()
-                msg = GoAwayMessage(GoAwayReason.benign_other, node_id)
-                await self.send_message(msg)
-                logger.info("++++++++++send go away message: %s", msg)
-                self.close()
-                return False
+                req_trx = OrderedIds(IdListModes.none, 0, [])
+                req_blocks = OrderedIds(IdListModes.catch_up, 0, [self.chain.head_block_id()])
+                msg = RequestMessage(req_trx, req_blocks)
+                logger.info(f'{self.peer}: send request message: {msg}')
+                return await self.send_message(msg)
+
                 # if not await self.send_handshake_message():
                 #     return False
                 # return True
@@ -1255,23 +1250,38 @@ class Connection(object):
             #TODO: create a task to send blocks
         elif tp == notice_message:
             message = NoticeMessage.unpack_bytes(raw_msg)
-            logger.info(f"{self.peer}: {message}")
+            logger.info(f"{self.peer}: receive notice message: {message}")
 
-            # TODO: verify catch_up
-            # if message.known_blocks.mode == IdListModes.catch_up:
-            #     req_trx = OrderedIds(IdListModes.none, 0, [])
-            #     req_blocks = OrderedIds(IdListModes.catch_up, 0, [self.chain.head_block_id()])
-            #     msg = RequestMessage(req_trx, req_blocks)
-            #     logger.info(msg)
-            #     self.send_message(msg)
+            if message.known_blocks.mode == IdListModes.catch_up:
+                pending = message.known_blocks.pending
+                block_id = message.known_blocks.ids[0]
 
-            if message.known_blocks.mode in (IdListModes.last_irr_catch_up, IdListModes.catch_up):
+                req_trx = OrderedIds(IdListModes.none, 0, [])
+                req_blocks = OrderedIds(IdListModes.catch_up, 0, [self.chain.head_block_id()])
+                msg = RequestMessage(req_trx, req_blocks)
+                logger.info(f'{self.peer}: send request message: {msg}')
+                return await self.send_message(msg)
+
+                my_block_id = self.chain.get_block_id_for_num(pending)
+                if my_block_id and my_block_id == block_id:
+                    return await self.send_handshake_message()
+                else:
+                    req_trx = OrderedIds(IdListModes.none, 0, [])
+                    req_blocks = OrderedIds(IdListModes.catch_up, 0, [self.chain.head_block_id()])
+                    msg = RequestMessage(req_trx, req_blocks)
+                    logger.info(f'{self.peer}: {msg}')
+                    return await self.send_message(msg)
+            elif message.known_blocks.mode  == IdListModes.last_irr_catch_up:
                 pending = message.known_blocks.pending
                 start_block = self.chain.head_block_num() + 1
                 if start_block > pending:
                     logger.info(f"++++++++++already in sync, start_block: {start_block}, pending: {pending}")
                     return True
-                await self.send_sync_request_message(start_block, pending)
+                msg = SyncRequestMessage(0, 0)
+                logger.info('+++++reset sync request before sending sync request when process notice_message')
+                if not await self.send_message(msg):
+                    return False
+                return await self.send_sync_request_message(start_block, pending)
         elif tp == packed_transaction_message:
             # TODO: handle packed transaction message
             # message = PackedTransactionMessage.unpack_bytes(raw_msg)
@@ -1285,9 +1295,9 @@ class Connection(object):
             logger.info(f'send handshake message to {self.peer} failed')
             return False
 
-        if not await self.send_sync_request_message():
-            logger.info(f'send sync request message to {self.peer} failed')
-            return False
+        # if not await self.send_sync_request_message():
+        #     logger.info(f'send sync request message to {self.peer} failed')
+        #     return False
 
         self.last_sync_request = None
 
@@ -1459,6 +1469,8 @@ class Network(object):
                 self.conn = await self.get_fastest_connection()
                 logger.info('+++++choose fastest connection: %s', self.conn.peer)
                 await self.conn.handle_messages()
+                logger.info('+++++handle_messages done, sleep a while')
+                await asyncio.sleep(3.0)
             except Exception as e:
                 logger.exception(e)
                 asyncio.sleep(5.0)

@@ -140,10 +140,10 @@ class BlockHeader(Packer):
     def block_num(self):
         return int.from_bytes(self.previous.to_bytes()[:4], 'big') + 1
 
-    def block_time(self):
+    def block_time(self) -> str:
         msec = self.timestamp * block_interval_ms
         msec += block_timestamp_epoch
-        return time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(msec / 1000))
+        return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(msec / 1000))
 
     def __repr__(self):
         return f'BlockHeader(timestamp: {self.timestamp}, producer: {self.producer}, confirmed: {self.confirmed}, previous: {self.previous}, transaction_mroot: {self.transaction_mroot}, action_mroot: {self.action_mroot}, schedule_version: {self.schedule_version}, new_producers: {self.new_producers}, header_extensions: {self.header_extensions})'

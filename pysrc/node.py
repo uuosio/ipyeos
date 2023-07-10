@@ -103,7 +103,11 @@ def read_genesis_from_block_log(tester):
     assert chain_id == tester.api.get_info()['chain_id']
 
 def read_chain_id_from_block_log(data_dir):
-    with open(f'{data_dir}/blocks/blocks.log', 'rb') as f:
+    block_log_file = f'{data_dir}/blocks/blocks.log'
+    if not os.path.exists(block_log_file):
+        return ''
+
+    with open(block_log_file, 'rb') as f:
         data = f.read(1024)
 
     dec = Decoder(data)

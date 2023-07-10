@@ -10,6 +10,10 @@ import sys
 import sysconfig
 
 from . import args
+from . import log
+from .debug import is_port_in_use
+
+logger = log.get_logger(__name__)
 
 dir_name = os.path.dirname(os.path.realpath(__file__))
 dir_name = os.path.join(dir_name, "release")
@@ -19,6 +23,14 @@ def is_macos_arm():
     return platform.system() == 'Darwin' and platform.processor() == 'arm'
 
 def setup_env():
+    for port in range(7777, 7787):
+        if not is_port_in_use(port):
+            break
+    else:
+        raise Exception('no available port')
+    logger.info('++++++++set DEBUG_PORT env to %s', port)
+    os.environ['DEBUG_PORT'] = str(port)
+
     libdir, py_version_short, abiflags = sysconfig.get_config_vars('LIBDIR', 'py_version_short', 'abiflags')
 
     _system = platform.system()
@@ -55,26 +67,31 @@ def run_ipyeos_in_docker():
 def quit_app():
     try:
         async def main():
-            command = sys.argv[0]
+            if sys.argv[0].endswith('__main__.py'): # python3 -m ipyeos ...
+                command = sys.argv[3]
+            else:
+                command = sys.argv[0]
             if command.endswith('eosdebugger'):
                 command = 'eosdebugger'
             elif command.endswith('eosnode'):
                 command = 'eosnode'
+            elif command.endswith('pyeosnode'):
+                command = 'pyeosnode'
             elif command.endswith('ipyeos'):
                 cmds = sys.argv[3:]
                 result = args.parse_args(cmds)
                 command = result.subparser
             else:
-                print('unknow command', sys.argv)
+                logger.info('unknow command: %s', sys.argv)
                 return
 
             if command == 'eosdebugger':
                 result = args.parse_parent_process_args()
                 url = f'http://{result.addr}:{result.rpc_server_port}/api/quit'
-            elif command == 'eosnode':
-                url = 'http://127.0.0.1:7777/quit'
+            elif command in ['eosnode', 'pyeosnode']:
+                url = f'http://127.0.0.1:{os.environ["DEBUG_PORT"]}/quit'
             else:
-                print('unknow command', sys.argv)
+                logger.info('unknow command: %s', sys.argv)
 
             # url = 'http://127.0.0.1:9093/api/quit'
             # r = httpx.post(url, json={}, proxies=None)
@@ -88,6 +105,7 @@ def quit_app():
                         print(await resp.text())
                 except Exception as e:
                     print(e)
+            print('send quit command to ipyeos done!')
         loop = asyncio.get_event_loop()
         loop.run_until_complete(main())
     except Exception as e:
