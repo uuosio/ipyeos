@@ -1,25 +1,10 @@
 # cython: language_level=3, c_string_type=str, c_string_encoding=utf8
-
-from cython.operator cimport dereference as deref, preincrement as inc
-from libcpp.string cimport string
-from libcpp.vector cimport vector
-from libcpp.map cimport map
-from libcpp cimport bool
-from libc.stdlib cimport malloc, free
-from libc.string cimport memcpy, memset
-from cpython.bytes cimport PyBytes_AsStringAndSize, PyBytes_FromStringAndSize
-
+from _ipyeos cimport *
 
 cdef extern from * :
-    ctypedef long long int64_t
-    ctypedef unsigned long long uint64_t
-    ctypedef unsigned int uint32_t
-    ctypedef int int32_t
-    ctypedef unsigned short uint16_t
-    ctypedef unsigned char uint8_t
+    ctypedef uint64_t capi_name
     ctypedef unsigned int uint128_t #fake definition
     ctypedef int int128_t #fake definition
-    ctypedef uint64_t capi_name
     ctypedef char capi_checksum256
     ctypedef char capi_checksum160
     ctypedef char capi_checksum512

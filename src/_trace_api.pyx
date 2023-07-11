@@ -1,21 +1,6 @@
 # cython: language_level=3, c_string_type=str, c_string_encoding=utf8
 
-from cython.operator cimport dereference as deref, preincrement as inc
-from libcpp.string cimport string
-from libcpp.vector cimport vector
-from libcpp.map cimport map
-from libcpp cimport bool
-from libc.stdlib cimport malloc
-from libc.stdlib cimport free
-from cpython.bytes cimport PyBytes_AsStringAndSize, PyBytes_FromStringAndSize
-
-cdef extern from * :
-    ctypedef long long int64_t
-    ctypedef unsigned long long uint64_t
-    ctypedef int int32_t
-    ctypedef unsigned int uint32_t
-    ctypedef unsigned short uint16_t
-    ctypedef unsigned char uint8_t
+from _ipyeos cimport *
 
 cdef extern from "_ipyeos.hpp":
     ctypedef struct eos_cb:
