@@ -33,8 +33,10 @@ global_property_type = 12
 net_version_base = 0x04b5
 net_version_range = 106
 
-block_time_window_size = 60 * 24 # one day
-block_count_per_slot = 2*60 # one minute per slot
+block_time_window_size = 60 * 12 # 12 Hours
+block_count_per_slot = 2 * 60 # one minute per slot
+print_sync_blocks_info_interval = 10
+
 default_sync_fetch_span = 100
 
 # struct handshake_message {
@@ -802,6 +804,8 @@ class Connection(object):
         self.last_handshake_cost_time = 0.0
 
         self.block_counter = 0
+        self.total_bytes = 0
+
         self.block_counter_start_time: Optional[float] = None
         self.block_times = []
         self.print_block_start_time: Optional[float] = None
@@ -827,23 +831,12 @@ class Connection(object):
     async def read(self, length):
         if self.closed:
             return None
-        buffer = io.BytesIO()
-        while True:
-            try:
-                data = await self.reader.read(length)
-                if not data:
-                    logger.error(f'error reading {length} bytes of data from {self.peer}, writer.is_closing(): {self.writer.is_closing()}')
-                    self.close()
-                    return None
-                buffer.write(data)
-                length -= len(data)
-                if length <= 0:
-                    break
-            except Exception as e:
-                logger.exception(e)
-                self.close()
-                return None
-        return buffer.getvalue()
+        try:
+            return await self.reader.readexactly(length)
+        except asyncio.exceptions.IncompleteReadError:
+            logger.error(f'{self.peer}: asyncio.exceptions.IncompleteReadError')
+            self.close()
+            return None
 
     async def read_message(self):
         msg_len = await self.read(4)
@@ -1085,12 +1078,7 @@ class Connection(object):
         logger.error(f'+++++from: {module_name} at line {line_num}: {self.peer}')
 
         if start_block is None:
-            if self.last_sync_request is None:
-                logger.info('get start_block from last_irreversible_block_num')
-                start_block = self.chain.last_irreversible_block_num() + 1
-            else:
-                logger.info('get start_block from head_block_num')
-                start_block = self.chain.head_block_num() + 1
+            start_block = self.chain.head_block_num() + 1
         if end_block is None:
             if not self.last_handshake:
                 logger.error(f'+++++no handshake info')
@@ -1106,6 +1094,12 @@ class Connection(object):
         logger.info(f"+++++{msg}")
         return await self.send_message(msg)
 
+    async def send_reset_sync_request_message(self):
+        self.print_caller_info()
+        logger.info('+++++reset sync request')
+        msg = SyncRequestMessage(0, 0)
+        return await self.send_message(msg)
+
     async def resync_from_irreversible_block_num_plus_one(self):
         start_block = self.chain.last_irreversible_block_num() + 1
         end_block = self.chain.head_block_num()
@@ -1113,30 +1107,34 @@ class Connection(object):
 
     def reset_block_sync_info(self):
         self.block_counter = 0
+        self.total_bytes = 0
         self.block_counter_start_time: Optional[float] = None
         self.block_times = []
         self.print_block_start_time: Optional[float] = None
 
-    def calculate_block_sync_info(self, header: BlockHeader):
+    def calculate_block_sync_info(self, header: BlockHeader, block_size: int):
         if not self.block_counter_start_time:
             self.block_counter_start_time = time.monotonic()
             return
 
         self.block_counter += 1
+        self.total_bytes += block_size
+
         if self.block_counter == block_count_per_slot:
             duration = time.monotonic() - self.block_counter_start_time
-            self.block_times.append(duration)
+            self.block_times.append((self.total_bytes, duration))
             if len(self.block_times) >= block_time_window_size:
                 self.block_times.pop(0)
 
             self.block_counter = 0
+            self.total_bytes = 0
             self.block_counter_start_time = time.monotonic()
 
         if not self.print_block_start_time:
             self.print_block_start_time = time.monotonic()
 
         interval = time.monotonic() - self.print_block_start_time
-        if interval < 30:
+        if interval < print_sync_blocks_info_interval:
             return
 
         self.print_block_start_time = time.monotonic()
@@ -1144,9 +1142,15 @@ class Connection(object):
         if len(self.block_times) == 0:
             return
 
-        total_block_time = sum(self.block_times)
+        total_block_time = 0
+        total_block_size = 0
+        for info in self.block_times:
+            total_block_size += info[0]
+            total_block_time += info[1]
+
         total_blcoks = len(self.block_times) * block_count_per_slot
         block_sync_speed = round(total_blcoks / total_block_time, 1)
+        block_sync_network_speed = round(total_block_size / total_block_time / 1024, 1)
 
         received_block_num: U32 = header.block_num()
 
@@ -1163,7 +1167,7 @@ class Connection(object):
                 remaining_time = "{:02}h:{:02}m:{:02}s".format(int(hours), int(minutes), int(seconds))
             else:
                 remaining_time = "{:02}m:{:02}s".format(int(minutes), int(seconds))
-            logger.info(f"in sync, estimated remaining time: {remaining_time}, block sync speed: {block_sync_speed} b/s, current peer: {self.peer}, current block num: {received_block_num}, current block time: {header.block_time()}, remaining blocks: {remaining_blocks}")
+            logger.info(f"in sync, estimated remaining time: {remaining_time}, {block_sync_speed} b/s, {block_sync_network_speed} KB/s, current peer: {self.peer}, current block num: {received_block_num}, current block time: {header.block_time()}, remaining blocks: {remaining_blocks}")
         else:
             logger.info(f"block speed: {block_sync_speed} b/s, current peer: {self.peer}, current block num: {received_block_num}, current block time: {header.block_time()}")
 
@@ -1175,9 +1179,15 @@ class Connection(object):
             message = HandshakeMessage.unpack_bytes(raw_msg)
             self.last_handshake = message
             logger.info("received handshake message: %s", message)
-            if self.chain.head_block_num() + 2 < message.head_num:
+            if self.chain.head_block_num() < message.last_irreversible_block_num:
                 if not await self.send_sync_request_message():
                     return False
+            elif self.chain.head_block_num() + 2 < message.head_num:
+                req_trx = OrderedIds(IdListModes.none, 0, [])
+                req_blocks = OrderedIds(IdListModes.catch_up, 0, [self.chain.head_block_id()])
+                msg = RequestMessage(req_trx, req_blocks)
+                logger.info(f'{self.peer}: send request message: {msg}')
+                return await self.send_message(msg)
             # else:
             #     # last_irr_catch_up catch_up
             #     req_trx = OrderedIds(IdListModes.none, 0, [])
@@ -1197,7 +1207,6 @@ class Connection(object):
         elif tp == signed_block_message:
             header = BlockHeader.unpack_bytes(raw_msg)
             received_block_num = header.block_num()
-            # logger.info(f"{self.peer}: ++++++++received block num: {received_block_num}, block_id: {block_id}")
             head_block_num = self.chain.head_block_num()
             logger.info(f"{self.peer}: ++++++++head_block_num: {head_block_num}, received_block_num: {received_block_num}, received_block_time: {header.block_time()}")
             # if received_block_num % 100 == 0:
@@ -1212,7 +1221,8 @@ class Connection(object):
                     logger.info(f"{self.peer}: ++++++++receive invalid block, maybe fork happened: {received_block_num}, block_id: {block_id}, received block_id: {received_block_id}")
             elif head_block_num +1 < received_block_num:
                 logger.info(f"++++++++++{self.peer}: invalid incomming block number: expected: {head_block_num + 1}: received: {received_block_num}")
-
+                if not await self.send_reset_sync_request_message():
+                    return False
                 req_trx = OrderedIds(IdListModes.none, 0, [])
                 req_blocks = OrderedIds(IdListModes.catch_up, 0, [self.chain.head_block_id()])
                 msg = RequestMessage(req_trx, req_blocks)
@@ -1230,21 +1240,26 @@ class Connection(object):
                 # unlinkable_block_exception
                 exception = e.args[0]
                 if exception['name'] == 'unlinkable_block_exception':
+                    if not await self.send_reset_sync_request_message():
+                        return False
                     received_block_id = header.calculate_id()
                     logger.warning(f"{self.peer}: ++++++++receive unlinkable block: {received_block_num}, received_block_id: {received_block_id}")
-                    node_id = self.last_handshake.node_id if self.last_handshake else Checksum256.empty()
-                    msg = GoAwayMessage(GoAwayReason.unlinkable, node_id)
-                    await self.send_message(msg)
-                    logger.info("++++++++++send go away message: %s", msg)
-                    self.close()
-                    return False
+                    return await self.resync_from_irreversible_block_num_plus_one()
+                    # self.last_sync_request = None
+                    # return self.send_sync_request_message()
+                    # node_id = self.last_handshake.node_id if self.last_handshake else Checksum256.empty()
+                    # msg = GoAwayMessage(GoAwayReason.unlinkable, node_id)
+                    # await self.send_message(msg)
+                    # logger.info("++++++++++send go away message: %s", msg)
+                    # self.close()
+                    # return False
                 elif exception['name'] == 'fork_database_exception' and exception['stack'][0]['format'].startswith('we already know about this block'):
                     logger.warning(f"{self.peer}: ++++++++receive dumplicated block: {received_block_num}, block_id: {block_id}")
                     return True
                 logger.info(e)
                 raise e
 
-            self.calculate_block_sync_info(header)
+            self.calculate_block_sync_info(header, len(raw_msg))
 
             if self.last_handshake and self.last_handshake.head_num == received_block_num:
                 # await asyncio.sleep(3.0)
@@ -1523,8 +1538,6 @@ class Network(object):
                 self.conn = await self.get_fastest_connection()
                 logger.info('+++++choose fastest connection: %s', self.conn.peer)
                 await self.conn.handle_messages()
-                logger.info('+++++handle_messages done, sleep a while')
-                await asyncio.sleep(3.0)
             except Exception as e:
                 logger.exception(e)
                 asyncio.sleep(5.0)

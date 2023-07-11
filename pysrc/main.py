@@ -140,7 +140,10 @@ class Main(object):
         logger.info(f'++++++++++++debugging server started at port {port}!!')
 
         while True:
-            await asyncio.sleep(3600) # serve forever
+            try:
+                await asyncio.sleep(3600) # serve forever
+            except asyncio.exceptions.CancelledError:
+                break
 
     async def heartbeat(self):
         while True:
@@ -193,16 +196,10 @@ class Main(object):
 
         loop.add_signal_handler(signal.SIGINT, self.handle_signal, signal.SIGINT, loop)
         loop.add_signal_handler(signal.SIGTERM, self.handle_signal, signal.SIGTERM, loop)
+        asyncio.create_task(self.start_webserver(self.quit_pyeosnode))
 
         result = args.parse_args()
-        asyncio.create_task(self.start_webserver(self.quit_pyeosnode))
-        asyncio.create_task(node.start(result.config_file, result.genesis_file, result.snapshot_file))
-        while True:
-            try:
-                await asyncio.sleep(3600)
-            except asyncio.exceptions.CancelledError:
-                logger.info('main task cancelled')
-                break
+        await node.start(result.config_file, result.genesis_file, result.snapshot_file)
         print('all done!')
 
 def run_eosnode():
