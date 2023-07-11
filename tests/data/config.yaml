@@ -23,6 +23,7 @@ genesis:
 logging_config_file: "logging.json"
 
 net:
+  # socks5_proxy: "127.0.0.1:8084"
   sync_fetch_span: 300
   peers:
     [

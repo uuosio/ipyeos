@@ -4,6 +4,7 @@ import io
 import ssl
 import time
 import secrets
+import socket
 import signal
 from typing import List, Dict, Type, Union, Any, Optional
 
@@ -778,6 +779,12 @@ class Connection(object):
         except KeyError:
             self.sync_fetch_span = default_sync_fetch_span
 
+        try:
+            socks5_proxy = net_config['socks5_proxy']
+            self.proxy_host, self.proxy_port = socks5_proxy.split(':')
+        except KeyError:
+            self.proxy_host, self.proxy_port = None, None
+
     def add_goway_listener(self, listener):
         self.goway_listeners.append(listener)
 
@@ -1326,6 +1333,40 @@ class OutConnection(Connection):
         self.chain = chain
         self.set_default()
 
+    async def open_connection_socks5(self, proxy_host, proxy_port, target_host, target_port):
+        # Resolve proxy address and target address
+        proxy_addr = socket.gethostbyname(proxy_host)
+        target_addr = socket.gethostbyname(target_host)
+        target_port = int(target_port)
+
+        reader, writer = await asyncio.open_connection(proxy_addr, proxy_port)
+
+        # Send SOCKS5 greeting message
+        writer.write(b"\x05\x01\x00")
+        await writer.drain()
+
+        # Receive SOCKS5 server response
+        version, method = await reader.readexactly(2)
+
+        # Send SOCKS5 connection request
+        writer.write(b"\x05\x01\x00\x01" + socket.inet_aton(target_addr) + target_port.to_bytes(2, 'big'))
+        await writer.drain()
+
+        # Receive SOCKS5 server response
+        version, rep, rsv, atyp = await reader.readexactly(4)
+        if atyp == 1:
+            bnd_addr = socket.inet_ntoa(await reader.readexactly(4))
+        else:
+            bnd_addr = await reader.readexactly(await reader.readexactly(1)[0])
+        bnd_port = int.from_bytes(await reader.readexactly(2), 'big')
+
+        if rep != 0:
+            writer.close()
+            await writer.wait_closed()
+            raise Exception(f"SOCKS5 connect request failed with code {rep}")
+
+        return reader, writer
+
     async def _connect(self):
         self.set_default()
         logger.info('connecting to %s', self.peer)
@@ -1336,7 +1377,10 @@ class OutConnection(Connection):
                 context = ssl.create_default_context()
                 self.reader, self.writer = await asyncio.open_connection(host, port, ssl=context, limit=100*1024*1024)
             else:
-                self.reader, self.writer = await asyncio.open_connection(host, port, limit=100*1024*1024)
+                if self.proxy_host:
+                    self.reader, self.writer = await self.open_connection_socks5(self.proxy_host, self.proxy_port, host, port)
+                else:
+                    self.reader, self.writer = await asyncio.open_connection(host, port, limit=100*1024*1024)
 
             # if await self.handshake():
             #     logger.info('handshake success')
