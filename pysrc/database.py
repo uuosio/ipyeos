@@ -6,6 +6,7 @@ from .types import U8, U16, U32, U64, I64, F64, Name, Checksum256
 from .packer import Encoder, Decoder
 from .database_objects import *
 from .utils import i2b, u2b, f2b, to_bytes
+from . import log
 
 null_object_type = 0
 account_object_type = 1
@@ -60,6 +61,8 @@ def parse_return_value(ret: int):
         return True
     return False
 
+logger = log.get_logger(__name__)
+
 class Database:
     def __init__(self, db_ptr: int = 0):
         if not db_ptr:
@@ -67,10 +70,20 @@ class Database:
             self.db_ptr = _eos.get_database()
         else:
             self.db_ptr = db_ptr
-        self.ptr = _database.new()
+        self.ptr = _database.new(self.db_ptr)
+        logger.info("+++++total memory: %.2fMB, used memory: %.2fMB, free memory: %.2fMB", self.total_memory()/1024/1024, self.used_memory()/1024/1024, self.free_memory()/1024/1024)
+
+    def total_memory(self):
+        return _database.get_total_memory(self.ptr)
+
+    def free_memory(self):
+        return _database.get_free_memory(self.ptr)
+
+    def used_memory(self):
+        return self.total_memory() - self.free_memory()
 
     def create(self, tp, raw_data: bytes):
-        ret = _database.create(self.ptr, self.db_ptr, tp, raw_data)
+        ret = _database.create(self.ptr, tp, raw_data)
         if ret == -2:
             raise Exception(_eos.get_last_error_and_clear())
         assert ret in (0, 1)
@@ -79,7 +92,7 @@ class Database:
         return False
 
     def modify(self, tp: int, index_position: int, raw_key: bytes, raw_data: bytes):
-        ret = _database.modify(self.ptr, self.db_ptr, tp, index_position, raw_key, raw_data)
+        ret = _database.modify(self.ptr, tp, index_position, raw_key, raw_data)
         if ret == -2:
             raise Exception(_eos.get_last_error_and_clear())
         assert ret in (0, 1)
@@ -88,7 +101,7 @@ class Database:
         return False
 
     def walk(self, tp: int, index_position: int, cb, custom_data = None):
-        ret = _database.walk(self.ptr, self.db_ptr, tp, index_position, cb, custom_data)
+        ret = _database.walk(self.ptr, tp, index_position, cb, custom_data)
         if ret == -2:
             raise Exception(_eos.get_last_error_and_clear())
         return ret
@@ -100,7 +113,7 @@ class Database:
             if isinstance(upper_bound, int):
                 upper_bound = i2b(upper_bound)
 
-        ret = _database.walk_range(self.ptr, self.db_ptr, tp, index_position, lower_bound, upper_bound, cb, custom_data)
+        ret = _database.walk_range(self.ptr, tp, index_position, lower_bound, upper_bound, cb, custom_data)
         if ret == -2:
             raise Exception(_eos.get_last_error_and_clear())
         return ret
@@ -108,7 +121,7 @@ class Database:
     def find(self, tp: int, index_position: int, key: Union[int, bytes]):
         if index_position == 0 and isinstance(key, int):
             key = i2b(key)
-        ret, data = _database.find(self.ptr, self.db_ptr, tp, index_position, key)
+        ret, data = _database.find(self.ptr, tp, index_position, key)
         if ret == -2:
             raise Exception(_eos.get_last_error_and_clear())
         if ret == 0:
@@ -118,7 +131,7 @@ class Database:
     def lower_bound(self, tp: int, index_position: int, key: Union[int, bytes]):
         if index_position == 0 and isinstance(key, int):
             key = i2b(key)
-        ret, data = _database.lower_bound(self.ptr, self.db_ptr, tp, index_position, key)
+        ret, data = _database.lower_bound(self.ptr, tp, index_position, key)
         if ret == -2:
             raise Exception(_eos.get_last_error_and_clear())
         if ret == 0:
@@ -129,7 +142,7 @@ class Database:
         if index_position == 0 and isinstance(key, int):
             key = i2b(key, 8)
 
-        ret, data = _database.upper_bound(self.ptr, self.db_ptr, tp, index_position, key)
+        ret, data = _database.upper_bound(self.ptr, tp, index_position, key)
         if ret == -2:
             raise Exception(_eos.get_last_error_and_clear())
         if ret == 0:
@@ -137,7 +150,7 @@ class Database:
         return data
 
     def row_count(self, tp: int):
-        ret = _database.row_count(self.ptr, self.db_ptr, tp)
+        ret = _database.row_count(self.ptr, tp)
         if ret == -2:
             raise Exception(f"invalid database object type: {tp}")
         return ret
