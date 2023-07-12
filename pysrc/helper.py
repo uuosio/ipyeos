@@ -34,14 +34,14 @@ r = requests.post('http://127.0.0.1:7777/exec', data={'code': code})
 print(r.text)
 </code></pre>
 
-<h2><code>ipython()</code></h2>
+<h2><code>ipython</code></h2>
 
 <p>This command launches an interactive IPython session.</p>
 
 <p><strong>Example:</strong></p>
 
 <pre><code class="language-bash">
-    curl -X POST http://127.0.0.1:7777/ipython
+    curl -X GET http://127.0.0.1:7777/ipython
 </code></pre>
 
 <h2><code>ikernel</code></h2>
@@ -51,7 +51,7 @@ print(r.text)
 <p><strong>Example:</strong></p>
 
 <pre><code class="language-bash">
-    curl -X POST http://127.0.0.1:7777/ikernel
+    curl -X GET http://127.0.0.1:7777/ikernel
 </code></pre>
 
 <h2><code>quit</code></h2>
@@ -61,7 +61,7 @@ print(r.text)
 <p><strong>Example:</strong></p>
 
 <pre><code class="language-bash">
-    curl -X POST http://127.0.0.1:7777/quit
+    curl -X GET http://127.0.0.1:7777/quit
 </code></pre>
 
 </body>

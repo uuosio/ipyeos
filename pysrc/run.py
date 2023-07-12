@@ -11,7 +11,7 @@ import sysconfig
 
 from . import args
 from . import log
-from .debug import is_port_in_use
+from .debug import get_free_port
 
 logger = log.get_logger(__name__)
 
@@ -23,11 +23,7 @@ def is_macos_arm():
     return platform.system() == 'Darwin' and platform.processor() == 'arm'
 
 def setup_env():
-    for port in range(7777, 7787):
-        if not is_port_in_use(port):
-            break
-    else:
-        raise Exception('no available port')
+    port = get_free_port()
     logger.info('++++++++set DEBUG_PORT env to %s', port)
     os.environ['DEBUG_PORT'] = str(port)
 

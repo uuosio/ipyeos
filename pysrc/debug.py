@@ -28,3 +28,14 @@ def is_port_in_use(port):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         return s.connect_ex(('localhost', port)) == 0
 
+def get_free_port():
+    port = 7777
+    if 'DEBUG_PORT' in os.environ:
+        return int(os.environ['DEBUG_PORT'])
+
+    for i in range(10):
+        port = 7777 + i
+        if not is_port_in_use(port):
+            return port
+
+    raise Exception('can not find a free port')

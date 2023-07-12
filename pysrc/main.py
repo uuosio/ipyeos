@@ -14,14 +14,14 @@ import traceback
 from typing import Optional
 
 from aiohttp import web
-from IPython.terminal.embed import InteractiveShellEmbed
-
 from . import eos, server
 from . import args
 from . import helper
 from . import log
 from . import node
-from .debug import is_port_in_use
+from .debug import get_free_port
+from . import rpc
+from . import debug_server
 
 if not 'RUN_IPYEOS' in os.environ:
     print('main module can only be load by ipyeos')
@@ -39,13 +39,17 @@ class Main(object):
         self.async_queue: Optional[asyncio.Queue()] = None
         self.in_shutdown = False
 
-    async def quit_eosnode(self, request):
-        eos.post(eos.quit)
-        return web.Response(text="Done!\n"+ str(time.time()))
+        self.debug_server_task = None
+        self.debug_server = None
 
-    async def quit_pyeosnode(self, request):
+        self.rpc_server_task = None
+        self.rpc_server = None
+
+    def quit_eosnode(self, request):
+        eos.post(eos.quit)
+
+    def quit_pyeosnode(self):
         asyncio.create_task(self.shutdown())
-        return web.Response(text="Done!\n"+ str(time.time()))
 
     async def show_commands(self, request):
         return web.Response(text=helper.html, content_type='text/html')
@@ -83,7 +87,7 @@ class Main(object):
         # await async_queue.put("ipython")
         # thread_queue.put("ipython")
         future = asyncio.get_event_loop().run_in_executor(self.executor, self._run_ipython)
-        return web.Response(text=f'done! {time.time()}')
+        return web.Response(text=f"Done!\n{str(time.time())}\n")
 
     def _run_ikernel(self):
         new_loop = asyncio.new_event_loop()
@@ -96,7 +100,7 @@ class Main(object):
         # await async_queue.put("ikernel")
         # thread_queue.put("ikernel")
         future = asyncio.get_event_loop().run_in_executor(self.executor, self._run_ikernel)
-        return web.Response(text=f'done! {time.time()}')
+        return web.Response(text=f"Done!\n{str(time.time())}\n")
 
     async def exec_code(self, request):
         data = await request.post()
@@ -125,16 +129,7 @@ class Main(object):
         app.router.add_get('/', self.show_commands)
         runner = web.AppRunner(app)
         await runner.setup()
-        port = 7777
-        if 'DEBUG_PORT' in os.environ:
-            port = int(os.environ['DEBUG_PORT'])
-        else:
-            for i in range(10):
-                port = 7777 + i
-                if not is_port_in_use(port):
-                    break
-            else:
-                raise Exception('can not find a free port')
+        port = get_free_port()
         site = web.TCPSite(runner, host='127.0.0.1', port=port)
         await site.start()
         logger.info(f'++++++++++++debugging server started at port {port}!!')
@@ -152,7 +147,7 @@ class Main(object):
 
     async def main_eosnode(self):
         self.async_queue = asyncio.Queue()
-        asyncio.create_task(self.start_webserver(self.quit_eosnode))
+        asyncio.create_task(debug_server.start(self.quit_eosnode))
         asyncio.create_task(self.run_eos())
 
         while True:
@@ -173,6 +168,21 @@ class Main(object):
         print('all done!')
 
     async def shutdown(self):
+        if self.in_shutdown:
+            logger.info("+++++++already in shutdown...")
+            return
+
+        self.in_shutdown = True
+
+        logger.info("+++++++shutdown...")
+
+        self.debug_server.exit()
+        self.rpc_server.exit()
+
+        await self.debug_server_task
+        await self.rpc_server_task
+        await self.sleep(5.0)
+
         loop = asyncio.get_running_loop()
         tasks = [t for t in asyncio.all_tasks(loop) if t is not asyncio.current_task()]
         # tasks = [t for t in asyncio.all_tasks(loop)]
@@ -183,10 +193,6 @@ class Main(object):
         loop.stop()
 
     def handle_signal(self, signum, loop):
-        if self.in_shutdown:
-            logger.info("+++++++already in shutdown...")
-            return
-        self.in_shutdown = True
         logger.info("+++++++handle signal: %s, shutting down...", signum)
         loop.create_task(self.shutdown())
         return
@@ -194,12 +200,20 @@ class Main(object):
     async def pyeosnode_main(self):
         loop = asyncio.get_running_loop()
 
+        server = debug_server.init(self.quit_pyeosnode)
+        self.debug_server_task = asyncio.create_task(debug_server.start(server))
+        self.debug_server = server
+
+        server = rpc.init()
+        self.rpc_server_task = asyncio.create_task(rpc.start(server))
+        self.rpc_server = server
+
         loop.add_signal_handler(signal.SIGINT, self.handle_signal, signal.SIGINT, loop)
         loop.add_signal_handler(signal.SIGTERM, self.handle_signal, signal.SIGTERM, loop)
-        asyncio.create_task(self.start_webserver(self.quit_pyeosnode))
 
         result = args.parse_args()
         await node.start(result.config_file, result.genesis_file, result.snapshot_file)
+        asyncio.create_task(self.shutdown())
         print('all done!')
 
 def run_eosnode():
