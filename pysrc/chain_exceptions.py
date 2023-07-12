@@ -100,6 +100,10 @@ class UnlinkableBlockException(ChainException):
 class ForkDatabaseException(ChainException):
     pass
 
+# database_guard_exception
+class DatabaseGuardException(ChainException):
+    pass
+
 # if name == 'unlinkable_block_exception':
 #     return UnlinkableBlockException(*args)
 # elif name == 'fork_database_exception':
@@ -111,6 +115,7 @@ exceptions = {
     'unlinkable_block_exception': UnlinkableBlockException,
     'fork_database_exception': ForkDatabaseException,
     'snapshot_request_not_found': SnapshotRequestNotFoundException,
+    'database_guard_exception': DatabaseGuardException,
 }
 
 def get_last_exception(error: Optional[str] = None):
