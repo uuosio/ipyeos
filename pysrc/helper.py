@@ -1,40 +1,69 @@
 html = """
 <html>
-<h1>Helper</h1>
 <head>
+<link href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism.min.css" rel="stylesheet" />
 </head>
 
-<p><strong>Commands:</strong></p>
-<ul>
-<li><code>exec(code)</code>: This command is used to execute the provided Python code. The code should be passed as a string.</li>
-</ul>
+<body>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-python.min.js"></script>
+
+<h1>Commands</h1>
+
+<h2><code>exec</code></h2>
+
+<p>This command is used to execute the provided Python code. The code should be passed as a string.</p>
+
 <p><strong>Example:</strong></p>
-<p>```python</p>
-<p>import requests</p>
-<p>code = '''
-  from ipyeos import eos</p>
-<p>def test():
-      eos.set_info_level("net_plugin_impl")
-      eos.set_info_level("default")</p>
-<p>eos.post(test)
-  '''</p>
-<p>r = requests.post('http://127.0.0.1:7777/exec', data={'code': code})
-</p>
-<p>  print(r.text)</p>
-<p>```</p>
-<ul>
-<li><code>ipython()</code>: This command launches an interactive IPython session.</li>
-</ul>
-<p><strong>Example:</strong></p>
-<pre><code>curl -X POST http://127.0.0.1:7777/ipython
+
+<pre><code class="language-python">
+import requests
+
+code = '''
+from ipyeos import eos
+
+def test():
+    eos.set_info_level("net_plugin_impl")
+    eos.set_info_level("default")
+    
+eos.post(test)
+'''
+
+r = requests.post('http://127.0.0.1:7777/exec', data={'code': code})
+
+print(r.text)
 </code></pre>
-<ul>
-<li>
-<p><code>ikernel()</code>: This command starts an IKernel (Interactive Kernel) session. The IKernel provides a Jupyter notebook interface for interactive computing.</p>
-</li>
-<li>
-<p><code>quit()</code>: This command is used to exit the application.</p>
-</li>
-</ul>
+
+<h2><code>ipython()</code></h2>
+
+<p>This command launches an interactive IPython session.</p>
+
+<p><strong>Example:</strong></p>
+
+<pre><code class="language-bash">
+    curl -X POST http://127.0.0.1:7777/ipython
+</code></pre>
+
+<h2><code>ikernel</code></h2>
+
+<p>This command starts an IKernel (Interactive Kernel) session. The IKernel provides a Jupyter notebook interface for interactive computing.</p>
+
+<p><strong>Example:</strong></p>
+
+<pre><code class="language-bash">
+    curl -X POST http://127.0.0.1:7777/ikernel
+</code></pre>
+
+<h2><code>quit</code></h2>
+
+<p>This command is used to exit the application.</p>
+
+<p><strong>Example:</strong></p>
+
+<pre><code class="language-bash">
+    curl -X POST http://127.0.0.1:7777/quit
+</code></pre>
+
+</body>
 </html>
 """

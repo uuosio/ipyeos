@@ -7,6 +7,7 @@ from ipyeos import eos, log
 from ipyeos import chaintester
 from ipyeos.chaintester import ChainTester
 
+from ipyeos.chain_exceptions import ForkDatabaseException, ChainException, get_last_exception
 from ipyeos.types import PublicKey
 from ipyeos.database_objects import KeyWeight, Authority
 from ipyeos.database import PermissionObjectIndex, GlobalPropertyObjectIndex
@@ -240,6 +241,13 @@ def test_push_block():
     assert head_block_num + num_count == info['head_block_num']
     t.free()
 
+def test_exception():
+    exception = '''{"code": 3020000, "name": "fork_database_exception", "message": "Fork database exception", "stack": [{"context": {"level": "error", "file": "controller.cpp", "line": 2240, "method": "operator()", "hostname": "", "thread_name": "chain-1", "timestamp": "2023-07-11T15:56:40.581"}, "format": "we already know about this block: ${id}", "data": {"id": "0000003c175d15e908e364816194f6dd239102fd4a4c2f46f4e81f977012b42d"}}]}'''
+    e = get_last_exception(exception)
+    logger.info("++++++%s", e.stack[0].context.level)
+    logger.info("++++++%s", e.stack[0].format)
+    logger.info("++++++%s", e.stack[0].data)
+
 def test_push_raw_block():
     if os.path.exists('./data/ddd'):
         shutil.rmtree('./data/ddd')
@@ -247,12 +255,12 @@ def test_push_raw_block():
     state_size = 10*1024*1024
     data_name = './data'
 
-    snapshot_dir = './data/push_block/snapshot-0000003b83662343c208e965654f4d906ed7fad0372e13c246981cd076d379bb.bin'
-    t = ChainTester(True, data_dir=os.path.join(data_name, 'ddd'), config_dir=os.path.join(data_name, 'cd'), state_size=state_size, snapshot_dir=snapshot_dir, log_level=5)
+    snapshot_file = './data/push_block/snapshot-0000003b83662343c208e965654f4d906ed7fad0372e13c246981cd076d379bb.bin'
+    t = ChainTester(True, data_dir=os.path.join(data_name, 'ddd'), config_dir=os.path.join(data_name, 'cd'), state_size=state_size, snapshot_file=snapshot_file, log_level=5)
     t.free()
 
     snapshot_dir = ''
-    t = ChainTester(True, data_dir=os.path.join(data_name, 'ddd'), config_dir=os.path.join(data_name, 'cd'), state_size=state_size, snapshot_dir=snapshot_dir, log_level=5)
+    t = ChainTester(True, data_dir=os.path.join(data_name, 'ddd'), config_dir=os.path.join(data_name, 'cd'), state_size=state_size, snapshot_file='', log_level=5)
     t.chain.abort_block()
 
     info = t.api.get_info()
@@ -261,7 +269,19 @@ def test_push_raw_block():
     logger.info("%s %s", head_block_num, blog.head_block_num())
     num_count = blog.head_block_num() - head_block_num
 
-    for block_num in range(head_block_num+1, head_block_num+num_count+1):
+    block_num = head_block_num+1
+    block = blog.read_block_by_num(block_num)
+    raw_block = eos.pack_block(block)
+    t.chain.push_raw_block(raw_block)
+    try:
+        t.chain.push_raw_block(raw_block)
+    except ForkDatabaseException as e:
+        logger.info("++++++%s", e)
+        logger.info("++++++%s", e.stack[0].context)
+        logger.info("++++++%s", e.stack[0].format)
+        # assert e.stack[0]['context'].format.startswith('we already know about this block')
+
+    for block_num in range(head_block_num+2, head_block_num+num_count+1):
         block = blog.read_block_by_num(block_num)
         raw_block = eos.pack_block(block)
         t.chain.push_raw_block(raw_block)

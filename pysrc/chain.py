@@ -3,6 +3,8 @@ from datetime import datetime
 from typing import Dict, List, Optional, Union
 
 from . import _chain, _eos, log
+
+from .chain_exceptions import get_last_exception
 from .types import U8, U16, U32, U64, I64, Name, PublicKey
 from .block_log import BlockLog
 from .types import U128, Checksum256
@@ -417,7 +419,7 @@ class Chain(object):
     def push_raw_block(self, raw_block: bytes) -> bool:
         ret = _chain.push_raw_block(self.ptr, raw_block)
         if not ret:
-            raise Exception(self.get_last_error())
+            raise get_last_exception()
         return True
 
     def get_scheduled_transaction(self, sender_id: U128, sender: Name) -> dict:
