@@ -1,6 +1,5 @@
 import argparse
 import asyncio
-import atexit
 import concurrent.futures
 import os
 import queue
@@ -28,7 +27,8 @@ def print_help(self):
     return eos.init(['ipyeos', '--help'])
 
 class Main(object):
-    def __init__(self):
+    def __init__(self, node_type='pyeosnode'):
+        self.node_type = node_type
         self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=10)
         self.thread_queue = queue.Queue()
         self.async_queue: Optional[asyncio.Queue()] = None
@@ -65,15 +65,6 @@ class Main(object):
         self.rpc_server_task = None
         self.rpc_server = None
 
-    def quit_eosnode(self, request):
-        eos.post(eos.quit)
-
-    def quit_pyeosnode(self):
-        asyncio.create_task(self.shutdown())
-
-    async def show_commands(self, request):
-        return web.Response(text=helper.html, content_type='text/html')
-
     def _run_eos(self):
         argv = sys.argv[1:]
         argv[0] = 'ipyeos'
@@ -91,37 +82,6 @@ class Main(object):
         print('run return', ret)
         return ret
 
-    async def run_eos(self):
-        future = asyncio.get_event_loop().run_in_executor(self.executor, self._run_eos)
-        await future
-        logger.info('eosnode exit')
-        await self.async_queue.put(None)
-
-    def _run_ipython(self):
-        from . import ipython_embed
-        shell = ipython_embed.embed()
-        atexit.unregister(shell.atexit_operations)
-        shell.atexit_operations()
-
-    async def run_ipython(self, request):
-        # await async_queue.put("ipython")
-        # thread_queue.put("ipython")
-        future = asyncio.get_event_loop().run_in_executor(self.executor, self._run_ipython)
-        return web.Response(text=f"Done!\n{str(time.time())}\n")
-
-    def _run_ikernel(self):
-        new_loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(new_loop)
-
-        from . import ipykernel_embed
-        ipykernel_embed.embed_kernel(ip='0.0.0.0')
-
-    async def run_ikernel(self, request):
-        # await async_queue.put("ikernel")
-        # thread_queue.put("ikernel")
-        future = asyncio.get_event_loop().run_in_executor(self.executor, self._run_ikernel)
-        return web.Response(text=f"Done!\n{str(time.time())}\n")
-
     async def exec_code(self, request):
         data = await request.post()
         try:
@@ -134,29 +94,6 @@ class Main(object):
             logger.error('exec code error:\n %s', exception_str)
             return web.Response(text=exception_str)
 
-
-    async def main_eosnode(self):
-        self.async_queue = asyncio.Queue()
-        self.start_webserver(self.quit_eosnode)
-        asyncio.create_task(self.run_eos())
-
-        while True:
-            # await asyncio.sleep(10.0)
-            # continue
-            command = await self.async_queue.get()
-            if not command:
-                break
-            if command == 'ipython':
-                # _run_ipython()
-                future = asyncio.get_event_loop().run_in_executor(self.executor, self._run_ipython)
-            elif command == 'ikernel':
-                self._run_ikernel()
-                # future = asyncio.get_event_loop().run_in_executor(executor, _run_ipython)
-
-        # result = await future
-        # print("Result: ", result)
-        print('all done!')
-
     async def shutdown(self):
         if self.in_shutdown:
             logger.info("+++++++already in shutdown...")
@@ -166,6 +103,12 @@ class Main(object):
 
         logger.info("+++++++shutdown...")
 
+        if self.node_type == 'eosnode':
+            logger.info("quit eosnode")
+            eos.quit()
+            # eos.post(eos.quit)
+
+        logger.info('shutdown webserver')
         await self.shutdown_webserver()
 
         loop = asyncio.get_running_loop()
@@ -177,19 +120,23 @@ class Main(object):
         await asyncio.gather(*tasks, return_exceptions=True)
         loop.stop()
 
+    def quit_node(self):
+        asyncio.create_task(self.shutdown())
+
     def handle_signal(self, signum, loop):
-        logger.info("+++++++handle signal: %s, shutting down...", signum)
-        loop.create_task(self.shutdown())
-        return
+        logger.info("handle_signal: %s", signum)
+        self.quit_node()
 
-    async def pyeosnode_main(self):
-        loop = asyncio.get_running_loop()
+    async def main_eosnode(self):
+        self.async_queue = asyncio.Queue()
+        future = asyncio.get_event_loop().run_in_executor(self.executor, self._run_eos)
+        try:
+            await future
+        except asyncio.exceptions.CancelledError:
+            logger.info('asyncio.exceptions.CancelledError')
+        print('all done!')
 
-        self.start_webserver(self.quit_pyeosnode)
-
-        loop.add_signal_handler(signal.SIGINT, self.handle_signal, signal.SIGINT, loop)
-        loop.add_signal_handler(signal.SIGTERM, self.handle_signal, signal.SIGTERM, loop)
-
+    async def main_pyeosnode(self):
         result = args.parse_args()
         await node.start(result.config_file, result.genesis_file, result.snapshot_file)
 
@@ -197,32 +144,33 @@ class Main(object):
 
         print('all done!')
 
+    async def main(self):
+        loop = asyncio.get_running_loop()
+        loop.add_signal_handler(signal.SIGINT, self.handle_signal, signal.SIGINT, loop)
+        loop.add_signal_handler(signal.SIGTERM, self.handle_signal, signal.SIGTERM, loop)
+
+        self.start_webserver(self.quit_node)
+
+        if self.node_type == 'eosnode':
+            return await self.main_eosnode()
+        elif self.node_type == 'pyeosnode':
+            return await self.main_pyeosnode()
+        assert False, 'unknown node type'
+
 def run_eosnode():
     if len(sys.argv) <= 2 or sys.argv[2] in ['-h', '--help']:
         return print_help()
 
-    m = Main()
-    def start():
-        asyncio.run(m.main_eosnode())
-        m.thread_queue.put(None)
-    t = threading.Thread(target=start, daemon=True)
-    t.start()
-    while True:
-        try:
-            cmd = m.thread_queue.get()
-            if cmd == None:
-                break
-            if cmd == 'ikernel':
-                m._run_ikernel()
-            elif cmd == 'ipython':
-                m._run_ipython()
-        except KeyboardInterrupt:
-            eos.post(eos.quit)
+    m = Main('eosnode')
+    try:
+        asyncio.run(m.main())
+    except KeyboardInterrupt:
+        logger.info("KeyboardInterrupt")
 
 def run_pyeosnode():
-    m = Main()
+    m = Main('pyeosnode')
     try:
-        asyncio.run(m.pyeosnode_main())
+        asyncio.run(m.main())
     except KeyboardInterrupt:
         logger.info("KeyboardInterrupt")
 
