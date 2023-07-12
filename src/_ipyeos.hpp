@@ -4,6 +4,7 @@
 #include <chain_rpc_api_proxy.hpp>
 #include <ipyeos_proxy.hpp>
 #include <vm_api_proxy.hpp>
+#include <snapshot_proxy.hpp>
 
 typedef void (*fn_init_uuos)(ipyeos_proxy *proxy);
 typedef ipyeos_proxy* (*fn_get_ipyeos_proxy)();

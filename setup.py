@@ -47,7 +47,8 @@ ext_modules = [
             'src/_eos.pyx',
             'src/_vm_api.pyx',
             'src/_transaction.pyx',
-            'src/_trace_api.pyx'
+            'src/_trace_api.pyx',
+            'src/_snapshot.pyx'
         ],
         include_dirs=[
             'src',
@@ -101,6 +102,9 @@ setup(
         'pytest>=6.2.5',
         'aiohttp>=3.8.4',
         'pyyaml',
+        "uvicorn",
+        "fastapi",
+        "pydantic",
         'ipython',
         'ipykernel'
     ],
