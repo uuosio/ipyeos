@@ -44,12 +44,12 @@ executor = concurrent.futures.ThreadPoolExecutor(max_workers=10)
 @app.get("/ipython")
 async def run_ipython():
     future = asyncio.get_event_loop().run_in_executor(executor, _run_ipython)
-    return f"Done!\n{str(time.time())}\n"
+    return f"Done! {time.time()}"
 
 @app.get("/ikernel")
 async def run_ikernel():
     future = asyncio.get_event_loop().run_in_executor(executor, _run_ikernel)
-    return f"Done!\n{str(time.time())}\n"
+    return f"Done! {time.time()}"
 
 @app.post("/exec")
 async def exec_code(item: Item):
@@ -68,7 +68,7 @@ async def quit():
     global quit_app
     if quit_app:
         quit_app()
-    return f"Done!\n{str(time.time())}\n"
+    return f"Done! {time.time()}"
 
 def init(quit):
     global quit_app
