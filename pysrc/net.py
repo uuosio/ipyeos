@@ -40,6 +40,7 @@ block_count_per_slot = 2 * 60 # one minute per slot
 print_sync_blocks_info_interval = 10
 
 default_sync_fetch_span = 300
+default_block_latency = 10
 
 # struct handshake_message {
 #     uint16_t                   network_version = 0; ///< incremental value above a computed base
@@ -844,12 +845,18 @@ class Connection(object):
     async def read(self, length):
         if self.closed:
             return None
-        try:
-            return await self.reader.readexactly(length)
-        except asyncio.exceptions.IncompleteReadError:
-            self.logger.error(f'asyncio.exceptions.IncompleteReadError')
-            self.close()
-            return None
+        while True:
+            try:
+                return await self.reader.readexactly(length)
+            except asyncio.exceptions.IncompleteReadError as e:
+                self.logger.error(f'asyncio.exceptions.IncompleteReadError')
+                if len(e.partial) > 0:
+                    self.logger.error(f'partial: {e.partial}')
+                    continue
+                else:
+                    self.logger.error(f'end of stream')
+                    self.close()
+                return None
 
     async def read_message(self):
         msg_len = await self.read(4)
@@ -1197,7 +1204,7 @@ class Connection(object):
                     return False
             elif self.chain.head_block_id() == message.head_id:
                 return True
-            elif self.chain.head_block_num() + 2 < message.head_num:
+            elif self.chain.head_block_num() + default_block_latency < message.head_num:
                 req_trx = OrderedIds(IdListModes.none, 0, [])
                 req_blocks = OrderedIds(IdListModes.catch_up, 0, [self.chain.head_block_id()])
                 msg = RequestMessage(req_trx, req_blocks)
@@ -1286,24 +1293,22 @@ class Connection(object):
 
             self.calculate_block_sync_info(header, len(raw_msg))
 
-            if not self.last_sync_request:
+            if self.last_sync_request and self.last_sync_request.end_block == received_block_num:
+                assert self.last_handshake, "last_handshake is None"
+                if self.last_handshake.last_irreversible_block_num > received_block_num:
+                    return await self.send_sync_request_message()
+
+                # send catch up request
+                self.last_sync_request = None
+                req_trx = OrderedIds(IdListModes.none, 0, [])
+                req_blocks = OrderedIds(IdListModes.catch_up, 0, [self.chain.head_block_id()])
+                msg = RequestMessage(req_trx, req_blocks)
+                self.logger.info(f'send request message: {msg}')
+                return await self.send_message(msg)
+            elif self.last_handshake and self.last_handshake.head_num == received_block_num:
+                return await self.send_handshake_message()
+            else:
                 return True
-
-            if not self.last_sync_request.end_block == received_block_num:
-                return True
-
-            assert self.last_handshake, "last_handshake is None"
-
-            if self.last_handshake.last_irreversible_block_num > received_block_num:
-                return await self.send_sync_request_message()
-
-            # send catch up request
-            self.last_sync_request = None
-            req_trx = OrderedIds(IdListModes.none, 0, [])
-            req_blocks = OrderedIds(IdListModes.catch_up, 0, [self.chain.head_block_id()])
-            msg = RequestMessage(req_trx, req_blocks)
-            self.logger.info(f'send request message: {msg}')
-            return await self.send_message(msg)
 
         elif tp == time_message:
             message = TimeMessage.unpack_bytes(raw_msg)
