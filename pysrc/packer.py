@@ -1,8 +1,10 @@
 import struct
-from typing import List, Type, Union, Any
+from typing import Any, List, Type, Union
 
 from . import eos
-from .types import U8, I16, U16, U32, U64, I64, U128, U256, Name, Checksum256, PublicKey
+from .types import (I16, I64, U8, U16, U32, U64, U128, U256, Checksum256, Name,
+                    PublicKey)
+
 
 def pack_length(val: int):
     result = bytearray()

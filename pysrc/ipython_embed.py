@@ -8,18 +8,16 @@ An embedded IPython shell.
 
 import sys
 import warnings
+from typing import Set
 
-from IPython.core import ultratb, compilerop
-from IPython.core import magic_arguments
-from IPython.core.magic import Magics, magics_class, line_magic
+from IPython.core import compilerop, magic_arguments, ultratb
 from IPython.core.interactiveshell import DummyMod, InteractiveShell
+from IPython.core.magic import Magics, line_magic, magics_class
 from IPython.terminal.interactiveshell import TerminalInteractiveShell
 from IPython.terminal.ipapp import load_default_config
-
-from traitlets import Bool, CBool, Unicode
 from IPython.utils.io import ask_yes_no
+from traitlets import Bool, CBool, Unicode
 
-from typing import Set
 
 class KillEmbedded(Exception):pass
 

@@ -1,5 +1,4 @@
 import asyncio as aio
-from concurrent.futures import ThreadPoolExecutor
 import glob
 import json
 import logging
@@ -10,6 +9,7 @@ import sys
 import threading
 import time
 import traceback
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
 from typing import Dict, List, NewType, Optional
 

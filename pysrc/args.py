@@ -1,5 +1,6 @@
-import sys
 import argparse
+import sys
+
 
 def parse_args(cmds=None):
     if not cmds:

@@ -1,7 +1,7 @@
 import json
 import sys
-from typing import Union
 from enum import Enum
+from typing import Union
 
 from . import _eos
 
@@ -75,7 +75,7 @@ def pack_native_object(_type: int, obj: Union[dict, str]) -> bytes:
 def unpack_native_object(_type: int, packed_obj: bytes) -> dict:
     ret = _eos.unpack_native_object(_type, packed_obj)
     if not ret:
-        raise Exception(_eos.get_last_error_and_clear())
+        raise Exception(_eos.get_last_error())
     return ret
 
 def pack_block(obj: Union[dict, str]) -> bytes:
@@ -103,7 +103,7 @@ def s2n(s: str) -> int:
     ret = _eos.s2n(s)
     if not ret == 0:
         return ret
-    err = _eos.get_last_error_and_clear()
+    err = _eos.get_last_error()
     if err:
         _eos.set_last_error("")
         raise Exception(err)
@@ -159,7 +159,7 @@ def is_debug_enabled() -> bool:
     return _eos.is_debug_enabled()
 
 def get_last_error() -> str:
-    return _eos.get_last_error_and_clear()
+    return _eos.get_last_error()
 
 def create_key(key_type: str = "K1") -> dict:
     ret = _eos.create_key(key_type)

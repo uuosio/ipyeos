@@ -1,9 +1,9 @@
 import hashlib
 import time
-from typing import Optional, List
+from typing import List, Optional
 
-from .packer import Encoder, Decoder, Packer
-from .types import U16, U32, U64, Name, Checksum256, PublicKey
+from .packer import Decoder, Encoder, Packer
+from .types import U16, U32, U64, Checksum256, Name, PublicKey
 
 # struct producer_key {
 #     account_name      producer_name;

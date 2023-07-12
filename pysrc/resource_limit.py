@@ -1,6 +1,9 @@
-from .database import Database, ResourceLimitsObjectIndex, ResourceLimitsConfigObjectIndex, ResourceLimitsStateObjectIndex
-from .database import ResourceUsageObjectIndex
+from .database import (Database, ResourceLimitsConfigObjectIndex,
+                       ResourceLimitsObjectIndex,
+                       ResourceLimitsStateObjectIndex,
+                       ResourceUsageObjectIndex)
 from .types import Name
+
 
 class ResourceLimit(object):
 

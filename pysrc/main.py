@@ -1,27 +1,22 @@
-import os
 import argparse
 import asyncio
 import atexit
 import concurrent.futures
+import os
 import queue
-import yaml
 import signal
-import sys
 import socket
-import time
+import sys
 import threading
+import time
 import traceback
 from typing import Optional
 
+import yaml
 from aiohttp import web
-from . import eos, server
-from . import args
-from . import helper
-from . import log
-from . import node
+
+from . import args, debug_server, eos, helper, log, node, rpc, server
 from .debug import get_free_port
-from . import rpc
-from . import debug_server
 
 if not 'RUN_IPYEOS' in os.environ:
     print('main module can only be load by ipyeos')

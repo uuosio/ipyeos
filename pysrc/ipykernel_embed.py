@@ -7,10 +7,8 @@
 import asyncio
 import sys
 
-from IPython.utils.frame import extract_module_locals
-
 from ipykernel.kernelapp import IPKernelApp
-
+from IPython.utils.frame import extract_module_locals
 
 # -----------------------------------------------------------------------------
 # Code

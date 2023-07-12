@@ -1,13 +1,14 @@
 import hashlib
-from typing import NewType, List, TypeVar, Generic, Optional, Union
+from typing import Generic, List, NewType, Optional, TypeVar, Union
 
-from . import database
-from . import eos
-from .types import U8, U16, U32, U64, I64, U128, U256, Name, TimePointSec, F128, PublicKey, Checksum256
-from .packer import Encoder, Decoder
-from .structs import PermissionLevel, KeyWeight, PermissionLevelWeight, WaitWeight, Authority, TimePoint
-from .structs import Variant
-from .utils import to_bytes, i2b, u2b, f2b
+from . import database, eos
+from .packer import Decoder, Encoder
+from .structs import (Authority, KeyWeight, PermissionLevel,
+                      PermissionLevelWeight, TimePoint, Variant, WaitWeight)
+from .types import (F128, I64, U8, U16, U32, U64, U128, U256, Checksum256,
+                    Name, PublicKey, TimePointSec)
+from .utils import f2b, i2b, to_bytes, u2b
+
 # struct account_object_ {
 #     account_name         name; //< name should not be changed within a chainbase modifier lambda
 #     block_timestamp_type creation_date;

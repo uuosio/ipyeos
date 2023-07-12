@@ -1,6 +1,7 @@
+from . import _eos, _trace_api
+from .chain_exceptions import get_last_exception
 from .types import I32, U32
-from . import _trace_api
-from . import _eos
+
 
 class TraceAPI(object):
 
@@ -11,5 +12,5 @@ class TraceAPI(object):
     def get_block_trace(self, block_num: U32):
         ret = _trace_api.get_block_trace(self.ptr, block_num)
         if not ret:
-            raise Exception(_eos.get_last_error_and_clear())
+            raise get_last_exception()
         return ret

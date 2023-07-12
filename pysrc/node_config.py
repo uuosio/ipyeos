@@ -1,8 +1,9 @@
 import argparse
 import os
-import yaml
 import sys
 from typing import Optional
+
+import yaml
 
 from . import log
 

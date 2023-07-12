@@ -1,7 +1,8 @@
 import asyncio
+
+import uvicorn
 from fastapi import FastAPI
 from pydantic import BaseModel
-import uvicorn
 
 from .uvicorn_server import UvicornServer
 
@@ -10,7 +11,6 @@ app = FastAPI()
 class Item(BaseModel):
     code: str
 
-@app.get("/")
 def read_root():
     """
     Returns a JSON object with a single key-value pair: "Hello" -> "World".
@@ -18,6 +18,7 @@ def read_root():
     return {"Hello": "World"}
 
 def init(port: int=8088):
+    app.get("/")(read_root)
     config = uvicorn.Config(app, host="127.0.0.1", port=port)
     server = UvicornServer(config)
     return server

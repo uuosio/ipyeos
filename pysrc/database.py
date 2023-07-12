@@ -1,12 +1,10 @@
-from typing import Union, Tuple
+from typing import Tuple, Union
 
-from . import _database
-from . import _eos
-from .types import U8, U16, U32, U64, I64, F64, Name, Checksum256
-from .packer import Encoder, Decoder
+from . import _database, _eos, log
 from .database_objects import *
-from .utils import i2b, u2b, f2b, to_bytes
-from . import log
+from .packer import Decoder, Encoder
+from .types import F64, I64, U8, U16, U32, U64, Checksum256, Name
+from .utils import f2b, i2b, to_bytes, u2b
 
 null_object_type = 0
 account_object_type = 1
@@ -55,7 +53,7 @@ database_header_object_type = 41
 
 def parse_return_value(ret: int):
     if ret == -2:
-        raise Exception(_eos.get_last_error_and_clear())
+        raise Exception(_eos.get_last_error())
     assert ret in (0, 1)
     if ret:
         return True
@@ -85,7 +83,7 @@ class Database:
     def create(self, tp, raw_data: bytes):
         ret = _database.create(self.ptr, tp, raw_data)
         if ret == -2:
-            raise Exception(_eos.get_last_error_and_clear())
+            raise Exception(_eos.get_last_error())
         assert ret in (0, 1)
         if ret:
             return True
@@ -94,7 +92,7 @@ class Database:
     def modify(self, tp: int, index_position: int, raw_key: bytes, raw_data: bytes):
         ret = _database.modify(self.ptr, tp, index_position, raw_key, raw_data)
         if ret == -2:
-            raise Exception(_eos.get_last_error_and_clear())
+            raise Exception(_eos.get_last_error())
         assert ret in (0, 1)
         if ret:
             return True
@@ -103,7 +101,7 @@ class Database:
     def walk(self, tp: int, index_position: int, cb, custom_data = None):
         ret = _database.walk(self.ptr, tp, index_position, cb, custom_data)
         if ret == -2:
-            raise Exception(_eos.get_last_error_and_clear())
+            raise Exception(_eos.get_last_error())
         return ret
 
     def walk_range(self, tp: int, index_position: int, lower_bound: Union[int, bytes], upper_bound: Union[int, bytes], cb, custom_data = None):
@@ -115,7 +113,7 @@ class Database:
 
         ret = _database.walk_range(self.ptr, tp, index_position, lower_bound, upper_bound, cb, custom_data)
         if ret == -2:
-            raise Exception(_eos.get_last_error_and_clear())
+            raise Exception(_eos.get_last_error())
         return ret
 
     def find(self, tp: int, index_position: int, key: Union[int, bytes]):
@@ -123,7 +121,7 @@ class Database:
             key = i2b(key)
         ret, data = _database.find(self.ptr, tp, index_position, key)
         if ret == -2:
-            raise Exception(_eos.get_last_error_and_clear())
+            raise Exception(_eos.get_last_error())
         if ret == 0:
             return None
         return data
@@ -133,7 +131,7 @@ class Database:
             key = i2b(key)
         ret, data = _database.lower_bound(self.ptr, tp, index_position, key)
         if ret == -2:
-            raise Exception(_eos.get_last_error_and_clear())
+            raise Exception(_eos.get_last_error())
         if ret == 0:
             return None
         return data
@@ -144,7 +142,7 @@ class Database:
 
         ret, data = _database.upper_bound(self.ptr, tp, index_position, key)
         if ret == -2:
-            raise Exception(_eos.get_last_error_and_clear())
+            raise Exception(_eos.get_last_error())
         if ret == 0:
             return None
         return data

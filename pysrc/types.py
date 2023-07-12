@@ -1,5 +1,6 @@
 import hashlib
 from typing import NewType
+
 from . import eos, log
 
 I8 = NewType('I8', int)

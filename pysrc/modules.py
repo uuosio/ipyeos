@@ -1,5 +1,6 @@
 import sys
 
+
 def load_modules():
     if f'ipyeos._chain' in sys.modules:
         return

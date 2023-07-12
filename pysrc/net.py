@@ -1,21 +1,21 @@
 import asyncio
-from enum import Enum
 import io
+import secrets
+import signal
+import socket
 import ssl
 import time
-import secrets
-import socket
-import signal
-from typing import List, Dict, Type, Union, Any, Optional
+from enum import Enum
+from typing import Any, Dict, List, Optional, Type, Union
 
+from . import debug, log, node_config
 from .blocks import BlockHeader
-from .chain_exceptions import UnlinkableBlockException, ForkDatabaseException, DatabaseGuardException
-from .packer import Encoder, Decoder
-from .types import I16, U16, U32, I64, U64, PublicKey, Signature, Checksum256
-from . import log, debug
-from .transaction import Transaction
 from .chain import Chain
-from . import node_config
+from .chain_exceptions import (DatabaseGuardException, ForkDatabaseException,
+                               UnlinkableBlockException)
+from .packer import Decoder, Encoder
+from .transaction import Transaction
+from .types import I16, I64, U16, U32, U64, Checksum256, PublicKey, Signature
 
 handshake_message = 0
 chain_size_message = 1

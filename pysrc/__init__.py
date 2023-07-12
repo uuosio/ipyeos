@@ -13,15 +13,10 @@ __version__ = "0.4.6"
 cur_dir = os.path.dirname(os.path.realpath(__file__))
 
 if 'RUN_IPYEOS' in os.environ:
-    from . import _eos
-    from . import modules
+    from . import _eos, modules
     modules.load_modules()
 
-    from . import _chain
-    from . import _chainapi
-    from . import _vm_api
-    from . import _database
-    from . import _block_log
+    from . import _block_log, _chain, _chainapi, _database, _vm_api
 
 def run_ipyeos(custom_cmds=[]):
     return run.run_ipyeos(custom_cmds)

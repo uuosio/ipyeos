@@ -1,7 +1,7 @@
-from typing import List, Type, TypeVar, Generic
+from typing import Generic, List, Type, TypeVar
 
-from .types import U8, U16, U32, U64, I64, Name, PublicKey
-from .packer import Encoder, Decoder, Packer
+from .packer import Decoder, Encoder, Packer
+from .types import I64, U8, U16, U32, U64, Name, PublicKey
 
 T = TypeVar('T')
 

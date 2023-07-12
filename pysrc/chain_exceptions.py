@@ -1,6 +1,7 @@
-import json
 import dataclasses
+import json
 from typing import Dict, List, Optional
+
 from . import _eos
 
 # exception example:
@@ -118,7 +119,7 @@ exceptions = {
 
 def get_last_exception(error: Optional[str] = None):
     if error is None:
-        error = _eos.get_last_error_and_clear()
+        error = _eos.get_last_error()
     if not error:
         return None
 

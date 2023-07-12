@@ -1,9 +1,9 @@
-from typing import List, Dict, Union
+from typing import Dict, List, Union
 
-from . import _transaction
-from .types import U8, U16, U32, U64, I64, Name, Checksum256, PrivateKey
-from . import eos
+from . import _transaction, eos
 from .packer import Packer
+from .types import I64, U8, U16, U32, U64, Checksum256, Name, PrivateKey
+
 
 class Transaction(object):
     def __init__(self, expiration: U32, ref_block_id: Checksum256, max_net_usage_words: U32 = 0, max_cpu_usage_ms: U8 = 0, delay_sec: U32 = 0):

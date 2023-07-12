@@ -1,4 +1,3 @@
-import aiohttp
 import argparse
 import asyncio
 import os
@@ -9,8 +8,9 @@ import subprocess
 import sys
 import sysconfig
 
-from . import args
-from . import log
+import aiohttp
+
+from . import args, log
 from .debug import get_free_port
 
 logger = log.get_logger(__name__)

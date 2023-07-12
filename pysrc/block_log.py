@@ -1,11 +1,11 @@
-from . import _block_log
-from . import _eos
+from . import _block_log, _eos
+
 
 class BlockLog(object):
     def __init__(self, block_log_dir: str):
         self.ptr = _block_log.new(block_log_dir)
         if not self.ptr:
-            raise Exception(_eos.get_last_error_and_clear())
+            raise Exception(_eos.get_last_error())
     
     def get_block_log_ptr(self) -> int:
         return _block_log.get_block_log_ptr(self.ptr)

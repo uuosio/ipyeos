@@ -3,11 +3,9 @@ from datetime import datetime
 from typing import Dict, List, Optional, Union
 
 from . import _chain, _eos, log
-
-from .chain_exceptions import get_last_exception
-from .types import U8, U16, U32, U64, I64, Name, PublicKey
 from .block_log import BlockLog
-from .types import U128, Checksum256
+from .chain_exceptions import get_last_exception
+from .types import I64, U8, U16, U32, U64, U128, Checksum256, Name, PublicKey
 
 logger = log.get_logger(__name__)
 
@@ -53,7 +51,7 @@ class Chain(object):
 
         self.ptr = _chain.chain_new(config, genesis, chain_id, protocol_features_dir, snapshot_file, debug_producer_key)
         if not self.ptr:
-            error = _eos.get_last_error_and_clear()
+            error = _eos.get_last_error()
             raise Exception(error)
 
         # self.enable_deep_mind()
@@ -68,7 +66,7 @@ class Chain(object):
         ret = _chain.startup(self.ptr, initdb)
         if not ret:
             self.ptr = 0
-            raise Exception(_eos.get_last_error_and_clear())
+            raise Exception(_eos.get_last_error())
 
     def free(self) -> None:
         """
@@ -398,7 +396,7 @@ class Chain(object):
             deadline = deadline.isoformat(timespec='milliseconds')
         result = _chain.push_transaction(self.ptr, packed_trx, deadline, billed_cpu_time_us, explicit_cpu_bill, subjective_cpu_bill_us)
         if not result:
-            result = _eos.get_last_error_and_clear()
+            result = _eos.get_last_error()
         result = json.loads(result)
         if 'except' in result:
             raise Exception(result)
@@ -409,7 +407,7 @@ class Chain(object):
             raise Exception("invalid block number, block_num: %d, head_block_num: %d, first_block_num: %d" % (block_num, blog.head_block_num(), blog.first_block_num()))
         ret = _chain.push_block(self.ptr, blog.get_block_log_ptr(), block_num)
         if not ret:
-            err = _eos.get_last_error_and_clear()
+            err = _eos.get_last_error()
             if err:
                 raise Exception(err)
             else:
@@ -491,7 +489,7 @@ class Chain(object):
         return _chain.gen_transaction(self.ptr, json_str, _actions, expiration, reference_block_id, _id, compress, _private_keys)
 
     def get_last_error(self) -> str:
-        err = _eos.get_last_error_and_clear()
+        err = _eos.get_last_error()
         try:
             return json.loads(err)
         except json.JSONDecodeError:        

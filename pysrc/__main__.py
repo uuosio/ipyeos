@@ -14,6 +14,7 @@ def main():
         return main.run()
     else:
         from . import run
+
         #python3 -m ipyeos eosnode ...
         #python3 -m ipyeos eosdebugger ...
         if len(sys.argv) > 1 and sys.argv[1] in ['eosnode', 'eosdebugger', 'pyeosnode']:
