@@ -224,8 +224,13 @@ class ChainTester(object):
 
 
         eos.set_log_level('default', log_level)
-        
+
         if snapshot_file:
+            if not os.path.exists(snapshot_file):
+                raise Exception(f'snapshot file {snapshot_file} does not exist')
+            if os.path.exists(f'{self.data_dir}/state/shared_memory.bin'):
+                raise Exception(f'{self.data_dir}/state/shared_memory.bin already exists while trying to restore the network state from snapshot')
+
             initialize = False
             init_database = False
             self.genesis_test = ''
