@@ -19,7 +19,7 @@ class Snapshot(object):
 
         request_id = _snapshot.schedule_snapshot(self.snapshot_ptr, block_spacing, start_block_num, end_block_num, snapshot_description)
         if request_id == 0xffffffff:
-            raise Exception(eos.get_last_error())
+            raise get_last_exception()
         self.schedule_request_ids.append(request_id)
         return request_id
 

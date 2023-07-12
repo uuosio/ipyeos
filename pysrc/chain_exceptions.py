@@ -104,18 +104,16 @@ class ForkDatabaseException(ChainException):
 class DatabaseGuardException(ChainException):
     pass
 
-# if name == 'unlinkable_block_exception':
-#     return UnlinkableBlockException(*args)
-# elif name == 'fork_database_exception':
-#     return ForkDatabaseException(*args)
-# elif name == 'snapshot_request_not_found':
-#     return SnapshotRequestNotFoundException(*args)
+# invalid_snapshot_request
+class InvalidSnapshotRequestException(ChainException):
+    pass
 
 exceptions = {
     'unlinkable_block_exception': UnlinkableBlockException,
     'fork_database_exception': ForkDatabaseException,
     'snapshot_request_not_found': SnapshotRequestNotFoundException,
     'database_guard_exception': DatabaseGuardException,
+    'invalid_snapshot_request': InvalidSnapshotRequestException,
 }
 
 def get_last_exception(error: Optional[str] = None):
