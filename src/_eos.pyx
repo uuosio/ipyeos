@@ -30,7 +30,7 @@ cdef extern from "_ipyeos.hpp":
     ctypedef struct ipyeos_proxy:
         void *get_database()
 
-        string& get_last_error()
+        string get_last_error()
         void set_last_error(string& error)
 
         void pack_abi(string& msg, vector[char]& packed_message)
@@ -85,11 +85,6 @@ def get_log_level(string& logger_name) -> int:
 
 def get_last_error():
     ret = get_ipyeos_proxy().get_last_error()
-    return ret
-
-def get_last_error_and_clear():
-    ret = get_ipyeos_proxy().get_last_error()
-    get_ipyeos_proxy().set_last_error(b"")
     return ret
 
 def set_last_error(err: str):
