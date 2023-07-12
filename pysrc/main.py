@@ -45,6 +45,31 @@ class Main(object):
         self.rpc_server_task = None
         self.rpc_server = None
 
+    def start_webserver(self, quit_app):
+        server = debug_server.init(quit_app)
+        self.debug_server_task = asyncio.create_task(debug_server.start(server))
+        self.debug_server = server
+
+        server = rpc.init()
+        self.rpc_server_task = asyncio.create_task(rpc.start(server))
+        self.rpc_server = server
+
+    async def shutdown_webserver(self):
+        if not self.debug_server_task:
+            return
+
+        self.debug_server.exit()
+        self.rpc_server.exit()
+
+        await self.debug_server_task
+        await self.rpc_server_task
+
+        self.debug_server_task = None
+        self.debug_server = None
+
+        self.rpc_server_task = None
+        self.rpc_server = None
+
     def quit_eosnode(self, request):
         eos.post(eos.quit)
 
@@ -114,40 +139,10 @@ class Main(object):
             logger.error('exec code error:\n %s', exception_str)
             return web.Response(text=exception_str)
 
-    async def start_webserver(self, quit_app):
-        app = web.Application()
-        app.router.add_post('/exec', self.exec_code)
-
-        app.router.add_post('/ipython', self.run_ipython)
-        app.router.add_post('/ikernel', self.run_ikernel)
-        app.router.add_post('/quit', quit_app)
-
-        app.router.add_get('/ipython', self.run_ipython)
-        app.router.add_get('/ikernel', self.run_ikernel)
-        app.router.add_get('/quit', quit_app)
-
-        app.router.add_get('/', self.show_commands)
-        runner = web.AppRunner(app)
-        await runner.setup()
-        port = get_free_port()
-        site = web.TCPSite(runner, host='127.0.0.1', port=port)
-        await site.start()
-        logger.info(f'++++++++++++debugging server started at port {port}!!')
-
-        while True:
-            try:
-                await asyncio.sleep(3600) # serve forever
-            except asyncio.exceptions.CancelledError:
-                break
-
-    async def heartbeat(self):
-        while True:
-            print("beep")
-            await asyncio.sleep(5.0)
 
     async def main_eosnode(self):
         self.async_queue = asyncio.Queue()
-        asyncio.create_task(debug_server.start(self.quit_eosnode))
+        self.start_webserver(self.quit_eosnode)
         asyncio.create_task(self.run_eos())
 
         while True:
@@ -176,12 +171,7 @@ class Main(object):
 
         logger.info("+++++++shutdown...")
 
-        self.debug_server.exit()
-        self.rpc_server.exit()
-
-        await self.debug_server_task
-        await self.rpc_server_task
-        await self.sleep(5.0)
+        await self.shutdown_webserver()
 
         loop = asyncio.get_running_loop()
         tasks = [t for t in asyncio.all_tasks(loop) if t is not asyncio.current_task()]
@@ -200,20 +190,16 @@ class Main(object):
     async def pyeosnode_main(self):
         loop = asyncio.get_running_loop()
 
-        server = debug_server.init(self.quit_pyeosnode)
-        self.debug_server_task = asyncio.create_task(debug_server.start(server))
-        self.debug_server = server
-
-        server = rpc.init()
-        self.rpc_server_task = asyncio.create_task(rpc.start(server))
-        self.rpc_server = server
+        self.start_webserver(self.quit_pyeosnode)
 
         loop.add_signal_handler(signal.SIGINT, self.handle_signal, signal.SIGINT, loop)
         loop.add_signal_handler(signal.SIGTERM, self.handle_signal, signal.SIGTERM, loop)
 
         result = args.parse_args()
         await node.start(result.config_file, result.genesis_file, result.snapshot_file)
-        asyncio.create_task(self.shutdown())
+
+        await self.shutdown_webserver()
+
         print('all done!')
 
 def run_eosnode():
