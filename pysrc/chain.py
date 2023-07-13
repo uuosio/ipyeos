@@ -402,10 +402,10 @@ class Chain(object):
             raise Exception(result)
         return result
 
-    def push_block(self, blog: BlockLog, block_num: int) -> bool:
+    def push_block_from_block_log(self, blog: BlockLog, block_num: int) -> bool:
         if block_num > blog.head_block_num() or block_num < blog.first_block_num():
             raise Exception("invalid block number, block_num: %d, head_block_num: %d, first_block_num: %d" % (block_num, blog.head_block_num(), blog.first_block_num()))
-        ret = _chain.push_block(self.ptr, blog.get_block_log_ptr(), block_num)
+        ret = _chain.push_block_from_block_log(self.ptr, blog.get_block_log_ptr(), block_num)
         if not ret:
             err = _eos.get_last_error()
             if err:
@@ -414,11 +414,11 @@ class Chain(object):
                 raise Exception("invalid block num")
         return True
 
-    def push_raw_block(self, raw_block: bytes) -> bool:
-        ret = _chain.push_raw_block(self.ptr, raw_block)
+    def push_block(self, raw_block: bytes, show_log: bool = False) -> bool:
+        ret, block_statistics = _chain.push_block(self.ptr, raw_block, show_log)
         if not ret:
             raise get_last_exception()
-        return True
+        return (ret, block_statistics)
 
     def get_scheduled_transaction(self, sender_id: U128, sender: Name) -> dict:
         ret = _chain.get_scheduled_transaction(self.ptr, sender_id.to_bytes(16, 'little'), sender)

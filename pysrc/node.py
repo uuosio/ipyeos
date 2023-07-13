@@ -217,7 +217,7 @@ async def start(config_file: str, genesis_file: str, snapshot_file: str):
 
     net_config = config['net']
     peers = net_config['peers']
-    logger.error(f'peers: {peers}')
+    logger.info(f'peers: {peers}')
     for peer in peers:
         if peers.count(peer) > 1:
             logger.error(f'duplicated peer: {peer} in config file {config_file}')

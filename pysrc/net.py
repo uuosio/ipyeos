@@ -845,13 +845,12 @@ class Connection(object):
     async def read(self, length):
         if self.closed:
             return None
-        while True:
-            try:
-                return await self.reader.readexactly(length)
-            except asyncio.exceptions.IncompleteReadError as e:
-                self.logger.error(f'asyncio.exceptions.IncompleteReadError: len(e.partial)={len(e.partial)}, e.expected={e.expected}')
-                self.close()
-                return None
+        try:
+            return await self.reader.readexactly(length)
+        except asyncio.exceptions.IncompleteReadError as e:
+            self.logger.error(f'asyncio.exceptions.IncompleteReadError: len(e.partial)={len(e.partial)}, e.expected={e.expected}')
+            self.close()
+        return None
 
     async def read_message(self):
         msg_len = await self.read(4)
@@ -1074,12 +1073,16 @@ class Connection(object):
         while True:
             try:
                 await asyncio.sleep(30.0)
-                self.last_time_message = TimeMessage(0, 0, int(time.time()*1e9), 0)
-                self.logger.info(f"send time message: {self.last_time_message}")
+                self.logger.info("+++++++++++=heart beat")
                 if not self.connected:
                     return
+                self.last_time_message = TimeMessage(0, 0, int(time.time()*1e9), 0)
+                self.logger.info(f"send time message: {self.last_time_message}")
                 if not await self.send_message(self.last_time_message):
                     self.logger.error(f'fail to send time message')
+                    return False
+                if not self.send_handshake_message():
+                    self.logger.error(f'fail to send handshake message')
                     return False
             except ConnectionResetError:
                 self.logger.error(f'connection reset')
@@ -1205,6 +1208,9 @@ class Connection(object):
                 msg = RequestMessage(req_trx, req_blocks)
                 self.logger.info(f'send request message: {msg}')
                 return await self.send_message(msg)
+            elif self.chain.head_block_num() > message.head_num:
+                self.logger.info("chain head is greater than peer")
+                return True
             # else:
             #     # last_irr_catch_up catch_up
             #     req_trx = OrderedIds(IdListModes.none, 0, [])
@@ -1225,7 +1231,7 @@ class Connection(object):
             header = BlockHeader.unpack_bytes(raw_msg)
             received_block_num = header.block_num()
             head_block_num = self.chain.head_block_num()
-            self.logger.info(f"++++++++head_block_num: {head_block_num}, received_block_num: {received_block_num}, received_block_time: {header.block_time()}")
+            # self.logger.info(f"++++++++head_block_num: {head_block_num}, received_block_num: {received_block_num}, received_block_time: {header.block_time()}")
             # if received_block_num % 100 == 0:
             #     self.logger.info("++++++++head_block_num: %s, received_block_num: %s", head_block_num, received_block_num)
             if head_block_num >= received_block_num:
@@ -1250,8 +1256,15 @@ class Connection(object):
                 #     return False
                 # return True
             try:
-                ret = self.chain.push_raw_block(raw_msg)
+                if time.time() - header.block_time_ms() / 1000 < 60:
+                    return_statistics = True
+                else:
+                    return_statistics = False
+                ret, statistics = self.chain.push_block(raw_msg, return_statistics)
+                if statistics:
+                    self.logger.info(statistics)
                 await asyncio.sleep(0.0)
+            # unlinkable_block_exception
             except UnlinkableBlockException as e:
                 if not await self.send_reset_sync_request_message():
                     return False
@@ -1263,19 +1276,10 @@ class Connection(object):
                 msg = RequestMessage(req_trx, req_blocks)
                 self.logger.info(f'send request message: {msg}')
                 return await self.send_message(msg)
-                # self.last_sync_request = None
-                # return self.send_sync_request_message()
-                # node_id = self.last_handshake.node_id if self.last_handshake else Checksum256.empty()
-                # msg = GoAwayMessage(GoAwayReason.unlinkable, node_id)
-                # await self.send_message(msg)
-                # self.logger.info("++++++++++send go away message: %s", msg)
-                # self.close()
-                # return False
             except ForkDatabaseException as e:
                 # fork_database_exception
-                # unlinkable_block_exception
                 if e.stack[0].format.startswith('we already know about this block'):
-                    self.logger.warning(f"++++++++receive dumplicated block: {received_block_num}, block_id: {block_id}")
+                    self.logger.warning(f"++++++++receive duplicated block: {received_block_num}, block_id: {block_id}")
                     return True
             except DatabaseGuardException as e:
                 self.logger.fatal(f"%s", e)
@@ -1283,6 +1287,7 @@ class Connection(object):
                 return False
             except Exception as e:
                 self.logger.fatal(f"%s", e)
+                self.logger.exception(e)
                 self.exit()
                 return False
 

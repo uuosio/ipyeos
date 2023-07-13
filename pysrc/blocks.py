@@ -140,6 +140,11 @@ class BlockHeader(Packer):
     def block_num(self):
         return int.from_bytes(self.previous.to_bytes()[:4], 'big') + 1
 
+    def block_time_ms(self) -> str:
+        msec = self.timestamp * block_interval_ms
+        msec += block_timestamp_epoch
+        return msec
+
     def block_time(self) -> str:
         msec = self.timestamp * block_interval_ms
         msec += block_timestamp_epoch

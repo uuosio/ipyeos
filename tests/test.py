@@ -201,7 +201,7 @@ def test_custom_2dir():
     t.free()
 
 
-def test_push_block():
+def test_push_block_from_block_log():
     if os.path.exists('./data/ddd'):
         shutil.rmtree('./data/ddd')
 
@@ -223,7 +223,7 @@ def test_push_block():
     num_count = blog.head_block_num() - head_block_num
 
     for block_num in range(head_block_num+1, head_block_num+num_count+1):
-        t.chain.push_block(blog, block_num)
+        t.chain.push_block_from_block_log(blog, block_num)
 
 
     block = blog.read_block_by_num(blog.head_block_num())
@@ -248,7 +248,7 @@ def test_exception():
     logger.info("++++++%s", e.stack[0].format)
     logger.info("++++++%s", e.stack[0].data)
 
-def test_push_raw_block():
+def test_push_block():
     if os.path.exists('./data/ddd'):
         shutil.rmtree('./data/ddd')
 
@@ -272,9 +272,9 @@ def test_push_raw_block():
     block_num = head_block_num+1
     block = blog.read_block_by_num(block_num)
     raw_block = eos.pack_block(block)
-    t.chain.push_raw_block(raw_block)
+    t.chain.push_block(raw_block)
     try:
-        t.chain.push_raw_block(raw_block)
+        t.chain.push_block(raw_block)
     except ForkDatabaseException as e:
         logger.info("++++++%s", e)
         logger.info("++++++%s", e.stack[0].context)
@@ -284,8 +284,7 @@ def test_push_raw_block():
     for block_num in range(head_block_num+2, head_block_num+num_count+1):
         block = blog.read_block_by_num(block_num)
         raw_block = eos.pack_block(block)
-        t.chain.push_raw_block(raw_block)
-
+        t.chain.push_block(raw_block)
 
     block = blog.read_block_by_num(blog.head_block_num())
     logger.info("++++block: %s", block)
