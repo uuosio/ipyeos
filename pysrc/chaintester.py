@@ -65,7 +65,7 @@ chain_config = {
         "cache_size":1073741824,
         "threads":1
     },
-    "eosvmoc_tierup":False,
+    "eosvmoc_tierup": "oc_none",
     "read_mode": DBReadMode.HEAD.name,
     "block_validation_mode":"FULL",
     "db_map_mode":"mapped",

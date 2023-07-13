@@ -849,13 +849,8 @@ class Connection(object):
             try:
                 return await self.reader.readexactly(length)
             except asyncio.exceptions.IncompleteReadError as e:
-                self.logger.error(f'asyncio.exceptions.IncompleteReadError')
-                if len(e.partial) > 0:
-                    self.logger.error(f'partial: {e.partial}')
-                    continue
-                else:
-                    self.logger.error(f'end of stream')
-                    self.close()
+                self.logger.error(f'asyncio.exceptions.IncompleteReadError: len(e.partial)={len(e.partial)}, e.expected={e.expected}')
+                self.close()
                 return None
 
     async def read_message(self):

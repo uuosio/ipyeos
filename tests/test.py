@@ -208,11 +208,11 @@ def test_push_block():
     state_size = 10*1024*1024
     data_name = './data'
 
-    snapshot_dir = './data/push_block/snapshot-0000003b83662343c208e965654f4d906ed7fad0372e13c246981cd076d379bb.bin'
+    snapshot_file = './data/push_block/snapshot-0000003b83662343c208e965654f4d906ed7fad0372e13c246981cd076d379bb.bin'
     t = ChainTester(True, data_dir=os.path.join(data_name, 'ddd'), config_dir=os.path.join(data_name, 'cd'), state_size=state_size, snapshot_file=snapshot_file, log_level=5)
     t.free()
 
-    snapshot_dir = ''
+    snapshot_file = ''
     t = ChainTester(True, data_dir=os.path.join(data_name, 'ddd'), config_dir=os.path.join(data_name, 'cd'), state_size=state_size, log_level=5)
     t.chain.abort_block()
 
