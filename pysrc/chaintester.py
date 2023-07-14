@@ -6,14 +6,11 @@ import os
 import shutil
 import subprocess
 import tempfile
+import time
+
 from datetime import datetime, timedelta, timezone
 from enum import Enum
 from typing import Dict, List, Optional, Union
-
-from .modules import load_modules
-
-load_modules()
-
 from ipyeos import chain, chainapi, database, node_config
 
 from . import eos, log
@@ -65,6 +62,9 @@ chain_config = {
         "cache_size":1073741824,
         "threads":1
     },
+    # oc_auto,
+    # oc_all,
+    # oc_none
     "eosvmoc_tierup": "oc_none",
     "read_mode": DBReadMode.HEAD.name,
     "block_validation_mode":"FULL",
@@ -567,11 +567,7 @@ class ChainTester(object):
         actions = json.dumps(actions)
         # expiration = datetime.utcnow() + timedelta(seconds=60*60)
 
-        expiration = self.chain.head_block_time()
-        # now = datetime.utcnow()
-        # if expiration < now:
-        #     expiration = now
-        expiration = expiration + 60*1e6
+        expiration = int(time.time()  + 60)
         ret = self.chain.gen_transaction(json_str, actions, expiration, ref_block_id, chain_id, compress, priv_keys)
         if json_str:
             return json.loads(ret)
@@ -611,17 +607,12 @@ class ChainTester(object):
             logger.warning("++++block time too small!")
         return block_time
 
-    def start_block(self, block_time=default_time):
+    def start_block(self, block_time_ms: int=0):
         self.chain.abort_block()
-        if not block_time:
-            self.chain.start_block(self.calc_pending_block_time(), 0, self.feature_digests)
-        else:
-            # logger.info(block_time)
-            self.chain.start_block(block_time, 0, self.feature_digests)
-
+        self.chain.start_block(block_time_ms, 0, self.feature_digests)
         self.feature_digests.clear()
 
-    def produce_block(self, next_block_time=default_time, start_block=True):
+    def produce_block(self, next_block_time_ms=0, start_block=True):
         trxs = self.chain.get_scheduled_transactions()
         idx = GeneratedTransactionObjectIndex(self.db)
         pending_block_time = self.chain.pending_block_time()
@@ -664,7 +655,7 @@ class ChainTester(object):
         self.chain.finalize_block(priv_keys)
         self.chain.commit_block()
         if start_block:
-            self.start_block(next_block_time)
+            self.start_block(next_block_time_ms)
 
     def create_account(self, creator: Name, account: Name, owner_key: Name, active_key: Name, ram_bytes: int=0, stake_net: int=0, stake_cpu: int=0):
         actions = []

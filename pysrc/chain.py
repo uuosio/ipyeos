@@ -4,7 +4,7 @@ from typing import Dict, List, Optional, Union
 
 from . import _chain, _eos, log
 from .block_log import BlockLog
-from .chain_exceptions import get_last_exception
+from .chain_exceptions import get_last_exception, get_transaction_exception
 from .types import I64, U8, U16, U32, U64, U128, Checksum256, Name, PublicKey
 
 logger = log.get_logger(__name__)
@@ -90,23 +90,22 @@ class Chain(object):
     def get_database(self):
         return _chain.get_database(self.ptr)
 
-    def start_block(self, _time: Union[datetime, str], confirm_block_count: int=0, features: Optional[list]=None) -> None:
+    def start_block(self, block_time_since_epoch_ms: int = 0, confirm_block_count: int=0, features: Optional[list]=None) -> None:
         """
         Start a new block
-        :param str _time
+        :param int64_t time_us
         :param int confirm_block_count
         :param list features
         """
-        if isinstance(_time, datetime):
-            _time = _time.isoformat(timespec='milliseconds')
+
         if features:
             if isinstance(features, list):
                 features = json.dumps(features)
         else:
             features = ''
-        if not _chain.start_block(self.ptr, _time, confirm_block_count, features):
-            err = self.get_last_error()
-            raise Exception(err)
+        if not _chain.start_block(self.ptr, block_time_since_epoch_ms, confirm_block_count, features):
+            raise get_last_exception()
+        return True
 
     def abort_block(self) -> bool:
         """
@@ -396,10 +395,8 @@ class Chain(object):
             deadline = deadline.isoformat(timespec='milliseconds')
         result = _chain.push_transaction(self.ptr, packed_trx, deadline, billed_cpu_time_us, explicit_cpu_bill, subjective_cpu_bill_us)
         if not result:
-            result = _eos.get_last_error()
+            raise get_transaction_exception()
         result = json.loads(result)
-        if 'except' in result:
-            raise Exception(result)
         return result
 
     def push_block_from_block_log(self, blog: BlockLog, block_num: int) -> bool:
@@ -414,8 +411,8 @@ class Chain(object):
                 raise Exception("invalid block num")
         return True
 
-    def push_block(self, raw_block: bytes, show_log: bool = False) -> bool:
-        ret, block_statistics = _chain.push_block(self.ptr, raw_block, show_log)
+    def push_block(self, raw_block: bytes, show_statistics: bool = False) -> bool:
+        ret, block_statistics = _chain.push_block(self.ptr, raw_block, show_statistics)
         if not ret:
             raise get_last_exception()
         return (ret, block_statistics)
@@ -478,7 +475,7 @@ class Chain(object):
         ret = _chain.unpack_action_args(self.ptr, name, action, raw_args)
         return json.loads(ret)
 
-    def gen_transaction(self, json_str, _actions: List, expiration: int, reference_block_id: str, _id: Union[str, Checksum256], compress: bool, _private_keys: List) -> str:
+    def gen_transaction(self, json_str, _actions: List, expiration_sec: int, reference_block_id: str, _id: Union[str, Checksum256], compress: bool, _private_keys: List) -> str:
         if isinstance(_actions, list):
             _actions = json.dumps(_actions)
 
@@ -486,7 +483,7 @@ class Chain(object):
             _private_keys = json.dumps(_private_keys)
         if isinstance(_id, Checksum256):
             _id = _id.to_string()
-        return _chain.gen_transaction(self.ptr, json_str, _actions, expiration, reference_block_id, _id, compress, _private_keys)
+        return _chain.gen_transaction(self.ptr, json_str, _actions, expiration_sec, reference_block_id, _id, compress, _private_keys)
 
     def get_last_error(self) -> str:
         err = _eos.get_last_error()

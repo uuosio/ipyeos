@@ -11,7 +11,7 @@ cdef extern from "_ipyeos.hpp":
         void *get_controller()
 
         void chain_id(string& result)
-        int start_block(string& _time, uint16_t confirm_block_count, string& _new_features)
+        int start_block(int64_t block_time_since_epoch_ms, uint16_t confirm_block_count, string& _new_features)
         int abort_block()
         bool startup(bool initdb)
         void *get_database()
@@ -90,7 +90,7 @@ cdef extern from "_ipyeos.hpp":
         bool all_subjective_mitigations_disabled()
         string get_scheduled_producer(string& _block_time)
 
-        void gen_transaction(bool json, string& _actions, int64_t expiration, string& reference_block_id, string& _chain_id, bool compress, string& _private_keys, vector[char]& result)
+        void gen_transaction(bool json, string& _actions, int64_t expiration_sec, string& reference_block_id, string& _chain_id, bool compress, string& _private_keys, vector[char]& result)
         string push_transaction(string& _packed_trx, string& deadline, uint32_t billed_cpu_time_us, bool explicit_cpu_bill, uint32_t subjective_cpu_bill_us)
         bool push_block_from_block_log(void *block_log_ptr, uint32_t block_num)
         bool push_block(const char *raw_block, size_t raw_block_size, string *block_statistics)
@@ -135,8 +135,8 @@ def chain_id(uint64_t ptr):
     chain(ptr).chain_id(result)
     return result
 
-def start_block(uint64_t ptr, string& _time, uint16_t confirm_block_count, string& _new_features):
-    return chain(ptr).start_block(_time, confirm_block_count, _new_features)
+def start_block(uint64_t ptr, int64_t block_time_since_epoch_ms, uint16_t confirm_block_count, string& _new_features):
+    return chain(ptr).start_block(block_time_since_epoch_ms, confirm_block_count, _new_features)
 
 def startup(uint64_t ptr, initdb):
     return chain(ptr).startup(initdb)
@@ -528,9 +528,9 @@ def get_scheduled_producer(uint64_t ptr, string& block_time):
     '''
     return chain(ptr).get_scheduled_producer(block_time)
 
-def gen_transaction(uint64_t ptr, bool json, string& _actions,  int64_t expiration, string& reference_block_id, string& _chain_id, bool compress, string& _private_keys):
+def gen_transaction(uint64_t ptr, bool json, string& _actions,  int64_t expiration_sec, string& reference_block_id, string& _chain_id, bool compress, string& _private_keys):
     cdef vector[char] result
-    chain(ptr).gen_transaction(json, _actions, expiration, reference_block_id, _chain_id, compress, _private_keys, result)
+    chain(ptr).gen_transaction(json, _actions, expiration_sec, reference_block_id, _chain_id, compress, _private_keys, result)
     return PyBytes_FromStringAndSize(result.data(), result.size())
 
 def push_transaction(uint64_t ptr, string& _packed_trx, string& deadline, uint32_t billed_cpu_time_us, bool explicit_cpu_bill = 0, uint32_t subjective_cpu_bill_us=0):
