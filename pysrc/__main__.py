@@ -7,8 +7,7 @@ INIT_SUCCESS = 6
 
 def main():
     if 'RUN_IPYEOS' in os.environ:
-        from . import modules
-        modules.load_modules()
+        from . import native_modules
 
         from . import main
         return main.run()

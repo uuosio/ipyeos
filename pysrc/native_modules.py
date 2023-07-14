@@ -18,3 +18,5 @@ def load_modules():
         mod = util.module_from_spec(spec)
         spec.loader.exec_module(mod)
         sys.modules[f'ipyeos.{module_name}'] = mod
+
+load_modules()

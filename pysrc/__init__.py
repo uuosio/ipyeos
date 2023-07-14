@@ -14,7 +14,6 @@ cur_dir = os.path.dirname(os.path.realpath(__file__))
 
 if 'RUN_IPYEOS' in os.environ:
     from . import _eos, modules
-    modules.load_modules()
 
     from . import _block_log, _chain, _chainapi, _database, _vm_api
 
