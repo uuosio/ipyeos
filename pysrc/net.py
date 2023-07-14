@@ -1209,7 +1209,8 @@ class Connection(object):
                 self.logger.info(f'send request message: {msg}')
                 return await self.send_message(msg)
             elif self.chain.head_block_num() > message.head_num:
-                self.logger.info("chain head is greater than peer")
+                ahead_num = self.chain.head_block_num() - message.head_num
+                self.logger.info(f"block num is ahead of peer by {ahead_num}")
                 return True
             # else:
             #     # last_irr_catch_up catch_up

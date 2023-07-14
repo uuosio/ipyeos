@@ -11,13 +11,7 @@ from enum import Enum
 from typing import Dict, List, Optional, Union
 
 import yaml
-
-from .modules import load_modules
-
-load_modules()
-
-from ipyeos import chain, chainapi, database
-
+from . import chain, chainapi, database
 from . import eos, log, net, node_config
 from .database import GeneratedTransactionObjectIndex
 from .database_objects import GeneratedTransactionObject
@@ -71,7 +65,10 @@ chain_config = {
         "cache_size":1073741824,
         "threads":1
     },
-    "eosvmoc_tierup":False,
+    # oc_auto,
+    # oc_all,
+    # oc_none
+    "eosvmoc_tierup": "oc_none",
     "read_mode": DBReadMode.HEAD.name,
     "block_validation_mode":"FULL",
     "db_map_mode":"mapped",
@@ -124,7 +121,7 @@ def read_chain_id_from_block_log(data_dir):
 class Node(object):
 
     def __init__(self, initialize=True, data_dir=None, config_dir=None, genesis: Union[str, Dict] = None, snapshot_file='', state_size=10*1024*1024, debug_producer_key=''):
-        self.chain = None
+        self._chain = None
 
         if snapshot_file:
             if not os.path.exists(snapshot_file):
@@ -179,17 +176,26 @@ class Node(object):
                 self.genesis = genesis
         else:
             self.genesis = ''
-        self.chain = chain.Chain(self.chain_config, self.genesis, self.chain_id, os.path.join(self.config_dir, "protocol_features"), snapshot_file, debug_producer_key)
-        self.chain.startup(init_database)
-        self.api = chainapi.ChainApi(self.chain)
+
+        self._chain = chain.Chain(self.chain_config, self.genesis, self.chain_id, os.path.join(self.config_dir, "protocol_features"), snapshot_file, debug_producer_key)
+        self._chain.startup(init_database)
+        self._api = chainapi.ChainApi(self.chain)
 
         self.db = database.Database(self.chain.get_database())
+
+    @property
+    def api(self) -> chainapi.ChainApi:
+        return self._api
+
+    @property
+    def chain(self) -> chain.Chain:
+        return self._chain
 
     def free(self):
         if not self.chain:
             return
         self.chain.free()
-        self.chain = None
+        self._chain = None
 
         if self.is_temp_data_dir and self.data_dir:
             shutil.rmtree(self.data_dir)
@@ -202,10 +208,22 @@ class Node(object):
     def __del__(self):
         self.free()
 
-network: Optional[net.Network] = None
+g_network: Optional[net.Network] = None
+g_node: Optional[Node] = None
+
+def get_node() -> Node:
+    global g_node
+    assert g_node, 'node is not started'
+    return g_node
+
+def get_network() -> net.Network:
+    global g_network
+    assert g_network, 'network is not started'
+    return g_network
 
 async def start(config_file: str, genesis_file: str, snapshot_file: str):
-    global network
+    global g_network
+    global g_node
 
     config = node_config.load_config(config_file)
     logging_config_file = config['logging_config_file']
@@ -243,11 +261,11 @@ async def start(config_file: str, genesis_file: str, snapshot_file: str):
     # assert genesis, 'genesis is empty'
     eos.initialize_logging(logging_config_file)
 
-    node = Node(False, data_dir=data_dir, config_dir=config_dir, genesis = genesis, state_size=state_size, snapshot_file=snapshot_file)
-    network = net.Network(node.chain, net_config['peers'])
+    g_node = Node(False, data_dir=data_dir, config_dir=config_dir, genesis = genesis, state_size=state_size, snapshot_file=snapshot_file)
+    g_network = net.Network(g_node.chain, net_config['peers'])
 
     try:
-        await network.run()
+        await g_network.run()
     except asyncio.exceptions.CancelledError:
-        for conn in network.connections:
+        for conn in g_network.connections:
             conn.close()

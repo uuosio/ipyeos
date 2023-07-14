@@ -2,7 +2,7 @@ import json
 from typing import Dict, List, Optional, Union
 
 from . import _chain, _chainapi, _eos
-
+from .chain_exceptions import get_last_exception
 
 class ChainApi(object):
 
@@ -10,9 +10,9 @@ class ChainApi(object):
         self.ptr = chain.ptr
         self.chain = chain
 
-    def get_info(self):
+    def get_info(self, is_json=True):
         ret = _chainapi.get_info(self.ptr)
-        return self.parse_return_value(ret)
+        return self.parse_return_value(ret, is_json)
 
     def get_activated_protocol_features(self, lower_bound=0, upper_bound=0xffffffff, limit=10, search_by_block_num=False, reverse=False):
         '''
@@ -451,12 +451,12 @@ class ChainApi(object):
         ret = _chainapi.db_size_api_get(self.ptr)
         return self.parse_return_value(ret)
 
-    def parse_return_value(self, ret):
-        success, js = ret
+    def parse_return_value(self, ret, is_json=True):
+        success, result = ret
         if not success:
-            err = self.chain.get_last_error()
-            raise Exception(err)
-        result = json.loads(js)
+            raise get_last_exception()
+        if is_json:
+            result = json.loads(result)
         return result
 
 def repair_log(blocks_dir, truncate_at_block: int=0):

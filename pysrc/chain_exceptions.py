@@ -48,6 +48,49 @@ from . import _eos
 #     ]
 # }
 
+# {'id': 'de07fe43fc85f6e96a12196abceb994a75ce735ab910b07e5ccb6e6534774f5d',
+#  'block_num': 2,
+#  'block_time': '2023-07-14T03:20:09.500',
+#  'elapsed': 208,
+#  'net_usage': 0,
+#  'scheduled': False,
+#  'action_traces': [],
+#  'failed_dtrx_trace': None,
+#  'except': {'code': 3040005,
+#   'name': 'expired_tx_exception',
+#   'message': 'Expired Transaction',
+#   'stack': [{'context': {'level': 'error',
+#      'file': 'controller.cpp',
+#      'line': 3479,
+#      'method': 'validate_expiration',
+#      'hostname': '',
+#      'thread_name': 'ipyeos',
+#      'timestamp': '2023-07-14T03:20:09.871'},
+#     'format': 'transaction has expired, expiration is ${trx.expiration} and pending block time is ${pending_block_time}',
+#     'data': {'trx.expiration': '2018-06-01T12:01:00',
+#      'pending_block_time': '2023-07-14T03:20:09.500'}},
+#    {'context': {'level': 'warn',
+#      'file': 'controller.cpp',
+#      'line': 3486,
+#      'method': 'validate_expiration',
+#      'hostname': '',
+#      'thread_name': 'ipyeos',
+#      'timestamp': '2023-07-14T03:20:09.871'},
+#     'format': '',
+#     'data': {'trx': {'expiration': '2018-06-01T12:01:00',
+#       'ref_block_num': 1,
+#       'ref_block_prefix': 631322306,
+#       'max_net_usage_words': 0,
+#       'max_cpu_usage_ms': 0,
+#       'delay_sec': 0,
+#       'context_free_actions': [],
+#       'actions': [{'account': 'eosio',
+#         'name': 'newaccount',
+#         'authorization': [{'actor': 'eosio', 'permission': 'active'}],
+#         'data': '0000000000ea3055008037f500ea305501000000010002c0ded2bc1f1305fb0faac5e6c03ee3a1924234985427b6167ca569d13df435cf0100000001000000010002c0ded2bc1f1305fb0faac5e6c03ee3a1924234985427b6167ca569d13df435cf01000000'}],
+#       'transaction_extensions': []}}}]},
+#  'error_code': '10000000000000000000'}
+
 @dataclasses.dataclass
 class Context:
     level: str
@@ -89,6 +132,33 @@ class ChainException(Exception):
     def __str__(self):
         return repr(self)
 
+# {'id': 'de07fe43fc85f6e96a12196abceb994a75ce735ab910b07e5ccb6e6534774f5d',
+#  'block_num': 2,
+#  'block_time': '2023-07-14T03:20:09.500',
+#  'elapsed': 208,
+#  'net_usage': 0,
+#  'scheduled': False,
+#  'action_traces': [],
+#  'failed_dtrx_trace': None,
+
+@dataclasses.dataclass
+class TransactionException(ChainException):
+    id: str
+    block_num: int
+    block_time: str
+    elapsed: int
+    net_usage: int
+    scheduled: bool
+    action_traces: List
+    failed_dtrx_trace: Optional
+    except_: ChainException
+
+    def __repr__(self):
+        return json.dumps(dataclasses.asdict(self))
+
+    def __str__(self):
+        return repr(self)
+
 # snapshot_request_not_found
 class SnapshotRequestNotFoundException(ChainException):
     pass
@@ -109,24 +179,25 @@ class DatabaseGuardException(ChainException):
 class InvalidSnapshotRequestException(ChainException):
     pass
 
+# assert_exception
+class AssertException(ChainException):
+    pass
+
+# expired_tx_exception
+class ExpiredTransactionException(ChainException):
+    pass
+
 exceptions = {
     'unlinkable_block_exception': UnlinkableBlockException,
     'fork_database_exception': ForkDatabaseException,
     'snapshot_request_not_found': SnapshotRequestNotFoundException,
     'database_guard_exception': DatabaseGuardException,
     'invalid_snapshot_request': InvalidSnapshotRequestException,
+    'assert_exception': AssertException,
+    'expired_tx_exception': ExpiredTransactionException,
 }
 
-def get_last_exception(error: Optional[str] = None):
-    if error is None:
-        error = _eos.get_last_error()
-    if not error:
-        return None
-
-    try:
-        error = json.loads(error)
-    except:
-        return Exception(error)
+def new_chain_exception(error: Dict):
     name = error['name']
 
     stacks = []
@@ -140,3 +211,28 @@ def get_last_exception(error: Optional[str] = None):
         return exceptions[name](*args)
     except KeyError:
         return ChainException(*args)
+
+def get_last_exception(error: Optional[str] = None):
+    if error is None:
+        error = _eos.get_last_error()
+    if not error:
+        return None
+
+    try:
+        error = json.loads(error)
+    except:
+        return Exception(error)
+
+    return new_exception(error)
+
+def get_transaction_exception():
+    error = _eos.get_last_error()
+    if not error:
+        return None
+    try:
+        error = json.loads(error)
+    except:
+        return Exception(error)
+
+    except_ = new_chain_exception(error['except'])
+    return TransactionException(except_=except_, **error)

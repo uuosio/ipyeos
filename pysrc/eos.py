@@ -4,7 +4,8 @@ from enum import Enum
 from typing import Union
 
 from . import _eos
-
+from . import native_modules
+from .chain_exceptions import get_last_exception
 
 class NativeType:
     handshake_message = 0
@@ -89,7 +90,10 @@ def unpack_block(packed_obj: bytes) -> dict:
     return _eos.unpack_native_object(NativeType.signed_block, packed_obj)
 
 def unpack_transaction(packed_obj: bytes) -> dict:
-    return _eos.unpack_native_object(NativeType.packed_transaction, packed_obj)
+    ret = _eos.unpack_native_object(NativeType.packed_transaction, packed_obj)
+    if not ret:
+        raise get_last_exception()
+    return ret
 
 def pack_abi(abi: str) -> bytes:
     if not abi:
