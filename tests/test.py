@@ -7,7 +7,7 @@ from ipyeos import eos, log
 from ipyeos import chaintester
 from ipyeos.chaintester import ChainTester
 
-from ipyeos.chain_exceptions import ForkDatabaseException, ChainException, get_last_exception
+from ipyeos.chain_exceptions import BlockValidateException, ChainException, ForkDatabaseException, get_last_exception
 from ipyeos.types import PublicKey
 from ipyeos.database_objects import KeyWeight, Authority
 from ipyeos.database import PermissionObjectIndex, GlobalPropertyObjectIndex
@@ -309,3 +309,12 @@ def test_gen_tx():
 
     tx = t.gen_transaction([action], json_str=False, compress=True)
     logger.info(eos.unpack_transaction(tx))
+
+def test_abort_block():
+    t = ChainTester(False, log_level=5)
+    try:
+        t.chain.start_block()
+    except BlockValidateException as e:
+        logger.error(e.stack[0].format)
+    t.chain.abort_block()
+    t.chain.abort_block()

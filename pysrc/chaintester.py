@@ -578,14 +578,14 @@ class ChainTester(object):
         for a in actions:
             _actions.append(self.gen_action(*a))
         raw_signed_trx = self.gen_transaction_ex(_actions)
-        deadline = datetime.max
+        deadline = 0
         billed_cpu_time_us = 100
         result = self.chain.push_transaction(raw_signed_trx, deadline, billed_cpu_time_us, explicit_cpu_bill)
         return result
 
     def push_actions_ex(self, actions: List, explicit_cpu_bill=False):
         raw_signed_trx = self.gen_transaction_ex(actions)
-        deadline = datetime.max
+        deadline = 0
         billed_cpu_time_us = 100
         result = self.chain.push_transaction(raw_signed_trx, deadline, billed_cpu_time_us, explicit_cpu_bill)
         return result

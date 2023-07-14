@@ -1608,3 +1608,9 @@ class Network(object):
                 self.logger.info(type(e))
                 self.logger.exception(e)
                 break
+
+    async def get_connection(self, timeout: float = 10.0):
+        while not self.conn and timeout > 0.0:
+            await asyncio.sleep(0.1)
+            timeout -= 0.1
+        return self.conn

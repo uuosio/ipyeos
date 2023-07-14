@@ -131,6 +131,9 @@ class ChainException(Exception):
 
     def __str__(self):
         return repr(self)
+    
+    def asdict(self):
+        return dataclasses.asdict(self)
 
 # {'id': 'de07fe43fc85f6e96a12196abceb994a75ce735ab910b07e5ccb6e6534774f5d',
 #  'block_num': 2,
@@ -187,6 +190,10 @@ class AssertException(ChainException):
 class ExpiredTransactionException(ChainException):
     pass
 
+# block_validate_exception
+class BlockValidateException(ChainException):
+    pass
+
 exceptions = {
     'unlinkable_block_exception': UnlinkableBlockException,
     'fork_database_exception': ForkDatabaseException,
@@ -195,6 +202,7 @@ exceptions = {
     'invalid_snapshot_request': InvalidSnapshotRequestException,
     'assert_exception': AssertException,
     'expired_tx_exception': ExpiredTransactionException,
+    'block_validate_exception': BlockValidateException,
 }
 
 def new_chain_exception(error: Dict):
@@ -223,7 +231,7 @@ def get_last_exception(error: Optional[str] = None):
     except:
         return Exception(error)
 
-    return new_exception(error)
+    return new_chain_exception(error)
 
 def get_transaction_exception():
     error = _eos.get_last_error()
@@ -234,5 +242,7 @@ def get_transaction_exception():
     except:
         return Exception(error)
 
-    except_ = new_chain_exception(error['except'])
-    return TransactionException(except_=except_, **error)
+    if 'except' in error:
+        except_ = new_chain_exception(error['except'])
+        return TransactionException(except_=except_, **error)
+    return new_chain_exception(error)

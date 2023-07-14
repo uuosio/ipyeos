@@ -26,6 +26,19 @@ class Transaction(object):
             ref_block_id = Checksum256.from_string(ref_block_id)
         self.ptr = _transaction.new_transaction(expiration, ref_block_id.to_bytes(), max_net_usage_words, max_cpu_usage_ms, delay_sec)
 
+    def id(self) -> Checksum256:
+        """
+        Returns the ID of the transaction.
+
+        Args:
+            None
+
+        Returns:
+            Checksum256: The ID of the transaction.
+        """
+        raw_id = _transaction.id(self.ptr)
+        return Checksum256(raw_id)
+
     def free(self):
         """
         Frees the memory allocated for the transaction object.

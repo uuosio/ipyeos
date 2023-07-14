@@ -1,5 +1,5 @@
 import asyncio
-
+import json
 import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.responses import PlainTextResponse
@@ -7,6 +7,7 @@ from pydantic import BaseModel
 
 from .uvicorn_server import UvicornServer
 from . import net, node
+from .chain_exceptions import BlockValidateException, ChainException
 
 app = FastAPI()
 
@@ -44,7 +45,7 @@ async def read_root():
 async def get_info():
     return node.get_node().api.get_info(is_json=False)
 
-@app.post("/push_transaction")
+@app.post("/push_transaction", response_class=PlainTextResponse)
 async def push_transaction(args: PushTransactionArgs):
     """
     Sends a packed transaction to the network.
@@ -56,8 +57,35 @@ async def push_transaction(args: PushTransactionArgs):
         The response from the network.
     """
     packed_tx = bytes.fromhex(args.packed_tx)
+
+    conn = await node.get_network().get_connection()
+    if not conn:
+        return '{"status": "error", "result": "no node connection"}'
     msg = net.PackedTransactionMessage(packed_tx)
-    return await node.get_network().conn.send_message(msg)
+
+    if args.speculate:
+        chain = node.get_node().chain
+        try:
+            chain.start_block()
+            ret = chain.push_transaction(packed_tx, return_json=False)
+            chain.abort_block()
+        except BlockValidateException as e:
+            ret = {"status": "error", "result": e.asdict()}
+            return json.dumps(ret)
+        except ChainException as e:
+            ret = {"status": "error", "result": e.asdict()}
+            return json.dumps(ret)
+        except Exception as e:
+            return f'{{"status": "error", "result": "{str(e)}"}}'
+
+        if await conn.send_message(msg):
+            return f'{{"status": "ok", "result": {ret}}}'
+        return '{"status": "error"}'
+    else:
+        if await conn.send_message(msg):
+            return '{"status": "ok"}'
+        else:
+            return '{"status": "error"}'
 
 def init(port: int=8088):
     app.get("/")(read_root)

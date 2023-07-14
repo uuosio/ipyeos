@@ -91,7 +91,7 @@ cdef extern from "_ipyeos.hpp":
         string get_scheduled_producer(string& _block_time)
 
         void gen_transaction(bool json, string& _actions, int64_t expiration_sec, string& reference_block_id, string& _chain_id, bool compress, string& _private_keys, vector[char]& result)
-        string push_transaction(string& _packed_trx, string& deadline, uint32_t billed_cpu_time_us, bool explicit_cpu_bill, uint32_t subjective_cpu_bill_us)
+        bool push_transaction(const char *_packed_trx, size_t _packed_trx_size, int64_t block_deadline_ms, uint32_t billed_cpu_time_us, bool explicit_cpu_bill, uint32_t subjective_cpu_bill_us, string& result)
         bool push_block_from_block_log(void *block_log_ptr, uint32_t block_num)
         bool push_block(const char *raw_block, size_t raw_block_size, string *block_statistics)
 
@@ -533,8 +533,13 @@ def gen_transaction(uint64_t ptr, bool json, string& _actions,  int64_t expirati
     chain(ptr).gen_transaction(json, _actions, expiration_sec, reference_block_id, _chain_id, compress, _private_keys, result)
     return PyBytes_FromStringAndSize(result.data(), result.size())
 
-def push_transaction(uint64_t ptr, string& _packed_trx, string& deadline, uint32_t billed_cpu_time_us, bool explicit_cpu_bill = 0, uint32_t subjective_cpu_bill_us=0):
-    return chain(ptr).push_transaction(_packed_trx, deadline, billed_cpu_time_us, explicit_cpu_bill, subjective_cpu_bill_us)
+def push_transaction(uint64_t ptr, _packed_trx: bytes, int64_t block_deadline_ms, uint32_t billed_cpu_time_us, bool explicit_cpu_bill = 0, uint32_t subjective_cpu_bill_us=0):
+    cdef string result
+    ret = chain(ptr).push_transaction(<char *>_packed_trx, len(_packed_trx), block_deadline_ms, billed_cpu_time_us, explicit_cpu_bill, subjective_cpu_bill_us, result)
+    if ret:
+        return (ret, result)
+    else:
+        return (ret, None)
 
 def push_block_from_block_log(uint64_t ptr, uint64_t block_log_ptr, uint32_t block_num) -> bool:
     return chain(ptr).push_block_from_block_log(<void *>block_log_ptr, block_num)

@@ -30,3 +30,8 @@ def test_name():
         name = eos.s2b('zzzzzzzzzzzzj')
     end = time.monotonic()
     logger.info("%s", count/(end - start))
+
+def test_checksum256():
+    a = Checksum256(b'\x00' * 32)
+    print(a.to_string())
+    print(a.to_bytes())
