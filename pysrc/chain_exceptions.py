@@ -2,7 +2,7 @@ import dataclasses
 import json
 from typing import Dict, List, Optional
 
-from . import _eos
+from .native_modules import _eos
 
 # exception example:
 # {

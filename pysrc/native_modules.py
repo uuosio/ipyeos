@@ -20,3 +20,13 @@ def load_modules():
         sys.modules[f'ipyeos.{module_name}'] = mod
 
 load_modules()
+
+from . import _eos
+from . import _chain
+from . import _chainapi
+from . import _vm_api
+from . import _database
+from . import _block_log
+from . import _transaction
+from . import _trace_api
+from . import _snapshot

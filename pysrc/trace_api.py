@@ -1,4 +1,4 @@
-from . import _eos, _trace_api
+from .native_modules import _eos, _trace_api
 from .chain_exceptions import get_last_exception
 from .types import I32, U32
 

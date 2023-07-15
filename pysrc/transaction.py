@@ -1,7 +1,8 @@
 import json
 from typing import Dict, List, Union
 
-from . import _transaction, eos
+from .native_modules import _transaction
+from . import eos
 
 from .chain_exceptions import get_last_exception
 from .packer import Packer

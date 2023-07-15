@@ -11,7 +11,7 @@ import time
 from datetime import datetime, timedelta, timezone
 from enum import Enum
 from typing import Dict, List, Optional, Union
-from ipyeos import chain, chainapi, database, node_config
+from . import chain, chainapi, database, node_config
 
 from . import eos, log
 from .database import GeneratedTransactionObjectIndex

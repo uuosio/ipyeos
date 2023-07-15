@@ -2,7 +2,8 @@ import json
 from datetime import datetime
 from typing import Dict, List, Optional, Union
 
-from . import _chain, _eos, log
+from . import log
+from .native_modules import _chain, _eos
 from .block_log import BlockLog
 from .chain_exceptions import get_last_exception, get_transaction_exception
 from .types import I64, U8, U16, U32, U64, U128, Checksum256, Name, PublicKey

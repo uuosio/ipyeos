@@ -1,6 +1,7 @@
 from typing import Tuple, Union
 
-from . import _database, _eos, log
+from . import log
+from .native_modules import _database, _eos
 from .database_objects import *
 from .packer import Decoder, Encoder
 from .types import F64, I64, U8, U16, U32, U64, Checksum256, Name

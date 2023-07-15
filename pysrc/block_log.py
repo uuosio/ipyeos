@@ -1,4 +1,4 @@
-from . import _block_log, _eos
+from .native_modules import _block_log, _eos
 
 
 class BlockLog(object):

@@ -3,8 +3,7 @@ import sys
 from enum import Enum
 from typing import Union
 
-from . import _eos
-from . import native_modules
+from .native_modules import _eos
 from .chain_exceptions import get_last_exception
 
 class NativeType:
