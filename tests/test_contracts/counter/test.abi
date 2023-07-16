@@ -1,0 +1,100 @@
+{
+    "____comment": "This file was generated with eosio-abigen. DO NOT EDIT ",
+    "version": "eosio::abi/1.2",
+    "types": [],
+    "structs": [
+        {
+            "name": "getcount",
+            "base": "",
+            "fields": [
+                {
+                    "name": "n",
+                    "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "inc",
+            "base": "",
+            "fields": [
+                {
+                    "name": "n",
+                    "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "record",
+            "base": "",
+            "fields": [
+                {
+                    "name": "account",
+                    "type": "name"
+                },
+                {
+                    "name": "count",
+                    "type": "uint64"
+                }
+            ]
+        },
+        {
+            "name": "test_bound",
+            "base": "",
+            "fields": []
+        },
+        {
+            "name": "test_remove",
+            "base": "",
+            "fields": [
+                {
+                    "name": "n",
+                    "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "test_store",
+            "base": "",
+            "fields": []
+        }
+    ],
+    "actions": [
+        {
+            "name": "getcount",
+            "type": "getcount",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "inc",
+            "type": "inc",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "testbound",
+            "type": "test_bound",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "testremove",
+            "type": "test_remove",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "teststore",
+            "type": "test_store",
+            "ricardian_contract": ""
+        }
+    ],
+    "tables": [
+        {
+            "name": "mytable",
+            "type": "record",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        }
+    ],
+    "ricardian_clauses": [],
+    "variants": [],
+    "action_results": []
+}

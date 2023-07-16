@@ -161,6 +161,12 @@ def enable_debug(debug) -> None:
 def is_debug_enabled() -> bool:
     return _eos.is_debug_enabled()
 
+def set_worker_process():
+    _eos.set_worker_process(True)
+
+def is_worker_process():
+    return _eos.is_worker_process()
+
 def get_last_error() -> str:
     return _eos.get_last_error()
 

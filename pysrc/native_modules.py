@@ -1,5 +1,5 @@
 import sys
-
+from importlib import util
 
 def load_modules():
     if f'ipyeos._chain' in sys.modules:
@@ -12,7 +12,6 @@ def load_modules():
     assert ipyeos_module, 'ipyeos._eos module not found'
     ipyeos_eos_so = ipyeos_module.__file__
 
-    from importlib import util
     for module_name in modules:
         spec = util.spec_from_file_location(module_name, ipyeos_eos_so)
         mod = util.module_from_spec(spec)

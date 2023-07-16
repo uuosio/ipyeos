@@ -21,7 +21,8 @@ cdef extern from "_ipyeos.hpp":
         uint64_t row_count(int32_t tp)
 
     ctypedef struct ipyeos_proxy:
-        void *new_database_proxy(void *db_ptr)
+        void *new_database_proxy(void *db_ptr, bool attach)
+        void *new_database(const string& dir, bool read_only, uint64_t shared_file_size, bool allow_dirty)
 
     ipyeos_proxy *get_ipyeos_proxy() nogil
 
@@ -38,8 +39,11 @@ cdef int32_t database_on_data(int32_t tp, char *data, size_t size, void *custom_
 cdef database_proxy *db(uint64_t ptr):
     return <database_proxy*>ptr
 
-def new(uint64_t db_ptr) -> uint64_t:
-    return <uint64_t>get_ipyeos_proxy().new_database_proxy(<void *>db_ptr)
+def new_proxy(uint64_t db_ptr, bool attach) -> uint64_t:
+    return <uint64_t>get_ipyeos_proxy().new_database_proxy(<void *>db_ptr, attach)
+
+def new_database(const string& state_dir, bool read_only, uint64_t shared_file_size, bool allow_dirty) -> uint64_t:
+    return <uint64_t>get_ipyeos_proxy().new_database(state_dir, read_only, shared_file_size, allow_dirty)
 
 # uint64_t get_free_memory(void *_db)
 def get_free_memory(uint64_t ptr):

@@ -49,6 +49,9 @@ cdef extern from "_ipyeos.hpp":
         void enable_debug(bool debug)
         bool is_debug_enabled()
 
+        void set_worker_process(bool worker_process)
+        bool is_worker_process()
+
         string create_key(string& key_type)
         string get_public_key(string &priv_key)
  
@@ -116,6 +119,12 @@ def enable_debug(bool debug):
 
 def is_debug_enabled():
     return get_ipyeos_proxy().is_debug_enabled()
+
+def set_worker_process(bool worker_process):
+    get_ipyeos_proxy().set_worker_process(worker_process)
+
+def is_worker_process():
+    return get_ipyeos_proxy().is_worker_process()
 
 def create_key(key_type: str):
     return get_ipyeos_proxy().create_key(key_type)

@@ -112,6 +112,7 @@ class Stack:
     context: Context
     format: str
     data: Dict
+    message: str
 
     def __repr__(self):
         return json.dumps(dataclasses.asdict(self))
@@ -194,6 +195,10 @@ class ExpiredTransactionException(ChainException):
 class BlockValidateException(ChainException):
     pass
 
+# set_exact_code
+class SetExactCodeException(ChainException):
+    pass
+
 exceptions = {
     'unlinkable_block_exception': UnlinkableBlockException,
     'fork_database_exception': ForkDatabaseException,
@@ -203,6 +208,7 @@ exceptions = {
     'assert_exception': AssertException,
     'expired_tx_exception': ExpiredTransactionException,
     'block_validate_exception': BlockValidateException,
+    'set_exact_code': SetExactCodeException,
 }
 
 def new_chain_exception(error: Dict):
@@ -210,7 +216,8 @@ def new_chain_exception(error: Dict):
 
     stacks = []
     for s in error['stack']:
-        stack = Stack(context=Context(**s['context']), format=s['format'], data=s['data'])
+        message = s['format'].replace('${', '{').format(**s['data'])
+        stack = Stack(context=Context(**s['context']), format=s['format'], data=s['data'], message=message)
         stacks.append(stack)
 
     args = error['code'], error['name'], error['message'], stacks
@@ -233,14 +240,15 @@ def get_last_exception(error: Optional[str] = None):
 
     return new_chain_exception(error)
 
-def get_transaction_exception():
-    error = _eos.get_last_error()
+def get_transaction_exception(error: Dict):
     if not error:
-        return None
-    try:
-        error = json.loads(error)
-    except:
-        return Exception(error)
+        error = _eos.get_last_error()
+        if not error:
+            return None
+        try:
+            error = json.loads(error)
+        except:
+            return Exception(error)
 
     if 'except' in error:
         except_ = new_chain_exception(error['except'])

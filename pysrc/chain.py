@@ -66,8 +66,9 @@ class Chain(object):
         """
         ret = _chain.startup(self.ptr, initdb)
         if not ret:
-            self.ptr = 0
-            raise Exception(_eos.get_last_error())
+            # self.ptr = 0
+            raise get_last_exception()
+        return True
 
     def free(self) -> None:
         """
@@ -391,13 +392,15 @@ class Chain(object):
     # def get_unapplied_transactions(self):
     #     return _chain.get_unapplied_transactions(self.ptr)
  
-    def push_transaction(self, packed_trx: bytes, block_deadline_ms: int = 0, billed_cpu_time_us: int = 0, explicit_cpu_bill: int = 0, subjective_cpu_bill_us = 0, return_json: bool = True) -> dict:
-        success, result = _chain.push_transaction(self.ptr, packed_trx, block_deadline_ms, billed_cpu_time_us, explicit_cpu_bill, subjective_cpu_bill_us)
+    def push_transaction(self, packed_trx: bytes, block_deadline_ms: int = 0, billed_cpu_time_us: int = 0, explicit_cpu_bill: int = 0, subjective_cpu_bill_us = 0, read_only: bool = False, return_json: bool = True) -> dict:
+        success, result = _chain.push_transaction(self.ptr, packed_trx, block_deadline_ms, billed_cpu_time_us, explicit_cpu_bill, subjective_cpu_bill_us, read_only)
         if not success:
             raise get_transaction_exception()
         if not return_json:
             return result
         result = json.loads(result)
+        if 'except' in result:
+            raise get_transaction_exception(result['except'])
         return result
 
     def push_block_from_block_log(self, blog: BlockLog, block_num: int) -> bool:
@@ -433,7 +436,17 @@ class Chain(object):
         return _chain.push_scheduled_transaction(self.ptr, scheduled_tx_id, deadline, billed_cpu_time_us)
 
     def commit_block(self) -> None:
-        return _chain.commit_block(self.ptr)
+        if not _chain.commit_block(self.ptr):
+            raise get_last_exception()
+        return True
+
+    def finalize_block(self, priv_keys: Union[list, str]) -> None:
+        if isinstance(priv_keys, list):
+            priv_keys = json.dumps(priv_keys)
+        if not _chain.finalize_block(self.ptr, priv_keys):
+            raise get_last_exception()
+        return True
+
 
     # def pop_block(self):
     #     return _chain.pop_block(self.ptr)
@@ -448,11 +461,6 @@ class Chain(object):
         if not isinstance(block_time, str):
             block_time = block_time.isoformat(timespec='milliseconds')
         return _chain.get_scheduled_producer(self.ptr, block_time)
-
-    def finalize_block(self, priv_keys: Union[list, str]) -> None:
-        if isinstance(priv_keys, list):
-            priv_keys = json.dumps(priv_keys)
-        _chain.finalize_block(self.ptr, priv_keys)
 
     def get_producer_public_keys(self) -> List[str]:
         ret = _chain.get_producer_public_keys(self.ptr)

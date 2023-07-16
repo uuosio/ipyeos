@@ -939,57 +939,6 @@ class Connection(object):
         self.logger.info(f'send handshake message: {msg}')
         return await self.send_message(msg)
 
-    async def handshake(self):
-        start_time = time.monotonic()
-        if not await self.send_handshake_message():
-            self.logger.info(f'fail to send handshake message')
-            return False
-
-        timeout = 30.0
-        start = time.time()
-        while timeout > 0.0:
-            try:
-                tp, raw_msg = await asyncio.wait_for(self.read_message(), timeout=timeout)
-                if not raw_msg:
-                    return False
-            except asyncio.TimeoutError:
-                self.logger.error(f'handshake timeout')
-                return False
-            timeout -= (time.time() - start)
-            start = time.time()
-            if not raw_msg:
-                return False
-            if tp == handshake_message:
-                message = HandshakeMessage.unpack_bytes(raw_msg)
-                self.last_handshake = message
-                self.logger.info(f"received handshake message: {message}")
-                self.last_handshake_cost_time = time.monotonic() - start_time
-                # asyncio.create_task(self.heart_beat())
-                return True
-            elif tp == notice_message:
-                message = NoticeMessage.unpack_bytes(raw_msg)
-                self.logger.info(message)
-                # self.last_notice_message = message
-                if message.known_blocks.mode in (IdListModes.last_irr_catch_up, IdListModes.catch_up):
-                    self.last_handshake_cost_time = time.monotonic() - start_time
-                    # pending = message.known_blocks.pending
-                    # msg = SyncRequestMessage(self.chain.head_block_num() + 1, pending)
-                    # self.logger.info("+++++send sync request message %s", msg)
-                    # await self.send_message(msg)
-                    return True
-            elif tp == go_away_message:
-                for listener in self.goway_listeners:
-                    listener(self, GoAwayMessage.unpack_bytes(raw_msg))
-                self.close()
-                return False
-            elif tp == time_message:
-                message = TimeMessage.unpack_bytes(raw_msg)
-                # self.logger.info(message)
-                await self.handle_time_message(message)
-            else:
-                self.logger.error(f"receive message during handshake: {tp}")
-        return False
-
     async def estimate_connection_latency(self):
         msg = TimeMessage(0, 0, int(time.time()*1e9), 0)
         if not await self.send_message(msg):
@@ -1325,7 +1274,14 @@ class Connection(object):
 
             if message.known_blocks.mode == IdListModes.catch_up:
                 pending = message.known_blocks.pending
-                block_id = message.known_blocks.ids[0]
+                try:
+                    block_id = message.known_blocks.ids[0]
+                except IndexError:
+                    msg = GoAwayMessage(GoAwayReasonEnum.no_reason, "no blocks in notice message")
+                    for listener in self.goway_listeners:
+                        listener(self, msg)
+                    await self.send_message(msg)
+                    return False
 
                 req_trx = OrderedIds(IdListModes.none, 0, [])
                 req_blocks = OrderedIds(IdListModes.catch_up, 0, [self.chain.head_block_id()])

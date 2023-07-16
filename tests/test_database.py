@@ -11,9 +11,10 @@ sys.path.append(os.path.join(test_dir, '..'))
 
 from ipyeos import eos, log
 from ipyeos import chaintester
-from ipyeos.chaintester import ChainTester
 from ipyeos import database
 
+from ipyeos.chain_exceptions import ChainException, SetExactCodeException
+from ipyeos.chaintester import ChainTester
 from ipyeos.types import PublicKey
 from ipyeos.packer import Encoder, Decoder
 from ipyeos.structs import KeyWeight, Authority
@@ -2515,3 +2516,74 @@ def test_object_creation(tester: ChainTester):
     dec.reset_pos()
     idx = DatabaseHeaderObjectIndex(tester.db)
     assert idx.create(DatabaseHeaderObject.unpack(dec))
+
+from multiprocessing import Process, Lock, Queue
+
+def worker(lock, q1, q2, data_dir, config_dir):
+    eos.set_worker_process()
+    tester = ChainTester(False, read_only_db = True, data_dir=data_dir, config_dir=config_dir)
+    logger.info("++++++++++++++tester.chain.head_block_num(): %d", tester.chain.head_block_num())
+
+    q2.put(True)
+
+    # try:
+    #     tester.produce_block()
+    #     assert False, 'should not reach here'
+    # except ChainException as e:
+    #     print(e)
+
+    while True:
+        value1 = q1.get()
+        if value1 is None:
+            break
+        with lock:
+            try:
+                r = tester.push_read_only_action('hello', 'getcount', eos.s2b('hello'), explicit_cpu_bill=True)
+                value = bytes.fromhex(r['action_traces'][0]['return_value'])
+                value = int.from_bytes(value, 'little')
+                assert value1 == value, f'{value1} != {value}'
+            except Exception as e:
+                logger.exception(e)
+        q2.put(True)
+    print(f'Worker: ', tester.api.get_info())
+    tester.free()
+
+def test_new_database():
+    tester = ChainTester(False, data_dir="dd", config_dir="cd")
+    tester.chain.abort_block()
+    lock = Lock()
+    q1 = Queue()
+    q2 = Queue()
+
+    p = Process(target=worker, args=(lock, q1, q2, tester.data_dir, tester.config_dir))
+    p.start()
+    q2.get()
+
+    logger.info("++++++++++++tester.chain.head_block_num(): %s", tester.chain.head_block_num())
+    if tester.chain.head_block_num() == 1:
+        tester.init()
+    else:
+        tester.chain.start_block()
+    with open('./test_contracts/counter/test.wasm', 'rb') as f:
+        code = f.read()
+    try:
+        tester.deploy_contract('hello', code, '')
+    except SetExactCodeException as e:
+        pass
+
+    for i in range(3):
+        with lock:
+            r = tester.push_action('hello', 'inc', eos.s2b('hello'), {'hello':'active'})
+            value = bytes.fromhex(r['action_traces'][0]['return_value'])
+            value = int.from_bytes(value, 'little')
+            tester.produce_block()
+        q1.put(value)
+        q2.get()
+    q1.put(None)
+    p.join()
+    tester.free()
+    return
+
+def test_new_database2():
+    test_new_database()
+

@@ -6,6 +6,7 @@ from .database_objects import *
 from .packer import Decoder, Encoder
 from .types import F64, I64, U8, U16, U32, U64, Checksum256, Name
 from .utils import f2b, i2b, to_bytes, u2b
+from .chain_exceptions import get_last_exception
 
 null_object_type = 0
 account_object_type = 1
@@ -63,13 +64,12 @@ def parse_return_value(ret: int):
 logger = log.get_logger(__name__)
 
 class Database:
-    def __init__(self, db_ptr: int = 0):
+    def __init__(self, db_ptr: int = 0, attach: bool=True):
         if not db_ptr:
             # default to get db ptr from chain_plugin.chain.db()
-            self.db_ptr = _eos.get_database()
-        else:
-            self.db_ptr = db_ptr
-        self.ptr = _database.new(self.db_ptr)
+            db_ptr = _eos.get_database()
+        self.ptr = _database.new_proxy(db_ptr, attach)
+        self.attach = attach
         logger.info("+++++total memory: %.2fMB, used memory: %.2fMB, free memory: %.2fMB", self.total_memory()/1024/1024, self.used_memory()/1024/1024, self.free_memory()/1024/1024)
 
     def total_memory(self):
@@ -2468,3 +2468,12 @@ class DatabaseHeaderObjectIndex(object):
 
     def row_count(self):
         return self.db.row_count(database_header_object_type)
+
+def new(db_ptr: int = 0):
+    return Database(db_ptr)
+
+def new_ex(state_dir: str, shared_file_size: U64, read_only: bool = True, allow_dirty: bool = True):
+    ptr = _database.new_database(state_dir, read_only, shared_file_size, allow_dirty)
+    if ptr == 0:
+        raise get_last_exception()
+    return Database(ptr, False)

@@ -195,7 +195,7 @@ def read_chain_id_from_block_log(data_dir):
 
 class ChainTester(object):
 
-    def __init__(self, initialize=True, data_dir=None, config_dir=None, genesis: Union[str, Dict] = None, snapshot_file='', state_size=10*1024*1024, log_level=log_level_debug, debug_producer_key=''):
+    def __init__(self, initialize=True, read_only_db: bool = False, data_dir=None, config_dir=None, genesis: Union[str, Dict] = None, snapshot_file='', state_size=10*1024*1024, log_level=log_level_debug, debug_producer_key=''):
         atexit.register(self.free)
         self.chain = None
         self.is_temp_data_dir = True
@@ -203,6 +203,10 @@ class ChainTester(object):
         self.debug_producer_key=debug_producer_key
         chain_config['state_size'] = state_size
         chain_config['state_guard_size'] = int(state_size * 0.005)
+
+        if read_only_db:
+            assert not initialize, "read_only_db must be False when initialize is True"
+            chain_config['read_only'] = True
 
         if data_dir:
             self.data_dir = data_dir
@@ -266,13 +270,13 @@ class ChainTester(object):
         if not initialize:
             self.feature_digests = []
             self.start_block()
-        else:
-            self.feature_digests = ['0ec7e080177b2c02b278d5088611686b49d739925a92d9bfcacd7fc6b74053bd']
-            self.start_block()
-        self.code_cache = {}
-
-        if not initialize:
             return
+        self.code_cache = {}
+        self.init()
+
+    def init(self):
+        self.feature_digests = ['0ec7e080177b2c02b278d5088611686b49d739925a92d9bfcacd7fc6b74053bd']
+        self.start_block()
 
         key = 'EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV'
         systemAccounts = [
@@ -478,13 +482,18 @@ class ChainTester(object):
         producer_key_map[pubkey] = priv_key
         return True
 
-    def push_action(self, account: Name, action: Name, args: Union[Dict, str, bytes], permissions: Dict={}, explicit_cpu_bill=False):
+    def push_action(self, account: Name, action: Name, args: Union[Dict, str, bytes], permissions: Dict, explicit_cpu_bill=False):
+        assert permissions, "permissions is empty"
+        return self.push_action_ex(account, action, args, permissions, explicit_cpu_bill)
+
+    def push_read_only_action(self, account: Name, action: Name, args: Union[Dict, str, bytes], explicit_cpu_bill=False):
+        return self.push_action_ex(account, action, args, {}, explicit_cpu_bill=explicit_cpu_bill)
+
+    def push_action_ex(self, account: Name, action: Name, args: Union[Dict, str, bytes], permissions: Dict, explicit_cpu_bill=False):
         auth = []
         for actor in permissions:
             perm = permissions[actor]
             auth.append({'actor': actor, 'permission': perm})
-        if not auth:
-            auth.append({'actor': account, 'permission': 'active'})
         if not isinstance(args, (dict, str, bytes)):
             raise Exception("push_action: args type not in (dict, str, bytes)")
         # logger.debug(f'{account}, {action}, {args}')
@@ -552,14 +561,20 @@ class ChainTester(object):
     def gen_transaction_ex(self, actions: List, json_str=False, compress=False):
         chain_id = self.chain.chain_id()
         ref_block_id = self.chain.last_irreversible_block_id().to_string()
-
-        priv_keys = self.get_required_private_keys(actions)
-
+        read_only_tx = True
+        for a in actions:
+            if a['authorization']:
+                read_only_tx = False
+                break
+        if read_only_tx:
+            priv_keys = []
+        else:
+            priv_keys = self.get_required_private_keys(actions)
         for a in actions:
             if isinstance(a['data'], dict):
                 data = self.chain.pack_action_args(a['account'], a['name'], a['data'])
                 a['data'] = data.hex()
-        assert len(priv_keys) >= 1
+        # assert len(priv_keys) >= 1, 'no private key found'
 
         priv_keys = json.dumps(priv_keys)
 #        priv_key = '5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3'
@@ -574,20 +589,44 @@ class ChainTester(object):
         return ret
 
     def push_actions(self, actions: List, explicit_cpu_bill=False):
-        _actions = []
+        read_only_tx = True
         for a in actions:
+            if a[-1]: #permissions
+                read_only_tx = False
+        assert not read_only_tx, "push_actions must not include valid permissions"
+        return self.push_actions_ex(actions, explicit_cpu_bill)
+
+    def push_read_only_actions(self, actions: List, explicit_cpu_bill=False):
+        read_only_tx = True
+        for a in actions:
+            if a[-1]: #permissions
+                read_only_tx = False
+        assert read_only_tx, "push_read_only_actions must not include permissions"
+        return self.push_actions_ex(actions, explicit_cpu_bill)
+
+    def push_actions_ex(self, actions: List, explicit_cpu_bill=False):
+        _actions = []
+        read_only_tx = True
+        for a in actions:
+            if a[-1]: #permissions
+                read_only_tx = False
             _actions.append(self.gen_action(*a))
         raw_signed_trx = self.gen_transaction_ex(_actions)
         deadline = 0
         billed_cpu_time_us = 100
-        result = self.chain.push_transaction(raw_signed_trx, deadline, billed_cpu_time_us, explicit_cpu_bill)
+        result = self.chain.push_transaction(raw_signed_trx, deadline, billed_cpu_time_us, explicit_cpu_bill, read_only_tx)
         return result
 
     def push_actions_ex(self, actions: List, explicit_cpu_bill=False):
+        read_only_tx = True
+        for a in actions:
+            if a['authorization']:
+                read_only_tx = False
+                break
         raw_signed_trx = self.gen_transaction_ex(actions)
         deadline = 0
         billed_cpu_time_us = 100
-        result = self.chain.push_transaction(raw_signed_trx, deadline, billed_cpu_time_us, explicit_cpu_bill)
+        result = self.chain.push_transaction(raw_signed_trx, deadline, billed_cpu_time_us, explicit_cpu_bill, read_only=read_only_tx)
         return result
 
     def calc_pending_block_time(self):
