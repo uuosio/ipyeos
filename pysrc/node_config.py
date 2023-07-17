@@ -92,7 +92,7 @@ class Config(object):
     def __init__(self, config_file: str):
         with open(config_file) as f:
             self.config = yaml.safe_load(f)
-        logger.info(f'config: {config}')
+        logger.info(f'config_file: {config_file}, config: {self.config}')
 
     def get_config(self):
         return self.config

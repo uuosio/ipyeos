@@ -2519,10 +2519,10 @@ def test_object_creation(tester: ChainTester):
 
 from multiprocessing import Process, Lock, Queue
 
-def worker(lock, q1, q2, data_dir, config_dir):
+def worker(name, lock, q1, q2, data_dir, config_dir):
     eos.set_worker_process()
     tester = ChainTester(False, read_only_db = True, data_dir=data_dir, config_dir=config_dir)
-    logger.info("++++++++++++++tester.chain.head_block_num(): %d", tester.chain.head_block_num())
+    logger.info(f"++++++++++++++{name}: tester.chain.head_block_num(): %d", tester.chain.head_block_num())
 
     q2.put(True)
 
@@ -2538,6 +2538,7 @@ def worker(lock, q1, q2, data_dir, config_dir):
             break
         with lock:
             try:
+                print(f'++++{name}: push_read_only_action')
                 r = tester.push_read_only_action('hello', 'getcount', eos.s2b('hello'), explicit_cpu_bill=True)
                 value = bytes.fromhex(r['action_traces'][0]['return_value'])
                 value = int.from_bytes(value, 'little')
@@ -2545,19 +2546,22 @@ def worker(lock, q1, q2, data_dir, config_dir):
             except Exception as e:
                 logger.exception(e)
         q2.put(True)
-    print(f'Worker: ', tester.api.get_info())
+    print(f'{name}: Worker: ', tester.api.get_info())
     tester.free()
 
 def test_new_database():
     tester = ChainTester(False, data_dir="dd", config_dir="cd")
     tester.chain.abort_block()
     lock = Lock()
-    q1 = Queue()
-    q2 = Queue()
 
-    p = Process(target=worker, args=(lock, q1, q2, tester.data_dir, tester.config_dir))
-    p.start()
-    q2.get()
+    processes = []
+    queues = [(Queue(), Queue()), (Queue(), Queue())]
+    for i in range(2):
+        q1, q2 = queues[i]
+        p = Process(target=worker, args=(f'subprocess {i}', lock, q1, q2, tester.data_dir, tester.config_dir))
+        p.start()
+        q2.get()
+        processes.append(p)
 
     logger.info("++++++++++++tester.chain.head_block_num(): %s", tester.chain.head_block_num())
     if tester.chain.head_block_num() == 1:
@@ -2577,13 +2581,18 @@ def test_new_database():
             value = bytes.fromhex(r['action_traces'][0]['return_value'])
             value = int.from_bytes(value, 'little')
             tester.produce_block()
-        q1.put(value)
-        q2.get()
-    q1.put(None)
-    p.join()
+        for q1, q2 in queues:
+            q1.put(value)
+            q2.get()
+
+    for i in range(2):
+        q1, q2 = queues[i]
+        q1.put(None)
+        processes[i].join()
+
     tester.free()
     return
 
-def test_new_database2():
-    test_new_database()
+# def test_new_database2():
+#     test_new_database()
 

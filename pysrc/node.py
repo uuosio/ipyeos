@@ -1,7 +1,9 @@
 import atexit
+import copy
 import hashlib
 import json
 import logging
+from multiprocessing import Lock
 import os
 import shutil
 import subprocess
@@ -34,7 +36,7 @@ class DBReadMode(Enum):
     IRREVERSIBLE = 1
     SPECULATIVE = 2
 
-chain_config = {
+g_chain_config = {
     "sender_bypass_whiteblacklist":[],
     "actor_whitelist":[],
     "actor_blacklist":[],
@@ -120,8 +122,54 @@ def read_chain_id_from_block_log(data_dir):
 
 class Node(object):
 
-    def __init__(self, initialize=True, data_dir=None, config_dir=None, genesis: Union[str, Dict] = None, snapshot_file='', state_size=10*1024*1024, debug_producer_key=''):
+    def init(self, config_file: str, genesis_file: str, snapshot_file: str):
+        config = node_config.load_config(config_file)
+        logging_config_file = config['logging_config_file']
+        chain_config = config['chain']
+        state_size=chain_config['state_size']
+        data_dir = chain_config['data_dir']
+        config_dir = chain_config['config_dir']
+        genesis: Optional[Dict] = None
+
+        net_config = config['net']
+        peers = net_config['peers']
+        logger.info(f'peers: {peers}')
+        for peer in peers:
+            if peers.count(peer) > 1:
+                logger.error(f'duplicated peer: {peer} in config file {config_file}')
+                return
+
+        if genesis_file:
+            try:
+                with open(genesis_file) as f:
+                    genesis = json.load(f)
+            except FileNotFoundError:
+                logger.error('genesis file not found: %s', genesis_file)
+                return
+            except JSONDecodeError:
+                logger.error('genesis file is not a valid json file: %s', genesis_file)
+                return
+            if 'genesis' in config:
+                logger.warning(f'genesis in config file {config_file} will be overwrite by genesis file {genesis_file}')
+        else:
+            try:
+                genesis = config['genesis']
+            except KeyError:
+                pass
+        # assert genesis, 'genesis is empty'
+        eos.initialize_logging(logging_config_file)
+
+        try:
+            debug_producer_key=chain_config['debug_producer_key']
+        except KeyError:
+            debug_producer_key=''
+
+        self.config = config
+        return data_dir, config_dir, genesis, state_size, snapshot_file, debug_producer_key
+
+    def __init__(self, config_file: str, genesis_file: str, snapshot_file: str, worker_process: bool = False):
         self._chain = None
+        data_dir, config_dir, genesis, state_size, snapshot_file, debug_producer_key = self.init(config_file, genesis_file, snapshot_file)
 
         if snapshot_file:
             if not os.path.exists(snapshot_file):
@@ -132,6 +180,13 @@ class Node(object):
         self.is_temp_data_dir = True
         self.is_temp_config_dir = True
         self.debug_producer_key=debug_producer_key
+
+        chain_config = copy.copy(g_chain_config)
+
+        if worker_process:
+            chain_config['read_only'] = True
+            eos.set_worker_process()
+
         chain_config['state_size'] = state_size
         chain_config['state_guard_size'] = int(state_size * 0.005)
 
@@ -167,8 +222,6 @@ class Node(object):
             init_database = True
             self.chain_id = ''
 
-        self.chain_config = json.dumps(chain_config)
-
         if genesis:
             if isinstance(genesis, dict):
                 self.genesis = json.dumps(genesis)
@@ -177,7 +230,8 @@ class Node(object):
         else:
             self.genesis = ''
 
-        self._chain = chain.Chain(self.chain_config, self.genesis, self.chain_id, os.path.join(self.config_dir, "protocol_features"), snapshot_file, debug_producer_key)
+        self.chain_config = chain_config
+        self._chain = chain.Chain(json.dumps(chain_config), self.genesis, self.chain_id, os.path.join(self.config_dir, "protocol_features"), snapshot_file, self.debug_producer_key)
         self._chain.startup(init_database)
         self._api = chainapi.ChainApi(self.chain)
 
@@ -221,49 +275,17 @@ def get_network() -> net.Network:
     assert g_network, 'network is not started'
     return g_network
 
-async def start(config_file: str, genesis_file: str, snapshot_file: str):
-    global g_network
+def init_node(config_file: str, genesis_file: str, snapshot_file: str, worker_process: bool = False):
     global g_node
+    g_node = Node(config_file, genesis_file, snapshot_file, worker_process)
+    return g_node
 
-    config = node_config.load_config(config_file)
-    logging_config_file = config['logging_config_file']
-    chain_config = config['chain']
-    state_size=chain_config['state_size']
-    data_dir = chain_config['data_dir']
-    config_dir = chain_config['config_dir']
-    genesis: Optional[Dict] = None
+async def start_network(database_write_lock: Optional[Lock] = None):
+    global g_node
+    global g_network
+    assert g_node, 'node is not initialized'
 
-    net_config = config['net']
-    peers = net_config['peers']
-    logger.info(f'peers: {peers}')
-    for peer in peers:
-        if peers.count(peer) > 1:
-            logger.error(f'duplicated peer: {peer} in config file {config_file}')
-            return
-
-    if genesis_file:
-        try:
-            with open(genesis_file) as f:
-                genesis = json.load(f)
-        except FileNotFoundError:
-            logger.error('genesis file not found: %s', genesis_file)
-            return
-        except JSONDecodeError:
-            logger.error('genesis file is not a valid json file: %s', genesis_file)
-            return
-        if 'genesis' in config:
-            logger.warning(f'genesis in config file {config_file} will be overwrite by genesis file {genesis_file}')
-    else:
-        try:
-            genesis = config['genesis']
-        except KeyError:
-            pass
-    # assert genesis, 'genesis is empty'
-    eos.initialize_logging(logging_config_file)
-
-    g_node = Node(False, data_dir=data_dir, config_dir=config_dir, genesis = genesis, state_size=state_size, snapshot_file=snapshot_file)
-    g_network = net.Network(g_node.chain, net_config['peers'])
-
+    g_network = net.Network(g_node.chain, g_node.config['net']['peers'], database_write_lock)
     try:
         await g_network.run()
     except asyncio.exceptions.CancelledError:

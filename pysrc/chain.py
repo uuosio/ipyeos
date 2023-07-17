@@ -403,6 +403,9 @@ class Chain(object):
             raise get_transaction_exception(result['except'])
         return result
 
+    def push_ro_transaction(self, packed_trx: bytes, return_json: bool = True) -> dict:
+        return self.push_transaction(packed_trx, read_only=True, return_json=return_json)
+
     def push_block_from_block_log(self, blog: BlockLog, block_num: int) -> bool:
         if block_num > blog.head_block_num() or block_num < blog.first_block_num():
             raise Exception("invalid block number, block_num: %d, head_block_num: %d, first_block_num: %d" % (block_num, blog.head_block_num(), blog.first_block_num()))

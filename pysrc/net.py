@@ -1,6 +1,7 @@
 import asyncio
 import io
 import logging
+import multiprocessing
 import secrets
 import signal
 import socket
@@ -765,9 +766,10 @@ class SyncBlockInfo(object):
         return self.__repr__()
 
 class Connection(object):
-    def __init__(self, chain: Chain, peer: str = ''):
+    def __init__(self, chain: Chain, database_write_lock = None, peer: str = ''):
         self.peer = peer
         self.chain = chain
+        self.database_write_lock = database_write_lock
         self.set_default()
         self.goway_listeners = []
         self.last_time_message = None
@@ -1210,9 +1212,17 @@ class Connection(object):
                     return_statistics = True
                 else:
                     return_statistics = False
-                ret, statistics = self.chain.push_block(raw_msg, return_statistics)
-                if statistics:
-                    self.logger.info(statistics)
+
+                if self.database_write_lock:
+                    with self.database_write_lock:
+                        ret, statistics = self.chain.push_block(raw_msg, return_statistics)
+                        if statistics:
+                            self.logger.info(statistics)
+                else:
+                    ret, statistics = self.chain.push_block(raw_msg, return_statistics)
+                    if statistics:
+                        self.logger.info(statistics)
+
                 await asyncio.sleep(0.0)
             # unlinkable_block_exception
             except UnlinkableBlockException as e:
@@ -1339,10 +1349,8 @@ class Connection(object):
                 return False
 
 class OutConnection(Connection):
-    def __init__(self, chain: Chain, peer: str = ''):
-        super().__init__(chain, peer)
-        self.peer = peer
-        self.chain = chain
+    def __init__(self, chain: Chain, database_write_lock = None, peer: str = ''):
+        super().__init__(chain, database_write_lock, peer)
         self.set_default()
 
     async def open_connection_socks5(self, proxy_host, proxy_port, target_host, target_port):
@@ -1431,7 +1439,7 @@ class OutConnection(Connection):
 # input('press enter to continue')
 
 class Network(object):
-    def __init__(self, chain, peers: List[str]):
+    def __init__(self, chain, peers: List[str], database_write_lock: Optional[multiprocessing.Lock] = None):
         self.chain = chain
         self.connections: List[Connection] = []
         self.generation = 0
@@ -1445,6 +1453,8 @@ class Network(object):
         self.should_exit = False
 
         self.logger = log.get_logger('network')
+
+        self.database_write_lock = database_write_lock
 
     def exit(self):
         self.should_exit = True
@@ -1476,7 +1486,7 @@ class Network(object):
         if not self.connections:
             asyncio.create_task(self.retry_connection())
             for peer in self.peers:
-                conn = OutConnection(self.chain, peer)
+                conn = OutConnection(self.chain, self.database_write_lock, peer)
                 conn.add_goway_listener(self.on_goway)
                 self.connections.append(conn)
 
