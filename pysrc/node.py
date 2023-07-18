@@ -187,8 +187,14 @@ class Node(object):
             chain_config['read_only'] = True
             eos.set_worker_process()
 
+        if state_size < 1024*1024*30:
+            state_size = 1024*1024*30
         chain_config['state_size'] = state_size
-        chain_config['state_guard_size'] = int(state_size * 0.005)
+
+        guard_size = int(state_size * 0.005)
+        if guard_size < 1024*1024*5:
+            guard_size = 1024*1024*5
+        chain_config['state_guard_size'] = guard_size
 
         if data_dir:
             self.data_dir = data_dir
@@ -280,14 +286,16 @@ def init_node(config_file: str, genesis_file: str, snapshot_file: str, worker_pr
     g_node = Node(config_file, genesis_file, snapshot_file, worker_process)
     return g_node
 
-async def start_network(database_write_lock: Optional[Lock] = None):
+async def start_network(rwlock: Optional[Lock] = None):
     global g_node
     global g_network
     assert g_node, 'node is not initialized'
 
-    g_network = net.Network(g_node.chain, g_node.config['net']['peers'], database_write_lock)
+    g_network = net.Network(g_node.chain, g_node.config['net']['peers'], rwlock)
     try:
         await g_network.run()
     except asyncio.exceptions.CancelledError:
         for conn in g_network.connections:
             conn.close()
+    g_node.chain.free()
+    g_node = None

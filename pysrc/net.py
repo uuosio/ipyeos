@@ -10,7 +10,7 @@ import time
 from enum import Enum
 from typing import Any, Dict, List, Optional, Type, Union
 
-from . import debug, log, node_config
+from . import debug, eos, log, node_config
 from .blocks import BlockHeader
 from .chain import Chain
 from .chain_exceptions import (DatabaseGuardException, ForkDatabaseException,
@@ -766,10 +766,10 @@ class SyncBlockInfo(object):
         return self.__repr__()
 
 class Connection(object):
-    def __init__(self, chain: Chain, database_write_lock = None, peer: str = ''):
+    def __init__(self, chain: Chain, rwlock = None, peer: str = ''):
         self.peer = peer
         self.chain = chain
-        self.database_write_lock = database_write_lock
+        self.rwlock = rwlock
         self.set_default()
         self.goway_listeners = []
         self.last_time_message = None
@@ -790,8 +790,6 @@ class Connection(object):
         except KeyError:
             self.proxy_host, self.proxy_port = None, None
         
-        self.should_exit = False
-
         self.logger = logging.getLogger(peer)
         self.logger.setLevel(logging.INFO)
 
@@ -799,9 +797,6 @@ class Connection(object):
         handler = logging.StreamHandler()
         handler.setFormatter(formater)
         self.logger.addHandler(handler)
-
-    def exit(self):
-        self.should_exit = True
 
     def add_goway_listener(self, listener):
         self.goway_listeners.append(listener)
@@ -843,6 +838,13 @@ class Connection(object):
         self.closed = True
         self.writer.close()
         self.reader = None
+
+    async def sleep(self, seconds: float):
+        while seconds > 0.0:
+            await asyncio.sleep(0.1)
+            seconds -= 0.1
+            if eos.should_exit():
+                return
 
     async def read(self, length):
         if self.closed:
@@ -1021,9 +1023,9 @@ class Connection(object):
         return True
 
     async def heart_beat(self):
-        while True:
+        while not eos.should_exit():
             try:
-                await asyncio.sleep(30.0)
+                await self.sleep(30.0)
                 self.logger.info("+++++++++++=heart beat")
                 if not self.connected:
                     return
@@ -1213,8 +1215,8 @@ class Connection(object):
                 else:
                     return_statistics = False
 
-                if self.database_write_lock:
-                    with self.database_write_lock:
+                if self.rwlock:
+                    with self.rwlock.wlock():
                         ret, statistics = self.chain.push_block(raw_msg, return_statistics)
                         if statistics:
                             self.logger.info(statistics)
@@ -1243,12 +1245,12 @@ class Connection(object):
                     return True
             except DatabaseGuardException as e:
                 self.logger.fatal(f"%s", e)
-                self.exit()
+                eos.exit()
                 return False
             except Exception as e:
                 self.logger.fatal(f"%s", e)
                 self.logger.exception(e)
-                self.exit()
+                eos.exit()
                 return False
 
             self.calculate_block_sync_info(header, len(raw_msg))
@@ -1340,7 +1342,7 @@ class Connection(object):
         #     self.logger.info(f'send sync request message to failed')
         #     return False
 
-        while True:
+        while not eos.should_exit():
             try:
                 if not await self._handle_message():
                     return False
@@ -1349,8 +1351,8 @@ class Connection(object):
                 return False
 
 class OutConnection(Connection):
-    def __init__(self, chain: Chain, database_write_lock = None, peer: str = ''):
-        super().__init__(chain, database_write_lock, peer)
+    def __init__(self, chain: Chain, rwlock = None, peer: str = ''):
+        super().__init__(chain, rwlock, peer)
         self.set_default()
 
     async def open_connection_socks5(self, proxy_host, proxy_port, target_host, target_port):
@@ -1439,7 +1441,7 @@ class OutConnection(Connection):
 # input('press enter to continue')
 
 class Network(object):
-    def __init__(self, chain, peers: List[str], database_write_lock: Optional[multiprocessing.Lock] = None):
+    def __init__(self, chain, peers: List[str], rwlock: Optional[multiprocessing.Lock] = None):
         self.chain = chain
         self.connections: List[Connection] = []
         self.generation = 0
@@ -1450,18 +1452,16 @@ class Network(object):
         self.sync_finished = False
         self.conn: Optional[Connection] = None
 
-        self.should_exit = False
-
         self.logger = log.get_logger('network')
 
-        self.database_write_lock = database_write_lock
-
-    def exit(self):
-        self.should_exit = True
+        self.rwlock = rwlock
 
     async def retry_connection(self):
         while True:
-            await asyncio.sleep(30.0)
+            for i in range(300):
+                await asyncio.sleep(0.1)
+                if eos.should_exit():
+                    return
             for conn in self.connections:
                 if conn.connected:
                     continue
@@ -1486,7 +1486,7 @@ class Network(object):
         if not self.connections:
             asyncio.create_task(self.retry_connection())
             for peer in self.peers:
-                conn = OutConnection(self.chain, self.database_write_lock, peer)
+                conn = OutConnection(self.chain, self.rwlock, peer)
                 conn.add_goway_listener(self.on_goway)
                 self.connections.append(conn)
 
@@ -1513,18 +1513,25 @@ class Network(object):
                 self.logger.info(f'connected to {conn.peer}')
             if not has_connected:
                 self.logger.info('+++++++no connection, sleep 10s')
-                await asyncio.sleep(10.0)
+                await self.sleep(10.0)
         return True
 
+    async def sleep(self, seconds: float):
+        while seconds > 0.0:
+            await asyncio.sleep(0.1)
+            seconds -= 0.1
+            if eos.should_exit():
+                return
+
     async def init(self):
-        while True:
+        while not eos.should_exit():
             try:
                 if await self._init():
                     self.logger.info('+++++++_init success')
                     return True
             except Exception as e:
                 self.logger.exception(e)
-            await asyncio.sleep(10.0)
+            await self.sleep(10.0)
         
     async def get_fastest_connection(self):
         connections = [c for c in self.connections if c.connected]
@@ -1535,7 +1542,7 @@ class Network(object):
                 if connections:
                     break
                 self.logger.info('+++++++no connection')
-                await asyncio.sleep(10.0)
+                await self.sleep(10.0)
 
         conn = connections[0]
         for c in connections[1:]:
@@ -1544,25 +1551,21 @@ class Network(object):
         return conn
 
     async def _run(self):
-        head_block_num = 0
         await self.init()
 
-        while not self.should_exit:
+        while not eos.should_exit():
             try:
                 self.conn = await self.get_fastest_connection()
                 self.logger.info('+++++choose fastest connection: %s', self.conn.peer)
                 await self.conn.handle_messages()
-                if self.conn.should_exit:
-                    self.exit()
-                    return False
             except Exception as e:
                 self.logger.exception(e)
-                asyncio.sleep(5.0)
+                self.sleep(5.0)
 
         return False
 
     async def run(self):
-        while not self.should_exit:
+        while not eos.should_exit():
             try:
                 ret = await self._run()
                 if not ret:

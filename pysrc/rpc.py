@@ -6,8 +6,10 @@ from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 
 from .uvicorn_server import UvicornServer
-from . import net, node
+from . import log, net, node
 from .chain_exceptions import BlockValidateException, ChainException
+
+logger = log.get_logger(__name__)
 
 app = FastAPI()
 
@@ -94,7 +96,10 @@ def init(port: int=8088):
     return server
 
 async def start(server):
-    await server.serve()
+    try:
+        await server.serve()
+    except asyncio.exceptions.CancelledError:
+        logger.info('asyncio.exceptions.CancelledError')
 
 if __name__ == '__main__':
     asyncio.run(run(8088))

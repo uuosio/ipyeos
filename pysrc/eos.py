@@ -35,6 +35,16 @@ class LogLevel(Enum):
 # "trace_api"
 # "state_history"
 
+g_should_exit = False
+
+def should_exit() -> bool:
+    global g_should_exit
+    return g_should_exit
+
+def exit() -> None:
+    global g_should_exit
+    g_should_exit = True
+
 def initialize_logging(logging_config_file: str="logging.json") -> None:
     _eos.initialize_logging(logging_config_file)
 

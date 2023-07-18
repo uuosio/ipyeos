@@ -24,7 +24,7 @@ if not 'RUN_IPYEOS' in os.environ:
 
 logger = log.get_logger(__name__)
 
-def print_help(self):
+def print_help():
     return eos.init(['ipyeos', '--help'])
 
 class Main(object):
@@ -42,7 +42,7 @@ class Main(object):
         self.rpc_server = None
 
         self.worker_processes = []
-        self.database_write_lock = None
+        self.rwlock = None
 
     def start_webserver(self, quit_app):
         server = debug_server.init(quit_app)
@@ -74,13 +74,16 @@ class Main(object):
         self.rpc_server_task = None
         self.rpc_server = None
 
-    def _run_eos(self):
+    def _init_eos(self):
         argv = sys.argv[1:]
         argv[0] = 'ipyeos'
         ret = eos.init(argv)
         if not ret == 0:
             print('init return', ret)
-            return
+            return False
+        return True
+
+    def _run_eos(self):
         ret = eos.run()
         # while True:
         #     ret = eos.run_once()
@@ -118,6 +121,8 @@ class Main(object):
             eos.quit()
             # eos.post(eos.quit)
 
+        eos.exit()
+        
         logger.info('shutdown webserver')
         await self.shutdown_webserver()
 
@@ -125,27 +130,34 @@ class Main(object):
         tasks = [t for t in asyncio.all_tasks(loop) if t is not asyncio.current_task()]
         # tasks = [t for t in asyncio.all_tasks(loop)]
         for task in tasks:
-            logger.info('cancle task: %s', task)
-            task.cancel()
+            logger.info('wait for task: %s', task)
+            # try:
+            #     await asyncio.wait_for(task, 1.0)
+            # except asyncio.exceptions.TimeoutError:
+            #     task.cancel()
         await asyncio.gather(*tasks, return_exceptions=True)
-        loop.stop()
+        # loop.stop()
+        logger.info('shutdown done')
 
     def quit_node(self):
         asyncio.create_task(self.shutdown())
 
     def start_worker_processes(self, worker_processes, config_file, genesis_file='', snapshot_file=''):
         if not worker_processes:
-            return
+            return True
         self.worker_processes = []
-        self.database_write_lock = Lock()
+        self.rwlock = worker.ReadWriteLock()
         for port in worker_processes:
             in_queue, out_queue = Queue(), Queue()
             exit_event = Event()
             messenger = worker.Messenger(in_queue, out_queue)
             logger.info('start worker %s', port)
-            p = Process(target=worker.run, args=(port, self.database_write_lock, worker.Messenger(out_queue, in_queue), exit_event, config_file, genesis_file, snapshot_file))
+            p = Process(target=worker.run, args=(port, self.rwlock, worker.Messenger(out_queue, in_queue), exit_event, config_file, genesis_file, snapshot_file))
             p.start()
-            messenger.get()
+            ret = messenger.get()
+            if not ret:
+                logger.error('worker %s start failed', port)
+                return False
             logger.info('worker %s started', port)
             self.worker_processes.append((p, messenger, exit_event))
 
@@ -164,18 +176,24 @@ class Main(object):
                         logger.error('message_listener error: %s', e)
                         break
             threading.Thread(target=message_listener, args=(messenger, )).start()
+        return True
 
-    def handle_signal(self, signum, loop):
+    def handle_signal(self, signum):
         logger.info("handle_signal: %s", signum)
         self.quit_node()
 
     async def main_eosnode(self):
+        if not self._init_eos():
+            return
+        self.start_webserver(self.quit_node)
         self.async_queue = asyncio.Queue()
         future = asyncio.get_event_loop().run_in_executor(self.executor, self._run_eos)
         try:
             await future
         except asyncio.exceptions.CancelledError:
             logger.info('asyncio.exceptions.CancelledError')
+
+        await self.shutdown()
         print('all done!')
 
     async def main_pyeosnode(self):
@@ -183,22 +201,24 @@ class Main(object):
         _node = node.init_node(result.config_file, result.genesis_file, result.snapshot_file)
         try:
             worker_processes = _node.config['worker_processes']
-            self.start_worker_processes(worker_processes, result.config_file, result.genesis_file, result.snapshot_file)
+            if not self.start_worker_processes(worker_processes, result.config_file, result.genesis_file, result.snapshot_file):
+                await self.shutdown()
+                return False
         except KeyError:
             logger.info('+++++no worker_process_num in config file')
             pass
-        await node.start_network(self.database_write_lock)
-        await self.shutdown_webserver()
-        self.shutdown_worker_processes()
 
+        self.start_webserver(self.quit_node)
+
+        await node.start_network(self.rwlock)
+        await self.shutdown()
+        # await asyncio.sleep(0.5)
         print('all done!')
 
     async def main(self):
         loop = asyncio.get_running_loop()
-        loop.add_signal_handler(signal.SIGINT, self.handle_signal, signal.SIGINT, loop)
-        loop.add_signal_handler(signal.SIGTERM, self.handle_signal, signal.SIGTERM, loop)
-
-        self.start_webserver(self.quit_node)
+        loop.add_signal_handler(signal.SIGINT, self.handle_signal, signal.SIGINT)
+        loop.add_signal_handler(signal.SIGTERM, self.handle_signal, signal.SIGTERM)
 
         if self.node_type == 'eosnode':
             return await self.main_eosnode()
