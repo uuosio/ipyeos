@@ -10,6 +10,7 @@ from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 
 from . import exec_result, helper, log
+from . import node_config
 from .debug import get_free_port
 from .uvicorn_server import UvicornServer
 
@@ -74,7 +75,11 @@ def init(quit):
     global quit_app
     quit_app = quit
 
-    port = get_free_port()
+    # port = get_free_port()
+    try:
+        port = node_config.get_config()['debug_port']
+    except KeyError:
+        port = 7777
     logger.info('start debug webserver at port %s', port)
     config = uvicorn.Config(app, host="127.0.0.1", port=port)
     server = UvicornServer(config)

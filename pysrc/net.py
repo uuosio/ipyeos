@@ -1457,11 +1457,8 @@ class Network(object):
         self.rwlock = rwlock
 
     async def retry_connection(self):
-        while True:
-            for i in range(300):
-                await asyncio.sleep(0.1)
-                if eos.should_exit():
-                    return
+        while not eos.should_exit():
+            await self.sleep(30.0)
             for conn in self.connections:
                 if conn.connected:
                     continue
@@ -1499,7 +1496,7 @@ class Network(object):
                 return True
 
         has_connected = False
-        while not has_connected:
+        while not has_connected and not eos.should_exit():
             tasks = []
             for conn in self.connections:
                 task = asyncio.create_task(conn.connect())

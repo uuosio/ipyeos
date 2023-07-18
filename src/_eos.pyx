@@ -164,7 +164,7 @@ def run_once():
 def quit():
     get_ipyeos_proxy().cb.quit()
 
-cdef void *call_python_fn(void* fn_info) nogil:
+cdef void *call_python_fn(void* fn_info) noexcept nogil:
     with gil:
         fn, args, kwargs = <object>fn_info
         try:

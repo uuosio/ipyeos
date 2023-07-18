@@ -59,8 +59,6 @@ class Messenger(object):
     def put(self, data):
         self.out_queue.put(data)
 
-from multiprocessing import Process, Condition, Value, Lock
-
 class ReadWriteLock:
     class _RLock:
         def __init__(self, lock):
@@ -112,7 +110,6 @@ async def read_root():
 @app.get("/get_info", response_class=PlainTextResponse)
 async def get_info():
     g_worker.messenger.put('get_info')
-    logger.info('get_info')
     try:
         msg = g_worker.messenger.get()
         logger.info('get_info: %s', msg)

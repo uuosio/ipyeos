@@ -102,6 +102,9 @@ class Config(object):
 
     def get_net_config(self):
         return self.config['net']
+    
+    def get_debug_port(self):
+        return self.config['debug_port']
 
 config: Optional[Config] = None
 
@@ -114,7 +117,7 @@ def load_config(config_file: str):
 def get_config():
     global config
     assert config
-    return config
+    return config.config
 
 def get_chain_config():
     global config

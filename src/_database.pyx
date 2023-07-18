@@ -30,7 +30,7 @@ ctypedef struct python_custom_data:
     void *cb
     void *custom_data
 
-cdef int32_t database_on_data(int32_t tp, char *data, size_t size, void *custom_data):
+cdef int32_t database_on_data(int32_t tp, char *data, size_t size, void *custom_data) noexcept:
     cdef python_custom_data *_data = <python_custom_data *>custom_data
     _cb = <object>_data.cb
     _custom_dta = <object>_data.custom_data

@@ -8,12 +8,12 @@ import yaml
 import pytest
 import tempfile
 
+from ipyeos import eos, net, log
 from ipyeos.chaintester import ChainTester
 from ipyeos.types import *
-from ipyeos import eos, net, log
 from ipyeos.transaction import Transaction
 from ipyeos import net
-from ipyeos.net import HandshakeMessage, ChainSizeMessage, GoAwayMessage, GoAwayReadon, TimeMessage
+from ipyeos.net import HandshakeMessage, ChainSizeMessage, GoAwayMessage, GoAwayReason, TimeMessage
 from ipyeos.net import RequestMessage, NoticeMessage, OrderedIds, IdListModes
 from ipyeos.net import SyncRequestMessage
 from ipyeos.net import PackedTransactionMessage
@@ -362,3 +362,44 @@ async def test_time_message():
         tasks.append(task)
 
     await asyncio.gather(*tasks)
+
+import asyncio
+import pytest
+from unittest.mock import MagicMock
+from unittest.mock import patch
+
+# Create a fixture that will be used in tests
+@pytest.fixture
+def mock_open_connection():
+    # Create mock reader and writer
+    reader = asyncio.StreamReader()
+    writer = MagicMock()
+
+    # Create a coroutine function to replace open_connection
+    async def mock_open_connection(*args, **kwargs):
+        logger.info("mock_open_connection")
+        return reader, writer
+
+    # Use patch to replace the real function with our mock
+    with patch('asyncio.open_connection', new=mock_open_connection):
+        # Yield the reader and writer to the test
+        logger.info("yield reader, writer")
+        yield reader, writer
+
+
+@pytest.mark.asyncio
+async def test_some_function(mock_open_connection):
+    old_open_connection = asyncio.open_connection
+
+    reader = asyncio.StreamReader()
+    writer = MagicMock()
+
+    # Create a coroutine function to replace open_connection
+    async def mock_open_connection(*args, **kwargs):
+        logger.info("mock_open_connection")
+        return reader, writer
+    asyncio.open_connection = mock_open_connection
+
+    reader, writer = await asyncio.open_connection('host', 'port')
+    # Use the reader and writer here as you would in your application
+    writer.write.assert_called_once()  # Example assertion

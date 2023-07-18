@@ -299,7 +299,8 @@ def printdf(value: bytes):
 def printqf(value: bytes):
     cdef long double d
     assert len(value) == 16, "printqf: bad value size"
-    memcpy(<void *>&d, <char *>value, 16)
+    assert sizeof(d) == 16, "printqf: bad long double size"
+    memcpy(&d, <char *>value, 16)
     _printqf(&d)
 
 # void printn( uint64_t name );
