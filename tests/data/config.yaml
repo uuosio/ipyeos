@@ -26,6 +26,8 @@ worker_processes:
   - 8809
   - 8810
 
+debug_port: 7777
+
 net:
   # socks5_proxy: "127.0.0.1:8084"
   sync_fetch_span: 300

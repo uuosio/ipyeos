@@ -18,6 +18,35 @@ def test1():
 
 def test2():
     code = '''
+from ipyeos import eos
+from ipyeos import node, net
+network = node.get_network()
+
+peer = 'bp.cryptolions.io:9876'
+network.peers.append(peer)
+
+conn = net.OutConnection(network.chain, peer)
+conn.add_goway_listener(network.on_goway)
+network.connections.append(conn)
+exec_result.set("Done!")
+'''
+
+    code = '''
+from ipyeos import eos
+from ipyeos import node, net
+network = node.get_network()
+
+peer = 'bp.cryptolions.io:9876'
+conns = [c for c in network.connections if not c.peer == 'bp.cryptolions.io:9876']
+for c in conns:
+    network.connections.remove(c)
+exec_result.set("Done!")
+'''
+    r = requests.post('http://127.0.0.1:7777/exec', json={'code': code})
+    print(r.text)
+
+def test3():
+    code = '''
 import asyncio
 from ipyeos import exec_result
 async def shutdown():
@@ -35,4 +64,4 @@ exec_result.set('Done!')
     r = requests.post('http://127.0.0.1:7777/exec', json={'code': code})
     print(r.text)
 
-test2()
+test3()

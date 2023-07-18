@@ -1533,7 +1533,7 @@ class Network(object):
     async def get_fastest_connection(self):
         connections = [c for c in self.connections if c.connected]
         if not connections:
-            while True:
+            while not eos.should_exit():
                 await self.init()
                 connections = [c for c in self.connections if c.connected]
                 if connections:
