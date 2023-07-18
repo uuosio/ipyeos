@@ -297,11 +297,12 @@ def printdf(value: bytes):
 
 # void printqf(const long double* value);
 def printqf(value: bytes):
-    cdef long double d
+    # cdef long double d
+    cdef uint64_t[2] d
     assert len(value) == 16, "printqf: bad value size"
     assert sizeof(d) == 16, "printqf: bad long double size"
     memcpy(&d, <char *>value, 16)
-    _printqf(&d)
+    _printqf(<long double*>&d)
 
 # void printn( uint64_t name );
 def printn( uint64_t name ):
@@ -885,15 +886,18 @@ def db_idx_long_double_find_secondary(uint64_t code, uint64_t scope, uint64_t ta
 
 # int32_t db_idx_long_double_lowerbound(uint64_t code, uint64_t scope, uint64_t table, long double* secondary, uint64_t* primary);
 def db_idx_long_double_lowerbound(uint64_t code, uint64_t scope, uint64_t table, secondary: bytes, uint64_t primary):
-    cdef long double _secondary = 0.0
+    # cdef long double _secondary = 0.0
+    cdef uint64_t[2] _secondary
+
     assert len(secondary) == 16, "db_idx_long_double_lowerbound:bad secondary size"
-    memcpy(&_secondary, <char *>secondary, 16)
+    memcpy(_secondary, <char *>secondary, 16)
     it = _db_idx_long_double_lowerbound(code, scope, table, <long double*>&_secondary, &primary)
     return it, PyBytes_FromStringAndSize(<char *>&_secondary, 16), primary
 
 # int32_t db_idx_long_double_upperbound(uint64_t code, uint64_t scope, uint64_t table, long double* secondary, uint64_t* primary);
 def db_idx_long_double_upperbound(uint64_t code, uint64_t scope, uint64_t table, secondary: bytes, uint64_t primary):
-    cdef long double _secondary = 0.0
+    # cdef long double _secondary = 0.0
+    cdef uint64_t[2] _secondary
     assert len(secondary) == 16, "db_idx_long_double_upperbound:bad secondary size"
     memcpy(&_secondary, <char *>secondary, 16)
     it = _db_idx_long_double_upperbound(code, scope, table, <long double*>&_secondary, &primary)
