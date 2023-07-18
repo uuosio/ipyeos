@@ -7,7 +7,7 @@ cdef extern from "_ipyeos.hpp":
         uint64_t get_free_memory()
         uint64_t get_total_memory()
 
-        int32_t set_data_handler(int32_t (*)(int32_t tp, char *data, size_t size, void* custom_data), void *custom_data)
+        int32_t set_data_handler(int32_t (*)(int32_t tp, char *data, size_t size, void* custom_data) noexcept, void *custom_data)
         int32_t walk(int32_t tp, int32_t index_position)
         int32_t walk_range(int32_t tp, int32_t index_position, char *raw_lower_bound, size_t raw_lower_bound_size, char *raw_upper_bound, size_t raw_upper_bound_size)
         int32_t find(int32_t tp, int32_t index_position, char *raw_data, size_t size, vector[char] &out)
