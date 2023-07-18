@@ -36,6 +36,18 @@ class LogLevel(Enum):
 # "state_history"
 
 g_should_exit = False
+g_node_type = None
+g_data_dir = None
+g_config_dir = None
+g_chain_config = None
+
+def set_node_type(node_type: str) -> None:
+    global g_node_type
+    g_node_type = node_type
+
+def get_node_type() -> str:
+    global g_node_type
+    return g_node_type
 
 def should_exit() -> bool:
     global g_should_exit
@@ -44,6 +56,34 @@ def should_exit() -> bool:
 def exit() -> None:
     global g_should_exit
     g_should_exit = True
+
+def set_data_dir(data_dir: str) -> None:
+    global g_data_dir
+    assert get_node_type() == 'pyeosnode', 'only pyeosnode can use set_data_dir'
+    g_data_dir = data_dir
+
+def data_dir() -> str:
+    if get_node_type() == 'eosnode':
+        return _eos.data_dir()
+    assert g_data_dir, 'data_dir is not set'
+    return g_data_dir
+
+def set_config_dir(config_dir: str) -> None:
+    global g_config_dir
+    assert get_node_type() == 'pyeosnode', 'only pyeosnode can use set_config_dir'
+    g_config_dir = config_dir
+
+def config_dir() -> str:
+    if get_node_type() == 'eosnode':
+        return _eos.config_dir()
+    assert g_config_dir, 'config_dir is not set'
+    return g_config_dir
+
+def get_chain_config() -> dict:
+    global g_chain_config
+    if not g_chain_config:
+        g_chain_config = json.loads(_eos.get_chain_config())
+    return g_chain_config
 
 def initialize_logging(logging_config_file: str="logging.json") -> None:
     _eos.initialize_logging(logging_config_file)

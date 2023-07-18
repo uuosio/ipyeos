@@ -19,6 +19,10 @@ cdef extern from "_ipyeos.hpp":
         int get_log_level(string& logger_name)
         void enable_deep_mind(void *controller)
 
+        string data_dir()
+        string config_dir()
+        string get_chain_config()
+
     ctypedef struct database_proxy:
         void set_database(void *db)
         void *get_database()
@@ -73,6 +77,15 @@ def init_chain():
     eosext_init()
 
 init_chain()
+
+def data_dir():
+    return get_ipyeos_proxy().cb.data_dir()
+
+def config_dir():
+    return get_ipyeos_proxy().cb.config_dir()
+
+def get_chain_config() -> str:
+    return get_ipyeos_proxy().cb.get_chain_config()
 
 def initialize_logging(string& config_path):
     get_ipyeos_proxy().cb.initialize_logging(config_path)

@@ -8,7 +8,7 @@ import threading
 from fastapi import FastAPI, Request
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
-from multiprocessing import Process, Condition, Value, Lock
+from multiprocessing import Process, Condition, Value, Lock, Event
 
 from .uvicorn_server import UvicornServer
 from . import eos, log, net, node
@@ -190,9 +190,9 @@ class Worker(object):
         self.exit()
         logger.info('exit_listener')
 
-def run(port, rwlock: Lock, messenger: Messenger, exit_event, config_file, genesis_file, snapshot_file):
+def run(port, rwlock: Lock, messenger: Messenger, exit_event: Event, data_dir: str, config_dir: str, state_size: int):
     global g_worker
-    _node = node.init_node(config_file, genesis_file, snapshot_file, worker_process=True)
+    _node = node.init_worker_node(data_dir, config_dir, state_size)
     try:
         _node.chain.start_block()
     except DatabaseGuardException as e:

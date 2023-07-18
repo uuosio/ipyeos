@@ -120,57 +120,57 @@ def read_chain_id_from_block_log(data_dir):
         return dec.read_bytes(32).hex()
     assert False, "unknown chain id"
 
-class Node(object):
+def init(config_file: str, genesis_file: str, snapshot_file: str):
+    config = node_config.load_config(config_file)
+    logging_config_file = config['logging_config_file']
+    chain_config = config['chain']
+    state_size=chain_config['state_size']
+    data_dir = chain_config['data_dir']
+    config_dir = chain_config['config_dir']
+    genesis: Optional[Dict] = None
 
-    def init(self, config_file: str, genesis_file: str, snapshot_file: str):
-        config = node_config.load_config(config_file)
-        logging_config_file = config['logging_config_file']
-        chain_config = config['chain']
-        state_size=chain_config['state_size']
-        data_dir = chain_config['data_dir']
-        config_dir = chain_config['config_dir']
-        genesis: Optional[Dict] = None
+    net_config = config['net']
+    peers = net_config['peers']
+    logger.info(f'peers: {peers}')
+    for peer in peers:
+        if peers.count(peer) > 1:
+            logger.error(f'duplicated peer: {peer} in config file {config_file}')
+            return
 
-        net_config = config['net']
-        peers = net_config['peers']
-        logger.info(f'peers: {peers}')
-        for peer in peers:
-            if peers.count(peer) > 1:
-                logger.error(f'duplicated peer: {peer} in config file {config_file}')
-                return
-
-        if genesis_file:
-            try:
-                with open(genesis_file) as f:
-                    genesis = json.load(f)
-            except FileNotFoundError:
-                logger.error('genesis file not found: %s', genesis_file)
-                return
-            except JSONDecodeError:
-                logger.error('genesis file is not a valid json file: %s', genesis_file)
-                return
-            if 'genesis' in config:
-                logger.warning(f'genesis in config file {config_file} will be overwrite by genesis file {genesis_file}')
-        else:
-            try:
-                genesis = config['genesis']
-            except KeyError:
-                pass
-        # assert genesis, 'genesis is empty'
-        eos.initialize_logging(logging_config_file)
-
+    if genesis_file:
         try:
-            debug_producer_key=chain_config['debug_producer_key']
+            with open(genesis_file) as f:
+                genesis = json.load(f)
+        except FileNotFoundError:
+            logger.error('genesis file not found: %s', genesis_file)
+            return
+        except JSONDecodeError:
+            logger.error('genesis file is not a valid json file: %s', genesis_file)
+            return
+        if 'genesis' in config:
+            logger.warning(f'genesis in config file {config_file} will be overwrite by genesis file {genesis_file}')
+    else:
+        try:
+            genesis = config['genesis']
         except KeyError:
-            debug_producer_key=''
+            pass
+    # assert genesis, 'genesis is empty'
+    eos.initialize_logging(logging_config_file)
 
-        self.config = config
-        return data_dir, config_dir, genesis, state_size, snapshot_file, debug_producer_key
+    try:
+        debug_producer_key=chain_config['debug_producer_key']
+    except KeyError:
+        debug_producer_key=''
 
-    def __init__(self, config_file: str, genesis_file: str, snapshot_file: str, worker_process: bool = False):
+    return data_dir, config_dir, genesis, state_size, snapshot_file, debug_producer_key
+
+class Node(object):
+    def __init__(self, data_dir: str, config_dir: str, genesis: str, state_size: int, snapshot_file: str, debug_producer_key, worker_process: bool = False):
+        if not worker_process:
+            eos.set_data_dir(data_dir)
+            eos.set_config_dir(config_dir)
+
         self._chain = None
-        data_dir, config_dir, genesis, state_size, snapshot_file, debug_producer_key = self.init(config_file, genesis_file, snapshot_file)
-
         if snapshot_file:
             if not os.path.exists(snapshot_file):
                 raise Exception(f'snapshot file {snapshot_file} does not exist')
@@ -283,7 +283,15 @@ def get_network() -> net.Network:
 
 def init_node(config_file: str, genesis_file: str, snapshot_file: str, worker_process: bool = False):
     global g_node
-    g_node = Node(config_file, genesis_file, snapshot_file, worker_process)
+
+    args = init(config_file, genesis_file, snapshot_file)
+
+    g_node = Node(*args, worker_process)
+    return g_node
+
+def init_worker_node(data_dir, config_dir, state_size):
+    global g_node
+    g_node = Node(data_dir, config_dir, '', state_size, '', '', True)
     return g_node
 
 async def start_network(rwlock: Optional[Lock] = None):
@@ -291,7 +299,7 @@ async def start_network(rwlock: Optional[Lock] = None):
     global g_network
     assert g_node, 'node is not initialized'
 
-    g_network = net.Network(g_node.chain, g_node.config['net']['peers'], rwlock)
+    g_network = net.Network(g_node.chain, node_config.get_config()['net']['peers'], rwlock)
     try:
         await g_network.run()
     except asyncio.exceptions.CancelledError:

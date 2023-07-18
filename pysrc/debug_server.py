@@ -80,6 +80,9 @@ def init(quit):
         port = node_config.get_config()['debug_port']
     except KeyError:
         port = 7777
+    except AssertionError:
+        port = 7777
+
     logger.info('start debug webserver at port %s', port)
     config = uvicorn.Config(app, host="127.0.0.1", port=port)
     server = UvicornServer(config)
