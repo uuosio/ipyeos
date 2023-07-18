@@ -14,14 +14,13 @@ cdef extern from "_ipyeos.hpp":
         void print_log(int level, string& logger_name, string& message)
         void *post(void *(*fn)(void *), void *args) nogil
         void *get_database()
-
+        void *get_controller()
         void set_log_level(string& logger_name, int level)
         int get_log_level(string& logger_name)
         void enable_deep_mind(void *controller)
 
         string data_dir()
         string config_dir()
-        string get_chain_config()
 
     ctypedef struct database_proxy:
         void set_database(void *db)
@@ -32,8 +31,6 @@ cdef extern from "_ipyeos.hpp":
         int32_t find(int32_t tp, int32_t index_position, char *raw_data, size_t size, char *out, size_t out_size)
 
     ctypedef struct ipyeos_proxy:
-        void *get_database()
-
         string get_last_error()
         void set_last_error(string& error)
 
@@ -55,6 +52,8 @@ cdef extern from "_ipyeos.hpp":
 
         void set_worker_process(bool worker_process)
         bool is_worker_process()
+
+        string get_chain_config(void *controller)
 
         string create_key(string& key_type)
         string get_public_key(string &priv_key)
@@ -84,8 +83,8 @@ def data_dir():
 def config_dir():
     return get_ipyeos_proxy().cb.config_dir()
 
-def get_chain_config() -> str:
-    return get_ipyeos_proxy().cb.get_chain_config()
+def get_chain_config(uint64_t controller) -> str:
+    return get_ipyeos_proxy().get_chain_config(<void *>controller)
 
 def initialize_logging(string& config_path):
     get_ipyeos_proxy().cb.initialize_logging(config_path)
@@ -195,6 +194,9 @@ def post(fn, *args, **kwargs):
     if isinstance(_ret, Exception):
         raise _ret
     return _ret
+
+def get_controller() -> uint64_t:
+    return <uint64_t>get_ipyeos_proxy().cb.get_controller()
 
 def get_database() -> uint64_t:
     return <uint64_t>get_ipyeos_proxy().cb.get_database()

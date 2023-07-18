@@ -79,12 +79,6 @@ def config_dir() -> str:
     assert g_config_dir, 'config_dir is not set'
     return g_config_dir
 
-def get_chain_config() -> dict:
-    global g_chain_config
-    if not g_chain_config:
-        g_chain_config = json.loads(_eos.get_chain_config())
-    return g_chain_config
-
 def initialize_logging(logging_config_file: str="logging.json") -> None:
     _eos.initialize_logging(logging_config_file)
 
@@ -253,6 +247,20 @@ def run_once() -> int:
 
 def post(fn, *args, **kwargs):
     return _eos.post(fn, *args, **kwargs)
+
+def get_controller() -> int:
+    return _eos.get_controller()
+
+def get_database() -> int:
+    return _eos.get_database()
+
+def get_chain_config() -> dict:
+    global g_chain_config
+    assert get_node_type() == 'eosnode', 'only eosnode can use get_chain_config'
+    if g_chain_config:
+        return g_chain_config
+    g_chain_config = json.loads(_eos.get_chain_config(_eos.get_controller()))
+    return g_chain_config
 
 def quit() -> None:
     _eos.quit()

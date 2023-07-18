@@ -54,6 +54,8 @@ class Chain(object):
         if not self.ptr:
             error = _eos.get_last_error()
             raise Exception(error)
+        
+        self.chain_config: Optional[Dict] = None
 
         # self.enable_deep_mind()
     def startup(self, initdb: bool) -> bool:
@@ -91,6 +93,12 @@ class Chain(object):
 
     def get_database(self):
         return _chain.get_database(self.ptr)
+
+    def get_chain_config(self) -> dict:
+        if self.chain_config:
+            return self.chain_config
+        self.chain_config = json.loads(_eos.get_chain_config(self.get_controller()))
+        return self.chain_config
 
     def start_block(self, block_time_since_epoch_ms: int = 0, confirm_block_count: int=0, features: Optional[list]=None) -> None:
         """

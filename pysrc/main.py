@@ -158,7 +158,10 @@ class Main(object):
 
         data_dir = eos.data_dir()
         config_dir = eos.config_dir()
-        state_size = eos.get_chain_config()['state_size']
+        if self.node_type == 'eosnode':
+            state_size = eos.get_chain_config()['state_size']
+        else:
+            state_size = node.get_node().chain.get_chain_config()['state_size']
 
         for port in worker_processes:
             in_queue, out_queue = Queue(), Queue()
