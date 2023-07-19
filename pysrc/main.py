@@ -99,6 +99,7 @@ class Main(object):
         #         break
         #     await asyncio.sleep(0.0)
         #     print('run once')
+        eos.exit()
         print('run return', ret)
         return ret
 
@@ -124,12 +125,7 @@ class Main(object):
         logger.info("+++++++shutdown...")
         self.shutdown_worker_processes()
 
-        if self.node_type == 'eosnode':
-            logger.info("quit eosnode")
-            eos.quit()
-            # eos.post(eos.quit)
-
-        eos.exit()
+        # eos.post(eos.quit)
         
         logger.info('shutdown webserver')
         await self.shutdown_webserver()
@@ -148,7 +144,11 @@ class Main(object):
         logger.info('shutdown done')
 
     def quit_node(self):
-        asyncio.create_task(self.shutdown())
+        if self.node_type == 'eosnode':
+            logger.info("quit eosnode")
+            eos.quit()
+        eos.exit()
+        # asyncio.create_task(self.shutdown())
 
     def start_worker_processes(self, worker_processes):
         if not worker_processes:
@@ -159,7 +159,7 @@ class Main(object):
         data_dir = eos.data_dir()
         config_dir = eos.config_dir()
         if self.node_type == 'eosnode':
-            state_size = eos.get_chain_config()['state_size']
+            state_size = int(eos.get_chain_config()['state_size'])
         else:
             state_size = node.get_node().chain.get_chain_config()['state_size']
 
@@ -211,11 +211,13 @@ class Main(object):
             await self.shutdown()
             return False
 
-        try:
-            await future
-        except asyncio.exceptions.CancelledError:
-            logger.info('asyncio.exceptions.CancelledError')
-
+        while not eos.should_exit():
+            await asyncio.sleep(0.2)
+        # try:
+        #     await future
+        # except asyncio.exceptions.CancelledError:
+        #     logger.info('asyncio.exceptions.CancelledError')
+        logger.info('++++++++run_eos done!')
         await self.shutdown()
         print('all done!')
 

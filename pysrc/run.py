@@ -125,12 +125,15 @@ def run_ipyeos(custom_cmds=None):
     try:
         p = subprocess.Popen(cmds, stdout=sys.stdout, stderr=sys.stderr)
         ret = p.wait()
+        logger.info('ipyeos exit with code: %s', ret)
         return ret
     except KeyboardInterrupt:
-        quit_app()
-        p.terminate()
+        # quit_app()
+        # p.terminate()
         # p.send_signal(signal.SIGINT)
+        logger.info('KeyboardInterrupt, wait for ipyeos exit...')
         ret = p.wait()
+        logger.info('ipyeos exit with code: %s', ret)
         return ret
 
 def start_debug_server():
