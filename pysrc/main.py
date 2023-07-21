@@ -44,6 +44,8 @@ class Main(object):
         self.worker_processes = []
         self.rwlock = None
         self.init_finished_event = threading.Event()
+        self.init_worker_process_finished_event = threading.Event()
+
         self.init_success = False
 
     def start_webserver(self, quit_app):
@@ -93,7 +95,7 @@ class Main(object):
         config = node_config.get_config()
         argv = ['ipyeos']
         for key in config:
-            if key == 'worker_processes':
+            if key in ('worker_processes', 'debug_port', 'rpc_address'):
                 continue
             value = config[key]
             if value is None:
@@ -117,14 +119,17 @@ class Main(object):
         logger.info('run_eos %s %s', genesis_file, snapshot_file)
         try:
             self.init_success = self._init_eos(genesis_file, snapshot_file)
+            logger.info('_init_eos return: %s', self.init_success)
             self.init_finished_event.set()
             if not self.init_success:
                 return False
+            self.init_worker_process_finished_event.wait()
         except Exception as e:
             logger.exception(e)
             self.init_success = False
             self.init_finished_event.set()
             return False
+        logger.info('+++++eos.run')
         ret = eos.run()
         # while True:
         #     ret = eos.run_once()
@@ -240,6 +245,7 @@ class Main(object):
                 self.quit_node()
                 await self.shutdown()
                 return False
+            self.init_worker_process_finished_event.set()
         except KeyError:
             logger.info('+++++no worker_process_num in config file')
             pass
