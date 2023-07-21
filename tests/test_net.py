@@ -12,7 +12,7 @@ from ipyeos import eos, net, log
 from ipyeos.chaintester import ChainTester
 from ipyeos.types import *
 from ipyeos.transaction import Transaction
-from ipyeos import net
+from ipyeos import eos, net, node_config
 from ipyeos.net import HandshakeMessage, ChainSizeMessage, GoAwayMessage, GoAwayReason, TimeMessage
 from ipyeos.net import RequestMessage, NoticeMessage, OrderedIds, IdListModes
 from ipyeos.net import SyncRequestMessage
@@ -276,15 +276,16 @@ def test_config_file():
     print(json.dumps(genesis, indent=4))
 
 def test_connection():
-    with open('./data/config.yaml') as f:
-        config = yaml.safe_load(f)
+    # with open('./data/config.yaml') as f:
+    #     config = yaml.safe_load(f)
+    config = node_config.load_config('./data/config.yaml')
     logging_config_file = config['logging_config_file']
-    chain_config = config['chain_config']
+    chain_config = config['chain']
     state_size=chain_config['state_size']
     data_dir = chain_config['data_dir']
     config_dir = chain_config['config_dir']
 
-    peers = config['peers']
+    peers = config['net']['peers']
     logger.error(f'peers: {peers}')
     for peer in peers:
         if peers.count(peer) > 1:
@@ -292,17 +293,17 @@ def test_connection():
             return
 
     genesis = config['genesis']
-
-    node = Node(False, data_dir=data_dir, config_dir=config_dir, genesis = genesis, state_size=state_size)
-    # trace = TraceAPI(node.chain, 'dd/trace')
-
-    # trace = trace.get_block_trace(10)
+    eos.set_node_type('pyeosnode')
+    node = Node(data_dir=data_dir, config_dir=config_dir, genesis = genesis, state_size=state_size)
+    trace = TraceAPI(node.chain, 'dd/trace')
+    trace = trace.get_block_trace(10)
+    logger.info(trace)
 
     node.chain.abort_block()
     print(node.chain.chain_id())
     # peer.eosio.sg:9876
     # eu1.eosdac.io:49876
-    network = Network(node.chain, config['peers'])
+    network = Network(node.chain, config['net']['peers'])
     # network = Network(node.chain, 'peer.main.alohaeos.com', '9876')
     try:
         asyncio.run(network.run())
