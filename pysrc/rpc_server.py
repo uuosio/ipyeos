@@ -1,16 +1,23 @@
 import asyncio
 import json
+import uvicorn
+
 from concurrent.futures import ThreadPoolExecutor
+from fastapi import FastAPI, Request
+from fastapi.responses import PlainTextResponse
 from typing import Dict, List, NewType, Optional
 
-from aiohttp import web
+from .uvicorn_server import UvicornServer
 
 from . import eos
 from .interfaces.ttypes import Action, ActionArguments
+from . import log
 
 i32 = NewType('i32', int)
 i64 = NewType('i64', int)
 u64 = NewType('u64', int)
+
+logger = log.get_logger(__name__)
 
 class BaseChainTester:
     def produce_block(self, id):
@@ -22,7 +29,7 @@ class BaseChainTester:
     def push_actions(self, id, actions):
         pass
 
-    def get_table_rows(self, id, _json: bool, code: str, scope: str, table: str, lower_bound: str, upper_bound: str, limit: i64, key_type: str, index_position: str, reverse: bool, show_payer: bool):
+    def get_table_rows(self, id, _json: bool, code: str, scope: str, table: str, lower_bound: str, upper_bound: str, limit: i64, key_type: str, index_position: str, encode_type: str, reverse: bool, show_payer: bool):
         pass
 
     def enable_debug_contract(self, id, contract, enable):
@@ -108,8 +115,8 @@ class ChainTesterProxy(object):
     def deploy_contract(self, id, account: str, wasm: str, abi: str):
         return self.handler.deploy_contract(id, account, wasm, abi)
 
-    def get_table_rows(self, id, _json: bool, code: str, scope: str, table: str, lower_bound: str, upper_bound: str, limit: i64, key_type: str, index_position: str, reverse: bool, show_payer: bool):
-        return self.handler.get_table_rows(id, _json, code, scope, table, lower_bound, upper_bound, limit, key_type, index_position, reverse, show_payer)
+    def get_table_rows(self, id, _json: bool, code: str, scope: str, table: str, lower_bound: str, upper_bound: str, limit: i64, key_type: str, index_position: str, encode_type: str, reverse: bool, show_payer: bool):
+        return self.handler.get_table_rows(id, _json, code, scope, table, lower_bound, upper_bound, limit, key_type, index_position, encode_type, reverse, show_payer)
 
     def enable_debug_contract(self, id, contract, enable):
         self.handler.enable_debug_contract(id, contract, enable)
@@ -148,33 +155,32 @@ class ChainTesterProxy(object):
 
 proxy = None
 
-async def call_method(request: web.Request):
+app = FastAPI()
+
+@app.post("/api/{method}", response_class=PlainTextResponse)
+async def create_method(method: str, request: Request):
     try:
         kwargs = await request.json()
-        method = request.match_info.get('method', None)
-
         ret = getattr(proxy, method)(**kwargs)
         if isinstance(ret, dict):
             ret = json.dumps(ret)
         elif isinstance(ret, bytes):
             ret = ret.decode()
-        return web.Response(text=ret)
-    except json.JSONDecodeError:
-        return web.HTTPBadRequest(text="Invalid JSON")
+        assert isinstance(ret, str), f'invalid return type: {type(ret)}'
+        return ret
     except Exception as e:
-        print(e)
-        return web.HTTPInternalServerError()
+        logger.exception(e)
+        return f'{{"error": "{str(e)}"}}'
 
 async def start(rpc_server_addr, rpc_server_port, handler: BaseChainTester):
     global proxy
     proxy = ChainTesterProxy(handler)
-    print('+++++++start rpc server', rpc_server_addr, rpc_server_port)
-    app = web.Application()
-    app.router.add_route('POST', '/api/{method}', call_method)
-    runner = web.AppRunner(app)
-    await runner.setup()
-    site = web.TCPSite(runner, rpc_server_addr, rpc_server_port)
-    await site.start()
-    print('rpc server started')
-    while True:
-        await asyncio.sleep(1000.0)
+    logger.info('+++++++start rpc server: %s %s', rpc_server_addr, rpc_server_port)
+
+    config = uvicorn.Config(app, host=rpc_server_addr, port=int(rpc_server_port))
+    server = UvicornServer(config)
+
+    try:
+        await server.serve()
+    except asyncio.exceptions.CancelledError:
+        logger.info('asyncio.exceptions.CancelledError')

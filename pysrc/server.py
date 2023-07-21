@@ -26,6 +26,7 @@ from thrift.Thrift import TApplicationException, TMessageType, TType
 from thrift.transport import TSocket, TTransport
 
 from . import _chainapi, _eos, _vm_api, chaintester, eos, log, rpc_server
+from .chain_exceptions import ChainException
 from .chainapi import ChainApi
 from .chaintester import ChainTester
 from .interfaces import Apply, ApplyRequest, IPCChainTester
@@ -902,16 +903,8 @@ class ChainTesterHandler:
             # r = tester.push_action(account, action, arguments, permissions, explicit_cpu_bill = True)
             return json.dumps(r).encode()
         except Exception as e:
-            # logger.exception(e)
-            err = e.args[0]
-            if isinstance(err, dict):
-                error_message = err['except']
-                error_message = json.dumps(error_message)
-                err = json.dumps(err)
-            else:
-                error_message = err
-            # self.server.handle_vm_api_exception(error_message)
-            return err.encode()
+            logger.exception(e)
+            return str(e).encode()
         finally:
             self.current_tester = None
             client = self.get_apply_request_client()
@@ -980,11 +973,11 @@ class ChainTesterHandler:
     def create_key(self, key_type):
         return _eos.create_key(key_type)
 
-    def get_table_rows(self, id, _json: bool, code: str, scope: str, table: str, lower_bound: str, upper_bound: str, limit: i64, key_type: str, index_position: str, reverse: bool, show_payer: bool):
+    def get_table_rows(self, id, _json: bool, code: str, scope: str, table: str, lower_bound: str, upper_bound: str, limit: i64, key_type: str, index_position: str, encode_type: str, reverse: bool, show_payer: bool):
         tester: ChainTester = self.testers[id]
         # print(_json, code, scope, table, lower_bound, upper_bound, limit, key_type, index_position, reverse, show_payer)
         try:
-            r = tester.get_table_rows(_json, code, scope, table, lower_bound, upper_bound, limit, key_type, index_position, reverse, show_payer)
+            r = tester.get_table_rows(_json, code, scope, table, lower_bound, upper_bound, limit, key_type, index_position, encode_type, reverse, show_payer)
             return json.dumps(r)
         except Exception as e:
             print(e)
