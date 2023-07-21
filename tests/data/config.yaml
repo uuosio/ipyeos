@@ -27,6 +27,7 @@ worker_processes:
   - 8810
 
 debug_port: 7777
+rpc_address: '127.0.0.1:8088'
 
 net:
   # socks5_proxy: "127.0.0.1:8084"
@@ -43,4 +44,8 @@ chain:
   contracts_console: false
   data_dir: "dd"
   config_dir: "cd"  
+  db_map_mode: "mapped" # mapped heap locked
 
+plugins:
+  - trace_api
+  - snapshot

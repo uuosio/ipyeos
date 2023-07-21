@@ -18,7 +18,9 @@ from . import eos, log, net, node_config
 from .database import GeneratedTransactionObjectIndex
 from .database_objects import GeneratedTransactionObject
 from .packer import Decoder
+from .snapshot import Snapshot
 from .types import Name
+from .trace_api import TraceAPI
 
 logger = log.get_logger(__name__)
 
@@ -165,7 +167,7 @@ def init(config_file: str, genesis_file: str, snapshot_file: str):
     return data_dir, config_dir, genesis, state_size, snapshot_file, debug_producer_key
 
 class Node(object):
-    def __init__(self, data_dir: str, config_dir: str, genesis: str, state_size: int, snapshot_file: str, debug_producer_key, worker_process: bool = False):
+    def __init__(self, data_dir: str, config_dir: str, genesis: str, state_size: int, snapshot_file: str = '', debug_producer_key: str = '', worker_process: bool = False):
         if not worker_process:
             eos.set_data_dir(data_dir)
             eos.set_config_dir(config_dir)
@@ -213,7 +215,12 @@ class Node(object):
 
         chain_config['blocks_dir'] = os.path.join(self.data_dir, 'blocks')
         chain_config['state_dir'] = os.path.join(self.data_dir, 'state')
-        
+
+        try:
+            chain_config['db_map_mode'] = node_config.get_chain_config()['db_map_mode']
+        except:
+            chain_config['db_map_mode'] = 'mapped'
+
         if snapshot_file:
             initialize = False
             init_database = False
@@ -243,6 +250,21 @@ class Node(object):
 
         self.db = database.Database(self.chain.get_database())
 
+        try:
+            plugins = node_config.get_config()['plugins']
+
+            if 'trace_api' in plugins:
+                self.trace = TraceAPI(self.chain, f'{self.data_dir}/trace')
+            else:
+                self.trace = None
+
+            if 'snapshot' in plugins:
+                self.snapshot = Snapshot(self.chain, f'{self.data_dir}/snapshot')
+            else:
+                self.snapshot = None
+        except:
+            logger.info('+++++no plugins in config file')
+
     @property
     def api(self) -> chainapi.ChainApi:
         return self._api
@@ -250,6 +272,12 @@ class Node(object):
     @property
     def chain(self) -> chain.Chain:
         return self._chain
+
+    def get_trace(self) -> TraceAPI:
+        return self.trace
+
+    def get_snapshot(self) -> Snapshot:
+        return self.snapshot
 
     def free(self):
         if not self.chain:

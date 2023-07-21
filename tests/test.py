@@ -1,6 +1,7 @@
 import os
 import hashlib
 import shutil
+import sys
 import platform
 
 from ipyeos import eos, log
@@ -12,6 +13,7 @@ from ipyeos.types import PublicKey
 from ipyeos.database_objects import KeyWeight, Authority
 from ipyeos.database import PermissionObjectIndex, GlobalPropertyObjectIndex
 from ipyeos.block_log import BlockLog
+from ipyeos.trace_api import TraceAPI
 
 chaintester.chain_config['contracts_console'] = True
 dir_name = os.path.dirname(__file__)
@@ -318,3 +320,16 @@ def test_abort_block():
         logger.error(e.stack[0].format)
     t.chain.abort_block()
     t.chain.abort_block()
+
+@chain_test(True)
+def test_trace(t: ChainTester):
+    # if 'pytest' in sys.modules:
+    #     print('in pytest')
+    #     return
+    trace = TraceAPI(t.chain, f'{t.data_dir}/trace')
+    num = t.chain.head_block_num()
+    for i in range(10):
+        t.push_action('hello', 'hi', b'hi', {'hello': 'active'})
+        t.produce_block()
+    info = trace.get_block_trace(num + 1)
+    logger.info(info)

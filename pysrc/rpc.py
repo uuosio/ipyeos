@@ -6,8 +6,8 @@ from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 
 from .uvicorn_server import UvicornServer
-from . import log, net, node
-from .chain_exceptions import BlockValidateException, ChainException
+from . import log, net, node, node_config
+from .chain_exceptions import BlockValidateException, InvalidSnapshotRequestException, SnapshotRequestNotFoundException, ChainException
 
 logger = log.get_logger(__name__)
 
@@ -36,6 +36,28 @@ class PushTransactionArgs(BaseModel):
     """
     packed_tx: str
     speculate: bool = False
+
+class GetBlockTraceArgs(BaseModel):
+    """
+    A Pydantic model that represents the arguments for the `get_block_trace` RPC method.
+    """
+    block_num: int
+
+# start_block_num=num, end_block_num=num + 9, block_spacing=3, snapshot_description="1"
+class SnapshotScheduleArgs(BaseModel):
+    """
+    A Pydantic model that represents the arguments for the `snapshot_schedule` RPC method.
+    """
+    start_block_num: int
+    end_block_num: int
+    block_spacing: int
+    snapshot_description: str
+
+class SnapshotUnscheduleArgs(BaseModel):
+    """
+    A Pydantic model that represents the arguments for the `snapshot_unschedule` RPC method.
+    """
+    schedule_request_id: int
 
 async def read_root():
     """
@@ -89,9 +111,65 @@ async def push_transaction(args: PushTransactionArgs):
         else:
             return '{"status": "error"}'
 
-def init(port: int=8088):
+async def get_block_trace(args: GetBlockTraceArgs):
+    try:
+        logger.error("++++++++args.block_num: %s", args.block_num)
+        ret = node.get_node().get_trace().get_block_trace(args.block_num)
+        return f'{{"status": "ok", "result": {ret}}}'
+    except Exception as e:
+        logger.exception(e)
+        return f'{{"status": "error", "result": "{str(e)}"}}'
+
+async def snapshot_schedule(args: SnapshotScheduleArgs):
+    try:
+        ret = node.get_node().get_snapshot().schedule(args.start_block_num, args.end_block_num, args.block_spacing, args.snapshot_description)
+        return f'{{"status": "ok", "result": {ret}}}'
+    except InvalidSnapshotRequestException:
+        return '{"status": "error", "result": "invalid snapshot request"}'
+
+async def snapshot_unschedule(args: SnapshotUnscheduleArgs):
+    try:
+        ret = node.get_node().get_snapshot().unschedule(args.schedule_request_id)
+        return f'{{"status": "ok", "result": {ret}}}'
+    except SnapshotRequestNotFoundException:
+        return '{"status": "error", "result": "invalid snapshot request"}'
+
+async def snapshot_get_requests():
+    ret = node.get_node().get_snapshot().get_requests()
+    return f'{{"status": "ok", "result": {ret}}}'
+
+def add_post_method(path, func):
+    app.post(path, response_class=PlainTextResponse)(func)
+
+def add_get_method(path, func):
+    app.get(path, response_class=PlainTextResponse)(func)
+
+def init(rpc_address: str):
+    try:
+        host, port = rpc_address.split(':')
+        port = int(port)
+    except:
+        logger.error('invalid rpc_address: %s', rpc_address)
+        return None
+
     app.get("/")(read_root)
-    config = uvicorn.Config(app, host="127.0.0.1", port=port)
+    try:
+        plugins = node_config.get_config()['plugins']
+
+        if 'trace_api' in plugins:
+            add_post_method("/get_block_trace", get_block_trace)
+            logger.info('+++++add get_block_trace method')
+
+        if 'snapshot' in plugins:
+            logger.info('+++++add snapshot methods')
+            add_post_method("/snapshot_schedule", snapshot_schedule)
+            add_post_method("/snapshot_unschedule", snapshot_unschedule)
+            add_get_method("/snapshot_get_requests", snapshot_get_requests)
+    except Exception as e:
+        logger.exception(e)
+        logger.info('+++++no plugins in config file')
+
+    config = uvicorn.Config(app, host=host, port=port)
     server = UvicornServer(config)
     return server
 
