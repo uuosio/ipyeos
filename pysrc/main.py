@@ -15,10 +15,9 @@ from multiprocessing import Process, Lock, Queue, Event
 from typing import Optional
 
 from . import args, debug_server, eos, helper, log, node, node_config, rpc, server, worker
-from .debug import get_free_port
 
 if not 'RUN_IPYEOS' in os.environ:
-    print('main module can only be load by ipyeos')
+    print('only ipyeos can load the main module.')
     sys.exit(0)
 
 logger = log.get_logger(__name__)
@@ -90,19 +89,41 @@ class Main(object):
             self.rpc_server_task = None
             self.rpc_server = None
 
-    def _init_eos(self):
-        argv = sys.argv[1:]
-        argv[0] = 'ipyeos'
+    def _init_eos(self, genesis_file, snapshot_file):
+        config = node_config.get_config()
+        argv = ['ipyeos']
+        for key in config:
+            if key == 'worker_processes':
+                continue
+            value = config[key]
+            if value is None:
+                argv.append('--'+key.replace('_', '-'))
+            else:
+                argv.append('--'+key.replace('_', '-')+'='+str(value))
+
+        if genesis_file:
+            argv.append('--genesis-json='+genesis_file)
+
+        if snapshot_file:
+            argv.append('--snapshot='+snapshot_file)
+        logger.info(' '.join(argv))
         ret = eos.init(argv)
         if not ret == 0:
             logger.info('init return %s', ret)
             return False
         return True
 
-    def _run_eos(self):
-        self.init_success = self._init_eos()
-        self.init_finished_event.set()
-        if not self.init_success:
+    def _run_eos(self, genesis_file, snapshot_file):
+        logger.info('run_eos %s %s', genesis_file, snapshot_file)
+        try:
+            self.init_success = self._init_eos(genesis_file, snapshot_file)
+            self.init_finished_event.set()
+            if not self.init_success:
+                return False
+        except Exception as e:
+            logger.exception(e)
+            self.init_success = False
+            self.init_finished_event.set()
             return False
         ret = eos.run()
         # while True:
@@ -113,7 +134,9 @@ class Main(object):
         #     print('run once')
         eos.exit()
         print('run return', ret)
-        return ret
+        if ret == 0:
+            return True
+        return False
 
     async def shutdown(self):
         if self.in_shutdown:
@@ -135,10 +158,11 @@ class Main(object):
         # tasks = [t for t in asyncio.all_tasks(loop)]
         for task in tasks:
             logger.info('wait for task: %s', task)
-            # try:
-            #     await asyncio.wait_for(task, 1.0)
-            # except asyncio.exceptions.TimeoutError:
-            #     task.cancel()
+            try:
+                await asyncio.wait_for(task, 3.0)
+            except asyncio.exceptions.TimeoutError:
+                logger.info('task %s timeout, cancel it', task)
+                task.cancel()
         await asyncio.gather(*tasks, return_exceptions=True)
         # loop.stop()
         logger.info('shutdown done')
@@ -200,16 +224,25 @@ class Main(object):
         self.quit_node()
 
     async def main_eosnode(self):
+        result = args.parse_args()
+        node_config.load_config(result.config_file)
+
         self.start_webserver(self.quit_node)
         self.async_queue = asyncio.Queue()
-        future = asyncio.get_event_loop().run_in_executor(self.executor, self._run_eos)
+        future = asyncio.get_event_loop().run_in_executor(self.executor, self._run_eos, result.genesis_file, result.snapshot_file)
         self.init_finished_event.wait()
         if not self.init_success:
             return False
 
-        if not self.start_worker_processes([8809]):
-            await self.shutdown()
-            return False
+        try:
+            worker_processes = node_config.get_config()['worker_processes']
+            if not self.start_worker_processes(worker_processes):
+                self.quit_node()
+                await self.shutdown()
+                return False
+        except KeyError:
+            logger.info('+++++no worker_process_num in config file')
+            pass
 
         while not eos.should_exit():
             await asyncio.sleep(0.2)
@@ -227,6 +260,7 @@ class Main(object):
         try:
             worker_processes = node_config.get_config()['worker_processes']
             if not self.start_worker_processes(worker_processes):
+                self.quit_node()
                 await self.shutdown()
                 return False
         except KeyError:

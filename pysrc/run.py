@@ -9,7 +9,6 @@ import sys
 import sysconfig
 
 from . import args, log
-from .debug import get_free_port
 
 logger = log.get_logger(__name__)
 
@@ -21,9 +20,6 @@ def is_macos_arm():
     return platform.system() == 'Darwin' and platform.processor() == 'arm'
 
 def setup_env():
-    port = get_free_port()
-    logger.info('++++++++set DEBUG_PORT env to %s', port)
-    os.environ['DEBUG_PORT'] = str(port)
 
     libdir, py_version_short, abiflags = sysconfig.get_config_vars('LIBDIR', 'py_version_short', 'abiflags')
 

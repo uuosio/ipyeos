@@ -11,7 +11,6 @@ from pydantic import BaseModel
 
 from . import exec_result, helper, log
 from . import node_config
-from .debug import get_free_port
 from .uvicorn_server import UvicornServer
 
 logger = log.get_logger(__name__)
@@ -75,7 +74,6 @@ def init(quit):
     global quit_app
     quit_app = quit
 
-    # port = get_free_port()
     try:
         port = node_config.get_config()['debug_port']
     except KeyError:
