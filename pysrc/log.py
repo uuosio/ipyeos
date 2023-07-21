@@ -1,3 +1,4 @@
+import sys
 import logging
 
 log_format = '%(asctime)s [%(levelname)s] %(module)s %(lineno)d %(message)s'
@@ -39,5 +40,6 @@ handler.setFormatter(formater)
 def get_logger(name):
     logger = logging.getLogger(name)
     logger.setLevel(logging.INFO)
-    logger.addHandler(handler)
+    if not 'pytest' in sys.modules:
+        logger.addHandler(handler)
     return logger
