@@ -11,7 +11,6 @@ import time
 import traceback
 import yaml
 
-from aiohttp import web
 from multiprocessing import Process, Lock, Queue, Event
 from typing import Optional
 
@@ -50,12 +49,25 @@ class Main(object):
 
     def start_webserver(self, quit_app):
         server = debug_server.init(quit_app)
+        if not server:
+            return False
         self.debug_server_task = asyncio.create_task(debug_server.start(server))
         self.debug_server = server
 
-        server = rpc.init()
+        if self.node_type == 'eosnode':
+            return
+
+        try:
+            rpc_address = node_config.get_config()['rpc_address']
+        except:
+            rpc_address = '127.0.0.1:8088'
+            logger.info('+++++no rpc_address in config file, use default: %s', rpc_address)
+        server = rpc.init(rpc_address)
+        if not server:
+            return False
         self.rpc_server_task = asyncio.create_task(rpc.start(server))
         self.rpc_server = server
+        return True
 
     def shutdown_worker_processes(self):
         for worker in self.worker_processes:
@@ -66,17 +78,17 @@ class Main(object):
         if not self.debug_server_task:
             return
 
-        self.debug_server.exit()
-        self.rpc_server.exit()
+        if self.debug_server:
+            self.debug_server.exit()
+            await self.debug_server_task
+            self.debug_server_task = None
+            self.debug_server = None
 
-        await self.debug_server_task
-        await self.rpc_server_task
-
-        self.debug_server_task = None
-        self.debug_server = None
-
-        self.rpc_server_task = None
-        self.rpc_server = None
+        if self.rpc_server:
+            self.rpc_server.exit()
+            await self.rpc_server_task
+            self.rpc_server_task = None
+            self.rpc_server = None
 
     def _init_eos(self):
         argv = sys.argv[1:]
@@ -102,18 +114,6 @@ class Main(object):
         eos.exit()
         print('run return', ret)
         return ret
-
-    async def exec_code(self, request):
-        data = await request.post()
-        try:
-            code = data['code']
-            logger.info('exec code:\n %s', code)
-            exec(code)
-            return web.Response(text='OK')
-        except Exception as e:
-            exception_str = traceback.format_exc()
-            logger.error('exec code error:\n %s', exception_str)
-            return web.Response(text=exception_str)
 
     async def shutdown(self):
         if self.in_shutdown:

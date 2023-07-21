@@ -8,8 +8,6 @@ import subprocess
 import sys
 import sysconfig
 
-import aiohttp
-
 from . import args, log
 from .debug import get_free_port
 
@@ -59,53 +57,6 @@ def run_ipyeos_in_docker():
         cmd.extend(custom_cmds)
     print(' '.join(cmd))
     return subprocess.call(cmd, stdout=sys.stdout, stderr=sys.stderr)
-
-def quit_app():
-    try:
-        async def main():
-            if sys.argv[0].endswith('__main__.py'): # python3 -m ipyeos ...
-                command = sys.argv[3]
-            else:
-                command = sys.argv[0]
-            if command.endswith('eosdebugger'):
-                command = 'eosdebugger'
-            elif command.endswith('eosnode'):
-                command = 'eosnode'
-            elif command.endswith('pyeosnode'):
-                command = 'pyeosnode'
-            elif command.endswith('ipyeos'):
-                cmds = sys.argv[3:]
-                result = args.parse_args(cmds)
-                command = result.subparser
-            else:
-                logger.info('unknow command: %s', sys.argv)
-                return
-
-            if command == 'eosdebugger':
-                result = args.parse_parent_process_args()
-                url = f'http://{result.addr}:{result.rpc_server_port}/api/quit'
-            elif command in ['eosnode', 'pyeosnode']:
-                url = f'http://127.0.0.1:{os.environ["DEBUG_PORT"]}/quit'
-            else:
-                logger.info('unknow command: %s', sys.argv)
-
-            # url = 'http://127.0.0.1:9093/api/quit'
-            # r = httpx.post(url, json={}, proxies=None)
-            # print(r.status_code, r.text)
-            # return
-            print('+++++++url:', url)
-            async with aiohttp.ClientSession(trust_env=False) as session:
-                try:
-                    async with session.post(url, data="{}", proxy=None) as resp:
-                        print(resp.status)
-                        print(await resp.text())
-                except Exception as e:
-                    print(e)
-            print('send quit command to ipyeos done!')
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(main())
-    except Exception as e:
-        print(e)
 
 def run_ipyeos(custom_cmds=None):
     if 'RUN_IPYEOS' in os.environ:

@@ -980,48 +980,6 @@ class Connection(object):
                 self.logger.error(f"receive message during handshake: {tp}")
         return False
 
-    async def estimate_peer_speed(self):
-        start_time = time.monotonic()
-        start_block = 2
-        end_block = start_block + 10 - 1
-        current_block = start_block
-        msg = SyncRequestMessage(start_block, end_block)
-        try:
-            if not await self.send_message(msg):
-                return False
-        except asyncio.exceptions.CancelledError as e:
-            self.logger.info(f"CancelledError in request blocks")
-            return False
-        except Exception as e:
-            self.logger.exception(e)
-            return False
-
-        while current_block <= end_block:
-            try:
-                tp, raw_msg = await self.read_message()
-                if not raw_msg:
-                    return info
-                if tp == signed_block_message:
-                    header = BlockHeader.unpack_bytes(raw_msg)
-                    received_block_num = header.block_num()
-                    if not current_block == received_block_num:
-                        self.logger.error(f'received block num {received_block_num} not equal to current block num {current_block}')
-                    current_block += 1
-                elif tp == go_away_message:
-                    for listener in self.goway_listeners:
-                        listener(self, GoAwayMessage.unpack_bytes(raw_msg))
-                    self.close()
-                    return False
-            except Exception as e:
-                self.logger.error(f'error when receiving blocks')
-                self.logger.exception(e)
-                return False
-            except asyncio.exceptions.CancelledError as e:
-                self.logger.info(f"CancelledError in request blocks")
-                return False
-        self.avg_block_time = (time.monotonic() - start_time) / 10
-        return True
-
     async def heart_beat(self):
         while not eos.should_exit():
             try:
@@ -1403,15 +1361,6 @@ class OutConnection(Connection):
                     self.reader, self.writer = await self.open_connection_socks5(self.proxy_host, self.proxy_port, host, port)
                 else:
                     self.reader, self.writer = await asyncio.open_connection(host, port, limit=100*1024*1024)
-
-            # if await self.handshake():
-            #     self.logger.info('handshake success')
-            # else:
-            #     self.logger.info(f'connect to failed')
-            #     return None
-            # if await self.estimate_peer_speed():
-            #     self.logger.info('average block time: %s', self.avg_block_time)
-            #     return self
             if await self.estimate_connection_latency():
                 return self
             return None
@@ -1574,6 +1523,7 @@ class Network(object):
                 self.logger.info(type(e))
                 self.logger.exception(e)
                 break
+        self.logger.info('network exit')
 
     async def get_connection(self, timeout: float = 10.0):
         while not self.conn and timeout > 0.0:

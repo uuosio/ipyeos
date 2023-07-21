@@ -68,13 +68,21 @@ default_config = {
     "wasm_runtime": "wabt",
     "read_mode": "SPECULATIVE",
     "block_validation_mode": "FULL",
+    # enum map_mode {
+    #     mapped,
+    #     heap,
+    #     locked
+    # };
+    # Database map mode ("mapped", "heap", or "locked").
+    # In "mapped" mode database is memory mapped as a file.
+    # In "heap" mode database is preloaded in to swappable memory and will use huge pages if available.
+    # In "locked" mode database is preloaded, locked in to memory, and will use huge pages if available.
     "db_map_mode": "mapped",
     "db_hugepage_paths": [],
     "resource_greylist": [],
     "trusted_producers": [],
     "greylist_limit": 1000
 }
-
 
 class LogLevel(object):
     all = 0
