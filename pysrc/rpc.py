@@ -90,9 +90,16 @@ async def push_transaction(args: PushTransactionArgs):
     if args.speculate:
         chain = node.get_node().chain
         try:
-            chain.start_block()
-            ret = chain.push_transaction(packed_tx, return_json=False)
-            chain.abort_block()
+            rwlock = node.get_node().rwlock
+            if rwlock:
+                with rwlock.wlock():
+                    chain.start_block()
+                    ret = chain.push_transaction(packed_tx, return_json=False)
+                    chain.abort_block()
+            else:
+                chain.start_block()
+                ret = chain.push_transaction(packed_tx, return_json=False)
+                chain.abort_block()
         except BlockValidateException as e:
             ret = {"status": "error", "result": e.asdict()}
             return json.dumps(ret)

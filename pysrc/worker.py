@@ -192,7 +192,7 @@ class Worker(object):
 
 def run(port, rwlock: Lock, messenger: Messenger, exit_event: Event, data_dir: str, config_dir: str, state_size: int):
     global g_worker
-    _node = node.init_worker_node(data_dir, config_dir, state_size)
+    _node = node.init_worker_node(data_dir, config_dir, state_size, rwlock)
     try:
         _node.chain.start_block()
     except DatabaseGuardException as e:

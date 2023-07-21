@@ -167,7 +167,9 @@ def init(config_file: str, genesis_file: str, snapshot_file: str):
     return data_dir, config_dir, genesis, state_size, snapshot_file, debug_producer_key
 
 class Node(object):
-    def __init__(self, data_dir: str, config_dir: str, genesis: str, state_size: int, snapshot_file: str = '', debug_producer_key: str = '', worker_process: bool = False):
+    def __init__(self, data_dir: str, config_dir: str, genesis: str, state_size: int, snapshot_file: str = '', debug_producer_key: str = '', rwlock = None, worker_process: bool = False):
+        self.rwlock = rwlock
+
         if not worker_process:
             eos.set_data_dir(data_dir)
             eos.set_config_dir(config_dir)
@@ -309,25 +311,25 @@ def get_network() -> net.Network:
     assert g_network, 'network is not started'
     return g_network
 
-def init_node(config_file: str, genesis_file: str, snapshot_file: str, worker_process: bool = False):
+def init_node(config_file: str, genesis_file: str, snapshot_file: str, rwlock = None):
     global g_node
 
     args = init(config_file, genesis_file, snapshot_file)
 
-    g_node = Node(*args, worker_process)
+    g_node = Node(*args, rwlock)
     return g_node
 
-def init_worker_node(data_dir, config_dir, state_size):
+def init_worker_node(data_dir, config_dir, state_size, rwlock):
     global g_node
-    g_node = Node(data_dir, config_dir, '', state_size, '', '', True)
+    g_node = Node(data_dir, config_dir, '', state_size, '', '', rwlock, True)
     return g_node
 
-async def start_network(rwlock: Optional[Lock] = None):
+async def start_network():
     global g_node
     global g_network
     assert g_node, 'node is not initialized'
 
-    g_network = net.Network(g_node.chain, node_config.get_config()['net']['peers'], rwlock)
+    g_network = net.Network(g_node.chain, node_config.get_config()['net']['peers'], g_node.rwlock)
     try:
         await g_network.run()
     except asyncio.exceptions.CancelledError:

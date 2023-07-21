@@ -185,7 +185,7 @@ class Main(object):
         if self.node_type == 'eosnode':
             state_size = int(eos.get_chain_config()['state_size'])
         else:
-            state_size = node.get_node().chain.get_chain_config()['state_size']
+            state_size = int(node.get_node().chain.get_chain_config()['state_size'])
 
         for port in worker_processes:
             in_queue, out_queue = Queue(), Queue()
@@ -256,7 +256,7 @@ class Main(object):
 
     async def main_pyeosnode(self):
         result = args.parse_args()
-        node.init_node(result.config_file, result.genesis_file, result.snapshot_file)
+        node.init_node(result.config_file, result.genesis_file, result.snapshot_file, self.rwlock)
         try:
             worker_processes = node_config.get_config()['worker_processes']
             if not self.start_worker_processes(worker_processes):
@@ -269,7 +269,7 @@ class Main(object):
 
         self.start_webserver(self.quit_node)
 
-        await node.start_network(self.rwlock)
+        await node.start_network()
         await self.shutdown()
         # await asyncio.sleep(0.5)
         print('all done!')
