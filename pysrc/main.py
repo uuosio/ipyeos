@@ -15,6 +15,7 @@ from multiprocessing import Process, Lock, Queue, Event
 from typing import Optional
 
 from . import args, debug_server, eos, helper, log, node, node_config, rpc, server, worker
+from .chain_exceptions import ChainException
 
 if not 'RUN_IPYEOS' in os.environ:
     print('only ipyeos can load the main module.')
@@ -138,7 +139,7 @@ class Main(object):
         #     await asyncio.sleep(0.0)
         #     print('run once')
         eos.exit()
-        print('run return', ret)
+        logger.info('run return %s', ret)
         if ret == 0:
             return True
         return False
@@ -239,6 +240,10 @@ class Main(object):
         if not self.init_success:
             return False
 
+        loop = asyncio.get_running_loop()
+        loop.add_signal_handler(signal.SIGINT, self.handle_signal, signal.SIGINT)
+        loop.add_signal_handler(signal.SIGTERM, self.handle_signal, signal.SIGTERM)
+
         try:
             worker_processes = node_config.get_config()['worker_processes']
             if not self.start_worker_processes(worker_processes):
@@ -262,7 +267,28 @@ class Main(object):
 
     async def main_pyeosnode(self):
         result = args.parse_args()
-        node.init_node(result.config_file, result.genesis_file, result.snapshot_file, self.rwlock)
+        if not os.path.exists(result.config_file):
+            logger.error('config file not exists: %s', result.config_file)
+            return False
+
+        if result.genesis_file and not os.path.exists(result.genesis_file):
+            logger.error('genesis file not exists: %s', result.genesis_file)
+            return False
+
+        if result.snapshot_file and not os.path.exists(result.snapshot_file):
+            logger.error('snapshot file not exists: %s', result.snapshot_file)
+            return False
+
+        try:
+            node.init_node(result.config_file, result.genesis_file, result.snapshot_file, self.rwlock)
+        except ChainException as e:
+            logger.exception(e)
+            return False
+
+        loop = asyncio.get_running_loop()
+        loop.add_signal_handler(signal.SIGINT, self.handle_signal, signal.SIGINT)
+        loop.add_signal_handler(signal.SIGTERM, self.handle_signal, signal.SIGTERM)
+
         try:
             worker_processes = node_config.get_config()['worker_processes']
             if not self.start_worker_processes(worker_processes):
@@ -281,10 +307,6 @@ class Main(object):
         print('all done!')
 
     async def main(self):
-        loop = asyncio.get_running_loop()
-        loop.add_signal_handler(signal.SIGINT, self.handle_signal, signal.SIGINT)
-        loop.add_signal_handler(signal.SIGTERM, self.handle_signal, signal.SIGTERM)
-
         if self.node_type == 'eosnode':
             return await self.main_eosnode()
         elif self.node_type == 'pyeosnode':
