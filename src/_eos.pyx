@@ -66,7 +66,7 @@ cdef extern from "_ipyeos.hpp":
 
         bool base58_to_bytes(const string& s, vector[char]& out)
         bool bytes_to_base58(const char* data, size_t data_size, string& out)
-
+        void ripemd160(const char *data, size_t data_size, vector[char]& out)
 
     ipyeos_proxy *get_ipyeos_proxy() nogil
 
@@ -217,5 +217,12 @@ def bytes_to_base58(data: bytes) -> str:
     else:
         return None
 
+# void ripemd160(const char *data, size_t data_size, vector[char]& out)
+def ripemd160(data: bytes) -> bytes:
+    cdef vector[char] out
+    get_ipyeos_proxy().ripemd160(<const char *>data, len(data), out)
+    return PyBytes_FromStringAndSize(out.data(), out.size())
+
 def _enable_deep_mind(uint64_t controller):
     get_ipyeos_proxy().cb.enable_deep_mind(<void *>controller)
+

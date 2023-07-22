@@ -95,9 +95,8 @@ class PublicKey(object):
         return PublicKey(bytes(34))
 
     def to_base58(self):
-        hash = hashlib.new('ripemd160')
-        hash.update(self.raw[1:])
-        ret = 'EOS' + eos.bytes_to_base58(self.raw[1:] + hash.digest()[:4])
+        digest = eos.ripemd160(self.raw[1:])
+        ret = 'EOS' + eos.bytes_to_base58(self.raw[1:] + digest[:4])
         return ret
 
     @classmethod
@@ -105,7 +104,7 @@ class PublicKey(object):
         assert pub.startswith('EOS')
         pub = eos.base58_to_bytes(pub[3:])
         assert len(pub) == 37
-        digest = hashlib.new('ripemd160', pub[:-4]).digest()
+        digest = eos.ripemd160(pub[:-4])
         assert pub[-4:] == digest[:4]
         return cls(b'\x00' + pub[:-4])
 
@@ -199,10 +198,7 @@ class Signature(object):
     def to_base58(self):
         #convert to base58 encoded string
         assert self.raw[0] == 0
-        hash = hashlib.new('ripemd160')
-        hash.update(self.raw[1:])
-        hash.update(b'K1')
-        digest = hash.digest()
+        digest = eos.ripemd160(self.raw[1:] + b'K1')
         ret = 'SIG_K1_' + eos.bytes_to_base58(self.raw[1:] + digest[:4])
         return ret
  
@@ -213,11 +209,7 @@ class Signature(object):
         sig = sig[7:]
         sig = eos.base58_to_bytes(sig)
         assert len(sig) == 65+4
-        hash = hashlib.new('ripemd160')
-        hash.update(sig[:65])
-        hash.update(b'K1')
-        digest = hash.digest()
-
+        digest = eos.ripemd160(sig[:65] + b'K1')
         if digest[:4] != sig[65:]:
             raise Exception('Checksum mismatch')
 

@@ -270,3 +270,6 @@ def base58_to_bytes(s: str):
 
 def bytes_to_base58(data: bytes) -> str:
     return _eos.bytes_to_base58(data)
+
+def ripemd160(data: bytes) -> bytes:
+    return _eos.ripemd160(data)
