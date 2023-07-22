@@ -45,7 +45,7 @@ class Main(object):
         self.worker_processes = []
         self.rwlock = None
         self.init_finished_event = threading.Event()
-        self.init_worker_process_finished_event = threading.Event()
+        self.init_worker_process_finished_event = None
 
         self.init_success = False
 
@@ -124,7 +124,8 @@ class Main(object):
             self.init_finished_event.set()
             if not self.init_success:
                 return False
-            self.init_worker_process_finished_event.wait()
+            if self.init_worker_process_finished_event:
+                self.init_worker_process_finished_event.wait()
         except Exception as e:
             logger.exception(e)
             self.init_success = False
@@ -232,6 +233,12 @@ class Main(object):
     async def main_eosnode(self):
         result = args.parse_args()
         node_config.load_config(result.config_file)
+        try:
+            worker_processes = node_config.get_config()['worker_processes']
+            self.init_worker_process_finished_event = threading.Event()
+        except KeyError:
+            logger.info('+++++no worker_process_num in config file')
+            worker_processes = None
 
         self.start_webserver(self.quit_node)
         self.async_queue = asyncio.Queue()
@@ -244,16 +251,12 @@ class Main(object):
         loop.add_signal_handler(signal.SIGINT, self.handle_signal, signal.SIGINT)
         loop.add_signal_handler(signal.SIGTERM, self.handle_signal, signal.SIGTERM)
 
-        try:
-            worker_processes = node_config.get_config()['worker_processes']
+        if worker_processes:
             if not self.start_worker_processes(worker_processes):
                 self.quit_node()
                 await self.shutdown()
                 return False
             self.init_worker_process_finished_event.set()
-        except KeyError:
-            logger.info('+++++no worker_process_num in config file')
-            pass
 
         while not eos.should_exit():
             await asyncio.sleep(0.2)
@@ -263,7 +266,7 @@ class Main(object):
         #     logger.info('asyncio.exceptions.CancelledError')
         logger.info('++++++++run_eos done!')
         await self.shutdown()
-        print('all done!')
+        logger.info('all done!')
 
     async def main_pyeosnode(self):
         result = args.parse_args()
