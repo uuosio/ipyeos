@@ -4,6 +4,7 @@ import logging
 import signal
 import uvicorn
 import threading
+import time
 
 from fastapi import FastAPI, Request
 from fastapi.responses import PlainTextResponse
@@ -55,6 +56,15 @@ class Messenger(object):
 
     def get_nowait(self):
         return self.in_queue.get_nowait()
+
+    def get_timeout(self, timeout):
+        while timeout > 0:
+            if self.in_queue.empty():
+                time.sleep(0.1)
+                timeout -= 0.1
+                continue
+            return self.in_queue.get_nowait()
+        return None
 
     def put(self, data):
         self.out_queue.put(data)
@@ -192,8 +202,8 @@ class Worker(object):
 
 def run(port, rwlock: Lock, messenger: Messenger, exit_event: Event, data_dir: str, config_dir: str, state_size: int):
     global g_worker
-    _node = node.init_worker_node(data_dir, config_dir, state_size, rwlock)
     try:
+        _node = node.init_worker_node(data_dir, config_dir, state_size, rwlock)
         _node.chain.start_block()
     except DatabaseGuardException as e:
         logger.error('DatabaseGuardException: %s', e)

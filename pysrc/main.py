@@ -200,7 +200,7 @@ class Main(object):
             logger.info('start worker %s', port)
             p = Process(target=worker.run, args=(port, self.rwlock, worker.Messenger(out_queue, in_queue), exit_event, data_dir, config_dir, state_size))
             p.start()
-            ret = messenger.get()
+            ret = messenger.get_timeout(3.0)
             if not ret:
                 logger.error('worker %s start failed', port)
                 return False
