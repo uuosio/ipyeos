@@ -152,9 +152,17 @@ def add_get_method(path, func):
     app.get(path, response_class=PlainTextResponse)(func)
 
 def init(rpc_address: str):
+    uds = None
+    host = None
+    port = None
     try:
-        host, port = rpc_address.split(':')
-        port = int(port)
+        if rpc_address.startswith('/'):
+            uds = rpc_address
+            host = None
+            port = None
+        else:
+            host, port = rpc_address.split(':')
+            port = int(port)
     except:
         logger.error('invalid rpc_address: %s', rpc_address)
         return None
@@ -175,8 +183,8 @@ def init(rpc_address: str):
     except Exception as e:
         logger.exception(e)
         logger.info('+++++no plugins in config file')
-
-    config = uvicorn.Config(app, host=host, port=port)
+    
+    config = uvicorn.Config(app, host=host, port=port, uds=uds)
     server = UvicornServer(config)
     return server
 

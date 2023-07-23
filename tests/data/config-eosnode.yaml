@@ -1,6 +1,6 @@
 worker_processes:
-  - 8809
-  - 8810
+  - "127.0.0.1:8809"
+  - "/tmp/uvicorn.sock"
 
 debug_port: 7777
 rpc_address: '127.0.0.1:8089'

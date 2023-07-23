@@ -14,7 +14,7 @@ import yaml
 from multiprocessing import Process, Lock, Queue, Event
 from typing import Optional
 
-from . import args, debug_server, eos, helper, log, node, node_config, rpc, server, worker
+from . import args, debug, debug_server, eos, helper, log, node, node_config, rpc, server, worker, utils
 from .chain_exceptions import ChainException
 
 if not 'RUN_IPYEOS' in os.environ:
@@ -75,6 +75,7 @@ class Main(object):
         for worker in self.worker_processes:
             p, msg, exit_event = worker
             exit_event.set() # shutdown worker
+            p.join()
 
     async def shutdown_webserver(self):
         if not self.debug_server_task:
@@ -120,12 +121,20 @@ class Main(object):
         logger.info('run_eos %s %s', genesis_file, snapshot_file)
         try:
             self.init_success = self._init_eos(genesis_file, snapshot_file)
-            logger.info('_init_eos return: %s', self.init_success)
-            self.init_finished_event.set()
             if not self.init_success:
                 return False
-            if self.init_worker_process_finished_event:
-                self.init_worker_process_finished_event.wait()
+            logger.info('_init_eos return: %s', self.init_success)
+            try:
+                worker_processes = node_config.get_config()['worker_processes']
+                if not self.start_worker_processes(worker_processes):
+                    eos.exit()
+                    self.init_finished_event.set()
+                    self.init_success = False
+                    return False
+            except KeyError:
+                logger.info('+++++no worker_process_num in config file')
+            self.init_finished_event.set()
+
         except Exception as e:
             logger.exception(e)
             self.init_success = False
@@ -194,18 +203,21 @@ class Main(object):
         else:
             state_size = int(node.get_node().chain.get_chain_config()['state_size'])
 
-        for port in worker_processes:
+        for rpc_address in worker_processes:
+            if not utils.can_listen(rpc_address):
+                logger.error('rpc_address %s is in use', rpc_address)
+                return False
             in_queue, out_queue = Queue(), Queue()
             exit_event = Event()
             messenger = worker.Messenger(in_queue, out_queue)
-            logger.info('start worker %s', port)
-            p = Process(target=worker.run, args=(port, self.rwlock, worker.Messenger(out_queue, in_queue), exit_event, data_dir, config_dir, state_size))
+            logger.info('start worker %s', rpc_address)
+            p = Process(target=worker.run, args=(rpc_address, self.rwlock, worker.Messenger(out_queue, in_queue), exit_event, data_dir, config_dir, state_size))
             p.start()
             ret = messenger.get_timeout(3.0)
             if not ret:
-                logger.error('worker %s start failed', port)
+                logger.error('worker %s start failed', rpc_address)
                 return False
-            logger.info('worker %s started', port)
+            logger.info('worker %s started', rpc_address)
             self.worker_processes.append((p, messenger, exit_event))
 
             def message_listener(messenger):
@@ -214,15 +226,14 @@ class Main(object):
                         msg = messenger.get()
                         if not msg:
                             break
-                        logger.info('worker %s message: %s', port, msg)
+                        logger.info('worker %s message: %s', rpc_address, msg)
                         if msg == 'get_info':
                             msg = node.get_node().api.get_info(is_json=False)
                             messenger.put(msg)
-                            logger.info('worker %s message: %s', port, msg)
+                            logger.info('worker %s message: %s', rpc_address, msg)
                     except Exception as e:
                         logger.error('message_listener error: %s', e)
                         messenger.put(str(e))
-                        break
             threading.Thread(target=message_listener, args=(messenger, )).start()
         return True
 
@@ -233,30 +244,19 @@ class Main(object):
     async def main_eosnode(self):
         result = args.parse_args()
         node_config.load_config(result.config_file)
-        try:
-            worker_processes = node_config.get_config()['worker_processes']
-            self.init_worker_process_finished_event = threading.Event()
-        except KeyError:
-            logger.info('+++++no worker_process_num in config file')
-            worker_processes = None
 
-        self.start_webserver(self.quit_node)
         self.async_queue = asyncio.Queue()
         future = asyncio.get_event_loop().run_in_executor(self.executor, self._run_eos, result.genesis_file, result.snapshot_file)
+
         self.init_finished_event.wait()
         if not self.init_success:
             return False
 
+        self.start_webserver(self.quit_node)
+
         loop = asyncio.get_running_loop()
         loop.add_signal_handler(signal.SIGINT, self.handle_signal, signal.SIGINT)
         loop.add_signal_handler(signal.SIGTERM, self.handle_signal, signal.SIGTERM)
-
-        if worker_processes:
-            if not self.start_worker_processes(worker_processes):
-                self.quit_node()
-                await self.shutdown()
-                return False
-            self.init_worker_process_finished_event.set()
 
         while not eos.should_exit():
             await asyncio.sleep(0.2)
@@ -310,21 +310,37 @@ class Main(object):
         print('all done!')
 
     async def main(self):
-        if self.node_type == 'eosnode':
-            return await self.main_eosnode()
-        elif self.node_type == 'pyeosnode':
-            return await self.main_pyeosnode()
-        assert False, 'unknown node type'
+
+        import asyncio
+        import aiomonitor
+
+        loop = asyncio.get_event_loop()
+        with aiomonitor.start_monitor(loop):
+            logger.info("Now you can connect with: nc localhost 50101")
+            if self.node_type == 'eosnode':
+                return await self.main_eosnode()
+            elif self.node_type == 'pyeosnode':
+                return await self.main_pyeosnode()
+            assert False, 'unknown node type'
 
 def run_eosnode():
     if len(sys.argv) <= 2 or sys.argv[2] in ['-h', '--help']:
         return print_help()
 
     m = Main('eosnode')
-    try:
-        asyncio.run(m.main())
-    except KeyboardInterrupt:
-        logger.info("KeyboardInterrupt")
+
+    if sys.version_info >= (3, 11):
+        with asyncio.Runner(loop_factory=uvloop.new_event_loop) as runner:
+            try:
+                runner.run(main())
+            except KeyboardInterrupt:
+                logger.info("KeyboardInterrupt")
+    else:
+        uvloop.install()
+        try:
+            asyncio.run(m.main())
+        except KeyboardInterrupt:
+            logger.info("KeyboardInterrupt")
 
 def run_pyeosnode():
     m = Main('pyeosnode')

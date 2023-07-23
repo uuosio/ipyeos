@@ -140,9 +140,24 @@ async def push_ro_transaction(args: PushReadOnlyTransactionArgs):
     # return node.get_node().chain.push_ro_transaction(packed_tx, return_json=False)
 
 class Worker(object):
-    def __init__(self, messenger: Messenger, rwlock, exit_event, port: int=8089):
+    def __init__(self, messenger: Messenger, rwlock, exit_event, rpc_address: str):
+        uds = None
+        host = None
+        port = None
+        try:
+            if rpc_address.startswith('/'):
+                uds = rpc_address
+                host = None
+                port = None
+            else:
+                host, port = rpc_address.split(':')
+                port = int(port)
+        except:
+            logger.error('invalid rpc_address: %s', rpc_address)
+            return None
+
         app.get("/")(read_root)
-        self.config = uvicorn.Config(app, host="127.0.0.1", port=port)
+        self.config = uvicorn.Config(app, host=host, port=port, uds=uds)
         self.server = UvicornServer(self.config)
 
         self.messenger = messenger
@@ -153,9 +168,14 @@ class Worker(object):
 
     async def start(self):
         try:
+            # if port is in use, uvicorn will raise OSError and all sys.exit(-1) which should be avoided
+            # so make sure to check port is in use before start the server
             await self.server.serve()
         except asyncio.exceptions.CancelledError:
             logger.info('worker: asyncio.exceptions.CancelledError')
+        except BaseException as e:
+            logger.exception(e)
+        self.exit()
 
     def exit(self):
         eos.exit()
@@ -192,17 +212,18 @@ class Worker(object):
         except asyncio.exceptions.CancelledError:
             logger.info('worker: asyncio.exceptions.CancelledError')
 
+        self.exit_event.set()
         await self.shutdown()
-        logger.info('+++++++worker main exit')
 
     def exit_listener(self):
         self.exit_event.wait()
         self.exit()
         logger.info('exit_listener')
 
-def run(port, rwlock: Lock, messenger: Messenger, exit_event: Event, data_dir: str, config_dir: str, state_size: int):
+def run(rpc_address, rwlock: Lock, messenger: Messenger, exit_event: Event, data_dir: str, config_dir: str, state_size: int):
     global g_worker
     try:
+        g_worker = Worker(messenger, rwlock, exit_event, rpc_address)
         _node = node.init_worker_node(data_dir, config_dir, state_size, rwlock)
         _node.chain.start_block()
     except DatabaseGuardException as e:
@@ -215,8 +236,6 @@ def run(port, rwlock: Lock, messenger: Messenger, exit_event: Event, data_dir: s
         return
 
     messenger.put('init done')
-
-    g_worker = Worker(messenger, rwlock, exit_event, port)
     threading.Thread(target=g_worker.exit_listener).start()
 
     try:

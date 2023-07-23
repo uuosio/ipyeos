@@ -104,6 +104,8 @@ setup(
         "uvicorn",
         "fastapi",
         "pydantic",
+        'aiomonitor',
+        'uvloop',
         'ipython',
         'ipykernel'
     ],

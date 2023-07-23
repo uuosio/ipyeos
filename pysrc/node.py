@@ -179,7 +179,7 @@ class Node(object):
             if not os.path.exists(snapshot_file):
                 raise Exception(f'snapshot file {snapshot_file} does not exist')
             if os.path.exists(f'{data_dir}/state/shared_memory.bin'):
-                raise Exception(f'{data_dir}/state/shared_memory.bin already exists while trying to restore the network state from snapshot')
+                raise Exception(f'{data_dir}/state/shared_memory.bin is already exists while trying to restore the network state from a snapshot')
         atexit.register(self.free)
         self.is_temp_data_dir = True
         self.is_temp_config_dir = True
