@@ -9,6 +9,7 @@ import sys
 import threading
 import time
 import traceback
+import uvloop
 import yaml
 
 from multiprocessing import Process, Lock, Queue, Event
@@ -323,16 +324,11 @@ class Main(object):
                 return await self.main_pyeosnode()
             assert False, 'unknown node type'
 
-def run_eosnode():
-    if len(sys.argv) <= 2 or sys.argv[2] in ['-h', '--help']:
-        return print_help()
-
-    m = Main('eosnode')
-
+def run_node(m: Main):
     if sys.version_info >= (3, 11):
         with asyncio.Runner(loop_factory=uvloop.new_event_loop) as runner:
             try:
-                runner.run(main())
+                runner.run(m.main())
             except KeyboardInterrupt:
                 logger.info("KeyboardInterrupt")
     else:
@@ -342,12 +338,16 @@ def run_eosnode():
         except KeyboardInterrupt:
             logger.info("KeyboardInterrupt")
 
+def run_eosnode():
+    if len(sys.argv) <= 2 or sys.argv[2] in ['-h', '--help']:
+        return print_help()
+
+    m = Main('eosnode')
+    run_node(m)
+
 def run_pyeosnode():
     m = Main('pyeosnode')
-    try:
-        asyncio.run(m.main())
-    except KeyboardInterrupt:
-        logger.info("KeyboardInterrupt")
+    run_node(m)
 
 def run():
     if sys.argv[1] == 'eosnode':
