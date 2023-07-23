@@ -259,12 +259,12 @@ class Main(object):
         loop.add_signal_handler(signal.SIGINT, self.handle_signal, signal.SIGINT)
         loop.add_signal_handler(signal.SIGTERM, self.handle_signal, signal.SIGTERM)
 
-        while not eos.should_exit():
-            await asyncio.sleep(0.2)
-        # try:
-        #     await future
-        # except asyncio.exceptions.CancelledError:
-        #     logger.info('asyncio.exceptions.CancelledError')
+        # while not eos.should_exit():
+        #     await asyncio.sleep(0.2)
+        try:
+            await future
+        except asyncio.exceptions.CancelledError:
+            logger.info('asyncio.exceptions.CancelledError')
         logger.info('++++++++run_eos done!')
         await self.shutdown()
         logger.info('all done!')
