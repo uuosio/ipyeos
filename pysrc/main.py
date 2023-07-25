@@ -54,11 +54,23 @@ class Main(object):
         server = debug_server.init(quit_app)
         if not server:
             return False
+
+        try:
+            port = node_config.get_config()['debug_port']
+        except KeyError:
+            port = 7777
+        except AssertionError:
+            port = 7777
+
+        if not utils.can_listen(f'127.0.0.1:{port}'):
+            logger.error('debug_port %s is in use', port)
+            return False
+
         self.debug_server_task = asyncio.create_task(debug_server.start(server))
         self.debug_server = server
 
         if self.node_type == 'eosnode':
-            return
+            return True
 
         try:
             rpc_address = node_config.get_config()['rpc_address']
@@ -128,6 +140,9 @@ class Main(object):
                 self.init_finished_event.set()
                 self.init_success = False
                 return False
+
+            node.attach_node()
+
             try:
                 worker_processes = node_config.get_config()['worker_processes']
                 if not self.start_worker_processes(worker_processes):
@@ -256,7 +271,9 @@ class Main(object):
         if not self.init_success:
             return False
 
-        self.start_webserver(self.quit_node)
+        if not self.start_webserver(self.quit_node):
+            await self.shutdown()
+            return False
 
         loop = asyncio.get_running_loop()
         loop.add_signal_handler(signal.SIGINT, self.handle_signal, signal.SIGINT)
@@ -306,7 +323,9 @@ class Main(object):
             logger.info('+++++no worker_process_num in config file')
             pass
 
-        self.start_webserver(self.quit_node)
+        if not self.start_webserver(self.quit_node):
+            await self.shutdown()
+            return False
 
         await node.start_network()
         await self.shutdown()
