@@ -12,7 +12,7 @@ from pydantic import BaseModel
 from multiprocessing import Process, Condition, Value, Lock, Event
 
 from .uvicorn_server import UvicornServer
-from . import eos, log, net, node
+from . import eos, log, net, node, rate_limit
 from .chain_exceptions import BlockValidateException, DatabaseGuardException, ChainException
 
 logger = log.get_logger(__name__)
@@ -117,7 +117,7 @@ async def read_root():
     """
     return {"Hello": "World"}
 
-@app.get("/get_info", response_class=PlainTextResponse)
+@app.get("/v1/chain/get_info", response_class=PlainTextResponse)
 async def get_info():
     g_worker.messenger.put('get_info')
     try:
@@ -129,7 +129,7 @@ async def get_info():
     return 'None'
     # return node.get_node().api.get_info(is_json=False)
 
-@app.post("/push_ro_transaction", response_class=PlainTextResponse)
+@app.post("/v1/chain/push_read_only_transaction", response_class=PlainTextResponse)
 async def push_ro_transaction(args: PushReadOnlyTransactionArgs):
     global g_worker
     packed_tx = bytes.fromhex(args.packed_tx)
@@ -137,7 +137,15 @@ async def push_ro_transaction(args: PushReadOnlyTransactionArgs):
     with g_worker.rwlock.rlock():
         return node.get_node().chain.push_ro_transaction(packed_tx, return_json=False)
 
-    # return node.get_node().chain.push_ro_transaction(packed_tx, return_json=False)
+@app.post("/v1/chain/get_table_rows", response_class=PlainTextResponse)
+async def get_table_rows(req: Request):
+    global g_worker
+    kwargs = await req.json()
+    logger.info('get_table_rows: %s', kwargs)
+    with g_worker.rwlock.rlock():
+        ret = node.get_node().api.get_table_rows(**kwargs, return_json=False)
+        logger.info('get_table_rows: %s', ret)
+        return ret
 
 class Worker(object):
     def __init__(self, messenger: Messenger, rwlock, exit_event, rpc_address: str):
@@ -157,6 +165,8 @@ class Worker(object):
             return None
 
         app.get("/")(read_root)
+        app.middleware("http")(rate_limit.rate_limit_middleware)
+
         self.config = uvicorn.Config(app, host=host, port=port, uds=uds)
         self.server = UvicornServer(self.config)
 

@@ -106,6 +106,7 @@ setup(
         "pydantic",
         'aiomonitor',
         'uvloop',
+        'aiocache',
         'ipython',
         'ipykernel'
     ],

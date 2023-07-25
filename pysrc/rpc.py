@@ -6,7 +6,7 @@ from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 
 from .uvicorn_server import UvicornServer
-from . import log, net, node, node_config
+from . import log, net, node, node_config, rate_limit
 from .chain_exceptions import BlockValidateException, InvalidSnapshotRequestException, SnapshotRequestNotFoundException, ChainException
 
 logger = log.get_logger(__name__)
@@ -170,6 +170,8 @@ def init(rpc_address: str):
         return None
 
     app.get("/")(read_root)
+    app.middleware("http")(rate_limit.rate_limit_middleware)
+
     try:
         plugins = node_config.get_config()['plugins']
 
