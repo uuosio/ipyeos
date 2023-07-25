@@ -27,7 +27,7 @@ def parse_args(cmds=None):
     pyeos_parser.add_argument('-s', '--snapshot-file', default="", help="snapshot file for quick restore network state, default to empty string")
     pyeos_parser.add_argument('-g', '--genesis-file', default="", help="genesis file, default to empty string")
 
-    result, _ = parser.parse_known_args(cmds)
+    result = parser.parse_args(cmds)
     return result
 
 def parse_parent_process_args(cmds=None):
@@ -41,5 +41,5 @@ def parse_parent_process_args(cmds=None):
     parser.add_argument('--apply-request-addr', default="127.0.0.1", help="client side apply request server address, default to 127.0.0.1")
     parser.add_argument('--apply-request-port', default="9091", help="client side apply request server port, default to 9091")
 
-    result, _ = parser.parse_known_args(cmds)
+    result = parser.parse_args(cmds)
     return result

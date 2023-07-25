@@ -2,7 +2,10 @@ import socket
 import struct
 from typing import Union
 
+from . import log
 from .types import F64, F128
+
+logger = log.get_logger(__name__)
 
 def to_bytes(value: Union[int, F64, F128], size: int = 8, signed=False) -> bytes:
     if isinstance(value, int):

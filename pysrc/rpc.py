@@ -65,11 +65,11 @@ async def read_root():
     """
     return {"Hello": "World"}
 
-@app.get("/get_info", response_class=PlainTextResponse)
+@app.get("/v1/chain/get_info", response_class=PlainTextResponse)
 async def get_info():
     return node.get_node().api.get_info(is_json=False)
 
-@app.post("/push_transaction", response_class=PlainTextResponse)
+@app.post("/v1/chain/push_transaction", response_class=PlainTextResponse)
 async def push_transaction(args: PushTransactionArgs):
     """
     Sends a packed transaction to the network.
@@ -118,14 +118,16 @@ async def push_transaction(args: PushTransactionArgs):
         else:
             return '{"status": "error"}'
 
-async def get_block_trace(args: GetBlockTraceArgs):
+async def trace_api_get_block_trace(args: GetBlockTraceArgs):
     try:
         logger.error("++++++++args.block_num: %s", args.block_num)
         ret = node.get_node().get_trace().get_block_trace(args.block_num)
-        return f'{{"status": "ok", "result": {ret}}}'
+        if ret == 'null':
+            return '{"code":404,"message":"Trace API: block trace missing","error":{"code":0,"name":"","what":"","details":[]}}'
+        return ret
     except Exception as e:
         logger.exception(e)
-        return f'{{"status": "error", "result": "{str(e)}"}}'
+        return f'{str(e)}'
 
 async def snapshot_schedule(args: SnapshotScheduleArgs):
     try:
@@ -172,7 +174,7 @@ def init(rpc_address: str):
         plugins = node_config.get_config()['plugins']
 
         if 'trace_api' in plugins:
-            add_post_method("/get_block_trace", get_block_trace)
+            add_post_method("/v1/trace_api/get_block", trace_api_get_block_trace)
             logger.info('+++++add get_block_trace method')
 
         if 'snapshot' in plugins:

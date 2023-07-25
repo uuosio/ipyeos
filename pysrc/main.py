@@ -122,9 +122,12 @@ class Main(object):
         logger.info('run_eos %s %s', genesis_file, snapshot_file)
         try:
             self.init_success = self._init_eos(genesis_file, snapshot_file)
-            if not self.init_success:
-                return False
             logger.info('_init_eos return: %s', self.init_success)
+            if not self.init_success:
+                eos.exit()
+                self.init_finished_event.set()
+                self.init_success = False
+                return False
             try:
                 worker_processes = node_config.get_config()['worker_processes']
                 if not self.start_worker_processes(worker_processes):
@@ -317,7 +320,7 @@ class Main(object):
 
         loop = asyncio.get_event_loop()
         with aiomonitor.start_monitor(loop):
-            logger.info("Now you can connect with: nc localhost 50101")
+            logger.info("Now you can connect with: nc localhost 50101 or rlwrap nc localhost 50101")
             if self.node_type == 'eosnode':
                 return await self.main_eosnode()
             elif self.node_type == 'pyeosnode':

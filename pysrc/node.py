@@ -256,12 +256,12 @@ class Node(object):
             plugins = node_config.get_config()['plugins']
 
             if 'trace_api' in plugins:
-                self.trace = TraceAPI(self.chain, f'{self.data_dir}/trace')
+                self.trace = TraceAPI(self.chain, f'{self.data_dir}/traces')
             else:
                 self.trace = None
 
             if 'snapshot' in plugins:
-                self.snapshot = Snapshot(self.chain, f'{self.data_dir}/snapshot')
+                self.snapshot = Snapshot(self.chain, f'{self.data_dir}/snapshots')
             else:
                 self.snapshot = None
         except:

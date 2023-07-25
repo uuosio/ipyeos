@@ -63,7 +63,6 @@ default_config = {
     "contracts_console": False,
     "allow_ram_billing_in_notify": False,
     "disable_all_subjective_mitigations": False,
-    "uuos_mainnet": True,
     "genesis_accounts_file": "",
     "wasm_runtime": "wabt",
     "read_mode": "SPECULATIVE",

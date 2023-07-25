@@ -41,6 +41,11 @@ class Packer(object):
         return enc.get_bytes()
 
     @classmethod
+    def unpack_bytes(cls, raw: bytes):
+        dec = Decoder(raw)
+        return cls.unpack(dec)
+
+    @classmethod
     def unpack(cls, dec):
         assert False, "Not implemented"
 
@@ -293,6 +298,8 @@ class Decoder(object):
             return self.unpack_u32()
         elif tp is U64:
             return self.unpack_u64()
+        elif tp == bytes:
+            return self.unpack_bytes()
         return tp.unpack(self)
 
     def unpack_time_point(self):

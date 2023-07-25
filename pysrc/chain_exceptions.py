@@ -240,7 +240,7 @@ def get_last_exception(error: Optional[str] = None):
 
     return new_chain_exception(error)
 
-def get_transaction_exception(error: Dict):
+def get_transaction_exception(error: Optional[Dict] = None):
     if not error:
         error = _eos.get_last_error()
         if not error:

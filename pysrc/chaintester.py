@@ -605,19 +605,6 @@ class ChainTester(object):
         return self.push_actions_ex(actions, explicit_cpu_bill)
 
     def push_actions_ex(self, actions: List, explicit_cpu_bill=False):
-        _actions = []
-        read_only_tx = True
-        for a in actions:
-            if a[-1]: #permissions
-                read_only_tx = False
-            _actions.append(self.gen_action(*a))
-        raw_signed_trx = self.gen_transaction_ex(_actions)
-        deadline = 0
-        billed_cpu_time_us = 100
-        result = self.chain.push_transaction(raw_signed_trx, deadline, billed_cpu_time_us, explicit_cpu_bill, read_only_tx)
-        return result
-
-    def push_actions_ex(self, actions: List, explicit_cpu_bill=False):
         read_only_tx = True
         for a in actions:
             if a['authorization']:
