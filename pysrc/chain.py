@@ -72,6 +72,16 @@ class Chain(object):
             raise get_last_exception()
         return True
 
+    @classmethod
+    def attach(cls) -> 'Chain':
+        """
+        Attach to an existing chain
+        :returns Chain: Return a Chain instance
+        """
+        chain = cls.__new__(cls)
+        chain.ptr = _chain.chain_attach(_eos.get_controller())
+        return chain
+
     def free(self) -> None:
         """
         Release a chain
