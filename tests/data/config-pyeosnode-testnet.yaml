@@ -23,23 +23,20 @@ genesis:
 logging_config_file: "logging.json"
 
 worker_processes:
-  - "127.0.0.1:8809"
+  - "127.0.0.1:8810"
   - "/tmp/uvicorn.sock"
 
-debug_port: 7777
-rpc_address: '127.0.0.1:8088'
+debug_port: 7778
+rpc_address: '127.0.0.1:8820'
 
 net:
-  socks5_proxy: "127.0.0.1:8084"
+  # socks5_proxy: "127.0.0.1:8084"
   sync_fetch_span: 300
   peers:
-    - 'peer.eosn.io:9876'
-    - 'peer.main.alohaeos.com:9876'
-    - 'bp.cryptolions.io:9876'
-    - 'peer.eosio.sg:9876'
+    - '127.0.0.1:9876'
 
 chain:
-  state_size: 34359738368 # 32*1024*1024*1024 (32GB)
+  state_size: 104857600 # 100*1024*1024 (100MB)
   state_guard_size: 10485760 # 10*1024*1024 (10MB)
   contracts_console: false
   data_dir: "dd"

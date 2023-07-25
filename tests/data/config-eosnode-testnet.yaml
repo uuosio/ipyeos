@@ -1,11 +1,13 @@
-worker_processes:
-  - "127.0.0.1:8809"
-  - "/tmp/uvicorn.sock"
+# worker_processes:
+#   - "127.0.0.1:8809"
+#   - "/tmp/uvicorn.sock"
 
 debug_port: 7777
 rpc_address: '127.0.0.1:8089'
 
 #-------------------------------------
+
+resource-monitor-space-absolute-gb: 1
 
 data_dir: "dd"
 config_dir: "cd"
@@ -17,6 +19,6 @@ trace-no-abis:
 
 disable-replay-opts:
 
-plugin: eosio::state_history_plugin
-chain-state-history:
-trace-history:
+#plugin: eosio::state_history_plugin
+#chain-state-history:
+#trace-history:

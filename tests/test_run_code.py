@@ -64,4 +64,13 @@ exec_result.set('Done!')
     r = requests.post('http://127.0.0.1:7777/exec', json={'code': code})
     print(r.text)
 
-test3()
+def test_4():
+    code = '''
+from ipyeos import exec_result
+from ipyeos.chain import Chain
+chain = Chain.attach()
+head_num = chain.head_block_num()
+exec_result.set(f'{head_num} Done!')
+    '''
+    r = requests.post('http://127.0.0.1:7777/exec', json={'code': code})
+    print(r.text)

@@ -3,6 +3,7 @@ import hashlib
 import shutil
 import sys
 import platform
+import time
 
 from ipyeos import eos, log
 from ipyeos import chaintester
@@ -320,6 +321,35 @@ def test_abort_block():
         logger.error(e.stack[0].format)
     t.chain.abort_block()
     t.chain.abort_block()
+
+@chain_test(True)
+def test_start_block(t: ChainTester):
+    # if 'pytest' in sys.modules:
+    #     print('in pytest')
+    #     return
+    t.chain.abort_block()
+    count = 1000
+    txs = []
+    for i in range(count):
+        action = {
+            'account': 'hello',
+            'name': 'hi',
+            'data': b'hi'.hex() + str(i).encode().hex(),
+            'authorization': [{'actor':'hello', 'permission':'active'}]
+        }
+        ret = t.gen_transaction_ex([action])
+        txs.append(ret)
+
+    start = time.monotonic()
+
+    for tx in txs:
+        t.chain.start_block()
+        t.chain.push_transaction(tx)
+        t.chain.abort_block()
+
+    end = time.monotonic()
+    logger.info("++++++OPS: %s", count/(end - start))
+    return
 
 @chain_test(True)
 def test_trace(t: ChainTester):

@@ -27,14 +27,16 @@ async def rate_limit_middleware(request: Request, call_next):
     else:
         if current_time < client_data['block_until']:
             # Client is currently blocked, raise an error
-            return PlainTextResponse("Too Many Requests, try again later.", status_code=429)
+            error = '{"code":400, "message":"Too Many Requests, try again later.","error":{"code":0,"name":"","what":"","details":[]}}'
+            return PlainTextResponse(error, status_code=400)
         elif current_time - client_data['start_time'] < 60:
             # Less than a minute has passed since first request
             client_data['request_count'] += 1
             if client_data['request_count'] > REQUESTS_PER_MINUTE:
                 # Rate limit exceeded, block the client
                 client_data['block_until'] = current_time + BLOCK_INTERVAL
-                return PlainTextResponse("Too Many Requests, try again later.", status_code=429)
+                error = '{"code":400, "message":"Too Many Requests, try again later.","error":{"code":0,"name":"","what":"","details":[]}}'
+                return PlainTextResponse(error, status_code=400)
         else:
             # More than a minute has passed since first request, reset the counter
             client_data['request_count'] = 1
