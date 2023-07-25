@@ -233,6 +233,10 @@ class ChainApi(object):
         ret = _chainapi.get_table_rows(self.ptr, params)
         return self.parse_return_value(ret, return_json)
 
+    def get_table_rows_ex(self, params, return_json = True):
+        ret = _chainapi.get_table_rows(self.ptr, params)
+        return self.parse_return_value(ret, return_json)
+
     def get_table_by_scope(self, code: str, table: str, lower_bound: str, upper_bound: str, limit: int, reverse: bool = False):
         '''
             struct get_table_by_scope_params {

@@ -7,7 +7,7 @@ from . import log
 
 cache = Cache(Cache.MEMORY, serializer=PickleSerializer())
 
-REQUESTS_PER_MINUTE = 10
+REQUESTS_PER_MINUTE = 100
 BLOCK_INTERVAL = 60 # Block for 1 minute if the limit is exceeded
 
 logger = log.get_logger(__name__)

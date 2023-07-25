@@ -72,14 +72,14 @@ async def get_info():
 @app.post("/v1/chain/get_table_rows", response_class=PlainTextResponse)
 async def get_table_rows(req: Request):
     global g_worker
-    kwargs = await req.json()
+    params = await req.body()
     rwlock = node.get_node().rwlock
     if rwlock:
         with rwlock.rlock():
-            ret = node.get_node().api.get_table_rows(**kwargs, return_json=False)
+            ret = node.get_node().api.get_table_rows_ex(params, return_json=False)
             return ret
     else:
-        ret = node.get_node().api.get_table_rows(**kwargs, return_json=False)
+        ret = node.get_node().api.get_table_rows_ex(params, return_json=False)
         return ret
 
 @app.post("/v1/chain/push_transaction", response_class=PlainTextResponse)

@@ -116,7 +116,11 @@ class Main(object):
             if value is None:
                 argv.append('--'+key.replace('_', '-'))
             else:
-                argv.append('--'+key.replace('_', '-')+'='+str(value))
+                if key == 'plugin':
+                    for v in value:
+                        argv.append('--plugin'+'='+str(v))
+                else:
+                    argv.append('--'+key.replace('_', '-')+'='+str(value))
 
         if genesis_file:
             argv.append('--genesis-json='+genesis_file)

@@ -2,7 +2,9 @@ import asyncio
 import json
 import logging
 import signal
+import sys
 import uvicorn
+import uvloop
 import threading
 import time
 
@@ -248,8 +250,18 @@ def run(rpc_address, rwlock: Lock, messenger: Messenger, exit_event: Event, data
     messenger.put('init done')
     threading.Thread(target=g_worker.exit_listener).start()
 
-    try:
-        logger.info('worker process starting...')
-        asyncio.run(g_worker.main())
-    except KeyboardInterrupt:
-        logger.info('KeyboardInterrupt')
+
+    logger.info('worker process starting...')
+    if sys.version_info >= (3, 11):
+        with asyncio.Runner(loop_factory=uvloop.new_event_loop) as runner:
+            try:
+                runner.run(g_worker.main())
+            except KeyboardInterrupt:
+                logger.info("KeyboardInterrupt")
+    else:
+        uvloop.install()
+        try:
+            asyncio.run(g_worker.main())
+        except KeyboardInterrupt:
+            logger.info("KeyboardInterrupt")
+

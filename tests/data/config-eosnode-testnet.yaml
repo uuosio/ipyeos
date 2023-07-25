@@ -9,6 +9,11 @@ rpc_address: '127.0.0.1:8089'
 
 resource-monitor-space-absolute-gb: 1
 
+http-server-address: 0.0.0.0:8889
+
+plugin:
+  - eosio::chain_api_plugin
+
 data_dir: "dd"
 config_dir: "cd"
 
