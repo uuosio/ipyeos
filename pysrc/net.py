@@ -1113,7 +1113,7 @@ class Connection(object):
                     return False
             elif self.chain.head_block_id() == message.head_id:
                 return True
-            elif self.chain.head_block_num() + default_block_latency < message.head_num:
+            elif 0 < message.head_num - self.chain.head_block_num() < default_block_latency:
                 req_trx = OrderedIds(IdListModes.none, 0, [])
                 req_blocks = OrderedIds(IdListModes.catch_up, 0, [self.chain.head_block_id()])
                 msg = RequestMessage(req_trx, req_blocks)
@@ -1213,6 +1213,11 @@ class Connection(object):
 
             self.calculate_block_sync_info(header, len(raw_msg))
 
+            # self.logger.info(f"++++++++++self.last_handshake.head_num: {self.last_handshake.head_num}, received_block_num: {received_block_num}")
+            if self.last_handshake and self.last_handshake.head_num == received_block_num:
+                if not await self.send_handshake_message():
+                    return False
+
             if self.last_sync_request and self.last_sync_request.end_block == received_block_num:
                 assert self.last_handshake, "last_handshake is None"
                 if self.last_handshake.last_irreversible_block_num > received_block_num:
@@ -1225,10 +1230,11 @@ class Connection(object):
                 msg = RequestMessage(req_trx, req_blocks)
                 self.logger.info(f'send request message: {msg}')
                 return await self.send_message(msg)
-            elif self.last_handshake and self.last_handshake.head_num == received_block_num:
-                return await self.send_handshake_message()
-            else:
-                return True
+            # elif self.last_handshake and self.last_handshake.head_num == received_block_num:
+            #     if not await self.send_handshake_message():
+            #         return False
+
+            return True
 
         elif tp == time_message:
             message = TimeMessage.unpack_bytes(raw_msg)
@@ -1246,6 +1252,8 @@ class Connection(object):
                 pending = message.known_blocks.pending
                 try:
                     block_id = message.known_blocks.ids[0]
+                    # ret = self.chain.fetch_block_by_id(block_id.to_string())
+                    # self.logger.info(f"++++++++++fetch block by id: {block_id}, ret: {ret}")
                 except IndexError:
                     msg = GoAwayMessage(GoAwayReasonEnum.no_reason, "no blocks in notice message")
                     for listener in self.goway_listeners:
@@ -1504,6 +1512,7 @@ class Network(object):
                 self.conn = await self.get_fastest_connection()
                 self.logger.info('+++++choose fastest connection: %s', self.conn.peer)
                 await self.conn.handle_messages()
+                await self.sleep(3.0)
             except Exception as e:
                 self.logger.exception(e)
                 self.sleep(5.0)
