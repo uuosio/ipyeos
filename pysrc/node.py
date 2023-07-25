@@ -267,6 +267,24 @@ class Node(object):
         except:
             logger.info('+++++no plugins in config file')
 
+    @classmethod
+    def attach(cls):
+        node = cls.__new__(cls)
+        node._chain = chain.Chain.attach()
+        node._api = chainapi.ChainApi(node.chain)
+        node.db = database.Database(node.chain.get_database())
+        node.trace = None
+        node.snapshot = None
+        node.rwlock = None
+
+        node.is_temp_data_dir = False
+        node.data_dir = ''
+
+        node.is_temp_config_dir = False
+        node.config_dir = ''
+
+        return node
+
     @property
     def api(self) -> chainapi.ChainApi:
         return self._api
@@ -300,6 +318,12 @@ class Node(object):
 
 g_network: Optional[net.Network] = None
 g_node: Optional[Node] = None
+
+def attach_node():
+    global g_node
+    assert not g_node, 'node is already initialized'
+    g_node = Node.attach()
+    return g_node
 
 def get_node() -> Node:
     global g_node

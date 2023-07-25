@@ -1,4 +1,5 @@
 import json
+import json as json_
 from typing import Dict, List, Optional, Union
 
 from .native_modules import _chain, _chainapi, _eos
@@ -193,9 +194,9 @@ class ChainApi(object):
         ret = _chainapi.get_raw_abi(self.ptr, params)
         return self.parse_return_value(ret)
 
-    def get_table_rows(self, _json: bool, code: str, scope: str, table: str, lower_bound: str,
+    def get_table_rows(self, json: bool, code: str, scope: str, table: str, lower_bound: str,
                        upper_bound: str, limit: int, key_type='', index_position='', encode_type='dec',
-                       reverse = False, show_payer = False):
+                       reverse = False, show_payer = False, return_json = True):
         '''
             struct get_table_rows_params {
                 bool                 json = false;
@@ -213,9 +214,9 @@ class ChainApi(object):
                 std::optional<bool>  show_payer; // show RAM pyer
                 };
         '''
-        params = json.dumps(
+        params = json_.dumps(
             dict(
-                json=_json,
+                json=json,
                 code=code,
                 scope=scope,
                 table=table,
@@ -230,7 +231,7 @@ class ChainApi(object):
             )
         )
         ret = _chainapi.get_table_rows(self.ptr, params)
-        return self.parse_return_value(ret)
+        return self.parse_return_value(ret, return_json)
 
     def get_table_by_scope(self, code: str, table: str, lower_bound: str, upper_bound: str, limit: int, reverse: bool = False):
         '''
@@ -451,11 +452,11 @@ class ChainApi(object):
         ret = _chainapi.db_size_api_get(self.ptr)
         return self.parse_return_value(ret)
 
-    def parse_return_value(self, ret, is_json=True):
+    def parse_return_value(self, ret, return_json=True):
         success, result = ret
         if not success:
             raise get_last_exception()
-        if is_json:
+        if return_json:
             result = json.loads(result)
         return result
 

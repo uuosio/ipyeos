@@ -69,6 +69,22 @@ async def read_root():
 async def get_info():
     return node.get_node().api.get_info(is_json=False)
 
+@app.post("/v1/chain/get_table_rows", response_class=PlainTextResponse)
+async def get_table_rows(req: Request):
+    global g_worker
+    kwargs = await req.json()
+    logger.info('get_table_rows: %s', kwargs)
+    rwlock = node.get_node().rwlock
+    if rwlock:
+        with rwlock.rlock():
+            ret = node.get_node().api.get_table_rows(**kwargs, return_json=False)
+            logger.info('get_table_rows: %s', ret)
+            return ret
+    else:
+        ret = node.get_node().api.get_table_rows(**kwargs, return_json=False)
+        logger.info('get_table_rows: %s', ret)
+        return ret
+
 @app.post("/v1/chain/push_transaction", response_class=PlainTextResponse)
 async def push_transaction(args: PushTransactionArgs):
     """
