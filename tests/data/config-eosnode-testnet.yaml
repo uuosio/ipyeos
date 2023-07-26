@@ -11,9 +11,6 @@ resource-monitor-space-absolute-gb: 1
 
 http-server-address: 0.0.0.0:8889
 
-plugin:
-  - eosio::chain_api_plugin
-
 data_dir: "dd"
 config_dir: "cd"
 
@@ -24,6 +21,9 @@ trace-no-abis:
 
 disable-replay-opts:
 
-#plugin: eosio::state_history_plugin
-#chain-state-history:
-#trace-history:
+plugin:
+  - eosio::chain_api_plugin
+#   - eosio::state_history_plugin
+
+# chain-state-history:
+# trace-history:

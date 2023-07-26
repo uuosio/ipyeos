@@ -8,7 +8,7 @@ src/_vm_api.cpp
 src/_transaction.cpp
 src/_trace_api.cpp
 src/_snapshot.cpp
-src/_snapshot.cpp
+src/_state_history.cpp
 
 .vscode
 cp.sh

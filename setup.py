@@ -48,7 +48,8 @@ ext_modules = [
             'src/_vm_api.pyx',
             'src/_transaction.pyx',
             'src/_trace_api.pyx',
-            'src/_snapshot.pyx'
+            'src/_snapshot.pyx',
+            'src/_state_history.pyx'
         ],
         include_dirs=[
             'src',

@@ -19,6 +19,7 @@ from .database import GeneratedTransactionObjectIndex
 from .database_objects import GeneratedTransactionObject
 from .packer import Decoder
 from .snapshot import Snapshot
+from .state_history import StateHistory
 from .types import Name
 from .trace_api import TraceAPI
 
@@ -245,6 +246,16 @@ class Node(object):
         else:
             self.genesis = ''
 
+        disable_replay_opts = False
+        try:
+            for plugin in node_config.get_config()['plugins']:
+                if 'state_history' == plugin['name']:
+                    disable_replay_opts = True
+                    break
+        except:
+            pass
+
+        chain_config['disable_replay_opts'] = disable_replay_opts
         self.chain_config = chain_config
         self._chain = chain.Chain(json.dumps(chain_config), self.genesis, self.chain_id, os.path.join(self.config_dir, "protocol_features"), snapshot_file, self.debug_producer_key)
         self._chain.startup(init_database)
@@ -252,18 +263,38 @@ class Node(object):
 
         self.db = database.Database(self.chain.get_database())
 
+        self.trace = None
+        self.snapshot = None
         try:
             plugins = node_config.get_config()['plugins']
+            for plugin in plugins:
+                name = plugin['name']
+                if 'trace_api' == name:
+                    self.trace = TraceAPI(self.chain, f'{self.data_dir}/traces')
 
-            if 'trace_api' in plugins:
-                self.trace = TraceAPI(self.chain, f'{self.data_dir}/traces')
-            else:
-                self.trace = None
-
-            if 'snapshot' in plugins:
-                self.snapshot = Snapshot(self.chain, f'{self.data_dir}/snapshots')
-            else:
-                self.snapshot = None
+                if 'snapshot' == name:
+                    self.snapshot = Snapshot(self.chain, f'{self.data_dir}/snapshots')
+                
+                if 'state_history' == name:
+                    listen_address = plugin['listen_address']
+                    state_history_endpoint: str = '127.0.0.1:8080'
+                    state_history_unix_socket_path: str = ''
+                    if listen_address.startswith('/'):
+                        state_history_endpoint: str = ''
+                        state_history_unix_socket_path: str = listen_address
+                    else:
+                        state_history_endpoint: str = listen_address
+                        state_history_unix_socket_path: str = ''
+                    logger.info('+++++state_history_endpoint: %s', state_history_endpoint)
+                    logger.info('+++++state_history_unix_socket_path: %s', state_history_unix_socket_path)
+                    self.state_history = StateHistory()
+                    self.state_history.initialize(
+                        self.chain,
+                        self.data_dir,
+                        state_history_endpoint=state_history_endpoint,
+                        state_history_unix_socket_path=state_history_unix_socket_path
+                    )
+                    self.state_history.startup()
         except:
             logger.info('+++++no plugins in config file')
 

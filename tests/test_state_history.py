@@ -1,29 +1,54 @@
 import asyncio
+import os
+import hashlib
+import logging
+import shutil
+import platform
+
 import json
 import websockets
 import pytest
 
-from ipyeos import eos, log
-from ipyeos.packer import Packer, Encoder, Decoder
+from ipyeos import chaintester
+from ipyeos.chaintester import ChainTester
+
+from ipyeos.state_history import StateHistory
 from ipyeos.state_history import GetStatusRequestV0, BlockPosition, GetBlocksRequestV0, GetBlocksAckRequestV0
 from ipyeos.state_history import StateRequest, GetStatusResultV0, GetBlocksResultV0
+from ipyeos.chain_exceptions import SnapshotRequestNotFoundException, InvalidSnapshotRequestException
+
+from ipyeos import eos, log
+from ipyeos.packer import Packer, Encoder, Decoder
 from ipyeos.types import U32, Checksum256
 
-logger = log.get_logger(__name__)
+
+chaintester.chain_config['contracts_console'] = True
+dir_name = os.path.dirname(__file__)
+
+logger = logging.getLogger(__name__)
 
 async def send(ws, method, params):
     msg = [method, params]
     await ws.send(json.dumps(msg))
 
-# struct get_status_request_v0 {};
-
 @pytest.mark.asyncio
-async def test_ship():
-    uri = "ws://127.0.0.1:8081"
+async def test_state_history():
+    # t = ChainTester(True, data_dir=os.path.join(dir_name, "dd"), config_dir=os.path.join(dir_name, "cd"), log_level=0)
+    t = ChainTester(True, log_level=0)
+
+    s = StateHistory()
+    s.initialize(t.chain, t.data_dir)
+    s.startup()
+
+    for i in range(10):
+        t.produce_block()
+
+    uri = "ws://127.0.0.1:8080"
     ws = await websockets.connect(uri)
     # while True:
     msg = await ws.recv()
     print(msg)
+
 
     req = GetStatusRequestV0()
     req = StateRequest(req)
@@ -36,14 +61,11 @@ async def test_ship():
     status = GetStatusResultV0.unpack(dec)
     logger.info("++++++++status: %s", status)
 
-    req = GetBlocksRequestV0(status.last_irreversible.block_num, 0xffffffff, 1, [], False, True, True, True)
+    req = GetBlocksRequestV0(1, 0xffffffff, 1, [], False, True, True, True)
     req = StateRequest(req)
     await ws.send(req.get_bytes())
 
-    # msg = await ws.recv()
-    # logger.info('++++received:%s', msg)
-
-    while True:
+    for i in range(10):
         req = GetBlocksAckRequestV0(1)
         req = StateRequest(req)
         await ws.send(req.get_bytes())
@@ -54,4 +76,5 @@ async def test_ship():
         block = eos.unpack_block(result.block)
         logger.info('++++received: %s', result)
         logger.info('++++block: %s', block)
-        # await asyncio.sleep(1.0)
+
+    await ws.close()

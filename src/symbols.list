@@ -7,4 +7,5 @@ _PyInit__block_log
 _PyInit__transaction
 _PyInit__trace_api
 _PyInit__snapshot
+_PyInit__state_history
 _native_apply

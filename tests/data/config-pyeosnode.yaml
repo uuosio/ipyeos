@@ -47,5 +47,7 @@ chain:
   db_map_mode: "mapped" # mapped heap locked
 
 plugins:
-  - trace_api
-  - snapshot
+  - name: trace_api
+  - name: snapshot
+  - name: state_history
+    listen_address: 127.0.0.1:8082
