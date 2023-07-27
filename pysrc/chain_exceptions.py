@@ -120,21 +120,34 @@ class Stack:
     def __str__(self):
         return repr(self)
 
-@dataclasses.dataclass
 class ChainException(Exception):
-    code: int
-    name: str
-    message: str
-    stack: List[Stack]
+    # code: int
+    # name: str
+    # message: str
+    # stack: List[Stack]
+
+    def __init__(self, _json_str: Optional[str] = None, _json: Optional[Dict] = None):
+        super().__init__()
+        assert _json_str or _json, 'either _json_str or _json must be provided'
+        if _json_str:
+            assert isinstance(_json_str, str), '_json_str must be a string'
+        if _json:
+            assert isinstance(_json, dict), '_json must be a dict'
+            assert _json_str, '_json_str must be provided if _json is provided'
+        self._json_str = _json_str
+        self._json = _json
+
+    def json(self):
+        if not self._json:
+            self._json = json.loads(self._json_str)
+        return self._json
 
     def __repr__(self):
-        return json.dumps(dataclasses.asdict(self))
+        return self._json_str
 
     def __str__(self):
         return repr(self)
-    
-    def asdict(self):
-        return dataclasses.asdict(self)
+
 
 # {'id': 'de07fe43fc85f6e96a12196abceb994a75ce735ab910b07e5ccb6e6534774f5d',
 #  'block_num': 2,
@@ -147,21 +160,17 @@ class ChainException(Exception):
 
 @dataclasses.dataclass
 class TransactionException(ChainException):
-    id: str
-    block_num: int
-    block_time: str
-    elapsed: int
-    net_usage: int
-    scheduled: bool
-    action_traces: List
-    failed_dtrx_trace: Optional
-    except_: ChainException
-
-    def __repr__(self):
-        return json.dumps(dataclasses.asdict(self))
-
-    def __str__(self):
-        return repr(self)
+    # id: str
+    # block_num: int
+    # block_time: str
+    # elapsed: int
+    # net_usage: int
+    # scheduled: bool
+    # action_traces: List
+    # failed_dtrx_trace: Optional
+    # except_: ChainException
+    # error_code: str
+    pass
 
 # snapshot_request_not_found
 class SnapshotRequestNotFoundException(ChainException):
@@ -211,46 +220,26 @@ exceptions = {
     'set_exact_code': SetExactCodeException,
 }
 
-def new_chain_exception(error: Dict):
+def new_chain_exception(error_str: str, error: Dict):
     name = error['name']
-
-    stacks = []
-    for s in error['stack']:
-        message = s['format'].replace('${', '{').format(**s['data'])
-        stack = Stack(context=Context(**s['context']), format=s['format'], data=s['data'], message=message)
-        stacks.append(stack)
-
-    args = error['code'], error['name'], error['message'], stacks
-
     try:
-        return exceptions[name](*args)
+        return exceptions[name](error_str, error)
     except KeyError:
-        return ChainException(*args)
+        return ChainException(error_str, error)
 
 def get_last_exception(error: Optional[str] = None):
     if error is None:
         error = _eos.get_last_error()
+
     if not error:
         return None
 
     try:
-        error = json.loads(error)
+        _error = json.loads(error)
     except:
         return Exception(error)
 
-    return new_chain_exception(error)
+    return new_chain_exception(error, _error)
 
-def get_transaction_exception(error: Optional[Dict] = None):
-    if not error:
-        error = _eos.get_last_error()
-        if not error:
-            return None
-        try:
-            error = json.loads(error)
-        except:
-            return Exception(error)
-
-    if 'except' in error:
-        except_ = new_chain_exception(error['except'])
-        return TransactionException(except_=except_, **error)
-    return new_chain_exception(error)
+def get_transaction_exception(error_str: str):
+    return TransactionException(_json_str=error_str)
