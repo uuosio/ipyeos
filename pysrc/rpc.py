@@ -1,6 +1,9 @@
 import asyncio
 import json
 import uvicorn
+
+from aiocache import cached, Cache
+from aiocache.serializers import StringSerializer
 from fastapi import FastAPI, Request
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
@@ -66,6 +69,7 @@ async def read_root():
     return {"Hello": "World"}
 
 @app.get("/v1/chain/get_info", response_class=PlainTextResponse)
+@cached(ttl=1, cache=Cache.MEMORY, key="get_info", serializer=StringSerializer())
 async def get_info():
     return node.get_node().api.get_info(is_json=False)
 
