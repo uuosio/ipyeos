@@ -265,6 +265,8 @@ class Node(object):
 
         self.trace = None
         self.snapshot = None
+        self.state_history = None
+
         try:
             plugins = node_config.get_config()['plugins']
             for plugin in plugins:
@@ -276,27 +278,121 @@ class Node(object):
                     self.snapshot = Snapshot(self.chain, f'{self.data_dir}/snapshots')
                 
                 if 'state_history' == name:
-                    listen_address = plugin['listen_address']
-                    state_history_endpoint: str = '127.0.0.1:8080'
-                    state_history_unix_socket_path: str = ''
-                    if listen_address.startswith('/'):
-                        state_history_endpoint: str = ''
-                        state_history_unix_socket_path: str = listen_address
-                    else:
-                        state_history_endpoint: str = listen_address
-                        state_history_unix_socket_path: str = ''
-                    logger.info('+++++state_history_endpoint: %s', state_history_endpoint)
-                    logger.info('+++++state_history_unix_socket_path: %s', state_history_unix_socket_path)
-                    self.state_history = StateHistory()
-                    self.state_history.initialize(
-                        self.chain,
-                        self.data_dir,
-                        state_history_endpoint=state_history_endpoint,
-                        state_history_unix_socket_path=state_history_unix_socket_path
-                    )
-                    self.state_history.startup()
+                    self.init_state_history(plugin)
         except:
             logger.info('+++++no plugins in config file')
+
+    def init_state_history(self, plugin):
+        state_history_dir: str = 'state-history'
+        state_history_retained_dir: str = ''
+        state_history_archive_dir: str = ''
+        state_history_stride = 0
+        max_retained_history_files = 0
+        delete_state_history = False
+        trace_history = False
+        chain_state_history = False
+
+        state_history_endpoint: str = '127.0.0.1:8080'
+        state_history_unix_socket_path: str = ''
+
+        trace_history_debug_mode = False
+        state_history_log_retain_blocks = 0
+
+        try:
+            state_history_dir = plugin['state_history_dir']
+        except:
+            pass
+
+        try:
+            state_history_retained_dir = plugin['state_history_retained_dir']
+        except:
+            pass
+
+        try:
+            state_history_archive_dir = plugin['state_history_archive_dir']
+        except:
+            pass
+
+        try:
+            state_history_stride = plugin['state_history_stride']
+        except:
+            pass
+
+        try:
+            max_retained_history_files = plugin['max_retained_history_files']
+        except:
+            pass
+
+        try:
+            delete_state_history = plugin['delete_state_history']
+        except:
+            pass
+        
+        try:
+            trace_history = plugin['trace_history']
+        except:
+            pass
+
+        try:
+            chain_state_history = plugin['chain_state_history']
+        except:
+            pass
+
+        try:
+            trace_history_debug_mode = plugin['trace_history_debug_mode']
+        except:
+            pass
+
+        try:
+            state_history_log_retain_blocks = plugin['state_history_log_retain_blocks']
+        except:
+            pass
+
+        try:
+            listen_address = plugin['listen_address']
+
+            if listen_address.startswith('/'):
+                state_history_endpoint: str = ''
+                state_history_unix_socket_path: str = listen_address
+            else:
+                state_history_endpoint: str = listen_address
+                state_history_unix_socket_path: str = ''
+        except:
+            pass
+
+        logger.info('+++++state_history_endpoint: %s', state_history_endpoint)
+        logger.info('+++++state_history_unix_socket_path: %s', state_history_unix_socket_path)
+        logger.info('+++++state_history_dir: %s', state_history_dir)
+        logger.info('+++++state_history_retained_dir: %s', state_history_retained_dir)
+        logger.info('+++++state_history_archive_dir: %s', state_history_archive_dir)
+        logger.info('+++++state_history_stride: %s', state_history_stride)
+        logger.info('+++++max_retained_history_files: %s', max_retained_history_files)
+        logger.info('+++++delete_state_history: %s', delete_state_history)
+        logger.info('+++++trace_history: %s', trace_history)
+        logger.info('+++++chain_state_history: %s', chain_state_history)
+        logger.info('+++++state_history_endpoint: %s', state_history_endpoint)
+        logger.info('+++++state_history_unix_socket_path: %s', state_history_unix_socket_path)
+        logger.info('+++++trace_history_debug_mode: %s', trace_history_debug_mode)
+        logger.info('+++++state_history_log_retain_blocks: %s', state_history_log_retain_blocks)
+
+        self.state_history = StateHistory()
+        self.state_history.initialize(
+            self.chain,
+            self.data_dir,
+            state_history_dir,
+            state_history_retained_dir,
+            state_history_archive_dir,
+            state_history_stride,
+            max_retained_history_files,
+            delete_state_history,
+            trace_history,
+            chain_state_history,
+            state_history_endpoint,
+            state_history_unix_socket_path,
+            trace_history_debug_mode,
+            state_history_log_retain_blocks
+        )
+        self.state_history.startup()
 
     @classmethod
     def attach(cls):

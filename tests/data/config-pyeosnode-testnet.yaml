@@ -47,4 +47,7 @@ plugins:
   - name: trace_api
   - name: snapshot
   - name: state_history
+    # listen_address: /tmp/state_history.sock
     listen_address: 127.0.0.1:8081
+    chain_state_history: True
+    trace_history: True
