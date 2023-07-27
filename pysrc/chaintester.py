@@ -590,11 +590,13 @@ class ChainTester(object):
 
     def push_actions(self, actions: List, explicit_cpu_bill=False):
         read_only_tx = True
+        _actions = []
         for a in actions:
             if a[-1]: #permissions
                 read_only_tx = False
-        assert not read_only_tx, "push_actions must not include valid permissions"
-        return self.push_actions_ex(actions, explicit_cpu_bill)
+            _actions.append(self.gen_action(*a))
+        assert not read_only_tx, "push_actions must include valid permissions"
+        return self.push_actions_ex(_actions, explicit_cpu_bill)
 
     def push_read_only_actions(self, actions: List, explicit_cpu_bill=False):
         read_only_tx = True
