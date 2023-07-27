@@ -26,7 +26,7 @@ from thrift.Thrift import TApplicationException, TMessageType, TType
 from thrift.transport import TSocket, TTransport
 
 from . import _chainapi, _eos, _vm_api, chaintester, eos, log, rpc_server
-from .chain_exceptions import ChainException
+from .chain_exceptions import ChainException, TransactionException
 from .chainapi import ChainApi
 from .chaintester import ChainTester
 from .interfaces import Apply, ApplyRequest, IPCChainTester
@@ -34,6 +34,8 @@ from .interfaces.ttypes import (Action, ActionArguments, FindPrimaryReturn,
                                 FindSecondaryReturn, GetResourceLimitsReturn,
                                 LowerBoundUpperBoundReturn, NextPreviousReturn,
                                 Uint64)
+
+from .chain_exceptions import ChainException
 
 chaintester.chain_config['contracts_console'] = True
 
@@ -880,8 +882,8 @@ class ChainTesterHandler:
         if next_block_skip_seconds == 0:
             tester.produce_block()
         else:
-            pending_block_time = tester.chain.pending_block_time()
-            next_block_time = pending_block_time + timedelta(seconds=next_block_skip_seconds)
+            pending_block_time = tester.chain.pending_block_time() // 1000
+            next_block_time = pending_block_time + next_block_skip_seconds * 1000
             tester.produce_block(next_block_time)
 
         self.current_tester = None
@@ -902,6 +904,12 @@ class ChainTesterHandler:
             r = tester.push_action(account, action, arguments, permissions)
             # r = tester.push_action(account, action, arguments, permissions, explicit_cpu_bill = True)
             return json.dumps(r).encode()
+        except TransactionException as e:
+            logger.exception(e)
+            return str(e).encode()
+        except ChainException as e:
+            logger.exception(e)
+            return str(e).encode()
         except Exception as e:
             logger.exception(e)
             return str(e).encode()
@@ -936,8 +944,14 @@ class ChainTesterHandler:
         try:
             r = tester.push_actions(_actions)
             return json.dumps(r).encode()
+        except ChainException as e:
+            logger.exception(e)
+            return str(e).encode()
+        except TransactionException as e:
+            logger.exception(e)
+            return str(e).encode()
         except Exception as e:
-            # logger.exception(e)
+            logger.exception(e)
             err = e.args[0]
             if isinstance(err, dict):
                 error_message = err['except']
@@ -1058,7 +1072,7 @@ class ChainTesterHandler:
 
     def import_key(self, id: i32, pub_key: str, priv_key: str):
         chain: ChainTester = self.testers[id]
-        return chain.import_key(pub_key, priv_key)
+        return chain.import_key(priv_key)
 
     def get_required_keys(self, id: i32, transaction: str, available_keys: List[str]):
         chain = self.testers[id].chain
@@ -1241,10 +1255,10 @@ def update_auth(chain, account):
 
 class IPCChainTesterProcessor(IPCChainTester.Processor):
     def process(self, iprot, oprot):
-        (name, type, seqid) = iprot.readMessageBegin()
+        (name, _type, seqid) = iprot.readMessageBegin()
         # print('IPCChainTesterProcessor:', name)
         if self._on_message_begin:
-            self._on_message_begin(name, type, seqid)
+            self._on_message_begin(name, _type, seqid)
         if name not in self._processMap:
             iprot.skip(TType.STRUCT)
             iprot.readMessageEnd()
