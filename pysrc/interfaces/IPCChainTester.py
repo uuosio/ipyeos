@@ -209,7 +209,7 @@ class Iface(object):
         """
         pass
 
-    def get_table_rows(self, id, json, code, scope, table, lower_bound, upper_bound, limit, key_type, index_position, reverse, show_payer):
+    def get_table_rows(self, id, json, code, scope, table, lower_bound, upper_bound, limit, key_type, index_position, encode_type, reverse, show_payer):
         """
         Parameters:
          - id
@@ -222,6 +222,7 @@ class Iface(object):
          - limit
          - key_type
          - index_position
+         - encode_type
          - reverse
          - show_payer
 
@@ -922,7 +923,7 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "deploy_contract failed: unknown result")
 
-    def get_table_rows(self, id, json, code, scope, table, lower_bound, upper_bound, limit, key_type, index_position, reverse, show_payer):
+    def get_table_rows(self, id, json, code, scope, table, lower_bound, upper_bound, limit, key_type, index_position, encode_type, reverse, show_payer):
         """
         Parameters:
          - id
@@ -935,14 +936,15 @@ class Client(Iface):
          - limit
          - key_type
          - index_position
+         - encode_type
          - reverse
          - show_payer
 
         """
-        self.send_get_table_rows(id, json, code, scope, table, lower_bound, upper_bound, limit, key_type, index_position, reverse, show_payer)
+        self.send_get_table_rows(id, json, code, scope, table, lower_bound, upper_bound, limit, key_type, index_position, encode_type, reverse, show_payer)
         return self.recv_get_table_rows()
 
-    def send_get_table_rows(self, id, json, code, scope, table, lower_bound, upper_bound, limit, key_type, index_position, reverse, show_payer):
+    def send_get_table_rows(self, id, json, code, scope, table, lower_bound, upper_bound, limit, key_type, index_position, encode_type, reverse, show_payer):
         self._oprot.writeMessageBegin('get_table_rows', TMessageType.CALL, self._seqid)
         args = get_table_rows_args()
         args.id = id
@@ -955,6 +957,7 @@ class Client(Iface):
         args.limit = limit
         args.key_type = key_type
         args.index_position = index_position
+        args.encode_type = encode_type
         args.reverse = reverse
         args.show_payer = show_payer
         args.write(self._oprot)
@@ -1490,7 +1493,7 @@ class Processor(Iface, TProcessor):
         iprot.readMessageEnd()
         result = get_table_rows_result()
         try:
-            result.success = self._handler.get_table_rows(args.id, args.json, args.code, args.scope, args.table, args.lower_bound, args.upper_bound, args.limit, args.key_type, args.index_position, args.reverse, args.show_payer)
+            result.success = self._handler.get_table_rows(args.id, args.json, args.code, args.scope, args.table, args.lower_bound, args.upper_bound, args.limit, args.key_type, args.index_position, args.encode_type, args.reverse, args.show_payer)
             msg_type = TMessageType.REPLY
         except TTransport.TTransportException:
             raise
@@ -4294,13 +4297,14 @@ class get_table_rows_args(object):
      - limit
      - key_type
      - index_position
+     - encode_type
      - reverse
      - show_payer
 
     """
 
 
-    def __init__(self, id=None, json=None, code=None, scope=None, table=None, lower_bound=None, upper_bound=None, limit=None, key_type=None, index_position=None, reverse=None, show_payer=None,):
+    def __init__(self, id=None, json=None, code=None, scope=None, table=None, lower_bound=None, upper_bound=None, limit=None, key_type=None, index_position=None, encode_type=None, reverse=None, show_payer=None,):
         self.id = id
         self.json = json
         self.code = code
@@ -4311,6 +4315,7 @@ class get_table_rows_args(object):
         self.limit = limit
         self.key_type = key_type
         self.index_position = index_position
+        self.encode_type = encode_type
         self.reverse = reverse
         self.show_payer = show_payer
 
@@ -4374,11 +4379,16 @@ class get_table_rows_args(object):
                 else:
                     iprot.skip(ftype)
             elif fid == 11:
+                if ftype == TType.STRING:
+                    self.encode_type = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 12:
                 if ftype == TType.BOOL:
                     self.reverse = iprot.readBool()
                 else:
                     iprot.skip(ftype)
-            elif fid == 12:
+            elif fid == 13:
                 if ftype == TType.BOOL:
                     self.show_payer = iprot.readBool()
                 else:
@@ -4433,12 +4443,16 @@ class get_table_rows_args(object):
             oprot.writeFieldBegin('index_position', TType.STRING, 10)
             oprot.writeString(self.index_position.encode('utf-8') if sys.version_info[0] == 2 else self.index_position)
             oprot.writeFieldEnd()
+        if self.encode_type is not None:
+            oprot.writeFieldBegin('encode_type', TType.STRING, 11)
+            oprot.writeString(self.encode_type.encode('utf-8') if sys.version_info[0] == 2 else self.encode_type)
+            oprot.writeFieldEnd()
         if self.reverse is not None:
-            oprot.writeFieldBegin('reverse', TType.BOOL, 11)
+            oprot.writeFieldBegin('reverse', TType.BOOL, 12)
             oprot.writeBool(self.reverse)
             oprot.writeFieldEnd()
         if self.show_payer is not None:
-            oprot.writeFieldBegin('show_payer', TType.BOOL, 12)
+            oprot.writeFieldBegin('show_payer', TType.BOOL, 13)
             oprot.writeBool(self.show_payer)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -4470,8 +4484,9 @@ get_table_rows_args.thrift_spec = (
     (8, TType.I64, 'limit', None, None, ),  # 8
     (9, TType.STRING, 'key_type', 'UTF8', None, ),  # 9
     (10, TType.STRING, 'index_position', 'UTF8', None, ),  # 10
-    (11, TType.BOOL, 'reverse', None, None, ),  # 11
-    (12, TType.BOOL, 'show_payer', None, None, ),  # 12
+    (11, TType.STRING, 'encode_type', 'UTF8', None, ),  # 11
+    (12, TType.BOOL, 'reverse', None, None, ),  # 12
+    (13, TType.BOOL, 'show_payer', None, None, ),  # 13
 )
 
 
