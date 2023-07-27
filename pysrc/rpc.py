@@ -5,7 +5,7 @@ import uvicorn
 from aiocache import cached, Cache
 from aiocache.serializers import StringSerializer
 from fastapi import FastAPI, Request
-from fastapi.responses import PlainTextResponse
+from fastapi.responses import PlainTextResponse, JSONResponse
 from pydantic import BaseModel
 
 from .uvicorn_server import UvicornServer
@@ -71,7 +71,12 @@ async def read_root():
 @app.get("/v1/chain/get_info", response_class=PlainTextResponse)
 @cached(ttl=1, cache=Cache.MEMORY, key="get_info", serializer=StringSerializer())
 async def get_info():
-    return node.get_node().api.get_info(is_json=False)
+    rwlock = node.get_node().rwlock
+    if rwlock:
+        with rwlock.rlock():
+            return node.get_node().api.get_info(is_json=False)
+    else:
+        return node.get_node().api.get_info(is_json=False)
 
 @app.post("/v1/chain/get_table_rows", response_class=PlainTextResponse)
 async def get_table_rows(req: Request):
@@ -86,7 +91,15 @@ async def get_table_rows(req: Request):
         ret = node.get_node().api.get_table_rows_ex(params, return_json=False)
         return ret
 
-@app.post("/v1/chain/push_transaction", response_class=PlainTextResponse)
+def generate_response(result):
+    content = {"status": "ok", "result": result}
+    return JSONResponse(content=content, status_code=200)
+
+def generate_error_response(result):
+    content = {"status": "error", "result": result}
+    return JSONResponse(content=content, status_code=400)
+
+@app.post("/v1/chain/push_transaction")
 async def push_transaction(args: PushTransactionArgs):
     """
     Sends a packed transaction to the network.
@@ -101,39 +114,38 @@ async def push_transaction(args: PushTransactionArgs):
 
     conn = await node.get_network().get_connection()
     if not conn:
-        return '{"status": "error", "result": "no node connection"}'
+        return generate_error_response("no node connection")
     msg = net.PackedTransactionMessage(packed_tx)
 
-    if args.speculate:
-        chain = node.get_node().chain
-        try:
-            rwlock = node.get_node().rwlock
-            if rwlock:
-                with rwlock.wlock():
-                    chain.start_block()
-                    ret = chain.push_transaction(packed_tx, return_json=False)
-                    chain.abort_block()
-            else:
-                chain.start_block()
-                ret = chain.push_transaction(packed_tx, return_json=False)
-                chain.abort_block()
-        except BlockValidateException as e:
-            ret = {"status": "error", "result": e.asdict()}
-            return json.dumps(ret)
-        except ChainException as e:
-            ret = {"status": "error", "result": e.asdict()}
-            return json.dumps(ret)
-        except Exception as e:
-            return f'{{"status": "error", "result": "{str(e)}"}}'
-
+    if not args.speculate:
         if await conn.send_message(msg):
-            return f'{{"status": "ok", "result": {ret}}}'
-        return '{"status": "error"}'
-    else:
-        if await conn.send_message(msg):
-            return '{"status": "ok"}'
+            return generate_response('send transaction success')
         else:
-            return '{"status": "error"}'
+            return generate_error_response('send transaction failed')
+
+    ret = None
+    success = False
+    chain = node.get_node().chain
+    try:
+        rwlock = node.get_node().rwlock
+        if rwlock:
+            with rwlock.wlock():
+                chain.start_block()
+                success, ret = chain.push_transaction_ex(packed_tx, return_json=False)
+                chain.abort_block()
+        else:
+            chain.start_block()
+            success, ret = chain.push_transaction_ex(packed_tx, return_json=False)
+            chain.abort_block()
+    except Exception as e:
+        return generate_error_response(str(e))
+
+    if success:
+        if await conn.send_message(msg):
+            return generate_response(ret)
+        return generate_error_response('send transaction failed')
+    else:
+        return generate_error_response(ret)
 
 async def trace_api_get_block_trace(args: GetBlockTraceArgs):
     try:

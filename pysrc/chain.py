@@ -412,14 +412,25 @@ class Chain(object):
  
     def push_transaction(self, packed_trx: bytes, block_deadline_ms: int = 0, billed_cpu_time_us: int = 0, explicit_cpu_bill: int = 0, subjective_cpu_bill_us = 0, read_only: bool = False, return_json: bool = True) -> dict:
         success, result = _chain.push_transaction(self.ptr, packed_trx, block_deadline_ms, billed_cpu_time_us, explicit_cpu_bill, subjective_cpu_bill_us, read_only)
-        if not success:
-            raise get_transaction_exception()
-        if not return_json:
+        if success:
+            if return_json:
+                return json.loads(result)
             return result
-        result = json.loads(result)
-        if 'except' in result:
-            raise get_transaction_exception(result['except'])
-        return result
+
+        if result:
+            raise get_transaction_exception(result)
+
+        raise get_last_exception()
+
+    def push_transaction_ex(self, packed_trx: bytes, block_deadline_ms: int = 0, billed_cpu_time_us: int = 0, explicit_cpu_bill: int = 0, subjective_cpu_bill_us = 0, read_only: bool = False, return_json: bool = True) -> dict:
+        success, result = _chain.push_transaction(self.ptr, packed_trx, block_deadline_ms, billed_cpu_time_us, explicit_cpu_bill, subjective_cpu_bill_us, read_only)
+        if success:
+            return True, result
+
+        if result:
+            return False, result
+
+        return False, eos.get_last_error()
 
     def push_ro_transaction(self, packed_trx: bytes, return_json: bool = True) -> dict:
         return self.push_transaction(packed_trx, read_only=True, return_json=return_json)
