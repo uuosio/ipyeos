@@ -540,10 +540,7 @@ def gen_transaction(uint64_t ptr, bool json, string& _actions,  int64_t expirati
 def push_transaction(uint64_t ptr, _packed_trx: bytes, int64_t block_deadline_ms, uint32_t billed_cpu_time_us, bool explicit_cpu_bill = 0, uint32_t subjective_cpu_bill_us=0, bool read_only = 0):
     cdef string result
     ret = chain(ptr).push_transaction(<char *>_packed_trx, len(_packed_trx), block_deadline_ms, billed_cpu_time_us, explicit_cpu_bill, subjective_cpu_bill_us, read_only, result)
-    if ret:
-        return (ret, result)
-    else:
-        return (ret, None)
+    return (ret, result)
 
 def push_block_from_block_log(uint64_t ptr, uint64_t block_log_ptr, uint32_t block_num) -> bool:
     return chain(ptr).push_block_from_block_log(<void *>block_log_ptr, block_num)
