@@ -8,7 +8,7 @@ import sysconfig
 
 from . import run
 
-__version__ = "0.4.6"
+__version__ = "0.4.7"
 
 cur_dir = os.path.dirname(os.path.realpath(__file__))
 
