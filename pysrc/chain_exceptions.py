@@ -158,7 +158,6 @@ class ChainException(Exception):
 #  'action_traces': [],
 #  'failed_dtrx_trace': None,
 
-@dataclasses.dataclass
 class TransactionException(ChainException):
     # id: str
     # block_num: int
