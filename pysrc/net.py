@@ -1198,7 +1198,7 @@ class Connection(object):
                 return await self.send_message(msg)
             except ForkDatabaseException as e:
                 # fork_database_exception
-                if e.stack[0].format.startswith('we already know about this block'):
+                if e.json()['stack'][0]['format'].startswith('we already know about this block'):
                     self.logger.warning(f"++++++++receive duplicated block: {received_block_num}, block_id: {block_id}")
                     return True
             except DatabaseGuardException as e:
@@ -1223,8 +1223,12 @@ class Connection(object):
                 if self.last_handshake.last_irreversible_block_num > received_block_num:
                     return await self.send_sync_request_message()
 
+                if not await self.send_handshake_message():
+                    return False
+
                 # send catch up request
-                self.last_sync_request = None
+                self.last_sync_request = None #SyncRequestMessage(0, 0)
+
                 req_trx = OrderedIds(IdListModes.none, 0, [])
                 req_blocks = OrderedIds(IdListModes.catch_up, 0, [self.chain.head_block_id()])
                 msg = RequestMessage(req_trx, req_blocks)

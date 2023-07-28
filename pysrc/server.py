@@ -40,8 +40,7 @@ from .chain_exceptions import ChainException
 chaintester.chain_config['contracts_console'] = True
 
 logger = log.get_logger(__name__)
-logger.setLevel(logging.DEBUG)
-
+# logger.setLevel(logging.DEBUG)
 
 thread_queue = queue.Queue()
 
@@ -1312,6 +1311,7 @@ def start_debug_server(addr='127.0.0.1', server_port=9090, vm_api_port=9092, app
                 sys.exit(0)
                 break
         except KeyboardInterrupt:
+            logger.info("KeyboardInterrupt")
             sys.exit(0)
 
 if __name__ == '__main__':

@@ -247,9 +247,9 @@ def test_push_block_from_block_log():
 def test_exception():
     exception = '''{"code": 3020000, "name": "fork_database_exception", "message": "Fork database exception", "stack": [{"context": {"level": "error", "file": "controller.cpp", "line": 2240, "method": "operator()", "hostname": "", "thread_name": "chain-1", "timestamp": "2023-07-11T15:56:40.581"}, "format": "we already know about this block: ${id}", "data": {"id": "0000003c175d15e908e364816194f6dd239102fd4a4c2f46f4e81f977012b42d"}}]}'''
     e = get_last_exception(exception)
-    logger.info("++++++%s", e.stack[0].context.level)
-    logger.info("++++++%s", e.stack[0].format)
-    logger.info("++++++%s", e.stack[0].data)
+    logger.info("++++++%s", e.json()['stack'][0]['context']['level'])
+    logger.info("++++++%s", e.json()['stack'][0]['format'])
+    logger.info("++++++%s", e.json()['stack'][0]['data'])
 
 def test_push_block():
     if os.path.exists('./data/ddd'):
@@ -280,8 +280,8 @@ def test_push_block():
         t.chain.push_block(raw_block)
     except ForkDatabaseException as e:
         logger.info("++++++%s", e)
-        logger.info("++++++%s", e.stack[0].context)
-        logger.info("++++++%s", e.stack[0].format)
+        logger.info("++++++%s", e.json()['stack'][0]['context'])
+        logger.info("++++++%s", e.json()['stack'][0]['format'])
         # assert e.stack[0]['context'].format.startswith('we already know about this block')
 
     for block_num in range(head_block_num+2, head_block_num+num_count+1):
@@ -318,7 +318,7 @@ def test_abort_block():
     try:
         t.chain.start_block()
     except BlockValidateException as e:
-        logger.error(e.stack[0].format)
+        logger.error(e['stack'][0]['format'])
     t.chain.abort_block()
     t.chain.abort_block()
 
