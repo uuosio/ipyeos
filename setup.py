@@ -79,7 +79,7 @@ if os.path.exists('pysrc/release'):
 
 setup(
     name="ipyeos",
-    version="0.4.7",
+    version="0.4.8",
     description="IPYEOS project",
     author='The IPYEOS Team',
     license="MIT",
