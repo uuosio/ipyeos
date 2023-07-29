@@ -1,9 +1,10 @@
-import asyncio as aio
+import asyncio
 import glob
 import json
 import logging
 import os
 import queue
+import signal
 import string
 import sys
 import threading
@@ -25,7 +26,7 @@ from thrift.server import TServer
 from thrift.Thrift import TApplicationException, TMessageType, TType
 from thrift.transport import TSocket, TTransport
 
-from . import _chainapi, _eos, _vm_api, chaintester, eos, log, rpc_server
+from . import _chainapi, _eos, _vm_api, chaintester, eos, log, rpc_server, stop_process
 from .chain_exceptions import ChainException, TransactionException
 from .chainapi import ChainApi
 from .chaintester import ChainTester
@@ -1221,7 +1222,7 @@ class ChainTesterServer(object):
 
             try:
                 while True:
-                    self.processor.process(iprot, oprot)                    
+                    self.processor.process(iprot, oprot)
             except TTransport.TTransportException:
                 pass
             except Exception as x:
@@ -1289,30 +1290,28 @@ def start_debug_server(addr='127.0.0.1', server_port=9090, vm_api_port=9092, app
         server.serve()
         print('done.')
 
-    def start_rpc_server():
-        loop = aio.new_event_loop()
-        try:
-            loop.run_until_complete(rpc_server.start(rpc_server_addr, rpc_server_port, handler))
-        except KeyboardInterrupt:
-            loop.stop()
-            loop.close()
+    def handle_signal(signum):
+        logger.info("handle_signal: %s", signum)
+        rpc_server.stop()
 
-    t = threading.Thread(target=start_rpc_server, daemon=True)
-    t.start()
+    async def run_rpc_server():
+        loop = asyncio.get_running_loop()
+        loop.add_signal_handler(signal.SIGINT, handle_signal, signal.SIGINT)
+        loop.add_signal_handler(signal.SIGTERM, handle_signal, signal.SIGTERM)
+        asyncio.create_task(stop_process.run_exit_server(rpc_server.stop))
+        try:
+            await rpc_server.start(rpc_server_addr, rpc_server_port, handler)
+        except KeyboardInterrupt:
+            logger.info("KeyboardInterrupt")
+            rpc_server.stop()
+
+        sockfile = f'/tmp/{os.getpid()}.sock'
+        os.unlink(sockfile)
 
     t = threading.Thread(target=start_server, daemon=True)
     t.start()
 
-    while True:
-        try:
-            command = thread_queue.get(block=True)
-            if command == 'exit':
-                time.sleep(1.0)
-                sys.exit(0)
-                break
-        except KeyboardInterrupt:
-            logger.info("KeyboardInterrupt")
-            sys.exit(0)
+    asyncio.run(run_rpc_server())
 
 if __name__ == '__main__':
     start_debug_server()

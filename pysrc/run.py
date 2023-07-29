@@ -8,7 +8,7 @@ import subprocess
 import sys
 import sysconfig
 
-from . import args, log
+from . import args, log, stop_process
 
 logger = log.get_logger(__name__)
 
@@ -75,7 +75,8 @@ def run_ipyeos(custom_cmds=None):
         logger.info('ipyeos exit with code: %s', ret)
         return ret
     except KeyboardInterrupt:
-        # quit_app()
+        logger.info(f"+++++++quit {p.pid}")
+        stop_process.quit_app(p.pid)
         # p.terminate()
         # p.send_signal(signal.SIGINT)
         logger.info('KeyboardInterrupt, wait for ipyeos exit...')

@@ -172,8 +172,10 @@ async def create_method(method: str, request: Request):
         logger.exception(e)
         return f'{{"error": "{str(e)}"}}'
 
+server = None
 async def start(rpc_server_addr, rpc_server_port, handler: BaseChainTester):
     global proxy
+    global server
     proxy = ChainTesterProxy(handler)
     logger.info('+++++++start rpc server: %s %s', rpc_server_addr, rpc_server_port)
 
@@ -184,3 +186,9 @@ async def start(rpc_server_addr, rpc_server_port, handler: BaseChainTester):
         await server.serve()
     except asyncio.exceptions.CancelledError:
         logger.info('asyncio.exceptions.CancelledError')
+
+def stop():
+    global server
+    if server:
+        server.exit()
+        server = None
