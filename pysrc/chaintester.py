@@ -18,6 +18,7 @@ from .database import GeneratedTransactionObjectIndex
 from .database_objects import GeneratedTransactionObject
 from .packer import Decoder
 from .types import Name
+from .chain_exceptions import ChainException, TransactionException
 
 logger = log.get_logger(__name__)
 
@@ -661,8 +662,7 @@ class ChainTester(object):
             sender_id = dec.unpack_u128()
             payer = dec.unpack_name()
             delay_until = dec.unpack_i64()
-            # print('+++delay_until:', delay_until, pending_block_time)
-            if pending_block_time > delay_until:
+            if pending_block_time < delay_until:
                 return 0
             ready_txs.append(trx_id)
             return 1
@@ -678,7 +678,10 @@ class ChainTester(object):
                 priv_keys.append(producer_key_map[pub_key])
 
         for scheduled_tx_id in ready_txs:
-            self.chain.push_scheduled_transaction(scheduled_tx_id, deadline, 100)
+            try:
+                self.chain.push_scheduled_transaction(scheduled_tx_id, deadline, 100)
+            except TransactionException as e:
+                logger.exception(e)
         # logger.info("+++priv_keys: %s", priv_keys)
         self.chain.finalize_block(priv_keys)
         self.chain.commit_block()

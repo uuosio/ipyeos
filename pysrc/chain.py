@@ -418,7 +418,7 @@ class Chain(object):
             return result
 
         if result:
-            raise get_transaction_exception(result)
+            raise get_transaction_exception(_json_str=result)
 
         raise get_last_exception()
 
@@ -465,7 +465,16 @@ class Chain(object):
     def push_scheduled_transaction(self, scheduled_tx_id: str, deadline: Union[datetime, str], billed_cpu_time_us: int) -> dict:
         if isinstance(deadline, datetime):
             deadline = deadline.isoformat(timespec='milliseconds')
-        return _chain.push_scheduled_transaction(self.ptr, scheduled_tx_id, deadline, billed_cpu_time_us)
+        ret = _chain.push_scheduled_transaction(self.ptr, scheduled_tx_id, deadline, billed_cpu_time_us)
+
+        if not ret:
+            raise get_last_exception()
+
+        _ret = json.loads(ret)
+        if 'except' in _ret:
+            raise get_transaction_exception(_json_str=ret, _json=_ret)
+
+        return ret
 
     def commit_block(self) -> None:
         if not _chain.commit_block(self.ptr):

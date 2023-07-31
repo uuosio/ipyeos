@@ -240,5 +240,6 @@ def get_last_exception(error: Optional[str] = None):
 
     return new_chain_exception(error, _error)
 
-def get_transaction_exception(error_str: str):
-    return TransactionException(_json_str=error_str)
+def get_transaction_exception(_json_str: str = None, _json: Dict = None):
+    assert _json_str or _json, 'either _json_str or _json must be provided'
+    return TransactionException(_json_str, _json)
