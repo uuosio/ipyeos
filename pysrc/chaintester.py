@@ -483,8 +483,9 @@ class ChainTester(object):
         producer_key_map[pubkey] = priv_key
         return True
 
-    def push_action(self, account: Name, action: Name, args: Union[Dict, str, bytes], permissions: Dict, explicit_cpu_bill=False):
-        assert permissions, "permissions is empty"
+    def push_action(self, account: Name, action: Name, args: Union[Dict, str, bytes], permissions: Dict = None, explicit_cpu_bill=False):
+        if not permissions:
+            permissions = {account: 'active'}
         return self.push_action_ex(account, action, args, permissions, explicit_cpu_bill)
 
     def push_read_only_action(self, account: Name, action: Name, args: Union[Dict, str, bytes], explicit_cpu_bill=False):
