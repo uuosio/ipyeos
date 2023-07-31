@@ -1954,7 +1954,7 @@ class TableIdObjectIndex(object):
         upper_bound = i2b(upper_bound)
         return self.db.walk_range(table_id_object_type, TableIdObject.by_id, lower_bound, upper_bound, self.on_object_data, (cb, raw_data, user_data))
 
-    def walk_range_by_code_scope_table(self, lower_bound: Union[Name, Name, Name], upper_bound: Union[Name, Name, Name], cb, user_data=None, raw_data=False):
+    def walk_range_by_code_scope_table(self, lower_bound: Tuple[Name, Name, Name], upper_bound: Tuple[Name, Name, Name], cb, user_data=None, raw_data=False):
         lower_bound = TableIdObject.generate_key_by_code_scope_table(*lower_bound)
         upper_bound = TableIdObject.generate_key_by_code_scope_table(*upper_bound)
         return self.db.walk_range(table_id_object_type, TableIdObject.by_code_scope_table, lower_bound, upper_bound, self.on_object_data, (cb, raw_data, user_data))

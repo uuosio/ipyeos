@@ -22,9 +22,9 @@ genesis:
 
 logging_config_file: "logging.json"
 
-worker_processes:
-  - "127.0.0.1:8809"
-  - "/tmp/uvicorn.sock"
+# worker_processes:
+#   - "127.0.0.1:8809"
+#   - "/tmp/uvicorn.sock"
 
 debug_port: 7777
 rpc_address: '127.0.0.1:8088'
@@ -39,8 +39,8 @@ net:
     - 'peer.eosio.sg:9876'
 
 chain:
-  state_size: 34359738368 # 32*1024*1024*1024 (32GB)
-  state_guard_size: 10485760 # 10*1024*1024 (10MB)
+  state_size: 1048576000 # 32*1024 (32GB)
+  state_guard_size: 10485760 # 10 (10MB)
   contracts_console: false
   data_dir: "dd"
   config_dir: "cd"  

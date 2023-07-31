@@ -192,14 +192,14 @@ class Node(object):
             chain_config['read_only'] = True
             eos.set_worker_process()
 
-        if state_size < 1024*1024*30:
-            state_size = 1024*1024*30
-        chain_config['state_size'] = state_size
+        if state_size < 30:
+            state_size = 30
+        chain_config['state_size'] = state_size * 1024 * 1024
 
         guard_size = int(state_size * 0.005)
-        if guard_size < 1024*1024*5:
-            guard_size = 1024*1024*5
-        chain_config['state_guard_size'] = guard_size
+        if guard_size < 5:
+            guard_size = 5
+        chain_config['state_guard_size'] = guard_size * 1024 * 1024
 
         if data_dir:
             self.data_dir = data_dir
