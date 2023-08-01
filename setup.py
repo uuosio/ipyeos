@@ -107,9 +107,7 @@ setup(
         "pydantic",
         'aiomonitor',
         'uvloop',
-        'aiocache',
-        'ipython',
-        'ipykernel'
+        'aiocache'
     ],
     tests_require=[],
     include_package_data=True

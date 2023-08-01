@@ -34,26 +34,6 @@ r = requests.post('http://127.0.0.1:7777/exec', data={'code': code})
 print(r.text)
 </code></pre>
 
-<h2><code>ipython</code></h2>
-
-<p>This command launches an interactive IPython session.</p>
-
-<p><strong>Example:</strong></p>
-
-<pre><code class="language-bash">
-    curl -X GET http://127.0.0.1:7777/ipython
-</code></pre>
-
-<h2><code>ikernel</code></h2>
-
-<p>This command starts an IKernel (Interactive Kernel) session. The IKernel provides a Jupyter notebook interface for interactive computing.</p>
-
-<p><strong>Example:</strong></p>
-
-<pre><code class="language-bash">
-    curl -X GET http://127.0.0.1:7777/ikernel
-</code></pre>
-
 <h2><code>quit</code></h2>
 
 <p>This command is used to exit the application.</p>

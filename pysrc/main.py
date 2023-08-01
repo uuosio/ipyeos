@@ -1,3 +1,4 @@
+import aiomonitor
 import argparse
 import asyncio
 import concurrent.futures
@@ -337,10 +338,6 @@ class Main(object):
         print('all done!')
 
     async def main(self):
-
-        import asyncio
-        import aiomonitor
-
         loop = asyncio.get_event_loop()
         with aiomonitor.start_monitor(loop):
             logger.info("Now you can connect with: nc localhost 50101 or rlwrap nc localhost 50101")
