@@ -82,9 +82,9 @@ def deploy_contract(tester, package_name):
 @chain_test(True)
 def test_walk(tester: ChainTester):
     def on_data(tp, raw_data, custom_data):
-        print(tp, len(raw_data))
+        logger.info("%s %s", tp, len(raw_data))
         if tp == 1:
-            print(eos.b2s(raw_data[8:16]))
+            logger.info(eos.b2s(raw_data[8:16]))
         return 1
     object_types = [1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 30, 31, 32, 33, 34, 38, 39, 40, 41]
     for tp in object_types:
@@ -97,14 +97,14 @@ def test_row_count(tester: ChainTester):
     object_types = [1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 30, 31, 32, 33, 34, 38, 39, 40, 41]
     for tp in object_types:
         count = tester.db.row_count(tp)
-        print(f'+++++++++{tp}: {count}')
+        logger.info(f'+++++++++{tp}: {count}')
 
 @chain_test(True)
 def test_2walk_range(tester: ChainTester):
     def on_data(tp, raw_data, custom_data):
-        print(tp, raw_data)
+        logger.info("%s %s", tp, raw_data)
         if tp == 1:
-            print(eos.b2s(raw_data[:8]))
+            logger.info(eos.b2s(raw_data[:8]))
         return 1
     object_types = [1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 30, 31, 32, 33, 34, 38, 39, 40, 41]
 
@@ -114,19 +114,19 @@ def test_2walk_range(tester: ChainTester):
         tester.db.walk_range(tp, 0, int.to_bytes(0, 8, 'little'), int.to_bytes(10, 8, 'little'), on_data)
 
 def parse_code(raw_data: bytes):
-    print('+++++++raw_data:', len(raw_data))
+    logger.info('+++++++raw_data: %s', len(raw_data))
     dec = Decoder(raw_data)
     table_id = dec.unpack_u64()
 
     code_hash = dec.unpack_checksum256()
-    print('+++code hash:', code_hash)
+    logger.info('+++code hash: %s', code_hash)
     code = dec.unpack_bytes()
     code_ref_count = dec.unpack_u64()
     first_block_used = dec.unpack_u32()
     vm_type = dec.unpack_u8()
     vm_version = dec.unpack_u8()
-    print(code_ref_count, first_block_used, vm_type, vm_version)
-    print('len(code):', len(code))
+    logger.info("%s %s %s %s", code_ref_count, first_block_used, vm_type, vm_version)
+    logger.info('len(code): %s', len(code))
     # with open('out.wasm', 'wb') as f:
     #     f.write(code)
     return code_hash
@@ -140,11 +140,11 @@ def test_find(tester: ChainTester):
             continue
         raw_data = tester.db.find(tp, 0, int.to_bytes(0, 8, 'little'))
         if raw_data:
-            print(tp, len(raw_data))
+            logger.info("%s %s", tp, len(raw_data))
 
     if 0:
         key = int.to_bytes(1, 8, 'little')
-        print('++++key:', key)
+        logger.info('++++key: %s', key)
         raw_data = tester.db.find(40, 0, key)
         code_hash = parse_code(raw_data)
         # digest_type  code_hash; //< code_hash should not be changed within a chainbase modifier lambda
@@ -169,21 +169,21 @@ def test_lower_bound(tester: ChainTester):
             continue
         raw_data = tester.db.lower_bound(tp, 0, int.to_bytes(0, 8, 'little'))
         if raw_data:
-            print(tp, len(raw_data))
+            logger.info("%s %s", tp, len(raw_data))
 
     raw_data = tester.db.lower_bound(40, 0, int.to_bytes(1, 8, 'little'))
-    print(40, len(raw_data))
+    logger.info("%s %s", 40, len(raw_data))
 
     raw_data = tester.db.upper_bound(40, 0, int.to_bytes(1, 8, 'little'))
-    print(40, len(raw_data))
+    logger.info("%s %s", 40, len(raw_data))
 
     raw_data = tester.db.lower_bound(40, 0, int.to_bytes(0, 8, 'little'))
-    print(40, len(raw_data))
+    logger.info("%s %s", 40, len(raw_data))
 
     raw_data = tester.db.upper_bound(40, 0, int.to_bytes(0, 8, 'little'))
-    print(40, len(raw_data))
+    logger.info("%s %s", 40, len(raw_data))
     
-    print(time.monotonic() - start)
+    logger.info(time.monotonic() - start)
 
 def parse_account_object(data: bytes):
     #class account_object:
@@ -198,7 +198,7 @@ def parse_account_object(data: bytes):
     name = dec.unpack_name()
     creation_data = dec.unpack_u32()
     abi = dec.unpack_bytes()
-    print(name, creation_data)
+    logger.info("%s %s", name, creation_data)
     if abi:
         abi = eos.unpack_native_object(12, abi)
     # print(abi)
@@ -241,11 +241,11 @@ def test_account_index(tester: ChainTester):
     assert obj == obj_find
 
     perm = idx.find_by_id(1)
-    print(perm)
+    logger.info(perm)
     perm.creation_date += 1
     idx.modify(perm)
     perm2 = idx.find_by_id(1)
-    print(perm2)
+    logger.info(perm2)
     assert perm2 == perm
 
 def parse_account_metadata_object(data: bytes):
@@ -294,13 +294,13 @@ def test_account_metadata_index(tester: ChainTester):
     ret = parse_account_metadata_object(data)
 
     name = ret[0]
-    print(name)
+    logger.info(name)
     # by_name
     key = eos.s2b(name)
     data = tester.db.find(database.account_metadata_object_type, 1, key)
     ret2 = parse_account_metadata_object(data)
     assert ret == ret2
-    print(ret)
+    logger.info(ret)
 
     def on_data(obj, user_data):
         logger.info("+++%s", obj.table_id)
@@ -330,14 +330,14 @@ def test_account_metadata_index(tester: ChainTester):
 
 
     perm = idx.find_by_id(1)
-    print(perm)
+    logger.info(perm)
     perm_by_name = idx.find_by_name(perm.name)
     assert perm_by_name == perm
 
     perm.recv_sequence += 1
     idx.modify(perm)
     perm2 = idx.find_by_id(1)
-    print(perm2)
+    logger.info(perm2)
     assert perm2 == perm
 
 def parse_permission_object(raw_data: bytes):
@@ -370,26 +370,26 @@ def parse_permission_object(raw_data: bytes):
 
     pos = dec.get_pos()
     size = dec.unpack_length()
-    print('++++key_weight size:', size)
+    logger.info('++++key_weight size: %s', size)
     for i in range(size):
         pub = dec.unpack_public_key()
         weight = dec.unpack_u16()
-        print('++++key_weight:', pub, weight)
+        logger.info('++++key_weight: %s %s', pub, weight)
 
     size = dec.unpack_length()
-    print('+++++++permission_level_weight size:', size)
+    logger.info('+++++++permission_level_weight size: %s', size)
     for i in range(size):
         actor = dec.unpack_name()
         permission = dec.unpack_name()
         weight = dec.unpack_u16()
-        print("+++++++permission_level_weight:", actor, permission, weight)
+        logger.info("+++++++permission_level_weight: %s %s %s", actor, permission, weight)
 
     wait_weight_size = dec.unpack_length()
-    print('++++++wait_weight_size:', wait_weight_size)
+    logger.info('++++++wait_weight_size: %s', wait_weight_size)
     for i in range(wait_weight_size):
         wait_sec = dec.unpack_u32()
         weight =dec.unpack_u16()
-        print(wait_sec, weight)
+        logger.info("%s %s", wait_sec, weight)
 
     return (
         usage_id,
@@ -403,7 +403,7 @@ def parse_permission_object(raw_data: bytes):
 @chain_test(True)
 def test_permission_index(tester: ChainTester):
     def on_data(tp, raw_data, custom_data):
-        print(tp, len(raw_data))
+        logger.info("%s %s", tp, len(raw_data))
         try:
             parse_permission_object(raw_data)
             return 1
@@ -440,7 +440,7 @@ def test_permission_index(tester: ChainTester):
 
     idx = PermissionObjectIndex(tester.db)
     obj = idx.find_by_id(1)
-    print(obj)
+    logger.info(obj)
 
     obj_by_parent = idx.find_by_parent(obj.parent, obj.table_id)
     assert obj == obj_by_parent
@@ -452,7 +452,7 @@ def test_permission_index(tester: ChainTester):
     assert obj == obj_by_name
 
     def on_obj_data(obj, user_data):
-        print(obj)
+        logger.info(obj)
         return 1
 
     idx.walk_by_id(on_obj_data)
@@ -487,7 +487,7 @@ def test_permission_index(tester: ChainTester):
     obj.last_updated += 1
     idx.modify(obj)
     obj2 = idx.find_by_id(1)
-    print(obj2)
+    logger.info(obj2)
     assert obj == obj2
 
 def parse_permission_usage_object(raw_data: bytes):
@@ -496,12 +496,12 @@ def parse_permission_usage_object(raw_data: bytes):
     dec = Decoder(raw_data)
     table_id = dec.unpack_u64()
     last_used = dec.unpack_time_point()
-    print('last_used:', last_used)
+    logger.info('last_used: %s', last_used)
 
 @chain_test(True)
 def test_permission_usage_index(tester: ChainTester):
     def on_data(tp, raw_data, custom_data):
-        print(tp, len(raw_data))
+        logger.info("%s %s", tp, len(raw_data))
         try:
             parse_permission_usage_object(raw_data)
             return 1
@@ -528,11 +528,11 @@ def test_permission_usage_index(tester: ChainTester):
     assert obj_by_id == idx.find_by_id(obj_by_id.table_id)
 
     obj = idx.find_by_id(1)
-    print(obj)
+    logger.info(obj)
     obj.last_used += 1
     idx.modify(obj)
     obj2 = idx.find_by_id(1)
-    print(obj2)
+    logger.info(obj2)
     assert obj == obj2
 
 def parse_permission_link_object(raw_data: bytes):
@@ -553,7 +553,7 @@ def parse_permission_link_object(raw_data: bytes):
     code = dec.unpack_name()
     message_type = dec.unpack_name()
     required_permission = dec.unpack_name()
-    print(account, code, message_type, required_permission)
+    logger.info("%s %s %s %s", account, code, message_type, required_permission)
 
 @chain_test(True)
 def test_permission_link_index(tester: ChainTester):
@@ -586,7 +586,7 @@ def test_permission_link_index(tester: ChainTester):
     tester.push_action('eosio', 'linkauth', args, {"hello": "active"})
 
     def on_data(tp, raw_data, custom_data):
-        print(tp, len(raw_data))
+        logger.info("%s %s", tp, len(raw_data))
         try:
             parse_permission_link_object(raw_data)
             return 1
@@ -594,7 +594,7 @@ def test_permission_link_index(tester: ChainTester):
             logger.exception(e)
             return 0
     count = tester.db.row_count(database.permission_link_object_type)
-    print('+++++++row count:', count)
+    logger.info('+++++++row count: %s', count)
     tester.db.walk(database.permission_link_object_type, 0, on_data)
 
     # ordered_unique<tag<by_action_name>,
@@ -613,18 +613,18 @@ def test_permission_link_index(tester: ChainTester):
 
 
     ret = tester.db.lower_bound(database.permission_link_object_type, 0, lower_bound)
-    print(ret)
+    logger.info(ret)
     ret = tester.db.lower_bound(database.permission_link_object_type, 1, lower_bound)
-    print(ret)
+    logger.info(ret)
     ret = tester.db.lower_bound(database.permission_link_object_type, 2, lower_bound)
-    print(ret)
+    logger.info(ret)
 
     ret = tester.db.upper_bound(database.permission_link_object_type, 0, lower_bound)
-    print(ret)
+    logger.info(ret)
     ret = tester.db.upper_bound(database.permission_link_object_type, 1, lower_bound)
-    print(ret)
+    logger.info(ret)
     ret = tester.db.upper_bound(database.permission_link_object_type, 2, lower_bound)
-    print(ret)
+    logger.info(ret)
 
     idx = PermissionLinkObjectIndex(tester.db)
     obj = idx.find_by_id(0)
@@ -653,12 +653,12 @@ def test_permission_link_index(tester: ChainTester):
     assert obj_by_permission_name == idx.find_by_permission_name(obj.account, obj.required_permission, obj.table_id)
 
     obj = idx.find_by_id(0)
-    print(obj)
+    logger.info(obj)
 
     obj.required_permission = 'active'
     idx.modify(obj)
     obj2 = idx.find_by_id(0)
-    print(obj2)
+    logger.info(obj2)
     assert obj == obj2
 
 @chain_test(True)
@@ -688,7 +688,7 @@ def test_contract_table_objects(tester: ChainTester):
 
     count = tester.db.row_count(database.key_value_object_type)
     count2 = tester.db.row_count(database.table_id_object_type)
-    print(count, count2)
+    logger.info("%s %s", count, count2)
 
     def parse_table_id_object_data(raw_data):
         # print(tp, len(raw_data))
@@ -703,12 +703,12 @@ def test_contract_table_objects(tester: ChainTester):
 
     def on_table_id_object_data(tp, raw_data, custom_data):
         ret = parse_table_id_object_data(raw_data)
-        print(ret)
+        logger.info(ret)
         return 1
 
-    print('++++++++++walk+++++++++')
+    logger.info('++++++++++walk+++++++++')
     tester.db.walk(database.table_id_object_type, 0, on_table_id_object_data)
-    print('++++++++++walk_range+++++++++')
+    logger.info('++++++++++walk_range+++++++++')
     lower_bound = eos.s2b('eosio.token') + eos.s2b("") + eos.s2b("")
     upper_bound = eos.s2b('eosio.token') + eos.s2b("zzzzzzzzzzzzj") + eos.s2b("zzzzzzzzzzzzj")
     tester.db.walk_range(database.table_id_object_type, 1, lower_bound, upper_bound, on_table_id_object_data)
@@ -745,11 +745,11 @@ def test_contract_table_objects(tester: ChainTester):
         # print(tp, len(raw_data))
         assert tp == database.key_value_object_type
         ret = parse_key_value_object(raw_data)
-        print(ret)
+        logger.info(ret)
         return 1
 
     def on_data_secondary(tp, raw_data, custom_data):
-        print(tp, len(raw_data))
+        logger.info("%s %s", tp, len(raw_data))
         dec = Decoder(raw_data)
         table_id = dec.unpack_u64()
         # t_id = dec.unpack_u64()
@@ -828,9 +828,9 @@ def test_contract_table_objects(tester: ChainTester):
     logger.info(ret)
 
     def on_obj(obj, user_data):
-        print(obj)
+        logger.info(obj)
         return 1
-    # +++++++++Index64ObjectIndex+++++++++++++
+    logger.info("+++++++++Index64ObjectIndex+++++++++++++")
     idx = Index64ObjectIndex(tester.db)
     obj = idx.find_by_id(0)
     assert obj == idx.find_by_primary(obj.t_id, obj.primary_key)
@@ -852,7 +852,7 @@ def test_contract_table_objects(tester: ChainTester):
     obj_by_primary = idx.upper_bound_by_primary(obj.t_id, obj.primary_key)
     assert idx.upper_bound_by_id(1) == obj_by_primary
 
-    # +++++++++Index128ObjectIndex+++++++++++++
+    logger.info("+++++++++Index128ObjectIndex+++++++++++++")
     idx = Index128ObjectIndex(tester.db)
     obj = idx.find_by_id(0)
     assert obj == idx.find_by_primary(obj.t_id, obj.primary_key)
@@ -873,7 +873,8 @@ def test_contract_table_objects(tester: ChainTester):
     assert obj == idx.find_by_id(obj.table_id)
     obj_by_primary = idx.upper_bound_by_primary(obj.t_id, obj.primary_key)
     assert idx.upper_bound_by_id(1) == obj_by_primary
-    # +++++++++Index128ObjectIndex+++++++++++++
+    
+    logger.info("+++++++++Index128ObjectIndex+++++++++++++")
     idx = Index256ObjectIndex(tester.db)
     obj = idx.find_by_id(0)
     assert obj == idx.find_by_primary(obj.t_id, obj.primary_key)
@@ -895,7 +896,7 @@ def test_contract_table_objects(tester: ChainTester):
     obj_by_primary = idx.upper_bound_by_primary(obj.t_id, obj.primary_key)
     assert idx.upper_bound_by_id(1) == obj_by_primary
 
-    # +++++++++IndexDoubleObjectIndex+++++++++++++
+    logger.info("+++++++++IndexDoubleObjectIndex+++++++++++++")
     idx = IndexDoubleObjectIndex(tester.db)
     obj = idx.find_by_id(0)
     assert obj == idx.find_by_primary(obj.t_id, obj.primary_key)
@@ -917,7 +918,7 @@ def test_contract_table_objects(tester: ChainTester):
     obj_by_primary = idx.upper_bound_by_primary(obj.t_id, obj.primary_key)
     assert idx.upper_bound_by_id(1) == obj_by_primary
 
-    # +++++++++IndexLongDoubleObjectIndex+++++++++++++
+    logger.info("+++++++++IndexLongDoubleObjectIndex+++++++++++++")
     idx = IndexLongDoubleObjectIndex(tester.db)
     obj = idx.find_by_id(0)
     assert obj == idx.find_by_primary(obj.t_id, obj.primary_key)
@@ -964,11 +965,11 @@ def test_contract_table_objects(tester: ChainTester):
     assert idx.find_by_id(obj_by_code_scope_table.table_id) == obj_by_code_scope_table
 
     obj = idx.find_by_id(0)
-    print(obj)
+    logger.info(obj)
     obj.payer = 'hello'
     idx.modify(obj)
     obj2 = idx.find_by_id(0)
-    print(obj2)
+    logger.info(obj2)
     assert obj == obj2
 
 @chain_test(True)
