@@ -200,7 +200,7 @@ class GetStatusResultV0(Packer):
         return cls(head, last_irreversible, trace_begin_block, trace_end_block, chain_state_begin_block, chain_state_end_block, chain_id)
 
     def __repr__(self):
-        return f'GetStatusResultV0({self.head}, {self.last_irreversible}, {self.trace_begin_block}, {self.trace_end_block}, {self.chain_state_begin_block}, {self.chain_state_end_block}, {self.chain_id})'
+        return f'GetStatusResultV0(head: {self.head}, last_irreversible: {self.last_irreversible}, trace_begin_block: {self.trace_begin_block}, trace_end_block: {self.trace_end_block}, chain_state_begin_block: {self.chain_state_begin_block}, chain_state_end_block: {self.chain_state_end_block}, chain_id: {self.chain_id})'
 
     def __str__(self):
         return repr(self)
@@ -251,7 +251,7 @@ class GetBlocksResultV0(Packer):
         return cls(head, last_irreversible, this_block, prev_block, block, traces, deltas)
 
     def __repr__(self):
-        return f'GetBlocksResultV0({self.head}, {self.last_irreversible}, {self.this_block}, {self.prev_block}, {self.block}, {self.traces}, {self.deltas})'
+        return f'GetBlocksResultV0(head: {self.head}, last_irreversible: {self.last_irreversible}, this_block: {self.this_block}, prev_block: {self.prev_block}, block: {self.block}, traces: {self.traces}, deltas: {self.deltas})'
 
     def __str__(self):
         return repr(self)

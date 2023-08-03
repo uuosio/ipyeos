@@ -81,6 +81,27 @@ class Database:
     def used_memory(self):
         return self.total_memory() - self.free_memory()
 
+    def revision(self) -> int:
+        return _database.revision(self.ptr)
+
+    def undo(self):
+        _database.undo(self.ptr)
+
+    def undo_all(self):
+        _database.undo_all(self.ptr)
+
+    def start_undo_session(self, enabled: bool = True):
+        _database.start_undo_session(self.ptr, enabled)
+
+    def session_squash(self):
+        _database.session_squash(self.ptr)
+
+    def session_undo(self):
+        _database.session_undo(self.ptr)
+
+    def session_push(self):
+        _database.session_push(self.ptr)
+
     def create(self, tp, raw_data: bytes):
         ret = _database.create(self.ptr, tp, raw_data)
         if ret == -2:

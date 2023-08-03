@@ -2597,3 +2597,34 @@ def test_new_database():
 # def test_new_database2():
 #     test_new_database()
 
+@chain_test(False)
+def test_session(tester: ChainTester):
+    # account_object_type = 1
+    dec = Decoder(b'\x00'*2048)
+    idx = AccountObjectIndex(tester.db)
+
+    logger.info("row_count: %s", idx.row_count())
+
+    tester.db.undo_all()
+
+    tester.db.start_undo_session()
+    assert idx.create(AccountObject.unpack(dec))
+    logger.info("row_count: %s", idx.row_count())
+    tester.db.session_push()
+
+    tester.db.start_undo_session()
+    tester.db.session_push()
+
+    tester.db.undo()
+    logger.info("row_count: %s", idx.row_count())
+    assert idx.row_count() == 4
+
+    data_dir = tester.data_dir
+    config_dir = tester.config_dir
+    tester.free()
+    tester = ChainTester(False, data_dir=data_dir, config_dir=config_dir, log_level=5)
+    idx = AccountObjectIndex(tester.db)
+
+    tester.db.undo()
+    logger.info("row_count: %s", idx.row_count())
+    assert idx.row_count() == 3

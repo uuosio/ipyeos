@@ -30,9 +30,9 @@ release_files.extend([
 dir_name = os.path.dirname(os.path.realpath(__file__))
 
 if platform.system() == 'Darwin':
-    extra_link_args=[f'-Wl,-exported_symbols_list,{dir_name}/src/symbols.list']
+    extra_link_args=["-arch", "x86_64", f'-Wl,-exported_symbols_list,{dir_name}/src/symbols.list']
 else:
-    extra_link_args=[f'-Wl,--version-script,{dir_name}/src/version.script']
+    extra_link_args=["-arch", "x86_64", f'-Wl,--version-script,{dir_name}/src/version.script']
 
 ext_modules = [
     Extension(
@@ -58,7 +58,7 @@ ext_modules = [
             'leap/libraries/chain/vm_api'
         ],
         language='c++',
-        extra_compile_args=['-std=c++17'],
+        extra_compile_args=["-arch", "x86_64", '-std=c++17'],
         extra_link_args=extra_link_args,
     )
 ]

@@ -19,6 +19,9 @@ cdef extern from "_ipyeos.hpp":
         int get_log_level(string& logger_name)
         void enable_deep_mind(void *controller)
 
+        string unpack_native_object(int type, const char *packed_native_object, size_t packed_native_object_size)
+
+
         string data_dir()
         string config_dir()
 
@@ -104,6 +107,12 @@ def get_last_error():
 
 def set_last_error(err: str):
     get_ipyeos_proxy().set_last_error(err)
+
+# string unpack_native_object2(int type, const char *packed_native_object, size_t packed_native_object_size)
+def unpack_native_object2(int _type, packed_native_object: bytes):
+    cdef string result
+    result = get_ipyeos_proxy().cb.unpack_native_object(_type, <char *>packed_native_object, len(packed_native_object))
+    return result
 
 def pack_abi(string& abi):
     cdef vector[char] packed_abi

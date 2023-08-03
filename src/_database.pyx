@@ -7,6 +7,16 @@ cdef extern from "_ipyeos.hpp":
         uint64_t get_free_memory()
         uint64_t get_total_memory()
 
+        int64_t revision()
+        void set_revision(int64_t revision)
+        void undo()
+        void undo_all()
+
+        void start_undo_session(bool enabled)
+        void session_squash()
+        void session_undo()
+        void session_push()
+
         int32_t set_data_handler(int32_t (*)(int32_t tp, char *data, size_t size, void* custom_data) noexcept, void *custom_data)
         int32_t walk(int32_t tp, int32_t index_position)
         int32_t walk_range(int32_t tp, int32_t index_position, char *raw_lower_bound, size_t raw_lower_bound_size, char *raw_upper_bound, size_t raw_upper_bound_size)
@@ -52,6 +62,35 @@ def get_free_memory(uint64_t ptr):
 # uint64_t get_total_memory(void *_db)
 def get_total_memory(uint64_t ptr):
     return db(ptr).get_total_memory()
+
+def revision(uint64_t ptr) -> int:
+    return db(ptr).revision()
+
+# void set_revision(uint64_t revision)
+def set_revision(uint64_t ptr, int64_t revision):
+    return db(ptr).set_revision(revision)
+
+def undo(uint64_t ptr):
+    return db(ptr).undo()
+
+def undo_all(uint64_t ptr):
+    return db(ptr).undo_all()
+
+# void start_undo_session(bool enabled)
+def start_undo_session(uint64_t ptr, bool enabled):
+    return db(ptr).start_undo_session(enabled)
+
+# void session_squash()
+def session_squash(uint64_t ptr):
+    return db(ptr).session_squash()
+
+# void session_undo()
+def session_undo(uint64_t ptr):
+    return db(ptr).session_undo()
+
+# void session_push()
+def session_push(uint64_t ptr):
+    return db(ptr).session_push()
 
 def create(uint64_t ptr, int32_t tp, raw_data: bytes):
     return db(ptr).create(tp, <const char *>raw_data, len(raw_data))
