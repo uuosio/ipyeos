@@ -156,7 +156,7 @@ class Main(object):
                     self.init_success = False
                     return False
             except KeyError:
-                logger.info('+++++no worker_process_num in config file')
+                logger.info('+++++no worker_process in config file')
             self.init_finished_event.set()
 
         except Exception as e:
@@ -177,6 +177,59 @@ class Main(object):
         if ret == 0:
             return True
         return False
+
+    def _run_pyeos(self, data_dir, config_dir):
+        try:
+# producer-name: eosio
+# enable-stale-production:
+            args = [
+                f'--data-dir={data_dir}',
+                f'--config-dir={config_dir}'
+                # '--producer-name=eosio',
+                # '--enable-stale-production'
+            ]
+            ret = eos.init2(args)
+            if not ret == 0:
+                eos.exit()
+                self.init_finished_event.set()
+                self.init_success = False
+                return False
+
+            try:
+                worker_processes = node_config.get_config()['worker_processes']
+                if not self.start_worker_processes(worker_processes):
+                    eos.exit()
+                    self.init_finished_event.set()
+                    self.init_success = False
+                    return False
+            except KeyError:
+                logger.info('+++++no worker_process in config file')
+            self.init_finished_event.set()
+
+        except Exception as e:
+            logger.exception(e)
+            self.init_success = False
+            self.init_finished_event.set()
+            return False
+        logger.info('+++++eos.run')
+        ret = eos.run()
+        # while True:
+        #     ret = eos.run_once()
+        #     if not ret == 0:
+        #         break
+        #     await asyncio.sleep(0.0)
+        #     print('run once')
+        eos.exit()
+        logger.info('run return %s', ret)
+        if ret == 0:
+            return True
+        return False
+
+    def run_pynode(self, config_file, genesis_file, snapshot_file):
+        _node = node.init_node(config_file, genesis_file, snapshot_file, self.rwlock)
+        self.init_finished_event.set()
+        self.init_success = True
+        return self._run_pyeos(_node.data_dir, _node.config_dir)
 
     async def shutdown(self):
         if self.in_shutdown:
@@ -208,11 +261,8 @@ class Main(object):
         logger.info('shutdown done')
 
     def quit_node(self):
-        if self.node_type == 'eosnode':
-            logger.info("quit eosnode")
-            eos.quit()
+        logger.info(f"quit {self.node_type}")
         eos.exit()
-        # asyncio.create_task(self.shutdown())
 
     def start_worker_processes(self, worker_processes):
         if not worker_processes:
@@ -284,8 +334,11 @@ class Main(object):
         loop.add_signal_handler(signal.SIGINT, self.handle_signal, signal.SIGINT)
         loop.add_signal_handler(signal.SIGTERM, self.handle_signal, signal.SIGTERM)
 
-        # while not eos.should_exit():
-        #     await asyncio.sleep(0.2)
+        while not eos.should_exit():
+            await asyncio.sleep(0.3)
+
+        eos.quit()
+
         try:
             await future
         except asyncio.exceptions.CancelledError:
@@ -308,8 +361,13 @@ class Main(object):
             logger.error('snapshot file not exists: %s', result.snapshot_file)
             return False
 
+        future = None
         try:
-            node.init_node(result.config_file, result.genesis_file, result.snapshot_file, self.rwlock)
+            future = asyncio.get_event_loop().run_in_executor(self.executor, self.run_pynode, result.config_file, result.genesis_file, result.snapshot_file)
+            self.init_finished_event.wait()
+            if not self.init_success:
+                return False
+            # threading.Thread(target=self._run_pyeos, args=(_node.data_dir, _node.config_dir)).start()
         except ChainException as e:
             logger.exception(e)
             return False
@@ -333,6 +391,8 @@ class Main(object):
             return False
 
         await node.start_network()
+        eos.quit()
+        await future
         await self.shutdown()
         # await asyncio.sleep(0.5)
         print('all done!')

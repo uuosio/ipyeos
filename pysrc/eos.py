@@ -35,7 +35,6 @@ class LogLevel(Enum):
 # "trace_api"
 # "state_history"
 
-g_should_exit = False
 g_node_type = None
 g_data_dir = None
 g_config_dir = None
@@ -50,12 +49,10 @@ def get_node_type() -> str:
     return g_node_type
 
 def should_exit() -> bool:
-    global g_should_exit
-    return g_should_exit
+    return _eos.should_exit()
 
 def exit() -> None:
-    global g_should_exit
-    g_should_exit = True
+    _eos.exit()
 
 def set_data_dir(data_dir: str) -> None:
     global g_data_dir
@@ -239,6 +236,11 @@ def init(argv=None) -> int:
         return _eos.init(argv)
     return _eos.init(sys.argv[1:])
 
+def init2(argv=None) -> int:
+    if argv:
+        return _eos.init2(argv)
+    return _eos.init2(sys.argv[1:])
+
 def run() -> int:
     return _eos.run()
 
@@ -248,8 +250,14 @@ def run_once() -> int:
 def post(fn, *args, **kwargs):
     return _eos.post(fn, *args, **kwargs)
 
+def post_signed_block(raw_block: bytes) -> bool:
+    return _eos.post_signed_block(raw_block)
+
 def get_controller() -> int:
     return _eos.get_controller()
+
+def set_controller(chain) -> None:
+    _eos.set_controller(chain.get_controller())
 
 def get_database() -> int:
     return _eos.get_database()

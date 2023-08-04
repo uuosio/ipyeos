@@ -1100,6 +1100,19 @@ class Connection(object):
         else:
             self.logger.info(f"block speed: {block_sync_speed} b/s, current block num: {received_block_num}, current block time: {header.block_time()}")
 
+    def push_block(self, raw_block, return_statistics):
+        return eos.post_signed_block(raw_block)
+
+        if self.rwlock:
+            with self.rwlock.wlock():
+                ret, statistics = self.chain.push_block(raw_block, return_statistics)
+                if statistics:
+                    self.logger.info(statistics)
+        else:
+            ret, statistics = self.chain.push_block(raw_block, return_statistics)
+            if statistics:
+                self.logger.info(statistics)
+
     async def _handle_message(self):
         tp, raw_msg = await self.read_message()
         if not raw_msg:
@@ -1173,15 +1186,7 @@ class Connection(object):
                 else:
                     return_statistics = False
 
-                if self.rwlock:
-                    with self.rwlock.wlock():
-                        ret, statistics = self.chain.push_block(raw_msg, return_statistics)
-                        if statistics:
-                            self.logger.info(statistics)
-                else:
-                    ret, statistics = self.chain.push_block(raw_msg, return_statistics)
-                    if statistics:
-                        self.logger.info(statistics)
+                self.push_block(raw_msg, return_statistics)
 
                 await asyncio.sleep(0.0)
             # unlinkable_block_exception
@@ -1198,9 +1203,13 @@ class Connection(object):
                 return await self.send_message(msg)
             except ForkDatabaseException as e:
                 # fork_database_exception
+                self.logger.exception(e)
                 if e.json()['stack'][0]['format'].startswith('we already know about this block'):
                     self.logger.warning(f"++++++++receive duplicated block: {received_block_num}, block_id: {block_id}")
                     return True
+                else:
+                    eos.exit()
+                    return False
             except DatabaseGuardException as e:
                 self.logger.fatal(f"%s", e)
                 eos.exit()
@@ -1519,7 +1528,7 @@ class Network(object):
                 await self.sleep(3.0)
             except Exception as e:
                 self.logger.exception(e)
-                self.sleep(5.0)
+                await self.sleep(5.0)
 
         return False
 
@@ -1530,7 +1539,8 @@ class Network(object):
                 if not ret:
                     break
             except asyncio.exceptions.CancelledError:
-                self.chain.free()
+                self.logger.info(f"network task CancelledError")
+                # self.chain.free()
                 break
             except Exception as e:
                 self.logger.info(type(e))

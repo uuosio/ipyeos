@@ -260,6 +260,7 @@ class Node(object):
         self._chain = chain.Chain(json.dumps(chain_config), self.genesis, self.chain_id, os.path.join(self.config_dir, "protocol_features"), snapshot_file, self.debug_producer_key)
         self._chain.startup(init_database)
         self._api = chainapi.ChainApi(self.chain)
+        eos.set_controller(self._chain)
 
         self.db = database.Database(self.chain.get_database())
 
@@ -486,5 +487,4 @@ async def start_network():
     except asyncio.exceptions.CancelledError:
         for conn in g_network.connections:
             conn.close()
-    g_node.chain.free()
     g_node = None

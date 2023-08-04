@@ -7,14 +7,25 @@ cdef extern from "_ipyeos.hpp":
 
     ctypedef struct eos_cb:
         int init(int argc, char** argv) nogil
+        int init2(int argc, char** argv) nogil
         int exec() nogil
         int exec_once() nogil
+
         void quit() nogil
+        void exit()
+        bool should_exit()
+
         void initialize_logging(string& config_path)
         void print_log(int level, string& logger_name, string& message)
+
         void *post(void *(*fn)(void *), void *args) nogil
+        bool post_signed_block(const char *raw_block, size_t raw_block_size) nogil
+
         void *get_database()
+
         void *get_controller()
+        void set_controller(void *controller)
+
         void set_log_level(string& logger_name, int level)
         int get_log_level(string& logger_name)
         void enable_deep_mind(void *controller)
@@ -170,6 +181,17 @@ def init(args):
 
     return get_ipyeos_proxy().cb.init(argc, argv)
 
+def init2(args):
+    cdef int argc
+    cdef char **argv
+
+    argc = len(args)
+    argv = <char **>malloc(argc * sizeof(char *))
+    for i in range(argc):
+        argv[i] = args[i]
+
+    return get_ipyeos_proxy().cb.init2(argc, argv)
+
 def run():
     cdef int ret
     with nogil:
@@ -184,6 +206,12 @@ def run_once():
 
 def quit():
     get_ipyeos_proxy().cb.quit()
+
+def exit():
+    get_ipyeos_proxy().cb.exit()
+
+def should_exit() -> bool:
+    return get_ipyeos_proxy().cb.should_exit()
 
 cdef void *call_python_fn(void* fn_info) noexcept nogil:
     with gil:
@@ -204,8 +232,14 @@ def post(fn, *args, **kwargs):
         raise _ret
     return _ret
 
+def post_signed_block(raw_block: bytes) -> bool:
+    return get_ipyeos_proxy().cb.post_signed_block(<const char *>raw_block, len(raw_block))
+
 def get_controller() -> uint64_t:
     return <uint64_t>get_ipyeos_proxy().cb.get_controller()
+
+def set_controller(uint64_t controller):
+    get_ipyeos_proxy().cb.set_controller(<void *>controller)
 
 def get_database() -> uint64_t:
     return <uint64_t>get_ipyeos_proxy().cb.get_database()
