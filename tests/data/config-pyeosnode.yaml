@@ -51,3 +51,4 @@ plugins:
   - name: snapshot
   - name: state_history
     listen_address: 127.0.0.1:8082
+  - name: producer

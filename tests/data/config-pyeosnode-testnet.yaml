@@ -51,3 +51,6 @@ plugins:
     listen_address: 127.0.0.1:8081
     chain_state_history: True
     trace_history: True
+  - name: producer
+    producer-name: eosio
+    enable-stale-production:

@@ -14,8 +14,8 @@ http-server-address: 0.0.0.0:8889
 data_dir: "dd"
 config_dir: "cd"
 
-producer-name: eosio
-enable-stale-production:
+#producer-name: eosio
+#enable-stale-production:
 
 trace-no-abis:
 
