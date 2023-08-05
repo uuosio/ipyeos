@@ -213,21 +213,45 @@ def exit():
 def should_exit() -> bool:
     return get_ipyeos_proxy().cb.should_exit()
 
+g_post_return_value = None
+def set_post_return_value(ret):
+    global g_post_return_value
+    g_post_return_value = ret
+
+def get_post_return_value():
+    global g_post_return_value
+    return g_post_return_value
+
 cdef void *call_python_fn(void* fn_info) noexcept nogil:
+    cdef void *_ret
     with gil:
+        ret = None
         fn, args, kwargs = <object>fn_info
         try:
             ret = fn(*args, **kwargs)
         except Exception as e:
-            return <void *><object>e
-        return <void *><object>ret
+            import traceback
+            print(e)
+            traceback.print_exc()
+            ret = e
+        except BaseException as e:
+            import traceback
+            print(e)
+            traceback.print_exc()
+            ret = e
+        set_post_return_value(ret)
+        _ret = <void *><object>ret
+    return _ret
 
 def post(fn, *args, **kwargs):
     cdef void *ret
     fn_info = (fn, args, kwargs)
     with nogil:
         ret = get_ipyeos_proxy().cb.post(call_python_fn, <void *><object>fn_info)
-    _ret = <object>ret
+    if ret == NULL:
+        return False
+    # _ret = <object>ret
+    _ret = get_post_return_value()
     if isinstance(_ret, Exception):
         raise _ret
     return _ret
