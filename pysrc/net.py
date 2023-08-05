@@ -778,6 +778,8 @@ class Connection(object):
         self.last_handshake = None
         self.lock = asyncio.Lock()
 
+        self.has_producer = node_config.get_producer_config() is not None
+
         net_config = node_config.get_net_config()
         try:
             self.sync_fetch_span = net_config['sync_fetch_span']
@@ -983,7 +985,7 @@ class Connection(object):
     async def heart_beat(self):
         while not eos.should_exit():
             try:
-                await self.sleep(30.0)
+                await self.sleep(10.0)
                 self.logger.info("+++++++++++=heart beat")
                 if not self.connected:
                     return
@@ -992,7 +994,7 @@ class Connection(object):
                 if not await self.send_message(self.last_time_message):
                     self.logger.error(f'fail to send time message')
                     return False
-                if not self.send_handshake_message():
+                if not await self.send_handshake_message():
                     self.logger.error(f'fail to send handshake message')
                     return False
             except ConnectionResetError:
@@ -1101,7 +1103,12 @@ class Connection(object):
             self.logger.info(f"block speed: {block_sync_speed} b/s, current block num: {received_block_num}, current block time: {header.block_time()}")
 
     def push_block(self, raw_block, return_statistics):
-        return eos.post_signed_block(raw_block)
+        if self.has_producer:
+            if self.rwlock:
+                with self.rwlock.wlock():
+                    return eos.post_signed_block(raw_block)
+            else:
+                return eos.post_signed_block(raw_block)
 
         if self.rwlock:
             with self.rwlock.wlock():
@@ -1115,7 +1122,7 @@ class Connection(object):
 
     async def _handle_message(self):
         tp, raw_msg = await self.read_message()
-        if not raw_msg:
+        if not raw_msg or eos.should_exit():
             return False
         if tp == handshake_message:
             message = HandshakeMessage.unpack_bytes(raw_msg)
@@ -1403,7 +1410,7 @@ class OutConnection(Connection):
             self.connected = True
             if self.heart_beat_task:
                 self.heart_beat_task.cancel()
-                self.heart_beat_task = asyncio.create_task(self.heart_beat())
+            self.heart_beat_task = asyncio.create_task(self.heart_beat())
         self.busy = False
         return ret
 
