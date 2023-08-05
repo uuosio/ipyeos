@@ -188,6 +188,17 @@ class Main(object):
                 # '--producer-name=eosio',
                 # '--enable-stale-production'
             ]
+            producer = node_config.get_producer_config()
+            if producer:
+                for key in producer:
+                    if key == 'name':
+                        continue
+                    value = producer[key]
+                    if value is None:
+                        args.append('--'+key.replace('_', '-'))
+                    else:
+                        args.append('--'+key.replace('_', '-')+'='+str(value))
+            logger.info("+++init args: %s", ' '.join(args))
             ret = eos.init2(args)
             if not ret == 0:
                 eos.exit()
@@ -225,10 +236,16 @@ class Main(object):
             return True
         return False
 
-    def run_pynode(self, config_file, genesis_file, snapshot_file):
-        _node = node.init_node(config_file, genesis_file, snapshot_file, self.rwlock)
-        self.init_finished_event.set()
-        self.init_success = True
+    def run_pynode(self, genesis_file, snapshot_file):
+        try:
+            _node = node.init_node(genesis_file, snapshot_file, self.rwlock)
+            self.init_success = True
+        except ChainException as e:
+            logger.exception(e)
+            self.init_success = False
+            return False
+        finally:
+            self.init_finished_event.set()
         return self._run_pyeos(_node.data_dir, _node.config_dir)
 
     async def shutdown(self):
@@ -361,16 +378,21 @@ class Main(object):
             logger.error('snapshot file not exists: %s', result.snapshot_file)
             return False
 
+        config = node_config.load_config(result.config_file)
+        has_producer = node_config.get_producer_config() is not None
+        logger.info("++++has_producer: %s", has_producer)
         future = None
-        try:
-            future = asyncio.get_event_loop().run_in_executor(self.executor, self.run_pynode, result.config_file, result.genesis_file, result.snapshot_file)
+        if has_producer:
+            future = asyncio.get_event_loop().run_in_executor(self.executor, self.run_pynode, result.genesis_file, result.snapshot_file)
             self.init_finished_event.wait()
             if not self.init_success:
                 return False
-            # threading.Thread(target=self._run_pyeos, args=(_node.data_dir, _node.config_dir)).start()
-        except ChainException as e:
-            logger.exception(e)
-            return False
+        else:
+            try:
+                node.init_node(result.genesis_file, result.snapshot_file, self.rwlock)
+            except ChainException as e:
+                logger.exception(e)
+                return False
 
         loop = asyncio.get_running_loop()
         loop.add_signal_handler(signal.SIGINT, self.handle_signal, signal.SIGINT)
@@ -391,8 +413,9 @@ class Main(object):
             return False
 
         await node.start_network()
-        eos.quit()
-        await future
+        if future:
+            eos.quit()
+            await future
         await self.shutdown()
         # await asyncio.sleep(0.5)
         print('all done!')

@@ -113,6 +113,15 @@ class Config(object):
     def get_debug_port(self):
         return self.config['debug_port']
 
+    def get_producer_config(self):
+        try:
+            for plugin in self.config['plugins']:
+                if plugin['name'] == 'producer':
+                    return plugin
+            return None
+        except KeyError:
+            return None
+
 config: Optional[Config] = None
 
 def load_config(config_file: str):
@@ -135,3 +144,8 @@ def get_net_config():
     global config
     assert config
     return config.get_net_config()
+
+def get_producer_config():
+    global config
+    assert config
+    return config.get_producer_config()

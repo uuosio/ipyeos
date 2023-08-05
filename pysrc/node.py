@@ -123,8 +123,8 @@ def read_chain_id_from_block_log(data_dir):
         return dec.read_bytes(32).hex()
     assert False, "unknown chain id"
 
-def init(config_file: str, genesis_file: str, snapshot_file: str):
-    config = node_config.load_config(config_file)
+def init(genesis_file: str, snapshot_file: str):
+    config = node_config.get_config()
     logging_config_file = config['logging_config_file']
     chain_config = config['chain']
     state_size=chain_config['state_size']
@@ -170,7 +170,6 @@ def init(config_file: str, genesis_file: str, snapshot_file: str):
 class Node(object):
     def __init__(self, data_dir: str, config_dir: str, genesis: str, state_size: int, snapshot_file: str = '', debug_producer_key: str = '', rwlock = None, worker_process: bool = False):
         self.rwlock = rwlock
-
         if not worker_process:
             eos.set_data_dir(data_dir)
             eos.set_config_dir(config_dir)
@@ -463,10 +462,10 @@ def get_network() -> net.Network:
     assert g_network, 'network is not started'
     return g_network
 
-def init_node(config_file: str, genesis_file: str, snapshot_file: str, rwlock = None):
+def init_node(genesis_file: str, snapshot_file: str, rwlock = None):
     global g_node
 
-    args = init(config_file, genesis_file, snapshot_file)
+    args = init(genesis_file, snapshot_file)
 
     g_node = Node(*args, rwlock)
     return g_node
