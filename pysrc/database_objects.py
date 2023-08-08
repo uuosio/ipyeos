@@ -718,7 +718,7 @@ class BlockSigningAuthorityV0(object):
     @classmethod
     def unpack(cls, dec: Decoder):
         threshold = dec.unpack_u32()
-        keys = dec.unpack_list(KeyWeight.unpack)
+        keys = dec.unpack_list(KeyWeight)
         return BlockSigningAuthorityV0(threshold, keys)
 
 BlockSigningAuthority = Variant[BlockSigningAuthorityV0]
