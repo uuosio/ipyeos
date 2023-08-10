@@ -41,7 +41,7 @@ block_count_per_slot = 2 * 60 # one minute per slot
 print_sync_blocks_info_interval = 10
 
 default_sync_fetch_span = 300
-default_block_latency = 10
+default_block_latency = 1
 
 # struct handshake_message {
 #     uint16_t                   network_version = 0; ///< incremental value above a computed base
@@ -1518,6 +1518,10 @@ class Network(object):
                 self.logger.info('+++++++no connection')
                 await self.sleep(10.0)
 
+        if not connections:
+            self.logger.info('+++++++eos on exiting')
+            return None
+
         conn = connections[0]
         for c in connections[1:]:
             if c.time_message_latency < conn.time_message_latency:
@@ -1530,6 +1534,8 @@ class Network(object):
         while not eos.should_exit():
             try:
                 self.conn = await self.get_fastest_connection()
+                if not self.conn:
+                    continue
                 self.logger.info('+++++choose fastest connection: %s', self.conn.peer)
                 await self.conn.handle_messages()
                 await self.sleep(3.0)

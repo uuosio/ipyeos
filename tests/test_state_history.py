@@ -101,8 +101,8 @@ def parse_deltas(deltas):
 
 @pytest.mark.asyncio
 async def test_state_history():
-    # t = ChainTester(True, data_dir=os.path.join(dir_name, "dd"), config_dir=os.path.join(dir_name, "cd"), log_level=0)
-    t = ChainTester(True, log_level=0)
+    # t = ChainTester(True, data_dir=os.path.join(dir_name, "dd"), config_dir=os.path.join(dir_name, "cd"))
+    t = ChainTester(True)
 
     s = StateHistory()
     s.initialize(t.chain, t.data_dir, trace_history=True, chain_state_history=True, state_history_log_retain_blocks=1000)

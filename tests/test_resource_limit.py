@@ -12,7 +12,7 @@ from ipyeos.resource_limit import ResourceLimit
 logger = log.get_logger(__name__)
 
 def test_limit():
-    t = ChainTester(False, log_level=5)
+    t = ChainTester(False)
     limit = ResourceLimit(t.db)
     logger.info(limit.get_total_cpu_weight())
 

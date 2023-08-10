@@ -12,7 +12,7 @@ from ipyeos.transaction import Transaction
 logger = log.get_logger(__name__)
 
 def test_tx():
-    t = ChainTester(False, log_level=5)
+    t = ChainTester(False)
     tx = Transaction(int(time.time()), t.chain.head_block_id())
     tx.add_action('eosio.token', 'transfer', b'hello, world', {'eosio': 'active'})
     priv_key = PrivateKey.from_base58('5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3')

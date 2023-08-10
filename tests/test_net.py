@@ -314,7 +314,7 @@ def test_snapshot():
     data_dir = tempfile.mkdtemp()
     config_dir = tempfile.mkdtemp()
     snapshot_file = './data/snapshot-0000001ba25b3b5af4ba6cacecb68ef4238a50bb7134e56fe985b4355fbf7488.bin'
-    node = Node(False, data_dir=data_dir, config_dir=config_dir, genesis = None, state_size=10*1024*1024, snapshot_file=snapshot_file, log_level=5)
+    node = Node(False, data_dir=data_dir, config_dir=config_dir, genesis = None, state_size=10*1024*1024, snapshot_file=snapshot_file)
     assert node.chain.head_block_num() == 27
 
 async def run_time_message_test(peer):

@@ -202,6 +202,18 @@ def enable_debug(debug) -> None:
 def is_debug_enabled() -> bool:
     return _eos.is_debug_enabled()
 
+def enable_adjust_cpu_billing(enabled: bool):
+    _eos.enable_adjust_cpu_billing(enabled)
+
+def is_adjust_cpu_billing_enabled():
+    return _eos.is_adjust_cpu_billing_enabled()
+
+def set_max_database_cpu_billing_time_us(us: int):
+    _eos.set_max_database_cpu_billing_time_us(us)
+
+def get_max_database_cpu_billing_time_us() -> int:
+    return _eos.get_max_database_cpu_billing_time_us()
+
 def set_worker_process():
     _eos.set_worker_process(True)
 
@@ -250,8 +262,8 @@ def run_once() -> int:
 def post(fn, *args, **kwargs):
     return _eos.post(fn, *args, **kwargs)
 
-def post_signed_block(raw_block: bytes) -> bool:
-    return _eos.post_signed_block(raw_block)
+def post_signed_block(raw_block: bytes, _async=False) -> bool:
+    return _eos.post_signed_block(raw_block, _async)
 
 def get_controller() -> int:
     return _eos.get_controller()
@@ -272,6 +284,9 @@ def get_chain_config() -> dict:
 
 def quit() -> None:
     _eos.quit()
+
+def is_quiting() -> bool:
+    return _eos.is_quiting()
 
 def base58_to_bytes(s: str):
     return _eos.base58_to_bytes(s)

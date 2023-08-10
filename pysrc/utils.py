@@ -3,7 +3,7 @@ import struct
 from typing import Union
 
 from . import log
-from .types import F64, F128
+from .types import U32, F64, F128, Checksum256
 
 logger = log.get_logger(__name__)
 
@@ -27,10 +27,19 @@ def u2b(value: int, size: int = 8) -> bytes:
 def f2b(value: float) -> bytes:
     return struct.pack('<d', value)
 
-def get_block_num_from_block_id(block_id: str) -> int:
+def get_block_num_from_block_id(block_id: str) -> U32:
     assert len(block_id) == 64
     assert isinstance(block_id, str)
     return int.from_bytes(bytes.fromhex(block_id[:8]), 'big')
+
+#    inline block_id_type make_block_id( uint32_t block_num ) {
+#       chain::block_id_type block_id;
+#       block_id._hash[0] = fc::endian_reverse_u32(block_num);
+#       return block_id;
+#    }
+
+def make_block_id(block_num: U32) -> Checksum256:
+    return Checksum256(block_num.to_bytes(4, byteorder='big') + b'\x00' * 28)
 
 def is_port_in_use(port):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:

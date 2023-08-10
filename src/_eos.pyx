@@ -12,6 +12,8 @@ cdef extern from "_ipyeos.hpp":
         int exec_once() nogil
 
         void quit() nogil
+        bool is_quiting()
+
         void exit()
         bool should_exit()
 
@@ -19,7 +21,10 @@ cdef extern from "_ipyeos.hpp":
         void print_log(int level, string& logger_name, string& message)
 
         void *post(void *(*fn)(void *), void *args) nogil
-        bool post_signed_block(const char *raw_block, size_t raw_block_size) nogil
+        bool post_signed_block(const char *raw_block, size_t raw_block_size, _async) nogil
+
+        bool set_on_produce_block_cb(bool (*fn)(const char *raw_block, size_t raw_block_size))
+        bool on_produce_block(const char *raw_block, size_t raw_block_size)
 
         void *get_database()
 
@@ -63,6 +68,12 @@ cdef extern from "_ipyeos.hpp":
 
         void enable_debug(bool debug)
         bool is_debug_enabled()
+
+        void enable_adjust_cpu_billing(bool enable)
+        bool is_adjust_cpu_billing_enabled()
+
+        void set_max_database_cpu_billing_time_us(int64_t us)
+        int64_t get_max_database_cpu_billing_time_us()
 
         void set_worker_process(bool worker_process)
         bool is_worker_process()
@@ -152,6 +163,18 @@ def enable_debug(bool debug):
 def is_debug_enabled():
     return get_ipyeos_proxy().is_debug_enabled()
 
+def enable_adjust_cpu_billing(enabled: bool):
+    get_ipyeos_proxy().enable_adjust_cpu_billing(enabled)
+
+def is_adjust_cpu_billing_enabled():
+    return get_ipyeos_proxy().is_adjust_cpu_billing_enabled()
+
+def set_max_database_cpu_billing_time_us(int64_t us):
+    get_ipyeos_proxy().set_max_database_cpu_billing_time_us(us)
+
+def get_max_database_cpu_billing_time_us() -> int64_t:
+    return get_ipyeos_proxy().get_max_database_cpu_billing_time_us()
+
 def set_worker_process(bool worker_process):
     get_ipyeos_proxy().set_worker_process(worker_process)
 
@@ -207,6 +230,9 @@ def run_once():
 def quit():
     get_ipyeos_proxy().cb.quit()
 
+def is_quiting():
+    return get_ipyeos_proxy().cb.is_quiting()
+
 def exit():
     get_ipyeos_proxy().cb.exit()
 
@@ -256,8 +282,8 @@ def post(fn, *args, **kwargs):
         raise _ret
     return _ret
 
-def post_signed_block(raw_block: bytes) -> bool:
-    return get_ipyeos_proxy().cb.post_signed_block(<const char *>raw_block, len(raw_block))
+def post_signed_block(raw_block: bytes, _async = False) -> bool:
+    return get_ipyeos_proxy().cb.post_signed_block(<const char *>raw_block, len(raw_block), _async)
 
 def get_controller() -> uint64_t:
     return <uint64_t>get_ipyeos_proxy().cb.get_controller()

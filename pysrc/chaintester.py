@@ -196,7 +196,7 @@ def read_chain_id_from_block_log(data_dir):
 
 class ChainTester(object):
 
-    def __init__(self, initialize=True, read_only_db: bool = False, data_dir=None, config_dir=None, genesis: Union[str, Dict] = None, snapshot_file='', state_size=10*1024*1024, log_level=log_level_debug, debug_producer_key=''):
+    def __init__(self, initialize=True, read_only_db: bool = False, data_dir=None, config_dir=None, genesis: Union[str, Dict] = None, snapshot_file='', state_size=10*1024*1024, debug_producer_key=''):
         atexit.register(self.free)
         self.chain = None
         self.is_temp_data_dir = True
@@ -226,9 +226,6 @@ class ChainTester(object):
 
         chain_config['blocks_dir'] = os.path.join(self.data_dir, 'blocks')
         chain_config['state_dir'] = os.path.join(self.data_dir, 'state')
-
-
-        eos.set_log_level('default', log_level)
 
         if snapshot_file:
             if not os.path.exists(snapshot_file):

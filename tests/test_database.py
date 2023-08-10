@@ -46,7 +46,7 @@ def update_auth(tester, account):
     tester.push_action('eosio', 'updateauth', a, {account:'active'})
 
 def init_tester(initialize=True):
-    tester = chaintester.ChainTester(initialize, log_level=5)
+    tester = chaintester.ChainTester(initialize)
     # update_auth(chain, 'hello')
     return tester
 
@@ -2622,7 +2622,7 @@ def test_session(tester: ChainTester):
     data_dir = tester.data_dir
     config_dir = tester.config_dir
     tester.free()
-    tester = ChainTester(False, data_dir=data_dir, config_dir=config_dir, log_level=5)
+    tester = ChainTester(False, data_dir=data_dir, config_dir=config_dir)
     idx = AccountObjectIndex(tester.db)
 
     tester.db.undo()

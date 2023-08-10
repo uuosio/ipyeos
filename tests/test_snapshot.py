@@ -17,7 +17,7 @@ dir_name = os.path.dirname(__file__)
 logger = logging.getLogger(__name__)
 
 def test_snapshot():
-    t = ChainTester(True, data_dir=os.path.join(dir_name, "dd"), config_dir=os.path.join(dir_name, "cd"), log_level=0)
+    t = ChainTester(True, data_dir=os.path.join(dir_name, "dd"), config_dir=os.path.join(dir_name, "cd"))
     snapshot_dir = os.path.join(dir_name, 'dd', 'snapshot')
     s = Snapshot(t.chain, snapshot_dir)
 
