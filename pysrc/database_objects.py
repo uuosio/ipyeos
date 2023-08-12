@@ -684,6 +684,7 @@ class IndexLongDoubleObject(object):
     
     @classmethod
     def generate_key_by_secondary(cls, t_id: I64, secondary_key: F128, primary_key: U64):
+        assert isinstance(secondary_key, F128), "secondary_key must be F128"
         enc = Encoder()
         enc.pack_i64(t_id)
         enc.pack(secondary_key)

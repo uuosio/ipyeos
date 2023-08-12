@@ -2628,3 +2628,34 @@ def test_session(tester: ChainTester):
     tester.db.undo()
     logger.info("row_count: %s", idx.row_count())
     assert idx.row_count() == 3
+
+def load_data(db, contract):
+    table_ids = []
+    def on_data(raw_obj, user_data):
+        # print(obj.table_id, obj)
+        table_id = int.from_bytes(raw_obj[:8], 'little')
+        table_ids.append(table_id)
+        return 1
+
+    table_id_index = TableIdObjectIndex(db)
+    table_id_index.walk_range_by_code_scope_table((contract, '', ''), (contract, 'zzzzzzzzzzzzj', 'zzzzzzzzzzzzj'), on_data, raw_data=True)
+
+    def on_data2(obj, user_data):
+        # print(obj)
+        return 1
+
+    logger.info("len(table_ids): %s", len(table_ids))
+    key_value_index = KeyValueObjectIndex(db)
+    logger.info("walk KeyValueObject")
+    for table_id in table_ids:
+        key_value_index.walk_range_by_scope_primary((table_id, 0), (table_id, 0xffffffffffffffff), on_data2, raw_data=True)
+
+    idx = Index64ObjectIndex(db)
+    logger.info("walk Index64Object")
+    for table_id in table_ids:
+        idx.walk_range_by_secondary((table_id, 0, 0), (table_id, 0xffffffffffffffff, 0xffffffffffffffff), on_data2, raw_data=True)
+
+@chain_test(True)
+def test_init_database_memory(tester: ChainTester):
+    load_data(tester.db, 'eosio')
+    load_data(tester.db, 'eosio.token')

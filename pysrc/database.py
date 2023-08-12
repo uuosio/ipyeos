@@ -175,6 +175,17 @@ class Database:
             raise Exception(f"invalid database object type: {tp}")
         return ret
 
+def call_cb(cb, data, user_data):
+    try:
+        ret = cb(data, user_data)
+        if not isinstance(ret, (bool, int)):
+            logger.error(f"{cb} can only return 1 or 0 or True or False")
+            return 0
+        return ret
+    except Exception as e:
+        logger.exception(e)
+        return 0
+
 # account_object_type = 1
 class AccountObjectIndex(object):
     def __init__(self, db: Database):
@@ -208,10 +219,10 @@ class AccountObjectIndex(object):
     def on_object_data(self, tp, data, custom_data):
         cb, raw_data, user_data = custom_data
         if raw_data:
-            return cb(data, user_data)
+            return call_cb(cb, data, user_data)
         dec = Decoder(data)
         obj = AccountObject.unpack(dec)
-        return cb(obj, user_data)
+        return call_cb(cb, obj, user_data)
 
     def walk_by_id(self, cb, user_data=None, raw_data=False):
         return self.db.walk(account_object_type, AccountObject.by_id, self.on_object_data, (cb, raw_data, user_data))
@@ -303,10 +314,10 @@ class AccountMetadataObjectIndex(object):
     def on_object_data(self, tp, data, custom_data):
         cb, raw_data, user_data = custom_data
         if raw_data:
-            return cb(data, user_data)
+            return call_cb(cb, data, user_data)
         dec = Decoder(data)
         obj = AccountMetadataObject.unpack(dec)
-        return cb(obj, user_data)
+        return call_cb(cb, obj, user_data)
 
     def walk_by_id(self, cb, user_data=None, raw_data=False):
         return self.db.walk(account_metadata_object_type, AccountMetadataObject.by_id, self.on_object_data, (cb, raw_data, user_data))
@@ -430,10 +441,10 @@ class PermissionObjectIndex(object):
     def on_object_data(self, tp, data, custom_data):
         cb, raw_data, user_data = custom_data
         if raw_data:
-            return cb(data, user_data)
+            return call_cb(cb, data, user_data)
         dec = Decoder(data)
         obj = PermissionObject.unpack(dec)
-        return cb(obj, user_data)
+        return call_cb(cb, obj, user_data)
 
     def walk_by_id(self, cb, user_data=None, raw_data=False):
         return self.db.walk(permission_object_type, PermissionObject.by_id, self.on_object_data, (cb, raw_data, user_data))
@@ -565,10 +576,10 @@ class PermissionUsageObjectIndex(object):
     def on_object_data(self, tp, data, custom_data):
         cb, raw_data, user_data = custom_data
         if raw_data:
-            return cb(data, user_data)
+            return call_cb(cb, data, user_data)
         dec = Decoder(data)
         obj = PermissionUsageObject.unpack(dec)
-        return cb(obj, user_data)
+        return call_cb(cb, obj, user_data)
 
     def walk_by_id(self, cb, user_data=None, raw_data=False):
         return self.db.walk(permission_usage_object_type, PermissionUsageObject.by_id, self.on_object_data, (cb, raw_data, user_data))
@@ -644,10 +655,10 @@ class PermissionLinkObjectIndex(object):
     def on_object_data(self, tp, data, custom_data):
         cb, raw_data, user_data = custom_data
         if raw_data:
-            return cb(data, user_data)
+            return call_cb(cb, data, user_data)
         dec = Decoder(data)
         obj = PermissionLinkObject.unpack(dec)
-        return cb(obj, user_data)
+        return call_cb(cb, obj, user_data)
 
     def walk_by_id(self, cb, user_data=None, raw_data=False):
         return self.db.walk(permission_link_object_type, PermissionLinkObject.by_id, self.on_object_data, (cb, raw_data, user_data))
@@ -764,10 +775,10 @@ class KeyValueObjectIndex(object):
     def on_object_data(self, tp, data, custom_data):
         cb, raw_data, user_data = custom_data
         if raw_data:
-            return cb(data, user_data)
+            return call_cb(cb, data, user_data)
         dec = Decoder(data)
         obj = KeyValueObject.unpack(dec)
-        return cb(obj, user_data)
+        return call_cb(cb, obj, user_data)
 
     def walk_by_id(self, cb, user_data=None, raw_data=False):
         return self.db.walk(key_value_object_type, KeyValueObject.by_id, self.on_object_data, (cb, raw_data, user_data))
@@ -867,10 +878,10 @@ class Index64ObjectIndex(object):
     def on_object_data(self, tp, data, custom_data):
         cb, raw_data, user_data = custom_data
         if raw_data:
-            return cb(data, user_data)
+            return call_cb(cb, data, user_data)
         dec = Decoder(data)
         obj = Index64Object.unpack(dec)
-        return cb(obj, user_data)
+        return call_cb(cb, obj, user_data)
 
     def walk_by_id(self, cb, user_data=None, raw_data=False):
         return self.db.walk(index64_object_type, Index64Object.by_id, self.on_object_data, (cb, raw_data, user_data))
@@ -994,10 +1005,10 @@ class Index128ObjectIndex(object):
     def on_object_data(self, tp, data, custom_data):
         cb, raw_data, user_data = custom_data
         if raw_data:
-            return cb(data, user_data)
+            return call_cb(cb, data, user_data)
         dec = Decoder(data)
         obj = Index128Object.unpack(dec)
-        return cb(obj, user_data)
+        return call_cb(cb, obj, user_data)
 
     def walk_by_id(self, cb, user_data=None, raw_data=False):
         return self.db.walk(index128_object_type, Index128Object.by_id, self.on_object_data, (cb, raw_data, user_data))
@@ -1121,10 +1132,10 @@ class Index256ObjectIndex(object):
     def on_object_data(self, tp, data, custom_data):
         cb, raw_data, user_data = custom_data
         if raw_data:
-            return cb(data, user_data)
+            return call_cb(cb, data, user_data)
         dec = Decoder(data)
         obj = Index256Object.unpack(dec)
-        return cb(obj, user_data)
+        return call_cb(cb, obj, user_data)
 
     def walk_by_id(self, cb, user_data=None, raw_data=False):
         return self.db.walk(index256_object_type, Index256Object.by_id, self.on_object_data, (cb, raw_data, user_data))
@@ -1248,10 +1259,10 @@ class IndexDoubleObjectIndex(object):
     def on_object_data(self, tp, data, custom_data):
         cb, raw_data, user_data = custom_data
         if raw_data:
-            return cb(data, user_data)
+            return call_cb(cb, data, user_data)
         dec = Decoder(data)
         obj = IndexDoubleObject.unpack(dec)
-        return cb(obj, user_data)
+        return call_cb(cb, obj, user_data)
 
     def walk_by_id(self, cb, user_data=None, raw_data=False):
         return self.db.walk(index_double_object_type, IndexDoubleObject.by_id, self.on_object_data, (cb, raw_data, user_data))
@@ -1374,12 +1385,21 @@ class IndexLongDoubleObjectIndex(object):
         return self.db.row_count(index_long_double_object_type)
 
     def on_object_data(self, tp, data, custom_data):
-        cb, raw_data, user_data = custom_data
-        if raw_data:
-            return cb(data, user_data)
-        dec = Decoder(data)
-        obj = IndexLongDoubleObject.unpack(dec)
-        return cb(obj, user_data)
+        try:
+            cb, raw_data, user_data = custom_data
+            if raw_data:
+                return call_cb(cb, data, user_data)
+                if not isinstance(ret, (bool, int)):
+                    logger.error(f"{cb} can only return 1 or 0 or True or False")
+                    return 0
+                return ret
+
+            dec = Decoder(data)
+            obj = IndexLongDoubleObject.unpack(dec)
+            return call_cb(cb, obj, user_data)
+        except Exception as e:
+            logger.exception(e)
+            return 0
 
     def walk_by_id(self, cb, user_data=None, raw_data=False):
         return self.db.walk(index_long_double_object_type, IndexLongDoubleObject.by_id, self.on_object_data, (cb, raw_data, user_data))
@@ -1561,10 +1581,10 @@ class BlockSummaryObjectIndex(object):
     def on_object_data(self, tp, data, custom_data):
         cb, raw_data, user_data = custom_data
         if raw_data:
-            return cb(data, user_data)
+            return call_cb(cb, data, user_data)
         dec = Decoder(data)
         obj = BlockSummaryObject.unpack(dec)
-        return cb(obj, user_data)
+        return call_cb(cb, obj, user_data)
 
     def walk_by_id(self, cb, user_data=None, raw_data=False):
         return self.db.walk(block_summary_object_type, BlockSummaryObject.by_id, self.on_object_data, (cb, raw_data, user_data))
@@ -1635,10 +1655,10 @@ class TransactionObjectIndex(object):
     def on_object_data(self, tp, data, custom_data):
         cb, raw_data, user_data = custom_data
         if raw_data:
-            return cb(data, user_data)
+            return call_cb(cb, data, user_data)
         dec = Decoder(data)
         obj = TransactionObject.unpack(dec)
-        return cb(obj, user_data)
+        return call_cb(cb, obj, user_data)
 
     def walk_by_id(self, cb, user_data=None, raw_data=False):
         return self.db.walk(transaction_object_type, TransactionObject.by_id, self.on_object_data, (cb, raw_data, user_data))
@@ -1780,10 +1800,10 @@ class GeneratedTransactionObjectIndex(object):
     def on_object_data(self, tp, data, custom_data):
         cb, raw_data, user_data = custom_data
         if raw_data:
-            return cb(data, user_data)
+            return call_cb(cb, data, user_data)
         dec = Decoder(data)
         obj = GeneratedTransactionObject.unpack(dec)
-        return cb(obj, user_data)
+        return call_cb(cb, obj, user_data)
 
     def walk_by_id(self, cb, user_data=None, raw_data=False):
         return self.db.walk(generated_transaction_object_type, GeneratedTransactionObject.by_id, self.on_object_data, (cb, raw_data, user_data))
@@ -1959,10 +1979,19 @@ class TableIdObjectIndex(object):
     def on_object_data(self, tp, data, custom_data):
         cb, raw_data, user_data = custom_data
         if raw_data:
-            return cb(data, user_data)
+            ret = cb(data, user_data)
+            if not isinstance(ret, (bool, int)):
+                logger.error(f"{cb} can only return 1 or 0 or True or False")
+                return 0
+            return ret
+
         dec = Decoder(data)
         obj = TableIdObject.unpack(dec)
-        return cb(obj, user_data)
+        ret = cb(obj, user_data)
+        if not isinstance(ret, (bool, int)):
+            logger.error(f"{cb} can only return 1 or 0 or True or False")
+            return 0
+        return ret
 
     def walk_by_id(self, cb, user_data=None, raw_data=False):
         return self.db.walk(table_id_object_type, TableIdObject.by_id, self.on_object_data, (cb, raw_data, user_data))
@@ -2054,10 +2083,10 @@ class ResourceLimitsObjectIndex(object):
     def on_object_data(self, tp, data, custom_data):
         cb, raw_data, user_data = custom_data
         if raw_data:
-            return cb(data, user_data)
+            return call_cb(cb, data, user_data)
         dec = Decoder(data)
         obj = ResourceLimitsObject.unpack(dec)
-        return cb(obj, user_data)
+        return call_cb(cb, obj, user_data)
 
     def walk_by_id(self, cb, user_data=None, raw_data=False):
         return self.db.walk(resource_limits_object_type, ResourceLimitsObject.by_id, self.on_object_data, (cb, raw_data, user_data))
@@ -2149,10 +2178,10 @@ class ResourceUsageObjectIndex(object):
     def on_object_data(self, tp, data, custom_data):
         cb, raw_data, user_data = custom_data
         if raw_data:
-            return cb(data, user_data)
+            return call_cb(cb, data, user_data)
         dec = Decoder(data)
         obj = ResourceUsageObject.unpack(dec)
-        return cb(obj, user_data)
+        return call_cb(cb, obj, user_data)
 
     def walk_by_id(self, cb, user_data=None, raw_data=False):
         return self.db.walk(resource_usage_object_type, ResourceUsageObject.by_id, self.on_object_data, (cb, raw_data, user_data))
@@ -2387,10 +2416,10 @@ class CodeObjectIndex(object):
     def on_object_data(self, tp, data, custom_data):
         cb, raw_data, user_data = custom_data
         if raw_data:
-            return cb(data, user_data)
+            return call_cb(cb, data, user_data)
         dec = Decoder(data)
         obj = CodeObject.unpack(dec)
-        return cb(obj, user_data)
+        return call_cb(cb, obj, user_data)
 
     def walk_by_id(self, cb, user_data=None, raw_data=False):
         return self.db.walk(database.code_object_type, CodeObject.by_id, self.on_object_data, (cb, raw_data, user_data))
