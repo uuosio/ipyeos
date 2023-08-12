@@ -70,7 +70,7 @@ async def read_root():
 
 @app.get("/v1/chain/get_info", response_class=PlainTextResponse)
 @cached(ttl=1, cache=Cache.MEMORY, key="get_info", serializer=StringSerializer())
-async def get_info():
+async def get_info(request: Request):
     rwlock = node.get_node().rwlock
     if rwlock:
         with rwlock.rlock():
@@ -100,7 +100,7 @@ def generate_error_response(result):
     return JSONResponse(content=content, status_code=400)
 
 @app.post("/v1/chain/push_transaction")
-async def push_transaction(args: PushTransactionArgs):
+async def push_transaction(request: Request, args: PushTransactionArgs):
     """
     Sends a packed transaction to the network.
 
@@ -147,7 +147,7 @@ async def push_transaction(args: PushTransactionArgs):
     else:
         return generate_error_response(ret)
 
-async def trace_api_get_block_trace(args: GetBlockTraceArgs):
+async def trace_api_get_block_trace(request: Request, args: GetBlockTraceArgs):
     try:
         logger.error("++++++++args.block_num: %s", args.block_num)
         ret = node.get_node().get_trace().get_block_trace(args.block_num)
@@ -158,21 +158,21 @@ async def trace_api_get_block_trace(args: GetBlockTraceArgs):
         logger.exception(e)
         return f'{str(e)}'
 
-async def snapshot_schedule(args: SnapshotScheduleArgs):
+async def snapshot_schedule(request: Request, args: SnapshotScheduleArgs):
     try:
         ret = node.get_node().get_snapshot().schedule(args.start_block_num, args.end_block_num, args.block_spacing, args.snapshot_description)
         return f'{{"status": "ok", "result": {ret}}}'
     except InvalidSnapshotRequestException:
         return '{"status": "error", "result": "invalid snapshot request"}'
 
-async def snapshot_unschedule(args: SnapshotUnscheduleArgs):
+async def snapshot_unschedule(request: Request, args: SnapshotUnscheduleArgs):
     try:
         ret = node.get_node().get_snapshot().unschedule(args.schedule_request_id)
         return f'{{"status": "ok", "result": {ret}}}'
     except SnapshotRequestNotFoundException:
         return '{"status": "error", "result": "invalid snapshot request"}'
 
-async def snapshot_get_requests():
+async def snapshot_get_requests(request: Request):
     ret = node.get_node().get_snapshot().get_requests()
     return f'{{"status": "ok", "result": {ret}}}'
 
@@ -200,6 +200,7 @@ def init(rpc_address: str):
 
     app.get("/")(read_root)
     app.middleware("http")(rate_limit.rate_limit_middleware)
+    rate_limit.create_schedule_task()
 
     try:
         plugins = node_config.get_config()['plugins']

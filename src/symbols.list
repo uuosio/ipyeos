@@ -8,4 +8,5 @@ _PyInit__transaction
 _PyInit__trace_api
 _PyInit__snapshot
 _PyInit__state_history
+_PyInit__multi_index
 _native_apply

@@ -172,6 +172,7 @@ class Worker(object):
 
         app.get("/")(read_root)
         app.middleware("http")(rate_limit.rate_limit_middleware)
+        rate_limit.create_schedule_task()
 
         self.config = uvicorn.Config(app, host=host, port=port, uds=uds)
         self.server = UvicornServer(self.config)
