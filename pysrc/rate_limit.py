@@ -1,5 +1,5 @@
+import asyncio
 import time
-
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import PlainTextResponse
 from aiocache import cached, Cache
@@ -16,20 +16,10 @@ BLOCK_INTERVAL = 60 # Block for 1 minute if the limit is exceeded
 
 logger = log.get_logger(__name__)
 
-class Connection:
-    def __init__(self, name, priority):
-        self.name = name
-        self.priority = priority
-
-    def __lt__(self, other):
-        return self.priority < other.priority
-
-    def __repr__(self):
-        return f"Task(name={self.name}, priority={self.priority})"
-
 class Task(object):
-    def __init__(self, task):
+    def __init__(self, url, task):
         self.task = task
+        self.url = url
         self.event = asyncio.Event()
         self.ret = None
 
@@ -53,16 +43,16 @@ class Connection:
     def __lt__(self, other):
         return self.relative_priority() < other.relative_priority()
 
-    await def process(self):
+    async def process(self):
         if not self.tasks:
-            return None
-
+            return False
         task = self.tasks.pop(0)
+        logger.debug(f"Processing task {task.task} for {self.host} {task.url}")
         start = time.monotonic()
         await task.run()
         duration = time.monotonic() - start
         self.served_time += duration
-        current_time = int(time.time)
+        current_time = int(time.time())
         ret = self.served_times.last()
         if ret:
             last_duration, last_time = ret
@@ -73,17 +63,20 @@ class Connection:
                 self.served_times.create(current_time, duration)
         else:
             self.served_times.create(current_time, duration)
+        return True
 
-    def add_task(self, task):
-        self.tasks.append(Task(task))
+    def add_task(self, url, task):
+        _task = Task(url, task)
+        self.tasks.append(_task)
+        return _task
     
     def clear_expired(self, window_time):
-        current_time = int(time.time)
+        current_time = int(time.time())
         while True:
             ret = self.served_times.first()
             if not ret:
                 break
-            duration, time_slot = ret
+            time_slot, duration = ret
             if current_time - time_slot < window_time:
                 break
             self.served_time -= duration
@@ -109,7 +102,7 @@ class WeightedFairScheduler:
         self.priority_index = secondary_double_index()
         self.window_time = 60*10
 
-    def add_task(self, host, task):
+    def add_task(self, host, url, task):
         if not host in self.connections:
             self.connection_counter += 1
             conn = Connection(self.connection_counter, host)
@@ -118,7 +111,7 @@ class WeightedFairScheduler:
             self.host_id_map[host] = self.connection_counter
             self.priority_index.create(self.connection_counter, conn.relative_priority())
         id = self.host_id_map[host]
-        self.connections[id].add_task(task)
+        return self.connections[id].add_task(url, task)
 
     async def process_task(self):
         while not eos.should_exit():
@@ -127,11 +120,12 @@ class WeightedFairScheduler:
                 if not ret:
                     await asyncio.sleep(0.01)
                     continue
-                priority, id = ret
+                id, priority = ret
                 conn = self.connections[id]
-                await conn.process()
+                if not await conn.process():
+                    continue
                 self.priority_index.create(id, conn.relative_priority())
-                for conn in self.connections:
+                for conn in self.connections.values():
                     old_relative_priority = conn.relative_priority()
                     conn.clear_expired(self.window_time)
                     relative_priority = conn.relative_priority()
@@ -177,6 +171,6 @@ async def rate_limit_middleware(request: Request, call_next):
             client_data['start_time'] = current_time
     # Store the updated client data
     await cache.set(client_ip, client_data)
-    task = scheduler.add_task(request.client.host, call_next(request))
+    task = scheduler.add_task(request.client.host, request.url, call_next(request))
     response = await task.wait()
     return response
