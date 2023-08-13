@@ -9,6 +9,7 @@ src/_transaction.cpp
 src/_trace_api.cpp
 src/_snapshot.cpp
 src/_state_history.cpp
+src/_multi_index.cpp
 
 .vscode
 cp.sh

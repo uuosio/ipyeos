@@ -1393,8 +1393,8 @@ class OutConnection(Connection):
                 return self
             return None
         except Exception as e:
-            self.logger.info(f'connect to error:')
-            self.logger.exception(e)
+            self.logger.info(f'connect to error: %s', e)
+            # self.logger.exception(e)
         return None
 
     async def connect(self):

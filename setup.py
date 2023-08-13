@@ -49,7 +49,8 @@ ext_modules = [
             'src/_transaction.pyx',
             'src/_trace_api.pyx',
             'src/_snapshot.pyx',
-            'src/_state_history.pyx'
+            'src/_state_history.pyx',
+            'src/_multi_index.pyx'
         ],
         include_dirs=[
             'src',

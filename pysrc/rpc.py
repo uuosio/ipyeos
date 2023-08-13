@@ -218,7 +218,7 @@ def init(rpc_address: str):
         logger.exception(e)
         logger.info('+++++no plugins in config file')
     
-    config = uvicorn.Config(app, host=host, port=port, uds=uds)
+    config = uvicorn.Config(app, host=host, port=port, uds=uds, log_level="error")
     server = UvicornServer(config)
     return server
 
