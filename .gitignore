@@ -10,6 +10,7 @@ src/_trace_api.cpp
 src/_snapshot.cpp
 src/_state_history.cpp
 src/_multi_index.cpp
+src/_read_write_lock.cpp
 
 .vscode
 cp.sh

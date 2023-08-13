@@ -50,7 +50,8 @@ ext_modules = [
             'src/_trace_api.pyx',
             'src/_snapshot.pyx',
             'src/_state_history.pyx',
-            'src/_multi_index.pyx'
+            'src/_multi_index.pyx',
+            'src/_read_write_lock.pyx',
         ],
         include_dirs=[
             'src',
