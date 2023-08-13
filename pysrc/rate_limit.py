@@ -1,4 +1,5 @@
 import asyncio
+import ipaddress
 import time
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import PlainTextResponse
@@ -11,6 +12,7 @@ from .multi_index import key_u64_value_double_index, secondary_double_index
 
 cache = Cache(Cache.MEMORY, serializer=PickleSerializer())
 
+MAX_CONNECTIONS = 1000
 REQUESTS_PER_MINUTE = 100
 BLOCK_INTERVAL = 60 # Block for 1 minute if the limit is exceeded
 
@@ -32,16 +34,20 @@ class Task(object):
         return self.ret
 
 class Connection:
-    def __init__(self, id, host, weight=1):
+    def __init__(self, id, host, weight=1, clear_expired_served_time=False):
         self.id = id
         self.host = host
         self.tasks = []
         self.weight = weight
         self.served_time = 0
         self.served_times = key_u64_value_double_index()
+        self.clear_expired_served_time = clear_expired_served_time
 
-    def __lt__(self, other):
-        return self.relative_priority() < other.relative_priority()
+    def __repr__(self):
+        return f"Connection id: {self.id} host: {self.host} weight: {self.weight} served_time: {self.served_time} tasks: {self.tasks}"
+
+    def __str__(self):
+        return repr(self)
 
     async def process(self):
         if not self.tasks:
@@ -50,19 +56,15 @@ class Connection:
         logger.debug(f"Processing task {task.task} for {self.host} {task.url}")
         start = time.monotonic()
         await task.run()
+        if not self.clear_expired_served_time:
+            return True
         duration = time.monotonic() - start
         self.served_time += duration
         current_time = int(time.time())
-        ret = self.served_times.last()
-        if ret:
-            last_duration, last_time = ret
-            if last_time == current_time:
-                last_duration += duration
-                self.served_times.modify(last_time, last_duration)
-            else:
-                self.served_times.create(current_time, duration)
-        else:
-            self.served_times.create(current_time, duration)
+        second = self.served_times.find(current_time)
+        if second:
+            duration += second
+        self.served_times.set(current_time, duration)
         return True
 
     def add_task(self, url, task):
@@ -96,43 +98,72 @@ class Connection:
 class WeightedFairScheduler:
     def __init__(self):
         self.connections = {}
-        self.id_host_map = {}
-        self.host_id_map = {}
-        self.connection_counter = 0
         self.priority_index = secondary_double_index()
-        self.window_time = 60*10
+        self.last_task_time_index = secondary_double_index()
+        self.window_time = 30 #60*10
+        self.clear_inactive_connections_time = time.monotonic()
 
     def add_task(self, host, url, task):
-        if not host in self.connections:
-            self.connection_counter += 1
-            conn = Connection(self.connection_counter, host)
-            self.connections[self.connection_counter] = conn
-            self.id_host_map[self.connection_counter] = host
-            self.host_id_map[host] = self.connection_counter
-            self.priority_index.create(self.connection_counter, conn.relative_priority())
-        id = self.host_id_map[host]
-        return self.connections[id].add_task(url, task)
+        if len(self.connections) > MAX_CONNECTIONS:
+            return None
+        int_address = int(ipaddress.ip_address(host))
+        conn = None
+        try:
+            conn = self.connections[int_address]
+        except KeyError:
+            conn = Connection(int_address, host)
+            self.connections[int_address] = conn
+        task = conn.add_task(url, task)
+        self.priority_index.set(int_address, conn.relative_priority())
+        return task
+
+    def clear_inactive_connections(self):
+        if len(self.connections) < MAX_CONNECTIONS:
+            return
+        if time.monotonic() - self.clear_inactive_connections_time < 30:
+            return
+        self.clear_inactive_connections_time = time.monotonic()
+        while True:
+            ret = self.last_task_time_index.first()
+            if not ret:
+                break
+            id, last_task_time = ret
+            if time.monotonic() - last_task_time < self.window_time:
+                # self.last_task_time_index.create(id, last_task_time)
+                break
+            # self.last_task_time_index.remove(id)
+            self.last_task_time_index.pop_first()
+            self.priority_index.remove(id)
+            conn = self.connections[id]
+            del self.connections[id]
+            logger.info("Removing inactive connection %s", conn)
+
+    async def _process_task(self):
+        ret = self.priority_index.last()
+        if not ret:
+            await asyncio.sleep(0.01)
+            return
+        self.clear_inactive_connections()
+        id, priority = ret
+        conn = self.connections[id]
+        if not conn.tasks:
+            await asyncio.sleep(0.01)
+            return
+        logger.debug(f"Processing connection {conn}")
+        if not await conn.process():
+            return
+        self.last_task_time_index.set(id, time.monotonic())
+        self.priority_index.set(id, conn.relative_priority())
 
     async def process_task(self):
         while not eos.should_exit():
             try:
-                ret = self.priority_index.pop_last()
-                if not ret:
-                    await asyncio.sleep(0.01)
-                    continue
-                id, priority = ret
-                conn = self.connections[id]
-                if not await conn.process():
-                    continue
-                self.priority_index.create(id, conn.relative_priority())
-                for conn in self.connections.values():
-                    old_relative_priority = conn.relative_priority()
-                    conn.clear_expired(self.window_time)
-                    relative_priority = conn.relative_priority()
-                    if relative_priority != old_relative_priority:
-                        self.priority_index.modify(conn.id, relative_priority)
+                await self._process_task()
             except asyncio.exceptions.CancelledError:
-                logger.info("Scheduler task cancelled")                
+                logger.info("Scheduler task cancelled")
+                return
+            except Exception as e:
+                logger.exception(e)
                 return
 
 scheduler = WeightedFairScheduler()
@@ -172,5 +203,10 @@ async def rate_limit_middleware(request: Request, call_next):
     # Store the updated client data
     await cache.set(client_ip, client_data)
     task = scheduler.add_task(request.client.host, request.url, call_next(request))
+    if not task:
+        error = '{"code":400, "message":"Too Many Connections, try again later.","error":{"code":0,"name":"","what":"","details":[]}}'
+        return PlainTextResponse(error, status_code=400)
+    logger.debug("+++++++= Waiting for task %s", task)
     response = await task.wait()
+    logger.debug("+++++++= Got response for task %s", response)
     return response

@@ -41,10 +41,22 @@ class key_u64_value_double_index(object):
     def remove(self, first: U64) -> bool:
         try:
             second = self.key_dict[first]
+            del self.key_dict[first]
+            return self.idx.remove(first, second)
         except KeyError:
             return False
-        del self.key_dict[first]
-        return self.idx.remove(first, second)
+
+    def set(self, first: U64, second: F64) -> bool:
+        try:
+            old_value = self.key_dict[first]
+            if old_value == second:
+                return True
+            ret = self.idx.modify(first, old_value, second)
+            assert ret
+            self.key_dict[first] = second
+            return True
+        except KeyError:
+            return self.create(first, second)
 
     def find(self, first: U64) -> Optional[F64]:
         try:
@@ -118,11 +130,24 @@ class secondary_double_index(object):
         return True
 
     def remove(self, first: U64) -> bool:
-        if not first in self.key_dict:
+        try:
+            second = self.key_dict[first]
+            del self.key_dict[first]
+            return self.idx.remove(first, second)
+        except KeyError:
             return False
-        second = self.key_dict[first]
-        del self.key_dict[first]
-        return self.idx.remove(first, old_value)
+
+    def set(self, first: U64, second: F64) -> bool:
+        try:
+            old_value = self.key_dict[first]
+            if old_value == second:
+                return True
+            ret = self.idx.modify(first, old_value, second)
+            assert ret
+            self.key_dict[first] = second
+            return True
+        except KeyError:
+            return self.create(first, second)
 
     def find_by_first(self, first: U64) -> Optional[F64]:
         try:
