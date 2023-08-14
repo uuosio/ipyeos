@@ -13,8 +13,8 @@ class TransactionTrace:
     def __del__(self):
         self.free()
 
-    def get_block_num(self):
-        return _transaction_trace.get_block_num(self._ptr)
+    def block_num(self):
+        return _transaction_trace.block_num(self._ptr)
 
     def is_onblock(self):
         return _transaction_trace.is_onblock(self._ptr)

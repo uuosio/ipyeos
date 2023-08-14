@@ -54,6 +54,7 @@ ext_modules = [
             'src/_read_write_lock.pyx',
             'src/_block_state.pyx',
             'src/_transaction_trace.pyx',
+            'src/_signed_block.pyx',
         ],
         include_dirs=[
             'src',

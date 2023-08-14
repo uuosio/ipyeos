@@ -13,6 +13,7 @@ src/_multi_index.cpp
 src/_read_write_lock.cpp
 src/_block_state.cpp
 src/_transaction_trace.cpp
+src/_signed_block.cpp
 
 .vscode
 cp.sh

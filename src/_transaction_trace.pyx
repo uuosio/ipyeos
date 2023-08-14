@@ -5,7 +5,7 @@ from _ipyeos cimport *
 cdef extern from "_ipyeos.hpp":
 
     ctypedef struct transaction_trace_proxy:
-        uint32_t get_block_num()
+        uint32_t block_num()
         bool is_onblock()
 
     ctypedef struct ipyeos_proxy:
@@ -25,8 +25,8 @@ def free(uint64_t ptr):
     cdef ipyeos_proxy *_proxy = get_ipyeos_proxy()
     return _proxy.transaction_trace_proxy_free(<void*>ptr)
 
-def get_block_num(uint64_t ptr):
-    return proxy(ptr).get_block_num()
+def block_num(uint64_t ptr):
+    return proxy(ptr).block_num()
 
 def is_onblock(uint64_t ptr):
     return proxy(ptr).is_onblock()

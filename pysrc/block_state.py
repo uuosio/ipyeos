@@ -13,5 +13,5 @@ class BlockState:
     def __del__(self):
         self.free()
 
-    def get_block_num(self):
-        return _block_state.get_block_num(self._ptr)
+    def block_num(self):
+        return _block_state.block_num(self._ptr)
