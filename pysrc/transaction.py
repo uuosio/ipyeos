@@ -1,5 +1,5 @@
 import json
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Optional
 
 from .native_modules import _transaction
 from . import eos
@@ -9,7 +9,7 @@ from .packer import Packer
 from .types import I64, U8, U16, U32, U64, Checksum256, Name, PrivateKey
 
 class Transaction(object):
-    def __init__(self, expiration: U32, ref_block_id: Union[Checksum256, str], max_net_usage_words: U32 = 0, max_cpu_usage_ms: U8 = 0, delay_sec: U32 = 0):
+    def __init__(self, expiration: U32 = 0, ref_block_id: Optional[Union[Checksum256, str]] = None, max_net_usage_words: U32 = 0, max_cpu_usage_ms: U8 = 0, delay_sec: U32 = 0):
         """
         Initializes a new transaction object with the given parameters.
 
@@ -23,9 +23,27 @@ class Transaction(object):
         Returns:
             None
         """
-        if isinstance(ref_block_id, str):
-            ref_block_id = Checksum256.from_string(ref_block_id)
-        self.ptr = _transaction.new_transaction(expiration, ref_block_id.to_bytes(), max_net_usage_words, max_cpu_usage_ms, delay_sec)
+        if ref_block_id:
+            if isinstance(ref_block_id, str):
+                ref_block_id = Checksum256.from_string(ref_block_id)
+            self.ptr = _transaction.new_transaction(expiration, ref_block_id.to_bytes(), max_net_usage_words, max_cpu_usage_ms, delay_sec)
+        else:
+            self.ptr = None
+
+    @staticmethod
+    def attach(cls, signed_transaction_ptr: int):
+        """
+        Attaches a signed transaction to a transaction object.
+
+        Args:
+            signed_transaction_ptr: The pointer to the signed transaction object.
+
+        Returns:
+            None
+        """
+        ret = cls()
+        ret.ptr = _transaction.attach_transaction(signed_transaction_ptr)
+        return ret
 
     def id(self) -> Checksum256:
         """
@@ -53,7 +71,7 @@ class Transaction(object):
         if not self.ptr:
             return
 
-        _transaction.free(self.ptr)
+        _transaction.free_transaction(self.ptr)
         self.ptr = 0
 
     def __del__(self):

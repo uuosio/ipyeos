@@ -25,12 +25,3 @@ void clear_last_exception();
 bool has_last_exception();
 std::exception_ptr get_last_exception();
 
-
-static inline transaction_proxy *get_transaction_proxy() {
-    static transaction_proxy *proxy = nullptr;
-    if (proxy == nullptr) {
-        proxy = get_ipyeos_proxy()->get_transaction_proxy();
-    }
-    return proxy;
-}
-
