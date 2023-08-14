@@ -21,7 +21,7 @@ def new(uint64_t transaction_trace_proxy_ptr):
     cdef ipyeos_proxy *_proxy = get_ipyeos_proxy()
     return <uint64_t>_proxy.transaction_trace_proxy_new(<void *>transaction_trace_proxy_ptr)
 
-def free(uint64_t ptr):
+def free_transaction_trace(uint64_t ptr):
     cdef ipyeos_proxy *_proxy = get_ipyeos_proxy()
     return _proxy.transaction_trace_proxy_free(<void*>ptr)
 

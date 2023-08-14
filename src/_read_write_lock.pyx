@@ -23,7 +23,7 @@ def new(const string& mutex_name):
     cdef ipyeos_proxy *_proxy = get_ipyeos_proxy()
     return <uint64_t>_proxy.read_write_lock_proxy_new(mutex_name)
 
-def free(uint64_t ptr):
+def free_read_write_lock(uint64_t ptr):
     cdef ipyeos_proxy *_proxy = get_ipyeos_proxy()
     return _proxy.read_write_lock_proxy_free(<void*>ptr)
 

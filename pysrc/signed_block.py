@@ -7,7 +7,7 @@ class SignedBlock:
     def free(self):
         if not self._ptr:
             return
-        _signed_block.free(self._ptr)
+        _signed_block.free_signed_block(self._ptr)
         self._ptr = None
 
     def __del__(self):

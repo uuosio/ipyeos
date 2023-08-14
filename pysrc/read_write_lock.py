@@ -5,7 +5,7 @@ class ReadWriteLock(object):
         self._lock = _read_write_lock.new(name)
     
     def free(self):
-        _read_write_lock.free(self._lock)
+        _read_write_lock.free_read_write_lock(self._lock)
     
     def __del__(self):
         if not self._lock:

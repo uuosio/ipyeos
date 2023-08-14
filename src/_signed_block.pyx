@@ -20,10 +20,9 @@ def new(uint64_t signed_block_proxy_ptr):
     cdef ipyeos_proxy *_proxy = get_ipyeos_proxy()
     return <uint64_t>_proxy.signed_block_proxy_new(<void *>signed_block_proxy_ptr)
 
-def free(uint64_t ptr):
+def free_signed_block(uint64_t ptr):
     cdef ipyeos_proxy *_proxy = get_ipyeos_proxy()
     return _proxy.signed_block_proxy_free(<void*>ptr)
 
 def block_num(uint64_t ptr):
     return proxy(ptr).block_num()
-

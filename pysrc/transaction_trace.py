@@ -7,7 +7,7 @@ class TransactionTrace:
     def free(self):
         if not self._ptr:
             return
-        _transaction_trace.free(self._ptr)
+        _transaction_trace.free_transaction_trace(self._ptr)
         self._ptr = None
 
     def __del__(self):
