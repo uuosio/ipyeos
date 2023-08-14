@@ -41,7 +41,7 @@ def update_auth(chain, account):
     chain.push_action('eosio', 'updateauth', a, {account:'active'})
 
 def init_chain(initialize=True):
-    chain = chaintester.ChainTester(initialize, log_level=5)
+    chain = chaintester.ChainTester(initialize)
     # update_auth(chain, 'hello')
     return chain
 
@@ -82,7 +82,7 @@ def test_load_native_lib():
         so_file = 'native/build/libnative.dylib'
     else:
         so_file = 'native/build/libnative.so'
-    t = ChainTester(True, log_level=1)
+    t = ChainTester(True)
     os.system('cd native;./build.sh')
     assert t.chain.set_native_contract("hello", so_file)
     with open('./hello/build/hello/hello.wasm', 'rb') as f:
@@ -107,7 +107,7 @@ def test_load_native_lib():
 def test_hello():
     os.system('mkdir hello/build;cd hello/build;cmake -Dcdt_DIR=`cdt-get-dir` ..;make')
     eos.enable_debug(True)
-    t = ChainTester(True, log_level=5)
+    t = ChainTester(True)
     with open('./hello/build/hello/hello.wasm', 'rb') as f:
         code = f.read()
     with open('./hello/build/hello/hello.abi', 'rb') as f:
@@ -139,7 +139,7 @@ def test_hello():
 # input('press any key to continue...')
 
 def test_custom_dir():
-    t = ChainTester(False, data_dir=os.path.join(dir_name, 'dd'), config_dir=os.path.join(dir_name, 'cd'), log_level=5)
+    t = ChainTester(False, data_dir=os.path.join(dir_name, 'dd'), config_dir=os.path.join(dir_name, 'cd'))
     t.produce_block()
     logger.info("+++++++%s", t.api.get_info())
 
@@ -158,7 +158,7 @@ def test_custom_2dir():
 
     chaintester.import_producer_key('5K3x5DPEbocfZSG8XD3RiyJAfPFH5Bd9ED15wtdEMbqzXCLPbma')
     debug_producer_key = 'EOS5K93aPtTdov2zWDqYxVcMQ4GBT1hyEpED8tjzPuLsf31tPySNY'
-    t = ChainTester(True, data_dir=os.path.join(data_name, 'ddd'), config_dir=os.path.join(data_name, 'cd'), state_size=state_size, snapshot_dir=snapshot_dir, debug_producer_key=debug_producer_key, log_level=5)
+    t = ChainTester(True, data_dir=os.path.join(data_name, 'ddd'), config_dir=os.path.join(data_name, 'cd'), state_size=state_size, snapshot_file=snapshot_dir, debug_producer_key=debug_producer_key)
 
     idx = GlobalPropertyObjectIndex(t.db)
     obj = idx.get()
@@ -197,7 +197,7 @@ def test_custom_2dir():
     #  'public': 'EOS5K93aPtTdov2zWDqYxVcMQ4GBT1hyEpED8tjzPuLsf31tPySNY'}
 
     chaintester.import_producer_key('5K3x5DPEbocfZSG8XD3RiyJAfPFH5Bd9ED15wtdEMbqzXCLPbma')
-    t = ChainTester(True, data_dir=os.path.join(data_name, 'dd'), config_dir=os.path.join(data_name, 'cd'), state_size=state_size, snapshot_dir=snapshot_dir, log_level=5)
+    t = ChainTester(True, data_dir=os.path.join(data_name, 'dd'), config_dir=os.path.join(data_name, 'cd'), state_size=state_size, snapshot_file=snapshot_dir)
 
     t.produce_block()
     logger.info("+++++++%s", t.api.get_info())
@@ -212,11 +212,11 @@ def test_push_block_from_block_log():
     data_name = './data'
 
     snapshot_file = './data/push_block/snapshot-0000003b83662343c208e965654f4d906ed7fad0372e13c246981cd076d379bb.bin'
-    t = ChainTester(True, data_dir=os.path.join(data_name, 'ddd'), config_dir=os.path.join(data_name, 'cd'), state_size=state_size, snapshot_file=snapshot_file, log_level=5)
+    t = ChainTester(True, data_dir=os.path.join(data_name, 'ddd'), config_dir=os.path.join(data_name, 'cd'), state_size=state_size, snapshot_file=snapshot_file)
     t.free()
 
     snapshot_file = ''
-    t = ChainTester(True, data_dir=os.path.join(data_name, 'ddd'), config_dir=os.path.join(data_name, 'cd'), state_size=state_size, log_level=5)
+    t = ChainTester(True, data_dir=os.path.join(data_name, 'ddd'), config_dir=os.path.join(data_name, 'cd'), state_size=state_size)
     t.chain.abort_block()
 
     info = t.api.get_info()
@@ -259,11 +259,11 @@ def test_push_block():
     data_name = './data'
 
     snapshot_file = './data/push_block/snapshot-0000003b83662343c208e965654f4d906ed7fad0372e13c246981cd076d379bb.bin'
-    t = ChainTester(True, data_dir=os.path.join(data_name, 'ddd'), config_dir=os.path.join(data_name, 'cd'), state_size=state_size, snapshot_file=snapshot_file, log_level=5)
+    t = ChainTester(True, data_dir=os.path.join(data_name, 'ddd'), config_dir=os.path.join(data_name, 'cd'), state_size=state_size, snapshot_file=snapshot_file)
     t.free()
 
     snapshot_dir = ''
-    t = ChainTester(True, data_dir=os.path.join(data_name, 'ddd'), config_dir=os.path.join(data_name, 'cd'), state_size=state_size, snapshot_file='', log_level=5)
+    t = ChainTester(True, data_dir=os.path.join(data_name, 'ddd'), config_dir=os.path.join(data_name, 'cd'), state_size=state_size, snapshot_file='')
     t.chain.abort_block()
 
     info = t.api.get_info()
@@ -305,7 +305,7 @@ def test_push_block():
     t.free()
 
 def test_gen_tx():
-    t = ChainTester(False, log_level=5)
+    t = ChainTester(False)
     action = ['eosio', 'sayhello', b'hello, world', {'eosio':'active'}]
     tx = t.gen_transaction([action], json_str=True)
     logger.info(tx)
@@ -314,7 +314,7 @@ def test_gen_tx():
     logger.info(eos.unpack_transaction(tx))
 
 def test_abort_block():
-    t = ChainTester(False, log_level=5)
+    t = ChainTester(False)
     try:
         t.chain.start_block()
     except BlockValidateException as e:
@@ -363,3 +363,45 @@ def test_trace(t: ChainTester):
         t.produce_block()
     info = trace.get_block_trace(num + 1)
     logger.info(info)
+
+def test_fork():
+    logger.info("+++++==test_fork")
+    eos.enable_adjust_cpu_billing(True)
+    eos.set_info_level('default')
+
+    t1 = ChainTester(True)
+    t2 = ChainTester(False)
+    t2.chain.abort_block()
+
+    for num in range(2, t1.chain.head_block_num() + 1):
+        block = t1.chain.fetch_block_by_number(num)
+        t2.chain.push_block(block)
+
+    t1.push_action('hello', 'hi', b'hi', {'hello': 'active'})    
+    t1.produce_block()
+    t1.produce_block()
+
+    t2.start_block()
+    t2.produce_block()
+    t2.chain.abort_block()
+
+    logger.info("%s %s", t1.chain.head_block_id(), t2.chain.head_block_id())
+    num = t2.chain.head_block_num()
+
+    block = t1.chain.fetch_block_by_number(num)
+    logger.info(f"+++++++push block {num}")
+    t2.chain.push_block(block)
+
+    num += 1
+    block = t1.chain.fetch_block_by_number(num)
+    logger.info(f"+++++++push block {num}")
+    t2.chain.push_block(block)
+
+    logger.info("%s %s", t1.chain.head_block_id(), t2.chain.head_block_id())
+
+
+    t1.produce_block()
+    t1.chain.free()
+
+    blog = BlockLog(f'{t1.data_dir}/blocks')    
+    logger.info(blog.head_block_num())
