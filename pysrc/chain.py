@@ -81,6 +81,9 @@ class Chain(object):
     def set_irreversible_block_callback(self, _listener):
         return _chain.set_irreversible_block_callback(self.ptr, _listener)
 
+    def set_applied_transaction_event_callback(self, _listener):
+        return _chain.set_applied_transaction_event_callback(self.ptr, _listener)
+
     @classmethod
     def attach(cls) -> 'Chain':
         """

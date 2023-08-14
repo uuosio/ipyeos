@@ -11,4 +11,5 @@ _PyInit__state_history
 _PyInit__multi_index
 _PyInit__read_write_lock
 _PyInit__block_state
+_PyInit__transaction_trace
 _native_apply

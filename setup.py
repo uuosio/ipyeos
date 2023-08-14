@@ -53,6 +53,7 @@ ext_modules = [
             'src/_multi_index.pyx',
             'src/_read_write_lock.pyx',
             'src/_block_state.pyx',
+            'src/_transaction_trace.pyx',
         ],
         include_dirs=[
             'src',

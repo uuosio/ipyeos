@@ -16,9 +16,9 @@ cdef extern from "_ipyeos.hpp":
 cdef block_state_proxy *proxy(uint64_t ptr):
     return <block_state_proxy*>ptr
 
-def new(uint64_t block_state_proxy_ptr):
+def new(uint64_t ptr):
     cdef ipyeos_proxy *_proxy = get_ipyeos_proxy()
-    return <uint64_t>_proxy.block_state_proxy_new(<void *>block_state_proxy_ptr)
+    return <uint64_t>_proxy.block_state_proxy_new(<void *>ptr)
 
 def free(uint64_t ptr):
     cdef ipyeos_proxy *_proxy = get_ipyeos_proxy()

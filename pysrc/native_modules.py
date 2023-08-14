@@ -20,6 +20,7 @@ def load_modules():
         '_multi_index',
         '_read_write_lock',
         '_block_state',
+        '_transaction_trace',
     ]
     ipyeos_module = sys.modules.get('ipyeos._eos')
     assert ipyeos_module, 'ipyeos._eos module not found'
@@ -46,4 +47,4 @@ from . import _state_history
 from . import _multi_index
 from . import _read_write_lock
 from . import _block_state
-
+from . import _transaction_trace
