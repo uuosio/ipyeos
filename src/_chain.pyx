@@ -5,11 +5,12 @@ from _ipyeos cimport *
 
 cdef extern from "_ipyeos.hpp":
     chain_proxy *chain(uint64_t ptr)
+    void Py_INCREF(object obj)
     
     ctypedef struct block_state_proxy:
         pass
 
-    ctypedef void (*fn_accepted_block_event_listener)(const block_state_proxy *bsp, void *user_data)
+    ctypedef void (*fn_block_event_listener)(const block_state_proxy *bsp, void *user_data)
 
     ctypedef struct chain_proxy:
         void say_hello()
@@ -19,7 +20,12 @@ cdef extern from "_ipyeos.hpp":
         int start_block(int64_t block_time_since_epoch_ms, uint16_t confirm_block_count, string& _new_features)
         int abort_block()
         bool startup(bool initdb)
-        bool set_accepted_block_event_listener(fn_accepted_block_event_listener _listener, void *user_data)
+        
+        bool set_accepted_block_event_listener(fn_block_event_listener _listener, void *user_data)
+        bool set_irreversible_block_event_listener(fn_block_event_listener _listener, void *user_data)
+
+        string get_info()
+
         void *get_database()
         bool finalize_block(string& _priv_keys)
         bool commit_block()
@@ -122,9 +128,10 @@ cdef extern from "_ipyeos.hpp":
 
     ipyeos_proxy *get_ipyeos_proxy()
 
-cdef void accepted_block_event_listener(const block_state_proxy *bsp, void *user_data) noexcept:
-    fn = <object>user_data
-    fn(<uint64_t>bsp)
+cdef void block_event_listener(const block_state_proxy *bsp, void *user_data) noexcept nogil:
+    with gil:
+        fn = <object>user_data
+        fn(<uint64_t>bsp)
 
 def chain_new(string& config, string& _genesis, string& chain_id, string& protocol_features_dir, string& snapshot_file, string& debug_producer_key):
     return <uint64_t>get_ipyeos_proxy().chain_new(config, _genesis, chain_id, protocol_features_dir, snapshot_file, debug_producer_key)
@@ -152,8 +159,16 @@ def start_block(uint64_t ptr, int64_t block_time_since_epoch_ms, uint16_t confir
 def startup(uint64_t ptr, initdb):
     return chain(ptr).startup(initdb)
 
+def get_info(uint64_t ptr):
+    return chain(ptr).get_info()
+
 def set_accepted_block_callback(uint64_t ptr, _listener):
-    return chain(ptr).set_accepted_block_event_listener(accepted_block_event_listener, <void *><object>_listener)
+    Py_INCREF(_listener)
+    return chain(ptr).set_accepted_block_event_listener(block_event_listener, <void *><object>_listener)
+
+def set_irreversible_block_callback(uint64_t ptr, _listener):
+    Py_INCREF(_listener)
+    return chain(ptr).set_irreversible_block_event_listener(block_event_listener, <void *><object>_listener)
 
 def get_database(uint64_t ptr):
     return <uint64_t>chain(ptr).get_database()

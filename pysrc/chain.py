@@ -72,8 +72,14 @@ class Chain(object):
             raise get_last_exception()
         return True
 
+    def get_info(self):
+        return _chain.get_info(self.ptr)
+
     def set_accepted_block_callback(self, _listener):
         return _chain.set_accepted_block_callback(self.ptr, _listener)
+
+    def set_irreversible_block_callback(self, _listener):
+        return _chain.set_irreversible_block_callback(self.ptr, _listener)
 
     @classmethod
     def attach(cls) -> 'Chain':

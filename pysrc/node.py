@@ -282,6 +282,15 @@ class Node(object):
         except:
             logger.info('+++++no plugins in config file')
 
+        self._chain.set_accepted_block_callback(self.on_accepted_block)
+        self.chain_info = self._chain.get_info()
+
+    def on_accepted_block(self, block_state_ptr):
+        # bs = BlockState(block_state_ptr)
+        # bs.free()
+        self.chain_info = self.chain.get_info()
+        # logger.info(self.chain_info)
+
     def init_state_history(self, plugin):
         state_history_dir: str = 'state-history'
         state_history_retained_dir: str = ''
@@ -442,6 +451,9 @@ class Node(object):
 
     def __del__(self):
         self.free()
+
+    def get_chain_info(self):
+        return self.chain_info
 
 g_network: Optional[net.Network] = None
 g_node: Optional[Node] = None

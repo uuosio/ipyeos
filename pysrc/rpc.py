@@ -69,14 +69,9 @@ async def read_root():
     return {"Hello": "World"}
 
 @app.get("/v1/chain/get_info", response_class=PlainTextResponse)
-@cached(ttl=1, cache=Cache.MEMORY, key="get_info", serializer=StringSerializer())
+# @cached(ttl=1, cache=Cache.MEMORY, key="get_info", serializer=StringSerializer())
 async def get_info(request: Request):
-    rwlock = node.get_node().rwlock
-    if rwlock:
-        with rwlock.rlock():
-            return node.get_node().api.get_info(is_json=False)
-    else:
-        return node.get_node().api.get_info(is_json=False)
+    return node.get_node().get_chain_info()
 
 @app.post("/v1/chain/get_table_rows", response_class=PlainTextResponse)
 async def get_table_rows(req: Request):
