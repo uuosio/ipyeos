@@ -19,6 +19,7 @@ def load_modules():
         '_state_history',
         '_multi_index',
         '_read_write_lock',
+        '_block_state',
     ]
     ipyeos_module = sys.modules.get('ipyeos._eos')
     assert ipyeos_module, 'ipyeos._eos module not found'
@@ -44,3 +45,5 @@ from . import _snapshot
 from . import _state_history
 from . import _multi_index
 from . import _read_write_lock
+from . import _block_state
+

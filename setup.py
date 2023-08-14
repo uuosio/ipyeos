@@ -52,6 +52,7 @@ ext_modules = [
             'src/_state_history.pyx',
             'src/_multi_index.pyx',
             'src/_read_write_lock.pyx',
+            'src/_block_state.pyx',
         ],
         include_dirs=[
             'src',

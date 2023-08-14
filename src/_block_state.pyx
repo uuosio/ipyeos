@@ -1,0 +1,28 @@
+# cython: language_level=3, c_string_type=str, c_string_encoding=utf8
+
+from _ipyeos cimport *
+
+cdef extern from "_ipyeos.hpp":
+
+    ctypedef struct block_state_proxy:
+        uint32_t get_block_num()
+
+    ctypedef struct ipyeos_proxy:
+        block_state_proxy *block_state_proxy_new(void *block_state_proxy_ptr)
+        bool block_state_proxy_free(void *block_state_proxy_ptr)
+
+    ipyeos_proxy *get_ipyeos_proxy() nogil
+
+cdef block_state_proxy *proxy(uint64_t ptr):
+    return <block_state_proxy*>ptr
+
+def new(uint64_t block_state_proxy_ptr):
+    cdef ipyeos_proxy *_proxy = get_ipyeos_proxy()
+    return <uint64_t>_proxy.block_state_proxy_new(<void *>block_state_proxy_ptr)
+
+def free(uint64_t ptr):
+    cdef ipyeos_proxy *_proxy = get_ipyeos_proxy()
+    return _proxy.block_state_proxy_free(<void*>ptr)
+
+def get_block_num(uint64_t ptr):
+    return proxy(ptr).get_block_num()

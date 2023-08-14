@@ -5,6 +5,11 @@ from _ipyeos cimport *
 
 cdef extern from "_ipyeos.hpp":
     chain_proxy *chain(uint64_t ptr)
+    
+    ctypedef struct block_state_proxy:
+        pass
+
+    ctypedef void (*fn_accepted_block_event_listener)(const block_state_proxy *bsp, void *user_data)
 
     ctypedef struct chain_proxy:
         void say_hello()
@@ -14,6 +19,7 @@ cdef extern from "_ipyeos.hpp":
         int start_block(int64_t block_time_since_epoch_ms, uint16_t confirm_block_count, string& _new_features)
         int abort_block()
         bool startup(bool initdb)
+        bool set_accepted_block_event_listener(fn_accepted_block_event_listener _listener, void *user_data)
         void *get_database()
         bool finalize_block(string& _priv_keys)
         bool commit_block()
@@ -37,8 +43,6 @@ cdef extern from "_ipyeos.hpp":
 
         uint32_t fork_db_head_block_num()
         string fork_db_head_block_id()
-        string fork_db_head_block_time()
-        string fork_db_head_block_producer()
         uint32_t fork_db_pending_head_block_num()
         string fork_db_pending_head_block_id()
         string fork_db_pending_head_block_time()
@@ -118,6 +122,9 @@ cdef extern from "_ipyeos.hpp":
 
     ipyeos_proxy *get_ipyeos_proxy()
 
+cdef void accepted_block_event_listener(const block_state_proxy *bsp, void *user_data) noexcept:
+    fn = <object>user_data
+    fn(<uint64_t>bsp)
 
 def chain_new(string& config, string& _genesis, string& chain_id, string& protocol_features_dir, string& snapshot_file, string& debug_producer_key):
     return <uint64_t>get_ipyeos_proxy().chain_new(config, _genesis, chain_id, protocol_features_dir, snapshot_file, debug_producer_key)
@@ -144,6 +151,9 @@ def start_block(uint64_t ptr, int64_t block_time_since_epoch_ms, uint16_t confir
 
 def startup(uint64_t ptr, initdb):
     return chain(ptr).startup(initdb)
+
+def set_accepted_block_callback(uint64_t ptr, _listener):
+    return chain(ptr).set_accepted_block_event_listener(accepted_block_event_listener, <void *><object>_listener)
 
 def get_database(uint64_t ptr):
     return <uint64_t>chain(ptr).get_database()
@@ -234,18 +244,6 @@ def fork_db_head_block_id(uint64_t ptr):
     returns: str
     '''
     return chain(ptr).fork_db_head_block_id()
-
-def fork_db_head_block_time(uint64_t ptr):
-    '''
-    returns: str
-    '''
-    return chain(ptr).fork_db_head_block_time()
-
-def fork_db_head_block_producer(uint64_t ptr):
-    '''
-    returns: str
-    '''
-    return chain(ptr).fork_db_head_block_producer()
 
 def fork_db_pending_head_block_num(uint64_t ptr):
     '''
