@@ -129,7 +129,7 @@ class Transaction(object):
 
     def pack(self, compress: bool = False) -> bytes:
         """
-        Packs the transaction into a binary format that can be sent over the network.
+        Packs the signed transaction into a binary format that can be sent over the network.
 
         Args:
             compress: A boolean indicating whether to compress the packed data.
