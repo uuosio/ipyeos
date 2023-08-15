@@ -8,6 +8,7 @@ from ipyeos.types import *
 from ipyeos import eos, net, log
 from ipyeos.chaintester import ChainTester
 from ipyeos.signed_transaction import SignedTransaction
+from ipyeos.packed_transaction import PackedTransaction
 
 logger = log.get_logger(__name__)
 
@@ -22,3 +23,6 @@ def test_tx():
     logger.info(raw_tx)
     logger.info(SignedTransaction.to_json(raw_tx, 0))
     logger.info(SignedTransaction.to_json(raw_tx, 1))
+
+    pt = PackedTransaction.from_raw(raw_tx)
+    logger.info(pt)

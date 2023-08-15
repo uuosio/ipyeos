@@ -38,6 +38,7 @@ def on_applied_transaction_event(trace_ptr, signed_tx_ptr):
     print(t.block_num(), t.is_onblock())
     
     pt = PackedTransaction(signed_tx_ptr)
+    print(pt)
     st = pt.get_signed_transaction()
     print(st.id())
 

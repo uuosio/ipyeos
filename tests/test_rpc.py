@@ -6,7 +6,7 @@ import time
 
 from ipyeos import eos
 from ipyeos.types import PrivateKey
-from ipyeos.transaction import Transaction
+from ipyeos.signed_transaction import SignedTransaction
 from ipyeos.chain_exceptions import AssertException
 
 logger = logging.getLogger(__name__)

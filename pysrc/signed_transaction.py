@@ -41,9 +41,16 @@ class SignedTransaction(object):
         Returns:
             None
         """
-        ret = cls()
+        ret = cls.__new__(cls)
         ret.ptr = _signed_transaction.attach_transaction(signed_transaction_ptr)
         return ret
+
+    def __repr__(self):
+        raw = self.pack()
+        return self.to_json(raw, 1)
+
+    def __str__(self):
+        return repr(self)
 
     def id(self) -> Checksum256:
         """
@@ -147,7 +154,7 @@ class SignedTransaction(object):
         Args:
             data (bytes): The binary transaction data to convert.
             result_type (int, optional): The type of transaction to return. 
-                0 for packed_transaction, 1 for _signed_transaction. Defaults to 0.
+                0 for packed_transaction, 1 for signed_transaction. Defaults to 0.
 
         Returns:
             dict: A JSON object representing the transaction data.
