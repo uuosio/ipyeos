@@ -26,3 +26,9 @@ def test_tx():
 
     pt = PackedTransaction.from_raw(raw_tx)
     logger.info(pt)
+
+    try:
+        pt = PackedTransaction.from_raw(b'aabb')
+        assert False
+    except Exception as e:
+        logger.info(e)

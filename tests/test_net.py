@@ -11,7 +11,7 @@ import tempfile
 from ipyeos import eos, net, log
 from ipyeos.chaintester import ChainTester
 from ipyeos.types import *
-from ipyeos.transaction import Transaction
+from ipyeos.signed_transaction import SignedTransaction
 from ipyeos import eos, net, node_config
 from ipyeos.net import HandshakeMessage, ChainSizeMessage, GoAwayMessage, GoAwayReason, TimeMessage
 from ipyeos.net import RequestMessage, NoticeMessage, OrderedIds, IdListModes

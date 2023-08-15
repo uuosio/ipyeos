@@ -27,6 +27,8 @@ class PackedTransaction(object):
     @classmethod
     def from_raw(cls, raw_packed_tx: bytes):
         ptr = _packed_transaction.new_ex(raw_packed_tx)
+        if not ptr:
+            raise get_last_exception()
         ret = cls.__new__(cls)
         ret.ptr = ptr
         ret.json_str = None

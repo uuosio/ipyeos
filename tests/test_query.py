@@ -6,7 +6,7 @@ import time
 
 from multiprocessing import Process, Queue, Condition, Value, Lock, shared_memory
 
-from ipyeos.transaction import Transaction
+from ipyeos.signed_transaction import SignedTransaction
 from ipyeos import Worker
 
 
@@ -41,7 +41,7 @@ def test_messenger():
 
 async def run_query(port):
     client = httpx.AsyncClient()
-    with Transaction(int(time.time())+60*10, '00'*32) as tx:
+    with SignedTransaction(int(time.time())+60*10, '00'*32) as tx:
         tx.add_action('eosio.stake', 'sayhello', b'hello, world', {})
         raw_tx = tx.pack().hex()
         start = time.monotonic()
@@ -68,7 +68,7 @@ def test_query_performance():
 async def test_ro_tx():
     port = 8809
     client = httpx.AsyncClient()
-    with Transaction(int(time.time())+60*10, '00'*32) as tx:
+    with SignedTransaction(int(time.time())+60*10, '00'*32) as tx:
         tx.add_action('eosio.stake', 'sayhello', b'hello, world', {})
         raw_tx = tx.pack().hex()
         r = await client.post(f'http://127.0.0.1:{port}/push_ro_transaction', json={'packed_tx': raw_tx})
