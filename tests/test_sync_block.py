@@ -4,6 +4,7 @@ import time
 
 from ipyeos.chaintester import ChainTester
 from ipyeos.block_log import BlockLog
+from ipyeos.trace_api import TraceAPI
 
 logger = logging.getLogger(__name__)
 
@@ -12,8 +13,14 @@ def test_sync():
     data_name = './data'
 
     snapshot_dir = ''
-    t = ChainTester(True, data_dir="dd", config_dir=os.path.join(data_name, 'cd'), state_size=state_size, snapshot_file='', log_level=5)
+    t = ChainTester(True, data_dir="dd", config_dir=os.path.join(data_name, 'cd'), state_size=state_size, snapshot_file='')
     t.chain.abort_block()
+
+    trace = TraceAPI(t.chain, f'{t.data_dir}/trace')
+    num = t.chain.head_block_num()
+
+    info = trace.get_block_trace(num + 1)
+    logger.info(info)
 
     info = t.api.get_info()
     head_block_num = info['head_block_num']
@@ -36,3 +43,36 @@ def test_sync():
             start = time.monotonic()
             count = 0
         t.chain.push_block(blog, block_num)
+
+
+def test_2sync():
+    state_size = 32*1024*1024*1024
+    data_name = './data'
+
+    snapshot_dir = ''
+    t = ChainTester(True, data_dir="dd", config_dir=os.path.join(data_name, 'cd'), state_size=state_size, snapshot_file='')
+    t.chain.abort_block()
+
+    trace = TraceAPI(t.chain, f'{t.data_dir}/trace')
+    head_block_num = t.chain.head_block_num()
+
+    blog = BlockLog('dd/blocks')
+    t.chain.push_block(blog, head_block_num + 1)
+
+    info = trace.get_block_trace(head_block_num + 1)
+    logger.info(info)
+
+
+def test_3sync():
+    state_size = 32*1024*1024*1024
+    data_name = './data'
+
+    snapshot_dir = ''
+    t = ChainTester(True, data_dir="dd", config_dir='cd', state_size=state_size, snapshot_file='')
+    t.chain.abort_block()
+
+    trace = TraceAPI(t.chain, f'{t.data_dir}/trace')
+    head_block_num = t.chain.head_block_num()
+
+    info = trace.get_block_trace(head_block_num + 1)
+    logger.info(info)

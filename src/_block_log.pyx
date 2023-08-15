@@ -3,9 +3,12 @@
 from _ipyeos cimport *
 
 cdef extern from "_ipyeos.hpp":
+    ctypedef struct signed_block_ptr:
+        pass
+
     ctypedef struct block_log_proxy:
         void *get_block_log_ptr()
-        string read_block_by_num(uint32_t block_num)
+        signed_block_ptr *read_block_by_num(uint32_t block_num)
         string read_block_header_by_num(uint32_t block_num)
         string read_block_id_by_num(uint32_t block_num)
         string read_block_by_id(const string& id)
@@ -29,8 +32,8 @@ def get_block_log_ptr(uint64_t ptr) -> uint64_t:
     return <uint64_t>block_log(ptr).get_block_log_ptr()
 
 # virtual string read_block_by_num(uint32_t block_num);
-def read_block_by_num(uint64_t ptr, uint32_t block_num) -> str:
-    return block_log(ptr).read_block_by_num(block_num)
+def read_block_by_num(uint64_t ptr, uint32_t block_num) -> uint64_t:
+    return <uint64_t>block_log(ptr).read_block_by_num(block_num)
 
 # virtual string read_block_header_by_num(uint32_t block_num);
 def read_block_header_by_num(uint64_t ptr, uint32_t block_num) -> str:

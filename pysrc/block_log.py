@@ -1,5 +1,5 @@
 from .native_modules import _block_log, _eos
-
+from .signed_block import SignedBlock
 
 class BlockLog(object):
     def __init__(self, block_log_dir: str):
@@ -13,7 +13,10 @@ class BlockLog(object):
     def read_block_by_num(self, block_num: int) -> str:
         if block_num > self.head_block_num() or block_num < self.first_block_num():
             raise Exception("invalid block number, block_num: %d, head_block_num: %d, first_block_num: %d" % (block_num, self.head_block_num(), self.first_block_num()))
-        return _block_log.read_block_by_num(self.ptr, block_num)
+        ptr = _block_log.read_block_by_num(self.ptr, block_num)
+        if not ptr:
+            raise Exception(_eos.get_last_error())
+        return SignedBlock.attach(ptr)
 
     def read_block_header_by_num(self, block_num: int) -> str:
         if block_num > self.head_block_num() or block_num < self.first_block_num():

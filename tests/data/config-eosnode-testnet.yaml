@@ -7,7 +7,8 @@ rpc_address: '127.0.0.1:8089'
 
 #-------------------------------------
 
-resource-monitor-space-absolute-gb: 1
+#resource-monitor-space-absolute-gb: 1
+resource-monitor-space-threshold: 99
 
 http-server-address: 0.0.0.0:8889
 
@@ -27,3 +28,6 @@ plugin:
 
 # chain-state-history:
 # trace-history:
+
+chain-state-db-size-mb: 256
+chain-state-db-guard-size-mb: 10

@@ -203,47 +203,6 @@ def test_custom_2dir():
     logger.info("+++++++%s", t.api.get_info())
     t.free()
 
-
-def test_push_block_from_block_log():
-    if os.path.exists('./data/ddd'):
-        shutil.rmtree('./data/ddd')
-
-    state_size = 10*1024*1024
-    data_name = './data'
-
-    snapshot_file = './data/push_block/snapshot-0000003b83662343c208e965654f4d906ed7fad0372e13c246981cd076d379bb.bin'
-    t = ChainTester(True, data_dir=os.path.join(data_name, 'ddd'), config_dir=os.path.join(data_name, 'cd'), state_size=state_size, snapshot_file=snapshot_file)
-    t.free()
-
-    snapshot_file = ''
-    t = ChainTester(True, data_dir=os.path.join(data_name, 'ddd'), config_dir=os.path.join(data_name, 'cd'), state_size=state_size)
-    t.chain.abort_block()
-
-    info = t.api.get_info()
-    head_block_num = info['head_block_num']
-    blog = BlockLog('./data/push_block/blocks')
-    logger.info("%s %s", head_block_num, blog.head_block_num())
-    num_count = blog.head_block_num() - head_block_num
-
-    for block_num in range(head_block_num+1, head_block_num+num_count+1):
-        t.chain.push_block_from_block_log(blog, block_num)
-
-
-    block = blog.read_block_by_num(blog.head_block_num())
-    logger.info("++++block: %s", block)
-
-    block_header = blog.read_block_header_by_num(blog.head_block_num())
-    logger.info("++++block_header: %s", block_header)
-
-    block_id = blog.read_block_id_by_num(blog.head_block_num())
-    logger.info("++++block_id: %s", block_id)
-    
-
-    info = t.api.get_info()
-    logger.info("+++++++%s %s", head_block_num, info['head_block_num'])
-    assert head_block_num + num_count == info['head_block_num']
-    t.free()
-
 def test_exception():
     exception = '''{"code": 3020000, "name": "fork_database_exception", "message": "Fork database exception", "stack": [{"context": {"level": "error", "file": "controller.cpp", "line": 2240, "method": "operator()", "hostname": "", "thread_name": "chain-1", "timestamp": "2023-07-11T15:56:40.581"}, "format": "we already know about this block: ${id}", "data": {"id": "0000003c175d15e908e364816194f6dd239102fd4a4c2f46f4e81f977012b42d"}}]}'''
     e = get_last_exception(exception)
@@ -405,3 +364,154 @@ def test_fork():
 
     blog = BlockLog(f'{t1.data_dir}/blocks')    
     logger.info(blog.head_block_num())
+
+def rent_cpu(t, account):
+    account = account
+    args = {
+        'payer':account,
+        'receiver': account,
+        'days':1,
+        'net_frac':111460*2,
+        'cpu_frac': 88282980*1000,
+        'max_payment':'1.1000 EOS'
+    }
+    try:
+        r = t.push_action('eosio', 'powerup', args, {account:'active'})
+        logger.info("+++++++++powerup: %s %s", r['elapsed'], r['receipt']['cpu_usage_us'])
+    except ChainException as e:
+        raise e
+
+from ipyeos.database import *
+
+def load_data(db, contract):
+    table_ids = []
+    count = 0
+    def on_data(raw_obj, user_data):
+        nonlocal count
+        count += 1
+        # dec = Decoder(raw_obj)
+        # obj = TableIdObject.unpack(dec)
+        # logger.info("+++++table_id: %s, obj: %s", obj.table_id, obj)
+        # return True
+        table_id = int.from_bytes(raw_obj[0:8], 'little')
+        table_ids.append(table_id)
+        if len(table_ids) % 10000 == 0:
+            logger.info("len(table_ids): %s", len(table_ids))
+            # return 0
+        return 1
+
+    table_id_index = TableIdObjectIndex(db)
+    table_id_index.walk_range_by_code_scope_table((contract, '', ''), (contract, 'zzzzzzzzzzzzj', 'zzzzzzzzzzzzj'), on_data, raw_data=True)
+
+    def on_data2(obj, user_data):
+        # print(obj)
+        return 1
+
+    logger.info("len(table_ids): %s", len(table_ids))
+
+    logger.info("len(table_ids): %s", len(table_ids))
+    key_value_index = KeyValueObjectIndex(db)    
+    logger.info("walk KeyValueObject")
+    # for table_id in table_ids:
+    #     key_value_index.walk_range_by_scope_primary((table_id, 0), (table_id, 0xffffffffffffffff), on_data2, raw_data=True)
+
+    indexes = [
+        Index64ObjectIndex,
+        Index128ObjectIndex,
+        Index256ObjectIndex,
+        IndexDoubleObjectIndex,
+    ]
+    for index in indexes:
+        logger.info('index: %s', index.__name__)
+        idx = index(db)
+        for table_id in table_ids:
+            idx.walk_range_by_secondary((table_id, 0, 0), (table_id, 0xffffffffffffffff, 0xffffffffffffffff), on_data2, raw_data=True)
+
+    logger.info('index: %s', IndexLongDoubleObjectIndex.__name__)
+    idx = IndexLongDoubleObjectIndex(db)
+    for table_id in table_ids:
+        idx.walk_range_by_secondary((table_id, F128(bytes(16)), 0), (table_id, F128(b'\xff'*16), 0xffffffffffffffff), on_data2, raw_data=True)
+
+def test_debug_mainnet():
+    eos.enable_adjust_cpu_billing(True)
+
+    state_size = 32*1024*1024*1024
+    chaintester.import_producer_key('5K3x5DPEbocfZSG8XD3RiyJAfPFH5Bd9ED15wtdEMbqzXCLPbma')
+    debug_producer_key = 'EOS5K93aPtTdov2zWDqYxVcMQ4GBT1hyEpED8tjzPuLsf31tPySNY'
+    data_dir = '/root/dev/dd'
+    config_dir='/root/dev/cd'
+    t = ChainTester(True, data_dir = data_dir, config_dir=config_dir, state_size=state_size, debug_producer_key=debug_producer_key)
+    eos.set_debug_level('default')
+
+    # logger.info("+++load eosio contract")
+    # load_data(t.db, 'eosio')
+
+    # logger.info("+++load eosio.token contract")
+    # load_data(t.db, 'eosio.token')
+
+    idx = GlobalPropertyObjectIndex(t.db)
+    obj = idx.get()
+    if obj.proposed_schedule_block_num:
+        # reset proposed schedule producers
+        obj.proposed_schedule.producers = []
+        obj.proposed_schedule_block_num = None
+        idx.set(obj)
+
+    logger.info("+++++producer keys: %s", t.chain.get_producer_public_keys())
+    t.produce_block()
+    logger.info("+++++++%s", t.api.get_info())
+
+    idx = PermissionObjectIndex(t.db)
+    perm = idx.find_by_owner('eosio.token', 'active')
+    print(perm)
+
+    # Private key: 5JBW9jddvqHY7inGEK2qWbGLYKeqm32NDYL3fLdYgMjnWxRjXLF
+    # Public key: EOS6hM1U89jbHWyX8ArHttFzoGe21y7ehXvtN5q7GbDxYEa9NFXH2
+    t.import_key('5JBW9jddvqHY7inGEK2qWbGLYKeqm32NDYL3fLdYgMjnWxRjXLF')
+    keys = [KeyWeight(PublicKey.from_base58('EOS6hM1U89jbHWyX8ArHttFzoGe21y7ehXvtN5q7GbDxYEa9NFXH2'), 1)]
+    perm.auth = Authority(1, keys, [], [])
+
+    ret = idx.modify(perm)
+    print('modify_by_id return:', ret)
+
+    idx = PermissionObjectIndex(t.db)
+    perm = idx.find_by_owner('eosio.token', 'active')
+    print(perm)
+
+
+    test_account = 'helloworld11'
+
+    idx = PermissionObjectIndex(t.db)
+    perm = idx.find_by_owner(test_account, 'active')
+    keys = [KeyWeight(PublicKey.from_base58('EOS6hM1U89jbHWyX8ArHttFzoGe21y7ehXvtN5q7GbDxYEa9NFXH2'), 1)]
+    perm.auth = Authority(1, keys, [], [])
+
+    ret = idx.modify(perm)
+    print('modify_by_id return:', ret)
+
+    args = {
+        'from':'eosio.token',
+        'to':test_account,
+        'quantity':'1.0000 EOS',
+        'memo':'hello'
+    }
+    for i in range(1):
+        args['memo'] = str(i)
+        logger.info("+++++++++transfer: %s", args)
+        r = t.push_action('eosio.token', 'transfer', args, {'eosio.token':'active'})
+        logger.info("+++++++++transfer finished %s %s", r['elapsed'], r['receipt']['cpu_usage_us'])
+    t.produce_block()
+
+    logger.info("%s", t.get_account(test_account)['cpu_limit'])
+    rent_cpu(t, test_account)
+    logger.info("%s", t.get_account(test_account)['cpu_limit'])
+
+    args = {
+        'from':test_account,
+        'to':'eosio.token',
+        'quantity':'1.0000 EOS',
+        'memo':'hello'
+    }
+    r = t.push_action('eosio.token', 'transfer', args, {test_account:'active'})
+    logger.info("+++++++++transfer finished %s %s", r['elapsed'], r['receipt']['cpu_usage_us'])
+    t.produce_block()
