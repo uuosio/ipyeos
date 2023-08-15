@@ -1,8 +1,8 @@
 from .native_modules import _transaction_trace
 
 class TransactionTrace:
-    def __init__(self, tx_trace_ptr):
-        self._ptr = _transaction_trace.new(tx_trace_ptr)
+    def __init__(self, tx_trace_ptr, attach = False):
+        self._ptr = _transaction_trace.new(tx_trace_ptr, attach)
     
     def free(self):
         if not self._ptr:
