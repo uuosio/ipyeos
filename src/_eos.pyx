@@ -3,7 +3,7 @@
 from _ipyeos cimport *
 
 cdef extern from "_ipyeos.hpp":
-    void eosext_init()
+    int eosext_init()
 
     ctypedef struct eos_cb:
         int init(int argc, char** argv) nogil
@@ -97,10 +97,10 @@ cdef extern from "_ipyeos.hpp":
 
     void app_quit()
 
-def init_chain():
-    eosext_init()
+def init_shared_libs():
+    return eosext_init()
 
-init_chain()
+# init_chain()
 
 def data_dir():
     return get_ipyeos_proxy().cb.data_dir()

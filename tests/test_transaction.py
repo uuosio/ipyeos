@@ -4,7 +4,7 @@ import secrets
 import json
 import time
 
-from ipyeos.types import *
+from ipyeos.types import Checksum256, PrivateKey
 from ipyeos import eos, net, log
 from ipyeos.chaintester import ChainTester
 from ipyeos.signed_transaction import SignedTransaction

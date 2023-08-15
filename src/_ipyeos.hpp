@@ -11,7 +11,7 @@ typedef ipyeos_proxy* (*fn_get_ipyeos_proxy)();
 
 extern "C" ipyeos_proxy * get_ipyeos_proxy();
 
-void eosext_init();
+int eosext_init();
 #define chain(ptr) ((chain_proxy*)ptr)
 #define chain_api(ptr) (((chain_proxy*)ptr)->api_proxy())
 

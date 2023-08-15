@@ -6,6 +6,7 @@ def load_modules():
         return
 
     from . import _eos
+    _eos.init_shared_libs()
 
     modules = [
         '_chain',
