@@ -16,7 +16,7 @@ from .chain import Chain
 from .chain_exceptions import (DatabaseGuardException, ForkDatabaseException,
                                UnlinkableBlockException)
 from .packer import Decoder, Encoder
-from .transaction import Transaction
+from .signed_transaction import SignedTransaction
 from .types import I16, I64, U16, U32, U64, Checksum256, PublicKey, Signature
 
 handshake_message = 0

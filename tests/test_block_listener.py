@@ -7,6 +7,7 @@ import time
 from ipyeos.chaintester import ChainTester
 from ipyeos.block_state import BlockState
 from ipyeos.transaction_trace import TransactionTrace
+from ipyeos.packed_transaction import PackedTransaction
 
 def on_accepted_block(block_state_ptr):
     # print("on_accepted_block", block_state_ptr)
@@ -35,6 +36,10 @@ def on_applied_transaction_event(trace_ptr, signed_tx_ptr):
     print(trace_ptr)
     t = TransactionTrace(trace_ptr)
     print(t.block_num(), t.is_onblock())
+    
+    pt = PackedTransaction(signed_tx_ptr)
+    st = pt.get_signed_transaction()
+    print(st.id())
 
 def test_on_applied_transaction_event():
     t = ChainTester()

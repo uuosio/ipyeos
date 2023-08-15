@@ -13,7 +13,8 @@ def load_modules():
         '_vm_api',
         '_database',
         '_block_log',
-        '_transaction',
+        '_signed_transaction',
+        '_packed_transaction',
         '_trace_api',
         '_snapshot',
         '_state_history',
@@ -41,7 +42,8 @@ from . import _chainapi
 from . import _vm_api
 from . import _database
 from . import _block_log
-from . import _transaction
+from . import _signed_transaction
+from . import _packed_transaction
 from . import _trace_api
 from . import _snapshot
 from . import _state_history

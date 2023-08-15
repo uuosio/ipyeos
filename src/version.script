@@ -1,4 +1,4 @@
 CODEABI_1.0 {
-    global: PyInit__chain;PyInit__chainapi;PyInit__eos;PyInit__vm_api;PyInit__database;PyInit__block_log;PyInit__transaction;PyInit__trace_api;PyInit__snapshot;PyInit__state_history;PyInit__multi_index;PyInit__read_write_lock;PyInit__block_state;PyInit_transaction_trace;PyInit__signed_block;native_apply;
+    global: PyInit__chain;PyInit__chainapi;PyInit__eos;PyInit__vm_api;PyInit__database;PyInit__block_log;PyInit__signed_transaction;PyInit__packed_transaction;PyInit__trace_api;PyInit__snapshot;PyInit__state_history;PyInit__multi_index;PyInit__read_write_lock;PyInit__block_state;PyInit_transaction_trace;PyInit__signed_block;native_apply;
     local: *;
 };

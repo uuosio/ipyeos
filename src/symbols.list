@@ -4,7 +4,8 @@ _PyInit__vm_api
 _PyInit__eos
 _PyInit__database
 _PyInit__block_log
-_PyInit__transaction
+_PyInit__signed_transaction
+_PyInit__packed_transaction
 _PyInit__trace_api
 _PyInit__snapshot
 _PyInit__state_history

@@ -5,7 +5,8 @@ src/_chainapi.cpp
 src/_database.cpp
 src/_eos.cpp
 src/_vm_api.cpp
-src/_transaction.cpp
+src/_signed_transaction.cpp
+src/_packed_transaction.cpp
 src/_trace_api.cpp
 src/_snapshot.cpp
 src/_state_history.cpp
