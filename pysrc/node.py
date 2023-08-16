@@ -15,13 +15,17 @@ from typing import Dict, List, Optional, Union
 import yaml
 from . import chain, chainapi, database
 from . import eos, log, net, node_config
+from .block_state import BlockState
 from .database import GeneratedTransactionObjectIndex
 from .database_objects import GeneratedTransactionObject
 from .packer import Decoder
+from .packed_transaction import PackedTransaction
 from .snapshot import Snapshot
 from .state_history import StateHistory
 from .types import Name
 from .trace_api import TraceAPI
+from .transaction_trace import TransactionTrace
+
 
 logger = log.get_logger(__name__)
 
@@ -282,7 +286,11 @@ class Node(object):
         except:
             logger.info('+++++no plugins in config file')
 
+        # if not node_config.get_producer_config():
         self._chain.set_accepted_block_callback(self.on_accepted_block)
+        self._chain.set_irreversible_block_callback(self.on_irreversible_block)
+        self._chain.set_applied_transaction_event_callback(self.on_applied_transaction_event)
+
         self.chain_info = self._chain.get_info()
 
     def on_accepted_block(self, block_state_ptr):
@@ -290,6 +298,21 @@ class Node(object):
         # bs.free()
         self.chain_info = self.chain.get_info()
         # logger.info(self.chain_info)
+
+    def on_irreversible_block(self, block_state_ptr):
+        pass
+        # bs = BlockState(block_state_ptr)
+        # logger.info("+++=bs.block_num %s", bs.block_num())
+
+    def on_applied_transaction_event(self, trace_ptr, signed_tx_ptr):
+        return
+        t = TransactionTrace(trace_ptr)
+        logger.info("%s %s", t.block_num(), t.is_onblock())
+        
+        pt = PackedTransaction(signed_tx_ptr)
+        logger.info(pt)
+        st = pt.get_signed_transaction()
+        logger.info(st.id())
 
     def init_state_history(self, plugin):
         state_history_dir: str = 'state-history'

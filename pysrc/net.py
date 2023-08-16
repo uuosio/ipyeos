@@ -1109,16 +1109,16 @@ class Connection(object):
                     return eos.post_signed_block(raw_block)
             else:
                 return eos.post_signed_block(raw_block)
-
-        if self.rwlock:
-            with self.rwlock.wlock():
+        else:
+            if self.rwlock:
+                with self.rwlock.wlock():
+                    ret, statistics = self.chain.push_block(raw_block, return_statistics)
+                    if statistics:
+                        self.logger.info(statistics)
+            else:
                 ret, statistics = self.chain.push_block(raw_block, return_statistics)
                 if statistics:
                     self.logger.info(statistics)
-        else:
-            ret, statistics = self.chain.push_block(raw_block, return_statistics)
-            if statistics:
-                self.logger.info(statistics)
 
     async def _handle_message(self):
         tp, raw_msg = await self.read_message()

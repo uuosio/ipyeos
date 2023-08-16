@@ -441,7 +441,7 @@ def test_debug_mainnet():
     data_dir = '/root/dev/dd'
     config_dir='/root/dev/cd'
     t = ChainTester(True, data_dir = data_dir, config_dir=config_dir, state_size=state_size, debug_producer_key=debug_producer_key)
-    eos.set_debug_level('default')
+    eos.set_info_level('default')
 
     # logger.info("+++load eosio contract")
     # load_data(t.db, 'eosio')
@@ -492,7 +492,7 @@ def test_debug_mainnet():
     args = {
         'from':'eosio.token',
         'to':test_account,
-        'quantity':'1.0000 EOS',
+        'quantity':'10.0000 EOS',
         'memo':'hello'
     }
     for i in range(1):
@@ -509,7 +509,7 @@ def test_debug_mainnet():
     args = {
         'from':test_account,
         'to':'eosio.token',
-        'quantity':'1.0000 EOS',
+        'quantity':'0.1000 EOS',
         'memo':'hello'
     }
     r = t.push_action('eosio.token', 'transfer', args, {test_account:'active'})
