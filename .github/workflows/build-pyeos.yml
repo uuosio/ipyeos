@@ -33,7 +33,7 @@ jobs:
         run: |
           wget https://github.com/uuosio/leap/releases/download/${{ env.PREBUILD_BINARY_VERSION }}/release-macos.tar.gz
           tar -C pysrc -xf release-macos.tar.gz
-          brew install llvm@11
+          brew install llvm@12
       - name: Set up Python 3.8
         uses: actions/setup-python@v2
         with:
