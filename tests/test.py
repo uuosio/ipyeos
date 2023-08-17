@@ -365,19 +365,20 @@ def test_fork():
     blog = BlockLog(f'{t1.data_dir}/blocks')    
     logger.info(blog.head_block_num())
 
-def rent_cpu(t, account):
+def rent_cpu(t, account, cpu_frac):
     account = account
     args = {
         'payer':account,
         'receiver': account,
         'days':1,
         'net_frac':111460*2,
-        'cpu_frac': 88282980*1000,
+        'cpu_frac': cpu_frac,
         'max_payment':'1.1000 EOS'
     }
     try:
         r = t.push_action('eosio', 'powerup', args, {account:'active'})
         logger.info("+++++++++powerup: %s %s", r['elapsed'], r['receipt']['cpu_usage_us'])
+        t.produce_block()
     except ChainException as e:
         raise e
 
@@ -432,6 +433,37 @@ def load_data(db, contract):
     for table_id in table_ids:
         idx.walk_range_by_secondary((table_id, F128(bytes(16)), 0), (table_id, F128(b'\xff'*16), 0xffffffffffffffff), on_data2, raw_data=True)
 
+def update_permissions(t, test_account):
+    idx = GlobalPropertyObjectIndex(t.db)
+    obj = idx.get()
+    if obj.proposed_schedule_block_num:
+        # reset proposed schedule producers
+        obj.proposed_schedule.producers = []
+        obj.proposed_schedule_block_num = None
+        idx.set(obj)
+
+    logger.info("+++++producer keys: %s", t.chain.get_producer_public_keys())
+    t.produce_block()
+    logger.info("+++++++%s", t.api.get_info())
+
+    idx = PermissionObjectIndex(t.db)
+    perm = idx.find_by_owner('eosio.token', 'active')
+    print(perm)
+
+    keys = [KeyWeight(PublicKey.from_base58('EOS6hM1U89jbHWyX8ArHttFzoGe21y7ehXvtN5q7GbDxYEa9NFXH2'), 1)]
+    perm.auth = Authority(1, keys, [], [])
+
+    ret = idx.modify(perm)
+    print('modify_by_id return:', ret)
+
+    idx = PermissionObjectIndex(t.db)
+    perm = idx.find_by_owner(test_account, 'active')
+    keys = [KeyWeight(PublicKey.from_base58('EOS6hM1U89jbHWyX8ArHttFzoGe21y7ehXvtN5q7GbDxYEa9NFXH2'), 1)]
+    perm.auth = Authority(1, keys, [], [])
+
+    ret = idx.modify(perm)
+    print('modify_by_id return:', ret)
+
 def test_debug_mainnet():
     eos.enable_adjust_cpu_billing(True)
 
@@ -449,17 +481,7 @@ def test_debug_mainnet():
     # logger.info("+++load eosio.token contract")
     # load_data(t.db, 'eosio.token')
 
-    idx = GlobalPropertyObjectIndex(t.db)
-    obj = idx.get()
-    if obj.proposed_schedule_block_num:
-        # reset proposed schedule producers
-        obj.proposed_schedule.producers = []
-        obj.proposed_schedule_block_num = None
-        idx.set(obj)
-
-    logger.info("+++++producer keys: %s", t.chain.get_producer_public_keys())
-    t.produce_block()
-    logger.info("+++++++%s", t.api.get_info())
+    test_account = 'helloworld11'
 
     idx = PermissionObjectIndex(t.db)
     perm = idx.find_by_owner('eosio.token', 'active')
@@ -468,31 +490,13 @@ def test_debug_mainnet():
     # Private key: 5JBW9jddvqHY7inGEK2qWbGLYKeqm32NDYL3fLdYgMjnWxRjXLF
     # Public key: EOS6hM1U89jbHWyX8ArHttFzoGe21y7ehXvtN5q7GbDxYEa9NFXH2
     t.import_key('5JBW9jddvqHY7inGEK2qWbGLYKeqm32NDYL3fLdYgMjnWxRjXLF')
-    keys = [KeyWeight(PublicKey.from_base58('EOS6hM1U89jbHWyX8ArHttFzoGe21y7ehXvtN5q7GbDxYEa9NFXH2'), 1)]
-    perm.auth = Authority(1, keys, [], [])
 
-    ret = idx.modify(perm)
-    print('modify_by_id return:', ret)
-
-    idx = PermissionObjectIndex(t.db)
-    perm = idx.find_by_owner('eosio.token', 'active')
-    print(perm)
-
-
-    test_account = 'helloworld11'
-
-    idx = PermissionObjectIndex(t.db)
-    perm = idx.find_by_owner(test_account, 'active')
-    keys = [KeyWeight(PublicKey.from_base58('EOS6hM1U89jbHWyX8ArHttFzoGe21y7ehXvtN5q7GbDxYEa9NFXH2'), 1)]
-    perm.auth = Authority(1, keys, [], [])
-
-    ret = idx.modify(perm)
-    print('modify_by_id return:', ret)
+    update_permissions(t, test_account)
 
     args = {
         'from':'eosio.token',
         'to':test_account,
-        'quantity':'10.0000 EOS',
+        'quantity':'100.0000 EOS',
         'memo':'hello'
     }
     for i in range(1):
@@ -502,9 +506,14 @@ def test_debug_mainnet():
         logger.info("+++++++++transfer finished %s %s", r['elapsed'], r['receipt']['cpu_usage_us'])
     t.produce_block()
 
+    args = {"payer": 'eosio.token', "receiver": test_account, "bytes":100*1024}
+    t.push_action('eosio', 'buyrambytes', args, {'eosio.token':'active'})
+
     logger.info("%s", t.get_account(test_account)['cpu_limit'])
-    rent_cpu(t, test_account)
-    logger.info("%s", t.get_account(test_account)['cpu_limit'])
+
+    for i in range(10):
+        rent_cpu(t, test_account, (88282981+i)*1000)
+        logger.info("%s %s %s", t.get_account(test_account)['cpu_limit'], t.chain.head_block_num(), t.chain.last_irreversible_block_id())
 
     args = {
         'from':test_account,
@@ -514,4 +523,7 @@ def test_debug_mainnet():
     }
     r = t.push_action('eosio.token', 'transfer', args, {test_account:'active'})
     logger.info("+++++++++transfer finished %s %s", r['elapsed'], r['receipt']['cpu_usage_us'])
-    t.produce_block()
+    for i in range(2):
+        t.produce_block()
+        logger.info("%s", t.chain.last_irreversible_block_id())
+        logger.info("%s", t.api.get_info())

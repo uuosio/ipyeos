@@ -23,6 +23,7 @@ def load_modules():
         '_read_write_lock',
         '_block_state',
         '_transaction_trace',
+        '_action_trace',
         '_signed_block',
     ]
     ipyeos_module = sys.modules.get('ipyeos._eos')
@@ -52,5 +53,6 @@ from . import _multi_index
 from . import _read_write_lock
 from . import _block_state
 from . import _transaction_trace
+from . import _action_trace
 from . import _signed_block
 

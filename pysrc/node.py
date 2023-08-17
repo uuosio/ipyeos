@@ -129,7 +129,10 @@ def read_chain_id_from_block_log(data_dir):
 
 def init(genesis_file: str, snapshot_file: str):
     config = node_config.get_config()
-    logging_config_file = config['logging_config_file']
+    try:
+        logging_config_file = config['logging_config_file']
+    except KeyError:
+        logging_config_file = ''
     chain_config = config['chain']
     state_size=chain_config['state_size']
     data_dir = chain_config['data_dir']
@@ -141,7 +144,7 @@ def init(genesis_file: str, snapshot_file: str):
     logger.info(f'peers: {peers}')
     for peer in peers:
         if peers.count(peer) > 1:
-            logger.error(f'duplicated peer: {peer} in config file {config_file}')
+            logger.error(f'duplicated peer: {peer} in config file')
             return
 
     if genesis_file:
@@ -155,7 +158,7 @@ def init(genesis_file: str, snapshot_file: str):
             logger.error('genesis file is not a valid json file: %s', genesis_file)
             return
         if 'genesis' in config:
-            logger.warning(f'genesis in config file {config_file} will be overwrite by genesis file {genesis_file}')
+            logger.warning(f'genesis in config file will be overwrite by genesis file {genesis_file}')
     else:
         try:
             genesis = config['genesis']

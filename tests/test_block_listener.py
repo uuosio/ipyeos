@@ -4,10 +4,13 @@ import secrets
 import json
 import time
 
+from ipyeos import log
 from ipyeos.chaintester import ChainTester
 from ipyeos.block_state import BlockState
 from ipyeos.transaction_trace import TransactionTrace
 from ipyeos.packed_transaction import PackedTransaction
+
+logger = log.get_logger(__name__)
 
 def on_accepted_block(block_state_ptr):
     # print("on_accepted_block", block_state_ptr)
@@ -30,17 +33,20 @@ def test_on_accepted_block():
     for i in range(20):
         t.produce_block()
 
-    print(t.chain.head_block_num())
+    logger.info(t.chain.head_block_num())
 
 def on_applied_transaction_event(trace_ptr, signed_tx_ptr):
-    print(trace_ptr)
+    logger.info(trace_ptr)
     t = TransactionTrace(trace_ptr)
-    print(t.block_num(), t.is_onblock())
+    logger.info("%s %s %s", t.block_num(), t.is_onblock(), t.get_action_traces_size())
+    if t.get_action_traces_size() > 0:
+        trace = t.get_action_trace(0)
+        logger.info(trace.act())
     
     pt = PackedTransaction(signed_tx_ptr)
-    print(pt)
+    logger.info(pt)
     st = pt.get_signed_transaction()
-    print(st.id())
+    logger.info(st.id())
 
 def test_on_applied_transaction_event():
     t = ChainTester()

@@ -13,5 +13,6 @@ _PyInit__multi_index
 _PyInit__read_write_lock
 _PyInit__block_state
 _PyInit__transaction_trace
+_PyInit__action_trace
 _PyInit__signed_block
 _native_apply

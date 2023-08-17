@@ -39,8 +39,8 @@ net:
     - 'peer.eosio.sg:9876'
 
 chain:
-  state_size: 1048576000 # 32*1024 (32GB)
-  state_guard_size: 10485760 # 10 (10MB)
+  state_size: 32768 # in MB, 32*1024 (32GB)
+  state_guard_size: 100 # in MB, 100 (100MB)
   contracts_console: false
   data_dir: "dd"
   config_dir: "cd"  
