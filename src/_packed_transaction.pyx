@@ -4,6 +4,8 @@ from typing import Union, List
 from _ipyeos cimport *
 
 cdef extern from "_ipyeos.hpp":
+    ctypedef struct signed_block_proxy:
+        pass
 
     ctypedef struct packed_transaction_ptr:
         pass
@@ -19,6 +21,7 @@ cdef extern from "_ipyeos.hpp":
     ctypedef struct ipyeos_proxy:
         packed_transaction_proxy *packed_transaction_proxy_new(packed_transaction_ptr *_packed_transaction_ptr, bool attach)
         packed_transaction_proxy *packed_transaction_proxy_new_ex(const char *raw_packed_tx, size_t raw_packed_tx_size)
+        packed_transaction_proxy *packed_transaction_proxy_new_ex_ex(signed_block_proxy *ptr, int index)
 
         bool packed_transaction_proxy_free(packed_transaction_proxy *packed_transaction_proxy_ptr)
 
@@ -32,6 +35,9 @@ def new(uint64_t ptr, bool attach) -> uint64_t:
 
 def new_ex(raw_packed_tx: bytes) -> uint64_t:
     return <uint64_t>get_ipyeos_proxy().packed_transaction_proxy_new_ex(<char *>raw_packed_tx, len(raw_packed_tx))
+
+def new_from_signed_block(uint64_t signed_block_proxy_ptr, int index) -> uint64_t:
+    return <uint64_t>get_ipyeos_proxy().packed_transaction_proxy_new_ex_ex(<signed_block_proxy *>signed_block_proxy_ptr, index)
 
 def free_transaction(uint64_t ptr):
     get_ipyeos_proxy().packed_transaction_proxy_free(<packed_transaction_proxy *>ptr)

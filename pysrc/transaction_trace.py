@@ -1,8 +1,12 @@
 from .action_trace import ActionTrace
 from .native_modules import _transaction_trace
+from .chain_exceptions import get_last_exception
 
 class TransactionTrace:
     def __init__(self, tx_trace_ptr, attach = False):
+        self._ptr = None
+        if not tx_trace_ptr:
+            raise Exception("invalid tx_trace_ptr")
         self._ptr = _transaction_trace.new(tx_trace_ptr, attach)
     
     def free(self):
@@ -13,6 +17,20 @@ class TransactionTrace:
 
     def __del__(self):
         self.free()
+
+    def __repr__(self):
+        return self.to_json()
+
+    def __str__(self):
+        return self.to_json()
+
+    @classmethod
+    def from_raw(cls, data: bytes):
+        ret = cls.__new__(cls)
+        ret._ptr = _transaction_trace.new_ex(data)
+        if not ret._ptr:
+            raise get_last_exception()
+        return ret
 
     def block_num(self):
         return _transaction_trace.block_num(self._ptr)
@@ -57,4 +75,12 @@ class TransactionTrace:
         return _transaction_trace.get_action_traces_size(self._ptr)
 
     def get_action_trace(self, index: int):
+        if index >= self.get_action_traces_size():
+            raise IndexError("Index out of range")
         return ActionTrace(self._ptr, index)
+
+    def pack(self) -> bytes:
+        return _transaction_trace.pack(self._ptr)
+
+    def to_json(self) -> str:
+        return _transaction_trace.to_json(self._ptr)

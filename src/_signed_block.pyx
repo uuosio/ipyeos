@@ -10,6 +10,7 @@ cdef extern from "_ipyeos.hpp":
     ctypedef struct signed_block_proxy:
         uint32_t block_num()
         vector[char] pack()
+        size_t transactions_size()
 
     ctypedef struct ipyeos_proxy:
         signed_block_proxy *signed_block_proxy_new(signed_block_ptr *_signed_block_ptr)
@@ -39,3 +40,6 @@ def block_num(uint64_t ptr):
 def pack(uint64_t ptr):
     ret = proxy(ptr).pack()
     return PyBytes_FromStringAndSize(<char *>ret.data(), ret.size())
+
+def transactions_size(uint64_t ptr):
+    return proxy(ptr).transactions_size()

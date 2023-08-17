@@ -163,5 +163,4 @@ class SignedTransaction(object):
         ret = _signed_transaction.unpack(data, result_type)
         if not ret:
             raise get_last_exception()
-        return json.loads(ret)
-
+        return ret.decode()

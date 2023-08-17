@@ -29,9 +29,12 @@ cdef extern from "_ipyeos.hpp":
         action_trace_proxy *get_action_trace(int index)
         bool free_action_trace(action_trace_proxy *_action_trace_proxy)
         int get_action_traces_size()
+        vector[char] pack()
+        string to_json()
 
     ctypedef struct ipyeos_proxy:
         transaction_trace_proxy *transaction_trace_proxy_new(transaction_trace_ptr *_transaction_trace_ptr, bool attach)
+        transaction_trace_proxy *transaction_trace_proxy_new_ex(const char *raw_packed_transaction_trace, size_t raw_packed_transaction_trace_size)
         bool transaction_trace_proxy_free(transaction_trace_proxy *transaction_trace_proxy_ptr)
 
     ipyeos_proxy *get_ipyeos_proxy() nogil
@@ -42,6 +45,10 @@ cdef transaction_trace_proxy *proxy(uint64_t ptr):
 def new(uint64_t ptr, bool attach):
     cdef ipyeos_proxy *_proxy = get_ipyeos_proxy()
     return <uint64_t>_proxy.transaction_trace_proxy_new(<transaction_trace_ptr *>ptr, attach)
+
+def new_ex(raw_packed_transaction_trace: bytes):
+    cdef ipyeos_proxy *_proxy = get_ipyeos_proxy()
+    return <uint64_t>_proxy.transaction_trace_proxy_new_ex(<char *>raw_packed_transaction_trace, len(raw_packed_transaction_trace))
 
 def free_transaction_trace(uint64_t ptr):
     cdef ipyeos_proxy *_proxy = get_ipyeos_proxy()
@@ -94,3 +101,12 @@ def get_action_trace(uint64_t ptr, int index) -> uint64_t:
 
 def free_action_trace(uint64_t ptr, uint64_t _action_trace_proxy):
     return proxy(ptr).free_action_trace(<action_trace_proxy*>_action_trace_proxy)
+
+# vector<char> pack()
+def pack(uint64_t ptr) -> bytes:
+    cdef vector[char] _vector = proxy(ptr).pack()
+    return PyBytes_FromStringAndSize(<char *>_vector.data(), _vector.size())
+
+# string to_json()
+def to_json(uint64_t ptr) -> str:
+    return proxy(ptr).to_json()

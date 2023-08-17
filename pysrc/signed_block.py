@@ -1,4 +1,5 @@
-from .native_modules import _signed_block
+from .native_modules import _signed_block, _packed_transaction
+from .packed_transaction import PackedTransaction
 
 class SignedBlock:
     def __init__(self, signed_block_ptr, attach=False):
@@ -31,3 +32,17 @@ class SignedBlock:
     
     def pack(self):
         return _signed_block.pack(self._ptr)
+
+    def transaction_count(self):
+        return _signed_block.transactions_size(self._ptr)
+
+    def get_transaction(self, index):
+        if index < 0 or index >= self.transaction_count():
+            raise IndexError("Index out of range")
+        ptr = _packed_transaction.new_from_signed_block(self._ptr, index)
+        if not ptr:
+            return None
+        ret = PackedTransaction.__new__(PackedTransaction)
+        ret.ptr = ptr
+        ret.json_str = None
+        return ret
