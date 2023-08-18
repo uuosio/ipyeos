@@ -15,6 +15,7 @@ src/_read_write_lock.cpp
 src/_block_state.cpp
 src/_transaction_trace.cpp
 src/_signed_block.cpp
+# src/_action_trace.cpp
 
 .vscode
 cp.sh

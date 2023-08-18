@@ -262,8 +262,11 @@ def run_once() -> int:
 def post(fn, *args, **kwargs):
     return _eos.post(fn, *args, **kwargs)
 
-def post_signed_block(raw_block: bytes, _async=False) -> bool:
-    return _eos.post_signed_block(raw_block, _async)
+def post_signed_block(raw_block: bytes) -> bool:
+    return _eos.post_signed_block(raw_block, True)
+
+def push_signed_block(raw_block: bytes) -> bool:
+    return _eos.post_signed_block(raw_block, False)
 
 def get_controller() -> int:
     return _eos.get_controller()

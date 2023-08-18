@@ -1106,9 +1106,9 @@ class Connection(object):
         if self.has_producer:
             if self.rwlock:
                 with self.rwlock.wlock():
-                    return eos.post_signed_block(raw_block)
+                    return eos.push_signed_block(raw_block)
             else:
-                return eos.post_signed_block(raw_block)
+                return eos.push_signed_block(raw_block)
         else:
             if self.rwlock:
                 with self.rwlock.wlock():
