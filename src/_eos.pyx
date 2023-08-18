@@ -21,7 +21,7 @@ cdef extern from "_ipyeos.hpp":
         void print_log(int level, string& logger_name, string& message)
 
         void *post(void *(*fn)(void *), void *args) nogil
-        bool post_signed_block(const char *raw_block, size_t raw_block_size, _async) nogil
+        bool post_signed_block(const char *raw_block, size_t raw_block_size, bool _async) nogil
 
         bool set_on_produce_block_cb(bool (*fn)(const char *raw_block, size_t raw_block_size))
         bool on_produce_block(const char *raw_block, size_t raw_block_size)
