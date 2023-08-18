@@ -1,4 +1,1 @@
-v0.4.8 release
-
-1. Add support for plugins
-2. Improve rpc interfaces
+v0.4.9 release
