@@ -1,5 +1,6 @@
 from .native_modules import _signed_block, _packed_transaction
 from .packed_transaction import PackedTransaction
+from .types import Checksum256
 
 class SignedBlock:
     def __init__(self, signed_block_ptr, attach=False):
@@ -36,10 +37,21 @@ class SignedBlock:
     def transaction_count(self):
         return _signed_block.transactions_size(self._ptr)
 
-    def get_transaction(self, index):
+    def get_transaction_id(self, index: int):
         if index < 0 or index >= self.transaction_count():
             raise IndexError("Index out of range")
-        ptr = _packed_transaction.new_from_signed_block(self._ptr, index)
+        tx_id = _signed_block.get_transaction_id(self._ptr, index)
+        return Checksum256(tx_id)
+
+    def is_packed_transaction(self, index: int):
+        if index < 0 or index >= self.transaction_count():
+            raise IndexError("Index out of range")
+        return _signed_block.is_packed_transaction(self._ptr, index)
+
+    def get_packed_transaction(self, index: int):
+        if index < 0 or index >= self.transaction_count():
+            raise IndexError("Index out of range")
+        ptr = _signed_block.get_packed_transaction(self._ptr, index)
         if not ptr:
             return None
         ret = PackedTransaction.__new__(PackedTransaction)

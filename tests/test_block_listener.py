@@ -19,7 +19,11 @@ def on_accepted_block(block_state_ptr):
     block = bs.block()
     logger.info("transaction count: %s", block.transaction_count())
     for i in range(block.transaction_count()):
-        pt = block.get_transaction(i)
+        tx_id = block.get_transaction_id(i)
+        logger.info("transaction id %s %s", i, tx_id)
+        pt = block.get_packed_transaction(i)
+        if not pt:
+            continue
         logger.info("transaction %s %s %s", i, pt, pt.get_signed_transaction())
 
 def on_irreversible_block(block_state_ptr):
