@@ -6,6 +6,13 @@ class BlockState:
         self._ptr = _block_state.new(block_state_proxy_ptr)
         self._block = None
     
+    @classmethod
+    def init(cls, block_state_proxy_ptr):
+        ret = cls.__new__(cls)
+        ret._ptr = block_state_proxy_ptr
+        ret._block = None
+        return ret
+
     def free(self):
         if not self._ptr:
             return

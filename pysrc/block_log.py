@@ -1,3 +1,4 @@
+from .chain_exceptions import get_last_exception
 from .native_modules import _block_log, _eos
 from .signed_block import SignedBlock
 
@@ -13,10 +14,14 @@ class BlockLog(object):
     def read_block_by_num(self, block_num: int) -> str:
         if block_num > self.head_block_num() or block_num < self.first_block_num():
             raise Exception("invalid block number, block_num: %d, head_block_num: %d, first_block_num: %d" % (block_num, self.head_block_num(), self.first_block_num()))
-        ptr = _block_log.read_block_by_num(self.ptr, block_num)
-        if not ptr:
-            raise Exception(_eos.get_last_error())
-        return SignedBlock.attach(ptr)
+        signed_block_proxy_ptr = _block_log.read_block_by_num(self.ptr, block_num)
+        if not signed_block_proxy_ptr:
+            ex = get_last_exception()
+            if ex:
+                raise ex
+            else:
+                raise Exception("read block by num failed")
+        return SignedBlock.init(signed_block_proxy_ptr)
 
     def read_block_header_by_num(self, block_num: int) -> str:
         if block_num > self.head_block_num() or block_num < self.first_block_num():

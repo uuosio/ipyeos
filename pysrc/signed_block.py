@@ -13,7 +13,17 @@ class SignedBlock:
 
     @classmethod
     def new(cls, signed_block_ptr):
+        """
+        """
         return cls(signed_block_ptr, attach=False)
+
+    @classmethod
+    def init(cls, signed_block_proxy_ptr):
+        """
+        """
+        ret = cls.__new__(cls)
+        ret._ptr = signed_block_proxy_ptr
+        return ret
 
     @classmethod
     def attach(cls, signed_block_ptr):
@@ -27,6 +37,9 @@ class SignedBlock:
 
     def __del__(self):
         self.free()
+
+    def get_raw_ptr(self):
+        return self._ptr
 
     def block_num(self):
         return _signed_block.block_num(self._ptr)

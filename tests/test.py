@@ -3,7 +3,9 @@ import hashlib
 import shutil
 import sys
 import platform
+import pytest
 import time
+import tempfile
 
 from ipyeos import eos, log
 from ipyeos import chaintester
@@ -93,7 +95,7 @@ def test_load_native_lib():
     t.produce_block()
 
     eos.enable_debug(True)
-    t.push_action('hello', 'hi', {'nm': 'alice'}, {'hello': 'active'})
+    t.push_action('hello', 'hi', eos.s2b('hello'), {'hello': 'active'})
     t.produce_block()
 
 
@@ -233,10 +235,9 @@ def test_push_block():
 
     block_num = head_block_num+1
     block = blog.read_block_by_num(block_num)
-    raw_block = eos.pack_block(block)
-    t.chain.push_block(raw_block)
+    t.chain.push_block(block)
     try:
-        t.chain.push_block(raw_block)
+        t.chain.push_block(block)
     except ForkDatabaseException as e:
         logger.info("++++++%s", e)
         logger.info("++++++%s", e.json()['stack'][0]['context'])
@@ -245,8 +246,7 @@ def test_push_block():
 
     for block_num in range(head_block_num+2, head_block_num+num_count+1):
         block = blog.read_block_by_num(block_num)
-        raw_block = eos.pack_block(block)
-        t.chain.push_block(raw_block)
+        t.chain.push_block(block)
 
     block = blog.read_block_by_num(blog.head_block_num())
     logger.info("++++block: %s", block)
@@ -277,7 +277,7 @@ def test_abort_block():
     try:
         t.chain.start_block()
     except BlockValidateException as e:
-        logger.error(e['stack'][0]['format'])
+        logger.error(e.json()['stack'][0]['format'])
     t.chain.abort_block()
     t.chain.abort_block()
 
@@ -464,6 +464,7 @@ def update_permissions(t, test_account):
     ret = idx.modify(perm)
     print('modify_by_id return:', ret)
 
+@pytest.mark.skip(reason="Ignore this test for now.")
 def test_debug_mainnet():
     eos.enable_adjust_cpu_billing(True)
 

@@ -7,6 +7,12 @@ cdef extern from "_ipyeos.hpp":
     chain_proxy *chain(uint64_t ptr)
     void Py_INCREF(object obj)
     
+    ctypedef struct signed_block_proxy:
+        pass
+
+    ctypedef struct block_state_proxy:
+        pass
+
     ctypedef struct block_state_ptr:
         pass
 
@@ -69,10 +75,10 @@ cdef extern from "_ipyeos.hpp":
         string proposed_producers()
         uint32_t last_irreversible_block_num()
         string last_irreversible_block_id()
-        string fetch_block_by_number(uint32_t block_num)
-        string fetch_block_by_id(string& params)
-        string fetch_block_state_by_number(uint32_t block_num)
-        string fetch_block_state_by_id(string& params)
+        signed_block_proxy *fetch_block_by_number(uint32_t block_num)
+        signed_block_proxy *fetch_block_by_id(string& params)
+        block_state_proxy *fetch_block_state_by_number(uint32_t block_num)
+        block_state_proxy *fetch_block_state_by_id(string& params)
         string calculate_integrity_hash()
         bool sender_avoids_whitelist_blacklist_enforcement(string& sender)
         bool check_actor_list(string& param)
@@ -111,7 +117,8 @@ cdef extern from "_ipyeos.hpp":
         void gen_transaction(bool json, string& _actions, int64_t expiration_sec, string& reference_block_id, string& _chain_id, bool compress, string& _private_keys, vector[char]& result)
         bool push_transaction(const char *_packed_trx, size_t _packed_trx_size, int64_t block_deadline_ms, uint32_t billed_cpu_time_us, bool explicit_cpu_bill, uint32_t subjective_cpu_bill_us, bool read_only, string& result)
         bool push_block_from_block_log(void *block_log_ptr, uint32_t block_num)
-        bool push_block(const char *raw_block, size_t raw_block_size, string *block_statistics)
+        bool push_raw_block(const char *raw_block, size_t raw_block_size, string *block_statistics)
+        bool push_block(const signed_block_proxy *block, string *block_statistics)
 
         string get_scheduled_transactions()
         string get_scheduled_transaction(const char *sender_id, size_t sender_id_size, string& sender)
@@ -353,25 +360,25 @@ def fetch_block_by_number(uint64_t ptr, uint32_t block_num):
     '''
     returns: bytes
     '''
-    return <bytes>chain(ptr).fetch_block_by_number(block_num)
+    return <uint64_t>chain(ptr).fetch_block_by_number(block_num)
 
 def fetch_block_by_id(uint64_t ptr, string& params):
     '''
     returns: bytes
     '''
-    return <bytes>chain(ptr).fetch_block_by_id(params)
+    return <uint64_t>chain(ptr).fetch_block_by_id(params)
 
 def fetch_block_state_by_number(uint64_t ptr, uint32_t block_num):
     '''
     returns: bytes
     '''
-    return <bytes>chain(ptr).fetch_block_state_by_number(block_num)
+    return <uint64_t>chain(ptr).fetch_block_state_by_number(block_num)
 
 def fetch_block_state_by_id(uint64_t ptr, string& params):
     '''
     returns: bytes
     '''
-    return <bytes>chain(ptr).fetch_block_state_by_id(params)
+    return <uint64_t>chain(ptr).fetch_block_state_by_id(params)
 
 def calculate_integrity_hash(uint64_t ptr):
     '''
@@ -575,13 +582,23 @@ def push_transaction(uint64_t ptr, _packed_trx: bytes, int64_t block_deadline_ms
 def push_block_from_block_log(uint64_t ptr, uint64_t block_log_ptr, uint32_t block_num) -> bool:
     return chain(ptr).push_block_from_block_log(<void *>block_log_ptr, block_num)
 
-def push_block(uint64_t ptr, raw_block: bytes, bool return_block_statistic):
+def push_raw_block(uint64_t ptr, raw_block: bytes, bool return_block_statistic):
     cdef string block_statistics
     if return_block_statistic:
-        ret = chain(ptr).push_block(<const char *>raw_block, len(raw_block), &block_statistics)
+        ret = chain(ptr).push_raw_block(<const char *>raw_block, len(raw_block), &block_statistics)
         return (ret, block_statistics)
     else:
-        ret = chain(ptr).push_block(<const char *>raw_block, len(raw_block), <string *>0)
+        ret = chain(ptr).push_raw_block(<const char *>raw_block, len(raw_block), <string *>0)
+        return (ret, None)
+
+# bool push_block(const signed_block_proxy *block, string *block_statistics)
+def push_block(uint64_t ptr, uint64_t signed_block_proxy_ptr, bool return_block_statistic):
+    cdef string block_statistics
+    if return_block_statistic:
+        ret = chain(ptr).push_block(<signed_block_proxy *>signed_block_proxy_ptr, &block_statistics)
+        return (ret, block_statistics)
+    else:
+        ret = chain(ptr).push_block(<signed_block_proxy *>signed_block_proxy_ptr, <string *>0)
         return (ret, None)
 
 def get_scheduled_transactions(uint64_t ptr):

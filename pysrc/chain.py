@@ -7,6 +7,8 @@ from .native_modules import _chain, _eos
 from .block_log import BlockLog
 from .chain_exceptions import get_last_exception, get_transaction_exception
 from .types import I64, U8, U16, U32, U64, U128, Checksum256, Name, PublicKey
+from .signed_block import SignedBlock
+from .block_state import BlockState
 
 logger = log.get_logger(__name__)
 
@@ -279,17 +281,41 @@ class Chain(object):
         block_id = _chain.last_irreversible_block_id(self.ptr)
         return Checksum256.from_string(block_id)
 
-    def fetch_block_by_number(self, block_num) -> bytes:
-        return _chain.fetch_block_by_number(self.ptr, block_num, raw_block)
+    def fetch_block_by_number(self, block_num) -> SignedBlock:
+        _signed_block_proxy_ptr = _chain.fetch_block_by_number(self.ptr, block_num)
+        if not _signed_block_proxy_ptr:
+            ex = get_last_exception()
+            if ex:
+                raise ex
+            raise Exception(f"block_num {block_num} not found")
+        return SignedBlock.init(_signed_block_proxy_ptr)
 
     def fetch_block_by_id(self, block_id) -> bytes:
-        return _chain.fetch_block_by_id(self.ptr, block_id)
+        ptr = _chain.fetch_block_by_id(self.ptr, block_id)
+        if not ptr:
+            ex = get_last_exception()
+            if ex:
+                raise ex
+            raise Exception(f"block_id {block_id} not found")
+        return SignedBlock.init(ptr)
 
-    def fetch_block_state_by_number(self, block_num) -> bytes:
-        _chain.fetch_block_state_by_number(self.ptr, block_num)
+    def fetch_block_state_by_number(self, block_num) -> BlockState:
+        ret = _chain.fetch_block_state_by_number(self.ptr, block_num)
+        if not ret:
+            ex = get_last_exception()
+            if ex:
+                raise ex
+            raise Exception(f"block_num {block_num} not found")
+        return BlockState.init(ret)
 
-    def fetch_block_state_by_id(self, block_id) -> bytes:
-        return _chain.fetch_block_state_by_id(self.ptr, block_id)
+    def fetch_block_state_by_id(self, block_id) -> BlockState:
+        ret = _chain.fetch_block_state_by_id(self.ptr, block_id)
+        if not ret:
+            ex = get_last_exception()
+            if ex:
+                raise ex
+            raise Exception(f"block_id {block_id} not found")
+        return BlockState.init(ret)
 
     def get_block_id_for_num(self, block_num) -> Optional[Checksum256]:
         ret = _chain.get_block_id_for_num(self.ptr, block_num)
@@ -413,9 +439,6 @@ class Chain(object):
     def fork_db_pending_head_block_num(self) -> int:
         return _chain.fork_db_pending_head_block_num(self.ptr)
 
-    def fetch_block_by_number(self, block_num) -> bytes:
-        return _chain.fetch_block_by_number(self.ptr, block_num)
-
     def is_building_block(self) -> bool:
         return _chain.is_building_block(self.ptr)
 
@@ -459,10 +482,24 @@ class Chain(object):
                 raise Exception("invalid block num")
         return True
 
-    def push_block(self, raw_block: bytes, show_statistics: bool = False) -> bool:
-        ret, block_statistics = _chain.push_block(self.ptr, raw_block, show_statistics)
+    def push_raw_block(self, raw_block: bytes, show_statistics: bool = False) -> bool:
+        ret, block_statistics = _chain.push_raw_block(self.ptr, raw_block, show_statistics)
         if not ret:
-            raise get_last_exception()
+            ex = get_last_exception()
+            if ex:
+                raise ex
+            else:
+                raise Exception("invalid block")
+        return (ret, block_statistics)
+
+    def push_block(self, block: SignedBlock, show_statistics: bool = False) -> bool:
+        ret, block_statistics = _chain.push_block(self.ptr, block.get_raw_ptr(), show_statistics)
+        if not ret:
+            ex = get_last_exception()
+            if ex:
+                raise ex
+            else:
+                raise Exception("invalid block")
         return (ret, block_statistics)
 
     def get_scheduled_transaction(self, sender_id: U128, sender: Name) -> dict:

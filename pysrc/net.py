@@ -1112,11 +1112,11 @@ class Connection(object):
         else:
             if self.rwlock:
                 with self.rwlock.wlock():
-                    ret, statistics = self.chain.push_block(raw_block, return_statistics)
+                    ret, statistics = self.chain.push_raw_block(raw_block, return_statistics)
                     if statistics:
                         self.logger.info(statistics)
             else:
-                ret, statistics = self.chain.push_block(raw_block, return_statistics)
+                ret, statistics = self.chain.push_raw_block(raw_block, return_statistics)
                 if statistics:
                     self.logger.info(statistics)
 
