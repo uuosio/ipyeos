@@ -11,6 +11,7 @@ from ipyeos.chaintester import ChainTester
 
 from ipyeos.chain_exceptions import BlockValidateException, ChainException, ForkDatabaseException, get_last_exception
 from ipyeos.block_log import BlockLog
+from ipyeos.signed_block import SignedBlock
 
 chaintester.chain_config['contracts_console'] = True
 dir_name = os.path.dirname(__file__)
@@ -115,10 +116,10 @@ def test_push_block():
 
     block_num = head_block_num+1
     block = blog.read_block_by_num(block_num)
-    raw_block = block.pack()
-    t.chain.push_block(raw_block)
+    # raw_block = block.pack()
+    t.chain.push_block(block)
     try:
-        t.chain.push_block(raw_block)
+        t.chain.push_block(block)
     except ForkDatabaseException as e:
         logger.info("++++++%s", e)
         logger.info("++++++%s", e.json()['stack'][0]['context'])
@@ -127,8 +128,8 @@ def test_push_block():
 
     for block_num in range(head_block_num+2, head_block_num+num_count+1):
         block = blog.read_block_by_num(block_num)
-        raw_block = block.pack()
-        t.chain.push_block(raw_block)
+        # raw_block = block.pack()
+        t.chain.push_block(block)
 
     block = blog.read_block_by_num(blog.head_block_num())
     logger.info("++++block: %s", block)
@@ -144,3 +145,10 @@ def test_push_block():
     logger.info("+++++++%s %s", head_block_num, info['head_block_num'])
     assert head_block_num + num_count == info['head_block_num']
     t.free()
+
+    block = blog.head()
+    logger.info("%s", block)
+    raw = block.pack()
+    assert raw == SignedBlock.unpack(raw).pack()
+
+

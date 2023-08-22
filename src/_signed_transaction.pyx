@@ -12,8 +12,8 @@ cdef extern from "_ipyeos.hpp":
         void id(vector[char]& _id)
         void add_action(uint64_t account, uint64_t name, const char *data, size_t size, vector[pair[uint64_t, uint64_t]]& auths)
         bool sign(const char *private_key, size_t size, const char *chain_id, size_t chain_id_size)
-        void pack(bool compress, vector[char]& packed_transaction)
-        bool unpack(const char *packed_transaction, size_t size, int result_type, string& result)
+        void pack(bool compress, int pack_type, vector[char]& packed_transaction)
+        bool to_json(int result_type, bool compressed, string& result)
 
     ctypedef struct ipyeos_proxy:
         signed_transaction_proxy *transaction_proxy_new(
@@ -57,21 +57,13 @@ def add_action(uint64_t ptr, uint64_t account, uint64_t name, data: bytes, auths
 def sign(uint64_t ptr, private_key: bytes, chain_id: bytes) -> bool:
     return proxy(ptr).sign(<const char *>private_key, len(private_key), <const char *>chain_id, len(chain_id))
 
-def pack(uint64_t ptr, bool compress):
+def pack(uint64_t ptr, bool compress, int pack_type):
     cdef vector[char] packed_transaction
-    proxy(ptr).pack(compress, packed_transaction)
+    proxy(ptr).pack(compress, pack_type, packed_transaction)
     return PyBytes_FromStringAndSize(packed_transaction.data(), packed_transaction.size())
 
-cdef signed_transaction_proxy *s_proxy = NULL
-
-cdef signed_transaction_proxy *get_instance():
-    global s_proxy
-    if s_proxy == NULL:
-        s_proxy = get_ipyeos_proxy().transaction_proxy_new(0, b'\x00' * 32, 32, 0, 0, 0)
-    return s_proxy
-
-def unpack(packed_transaction: bytes, int result_type):
+def to_json(uint64_t ptr, int result_type, bool compressed):
     cdef string result
-    get_instance().unpack(<const char *>packed_transaction, len(packed_transaction), result_type, result)
-    ret = PyBytes_FromStringAndSize(result.c_str(), result.size())
-    return ret
+    proxy(ptr).to_json(result_type, compressed, result)
+    return result
+

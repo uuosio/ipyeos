@@ -31,6 +31,13 @@ class SignedTransaction(object):
             self.ptr = None
 
     @classmethod
+    def init(cls, signed_transaction_proxy_ptr):
+        assert signed_transaction_proxy_ptr, "SignedTransaction is null"
+        ret = cls.__new__(cls)
+        ret.ptr = signed_transaction_proxy_ptr
+        return ret
+
+    @classmethod
     def attach(cls, signed_transaction_ptr: int):
         """
         Attaches a signed transaction to a transaction object.
@@ -41,13 +48,13 @@ class SignedTransaction(object):
         Returns:
             None
         """
+        assert signed_transaction_ptr, "signed_transaction_ptr is null"
         ret = cls.__new__(cls)
         ret.ptr = _signed_transaction.attach_transaction(signed_transaction_ptr)
         return ret
 
     def __repr__(self):
-        raw = self.pack()
-        return self.to_json(raw, 1)
+        return self.to_json(0)
 
     def __str__(self):
         return repr(self)
@@ -134,33 +141,32 @@ class SignedTransaction(object):
             raise Exception(eos.get_last_error())
         return True
 
-    def pack(self, compress: bool = False) -> bytes:
+    def pack(self, pack_type=0, compress: bool = False) -> bytes:
         """
         Packs the signed transaction into a binary format that can be sent over the network.
 
         Args:
             compress: A boolean indicating whether to compress the packed data.
-
+            pack_type: The type of transaction to pack. 0 for signed_transaction, 1 for packed_transaction.
         Returns:
             A bytes object containing the packed transaction data.
         """
-        return _signed_transaction.pack(self.ptr, compress)
+        assert pack_type == 0 or pack_type == 1, "pack_type must be 0 or 1"
+        return _signed_transaction.pack(self.ptr, compress, pack_type)
 
-    @classmethod
-    def to_json(cls, data: bytes, result_type: int = 0):
+    def to_json(self, result_type: int = 0, compressed: bool = False):
         """
         Convert binary transaction data to a JSON object.
 
         Args:
-            data (bytes): The binary transaction data to convert.
             result_type (int, optional): The type of transaction to return. 
-                0 for packed_transaction, 1 for signed_transaction. Defaults to 0.
+                0 for signed_transaction, 1 for packed_transaction. Defaults to 0.
 
         Returns:
             dict: A JSON object representing the transaction data.
 
         """
-        ret = _signed_transaction.unpack(data, result_type)
+        ret = _signed_transaction.to_json(self.ptr, result_type, compressed)
         if not ret:
             raise get_last_exception()
-        return ret.decode()
+        return ret

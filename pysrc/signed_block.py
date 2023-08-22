@@ -19,8 +19,7 @@ class SignedBlock:
 
     @classmethod
     def init(cls, signed_block_proxy_ptr):
-        """
-        """
+        assert signed_block_proxy_ptr, "SignedBlock pointer cannot be null"
         ret = cls.__new__(cls)
         ret._ptr = signed_block_proxy_ptr
         return ret
@@ -38,6 +37,12 @@ class SignedBlock:
     def __del__(self):
         self.free()
 
+    def __repr__(self):
+        return self.to_json()
+    
+    def __str__(self) -> str:
+        return self.to_json()
+
     def get_raw_ptr(self):
         return self._ptr
 
@@ -46,6 +51,11 @@ class SignedBlock:
     
     def pack(self):
         return _signed_block.pack(self._ptr)
+
+    @classmethod
+    def unpack(cls, packed_block):
+        _signed_block_proxy_ptr = _signed_block.new_ex(packed_block)
+        return cls.init(_signed_block_proxy_ptr)
 
     def transaction_count(self):
         return _signed_block.transactions_size(self._ptr)
@@ -71,3 +81,7 @@ class SignedBlock:
         ret.ptr = ptr
         ret.json_str = None
         return ret
+    
+    def to_json(self):
+        return _signed_block.to_json(self._ptr)
+

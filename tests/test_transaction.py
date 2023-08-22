@@ -18,14 +18,23 @@ def test_tx():
     tx.add_action('eosio.token', 'transfer', b'hello, world', {'eosio': 'active'})
     priv_key = PrivateKey.from_base58('5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3')
     tx.sign(priv_key, Checksum256.empty())
-    raw_tx = tx.pack()
     logger.info(tx.id())
+
+    raw_tx = tx.pack(0)
     logger.info(raw_tx)
-    logger.info(SignedTransaction.to_json(raw_tx, 0))
-    logger.info(SignedTransaction.to_json(raw_tx, 1))
+
+    raw_tx = tx.pack(1)
+    logger.info(raw_tx)
+
+    logger.info(tx.to_json(0))
+    logger.info(tx.to_json(1))
 
     pt = PackedTransaction.unpack(raw_tx)
     logger.info(pt)
+    logger.info(pt.get_signed_transaction())
+
+    pt = PackedTransaction.new_from_signed_transaction(tx, False)
+    assert pt.pack() == raw_tx
 
     try:
         pt = PackedTransaction.unpack(b'aabb')

@@ -25,6 +25,24 @@ class PackedTransaction(object):
         return cls(signed_transaction_ptr, True)
 
     @classmethod
+    def new_from_signed_transaction(cls, signed_tx: SignedTransaction, compressed: bool = False):
+        """
+        Initializes a new packed transaction object from a signed transaction object.
+
+        Args:
+            signed_tx: The signed transaction object.
+            bool compressed: Whether to compress the transaction.
+
+        Returns:
+            PackedTransaction: The new packed transaction object.
+        """
+        assert signed_tx, "signed_tx is null"
+        ret = cls.__new__(cls)
+        ret.ptr = _packed_transaction.new_from_signed_transaction(signed_tx.ptr, compressed)
+        ret.json_str = None
+        return ret
+
+    @classmethod
     def unpack(cls, raw_packed_tx: bytes):
         ptr = _packed_transaction.new_ex(raw_packed_tx)
         if not ptr:
@@ -45,7 +63,7 @@ class PackedTransaction(object):
 
     def get_signed_transaction(self):
         ptr = _packed_transaction.get_signed_transaction(self.ptr)
-        return SignedTransaction.attach(ptr)
+        return SignedTransaction.init(ptr)
 
     def pack(self) -> bytes:
         return _packed_transaction.pack(self.ptr)

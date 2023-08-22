@@ -11,8 +11,8 @@ cdef extern from "_ipyeos.hpp":
         signed_block_proxy *read_block_by_num(uint32_t block_num)
         string read_block_header_by_num(uint32_t block_num)
         string read_block_id_by_num(uint32_t block_num)
-        string read_block_by_id(const string& id)
-        string head()
+        signed_block_proxy *read_block_by_id(const string& id)
+        signed_block_proxy *head()
         uint32_t head_block_num()
         string head_id()
         uint32_t first_block_num()
@@ -44,12 +44,12 @@ def read_block_id_by_num(uint64_t ptr, uint32_t block_num) -> str:
     return block_log(ptr).read_block_id_by_num(block_num)
 
 # virtual string read_block_by_id(const string& id);
-def read_block_by_id(uint64_t ptr, string& id) -> str:
-    return block_log(ptr).read_block_by_id(id)
+def read_block_by_id(uint64_t ptr, string& id) -> uint64_t:
+    return <uint64_t>block_log(ptr).read_block_by_id(id)
 
 # virtual string head();
-def head(uint64_t ptr) -> str:
-    return block_log(ptr).head()
+def head(uint64_t ptr) -> uint64_t:
+    return <uint64_t>block_log(ptr).head()
 
 # uint32_t head_block_num()
 def head_block_num(uint64_t ptr) -> int:

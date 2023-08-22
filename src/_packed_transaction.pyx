@@ -4,6 +4,9 @@ from typing import Union, List
 from _ipyeos cimport *
 
 cdef extern from "_ipyeos.hpp":
+    ctypedef struct signed_transaction_proxy:
+        pass
+
     ctypedef struct signed_block_proxy:
         pass
 
@@ -14,13 +17,14 @@ cdef extern from "_ipyeos.hpp":
         pass
 
     ctypedef struct packed_transaction_proxy:
-        signed_transaction_ptr *get_signed_transaction()
+        signed_transaction_proxy *get_signed_transaction()
         vector[char] pack()
         string to_json()
 
     ctypedef struct ipyeos_proxy:
         packed_transaction_proxy *packed_transaction_proxy_new(packed_transaction_ptr *_packed_transaction_ptr, bool attach)
         packed_transaction_proxy *packed_transaction_proxy_new_ex(const char *raw_packed_tx, size_t raw_packed_tx_size)
+        packed_transaction_proxy *packed_transaction_proxy_new_ex_ex(signed_transaction_proxy *signed_transaction_proxy_ptr, bool compressed);
 
         bool packed_transaction_proxy_free(packed_transaction_proxy *packed_transaction_proxy_ptr)
 
@@ -34,6 +38,10 @@ def new(uint64_t ptr, bool attach) -> uint64_t:
 
 def new_ex(raw_packed_tx: bytes) -> uint64_t:
     return <uint64_t>get_ipyeos_proxy().packed_transaction_proxy_new_ex(<char *>raw_packed_tx, len(raw_packed_tx))
+
+# packed_transaction_proxy *packed_transaction_proxy_new_ex_ex(signed_transaction_proxy *signed_transaction_proxy_ptr, bool compressed);
+def new_from_signed_transaction(uint64_t signed_transaction_ptr, bool compressed) -> uint64_t:
+    return <uint64_t>get_ipyeos_proxy().packed_transaction_proxy_new_ex_ex(<signed_transaction_proxy *>signed_transaction_ptr, compressed)
 
 def free_transaction(uint64_t ptr):
     get_ipyeos_proxy().packed_transaction_proxy_free(<packed_transaction_proxy *>ptr)
