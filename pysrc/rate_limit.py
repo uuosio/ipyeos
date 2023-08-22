@@ -117,9 +117,10 @@ class WeightedFairScheduler:
         return task
 
     def clear_inactive_connections(self):
-        if time.monotonic() - self.clear_inactive_connections_time < 30:
-            if len(self.connections) < MAX_CONNECTIONS:
-                return
+        if time.monotonic() - self.clear_inactive_connections_time < self.window_time:
+            return
+            # if len(self.connections) < MAX_CONNECTIONS:
+            #     return
         self.clear_inactive_connections_time = time.monotonic()
         while True:
             ret = self.last_task_time_index.first()
@@ -132,7 +133,7 @@ class WeightedFairScheduler:
             self.priority_index.remove(id)
             conn = self.connections[id]
             del self.connections[id]
-            logger.info("Removing inactive connection %s", conn)
+            logger.debug("Removing inactive connection %s", conn)
 
     async def _process_task(self):
         self.clear_inactive_connections()

@@ -30,7 +30,7 @@ debug_port: 7777
 rpc_address: '127.0.0.1:8088'
 
 net:
-  socks5_proxy: "127.0.0.1:8084"
+  #socks5_proxy: "127.0.0.1:8084"
   sync_fetch_span: 300
   peers:
     - 'peer.eosn.io:9876'
