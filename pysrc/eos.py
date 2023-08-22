@@ -4,7 +4,7 @@ from enum import Enum
 from typing import Union
 
 from .native_modules import _eos
-from .chain_exceptions import get_last_exception
+from .core.chain_exceptions import get_last_exception
 
 class NativeType:
     handshake_message = 0

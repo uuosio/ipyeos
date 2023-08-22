@@ -2,8 +2,8 @@ import json
 import json as json_
 from typing import Dict, List, Optional, Union
 
+from .core.chain_exceptions import get_last_exception
 from .native_modules import _chain, _chainapi, _eos
-from .chain_exceptions import get_last_exception
 
 class ChainApi(object):
 

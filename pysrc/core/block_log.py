@@ -1,6 +1,7 @@
 from .chain_exceptions import get_last_exception
-from .native_modules import _block_log, _eos
 from .signed_block import SignedBlock
+
+from ..native_modules import _block_log, _eos
 
 class BlockLog(object):
     def __init__(self, block_log_dir: str):

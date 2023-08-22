@@ -1,6 +1,7 @@
 from .action_trace import ActionTrace
-from .native_modules import _transaction_trace
 from .chain_exceptions import get_last_exception
+
+from ..native_modules import _transaction_trace
 
 class TransactionTrace:
     def __init__(self, tx_trace_ptr, attach = False):

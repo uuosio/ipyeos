@@ -9,13 +9,13 @@ import json
 import websockets
 import pytest
 
-from ipyeos import chaintester
-from ipyeos.chaintester import ChainTester
+from ipyeos.tester import chaintester
+from ipyeos.tester.chaintester import ChainTester
 
 from ipyeos.state_history import StateHistory
 from ipyeos.state_history import GetStatusRequestV0, BlockPosition, GetBlocksRequestV0, GetBlocksAckRequestV0
 from ipyeos.state_history import StateRequest, GetStatusResultV0, GetBlocksResultV0
-from ipyeos.chain_exceptions import SnapshotRequestNotFoundException, InvalidSnapshotRequestException
+from ipyeos.core.chain_exceptions import SnapshotRequestNotFoundException, InvalidSnapshotRequestException
 
 from ipyeos import eos, log
 from ipyeos.packer import Packer, Encoder, Decoder
@@ -40,7 +40,7 @@ def deploy_contract(tester, package_name):
     tester.deploy_contract('hello', code, abi)
 
 from ipyeos.packer import Packer, Encoder, Decoder
-from ipyeos.database import AccountObject, AccountMetadataObject, CodeObject
+from ipyeos.core.database import AccountObject, AccountMetadataObject, CodeObject
 
 def parse_deltas(deltas):
     dec = Decoder(deltas)

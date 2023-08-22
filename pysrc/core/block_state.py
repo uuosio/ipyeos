@@ -1,5 +1,6 @@
-from .native_modules import _block_state
 from .signed_block import SignedBlock
+
+from ..native_modules import _block_state
 
 class BlockState:
     def __init__(self, block_state_proxy_ptr):

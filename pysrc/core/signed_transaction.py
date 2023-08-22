@@ -1,12 +1,12 @@
 import json
 from typing import Dict, List, Union, Optional
 
-from .native_modules import _signed_transaction
-from . import eos
-
 from .chain_exceptions import get_last_exception
-from .packer import Packer
-from .types import I64, U8, U16, U32, U64, Checksum256, Name, PrivateKey
+
+from .. import eos
+from ..native_modules import _signed_transaction
+from ..packer import Packer
+from ..types import I64, U8, U16, U32, U64, Checksum256, Name, PrivateKey
 
 class SignedTransaction(object):
     def __init__(self, expiration: U32 = 0, ref_block_id: Optional[Union[Checksum256, str]] = None, max_net_usage_words: U32 = 0, max_cpu_usage_ms: U8 = 0, delay_sec: U32 = 0):

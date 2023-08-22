@@ -4,7 +4,7 @@ import platform
 import time
 
 from ipyeos import log
-from ipyeos.chaintester import ChainTester
+from ipyeos.tester.chaintester import ChainTester
 
 logger = log.get_logger(__name__)
 

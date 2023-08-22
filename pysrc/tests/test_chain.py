@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 import pytest
 
 from ipyeos import _chain, _eos, eos
-from ipyeos.chaintester import ChainTester
+from ipyeos.tester.chaintester import ChainTester
 
 eos.set_log_level('default', 0)
 

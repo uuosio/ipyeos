@@ -26,17 +26,19 @@ from thrift.server import TServer
 from thrift.Thrift import TApplicationException, TMessageType, TType
 from thrift.transport import TSocket, TTransport
 
-from . import _chainapi, _eos, _vm_api, chaintester, eos, log, rpc_server, stop_process
-from .chain_exceptions import ChainException, TransactionException
+from . import eos, log, rpc_server, stop_process
+
+from .native_modules import _chainapi, _eos, _vm_api
+from .core.chain_exceptions import ChainException, TransactionException
 from .chainapi import ChainApi
-from .chaintester import ChainTester
 from .interfaces import Apply, ApplyRequest, IPCChainTester
 from .interfaces.ttypes import (Action, ActionArguments, FindPrimaryReturn,
                                 FindSecondaryReturn, GetResourceLimitsReturn,
                                 LowerBoundUpperBoundReturn, NextPreviousReturn,
                                 Uint64)
 
-from .chain_exceptions import ChainException
+from .tester import chaintester
+from .tester.chaintester import ChainTester
 
 chaintester.chain_config['contracts_console'] = True
 

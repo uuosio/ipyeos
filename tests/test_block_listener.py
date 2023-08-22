@@ -5,10 +5,10 @@ import json
 import time
 
 from ipyeos import log
-from ipyeos.chaintester import ChainTester
-from ipyeos.block_state import BlockState
-from ipyeos.transaction_trace import TransactionTrace
-from ipyeos.packed_transaction import PackedTransaction
+from ipyeos.tester.chaintester import ChainTester
+from ipyeos.core.block_state import BlockState
+from ipyeos.core.transaction_trace import TransactionTrace
+from ipyeos.core.packed_transaction import PackedTransaction
 
 logger = log.get_logger(__name__)
 

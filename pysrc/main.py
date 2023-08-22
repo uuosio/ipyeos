@@ -17,7 +17,7 @@ from multiprocessing import Process, Lock, Queue, Event
 from typing import Optional
 
 from . import args, debug, debug_server, eos, helper, log, node, node_config, rpc, server, worker, utils
-from .chain_exceptions import ChainException
+from .core.chain_exceptions import ChainException
 
 if not 'RUN_IPYEOS' in os.environ:
     print('only ipyeos can load the main module.')
@@ -231,6 +231,7 @@ class Main(object):
             # if not ret == 0:
             #     break
             if not ret == SUCCESS:
+                # await asyncio.sleep(0)
                 await asyncio.sleep(0.001)
             # print('run once')
         eos.exit()

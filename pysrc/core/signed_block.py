@@ -1,6 +1,7 @@
-from .native_modules import _signed_block, _packed_transaction
 from .packed_transaction import PackedTransaction
-from .types import Checksum256
+
+from ..native_modules import _signed_block, _packed_transaction
+from ..types import Checksum256
 
 class SignedBlock:
     def __init__(self, signed_block_ptr, attach=False):

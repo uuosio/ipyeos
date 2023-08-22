@@ -6,9 +6,9 @@ import time
 
 from ipyeos.types import Checksum256, PrivateKey
 from ipyeos import eos, net, log
-from ipyeos.chaintester import ChainTester
-from ipyeos.signed_transaction import SignedTransaction
-from ipyeos.packed_transaction import PackedTransaction
+from ipyeos.tester.chaintester import ChainTester
+from ipyeos.core.signed_transaction import SignedTransaction
+from ipyeos.core.packed_transaction import PackedTransaction
 
 logger = log.get_logger(__name__)
 

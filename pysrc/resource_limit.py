@@ -1,4 +1,4 @@
-from .database import (Database, ResourceLimitsConfigObjectIndex,
+from .core.database import (Database, ResourceLimitsConfigObjectIndex,
                        ResourceLimitsObjectIndex,
                        ResourceLimitsStateObjectIndex,
                        ResourceUsageObjectIndex)

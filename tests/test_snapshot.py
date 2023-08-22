@@ -5,11 +5,11 @@ import shutil
 import platform
 
 from ipyeos import eos
-from ipyeos import chaintester
-from ipyeos.chaintester import ChainTester
+from ipyeos.tester import chaintester
+from ipyeos.tester.chaintester import ChainTester
 
 from ipyeos.snapshot import Snapshot
-from ipyeos.chain_exceptions import SnapshotRequestNotFoundException, InvalidSnapshotRequestException
+from ipyeos.core.chain_exceptions import SnapshotRequestNotFoundException, InvalidSnapshotRequestException
 
 chaintester.chain_config['contracts_console'] = True
 dir_name = os.path.dirname(__file__)

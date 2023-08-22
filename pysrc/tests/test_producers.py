@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 
 import pytest
 
-from ipyeos.chaintester import ChainTester
+from ipyeos.tester.chaintester import ChainTester
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(levelname)s %(module)s %(lineno)d %(message)s')

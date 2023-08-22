@@ -1,4 +1,4 @@
-from .native_modules import _action_trace
+from ..native_modules import _action_trace
 
 class ActionTrace:
     def __init__(self, _transaction_trace_ptr, index: int):

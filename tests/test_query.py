@@ -6,8 +6,8 @@ import time
 
 from multiprocessing import Process, Queue, Condition, Value, Lock, shared_memory
 
-from ipyeos.signed_transaction import SignedTransaction
-from ipyeos import Worker
+from ipyeos.core.signed_transaction import SignedTransaction
+from ipyeos.worker import Worker
 
 
 def worker(messenger):

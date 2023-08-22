@@ -16,9 +16,10 @@ from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 from multiprocessing import Process, Condition, Value, Lock, Event
 
-from .uvicorn_server import UvicornServer
 from . import eos, log, net, node, rate_limit
-from .chain_exceptions import BlockValidateException, DatabaseGuardException, ChainException
+
+from .uvicorn_server import UvicornServer
+from .core.chain_exceptions import BlockValidateException, DatabaseGuardException, ChainException
 
 logger = log.get_logger(__name__)
 

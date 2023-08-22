@@ -11,14 +11,18 @@ import time
 from datetime import datetime, timedelta, timezone
 from enum import Enum
 from typing import Dict, List, Optional, Union
-from . import chain, chainapi, database, node_config
 
-from . import eos, log
-from .database import GeneratedTransactionObjectIndex
-from .database_objects import GeneratedTransactionObject
-from .packer import Decoder
-from .types import Name
-from .chain_exceptions import ChainException, TransactionException
+from .. import eos, log
+from .. import chainapi, node_config
+
+from ..core import chain
+from ..core import database
+
+from ..core.database import GeneratedTransactionObjectIndex
+from ..core.database_objects import GeneratedTransactionObject
+from ..packer import Decoder
+from ..types import Name
+from ..core.chain_exceptions import ChainException, TransactionException
 
 logger = log.get_logger(__name__)
 
@@ -382,8 +386,8 @@ class ChainTester(object):
         self.produce_block()
 
     def deploy_eosio_token(self):
-        code_path = os.path.join(test_dir, 'tests/contracts/eosio.token/eosio.token.wasm')
-        abi_path = os.path.join(test_dir, 'tests/contracts/eosio.token/eosio.token.abi')
+        code_path = os.path.join(test_dir, 'contracts/eosio.token/eosio.token.wasm')
+        abi_path = os.path.join(test_dir, 'contracts/eosio.token/eosio.token.abi')
         with open(code_path, 'rb') as f:
             code = f.read()
         with open(abi_path, 'rb') as f:
@@ -391,8 +395,8 @@ class ChainTester(object):
         r = self.deploy_contract('eosio.token', code, abi)
 
     def deploy_eosio_bios(self):
-        code_path = os.path.join(test_dir, 'tests/contracts/eosio.bios/eosio.bios.wasm')
-        abi_path = os.path.join(test_dir, 'tests/contracts/eosio.bios/eosio.bios.abi')
+        code_path = os.path.join(test_dir, 'contracts/eosio.bios/eosio.bios.wasm')
+        abi_path = os.path.join(test_dir, 'contracts/eosio.bios/eosio.bios.abi')
         with open(code_path, 'rb') as f:
             code = f.read()
         with open(abi_path, 'rb') as f:
@@ -400,9 +404,9 @@ class ChainTester(object):
         self.deploy_contract('eosio', code, abi)
 
     def deploy_eosio_system(self):
-        code_path = os.path.join(test_dir, 'tests/contracts/eosio.system/eosio.system.wasm')
+        code_path = os.path.join(test_dir, 'contracts/eosio.system/eosio.system.wasm')
         # code_path = '/Users/newworld/dev/eosio.contracts/build/contracts/eosio.system/eosio.system.wasm.pp'
-        abi_path = os.path.join(test_dir, 'tests/contracts/eosio.system/eosio.system.abi')
+        abi_path = os.path.join(test_dir, 'contracts/eosio.system/eosio.system.abi')
         with open(code_path, 'rb') as f:
             code = f.read()
         with open(abi_path, 'rb') as f:
@@ -410,8 +414,8 @@ class ChainTester(object):
         self.deploy_contract('eosio', code, abi)
 
     def deploy_eosio_msig(self):
-        code_path = os.path.join(test_dir, 'tests/contracts/eosio.msig/eosio.msig.wasm')
-        abi_path = os.path.join(test_dir, 'tests/contracts/eosio.msig/eosio.msig.abi')
+        code_path = os.path.join(test_dir, 'contracts/eosio.msig/eosio.msig.wasm')
+        abi_path = os.path.join(test_dir, 'contracts/eosio.msig/eosio.msig.abi')
         with open(code_path, 'rb') as f:
             code = f.read()
         with open(abi_path, 'rb') as f:
@@ -419,10 +423,10 @@ class ChainTester(object):
         self.deploy_contract('eosio.msig', code, abi)
 
     def deploy_micropython(self):
-        code_path = os.path.join(test_dir, 'tests/contracts/micropython/micropython_eosio.wasm')
+        code_path = os.path.join(test_dir, 'contracts/micropython/micropython_eosio.wasm')
         # code_path = '/Users/newworld/dev/uuos3/externals/micropython/build/ports/micropython_eosio.wasm'
         #code_path = '/Users/newworld/dev/uuos3/build/externals/micropython/ports/ipyeos/micropython_eosio.wasm'
-        abi_path = os.path.join(test_dir, 'tests/contracts/micropython/micropython.abi')
+        abi_path = os.path.join(test_dir, 'contracts/micropython/micropython.abi')
         with open(code_path, 'rb') as f:
             code = f.read()
         with open(abi_path, 'rb') as f:

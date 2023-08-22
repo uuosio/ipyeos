@@ -17,14 +17,14 @@ version = platform.python_version_tuple()
 version = '%s.%s' % (version[0], version[1])
 
 release_files.extend([
-    'tests/contracts/eosio.bios/*',
-    'tests/contracts/eosio.msig/*',
-    'tests/contracts/eosio.system/*',
-    'tests/contracts/eosio.token/*',
-    'tests/contracts/eosio.wrap/*',
-    'tests/contracts/micropython/*',
-    'tests/test_template.py',
-    'tests/activate_kv.wasm',
+    'tester/contracts/eosio.bios/*',
+    'tester/contracts/eosio.msig/*',
+    'tester/contracts/eosio.system/*',
+    'tester/contracts/eosio.token/*',
+    'tester/contracts/eosio.wrap/*',
+    'tester/contracts/micropython/*',
+    'tester/test_template.py',
+    'tester/activate_kv.wasm',
 ])
 
 dir_name = os.path.dirname(os.path.realpath(__file__))
@@ -93,12 +93,14 @@ setup(
     packages=packages,
     package_dir={
         'ipyeos': 'pysrc',
+        'ipyeos.core': 'pysrc/core',
         'ipyeos.interfaces': 'pysrc/interfaces',
         'ipyeos.tests': 'pysrc/tests',
-        'ipyeos.tests.contracts': 'pysrc/tests/contracts',
+        'ipyeos.tests.contracts': 'pysrc/tester/contracts',
+        'ipyeos.tester': 'pysrc/tester',
         'ipyeos.release.bin': 'pysrc/release/bin',
         'ipyeos.release.lib': 'pysrc/release/lib',
-        'ipyeos.tests.contracts.micropython': 'pysrc/tests/contracts/micropython',
+        'ipyeos.tests.contracts.micropython': 'pysrc/tester/contracts/micropython',
     },
     package_data={'ipyeos': release_files},
     ext_modules=cythonize(

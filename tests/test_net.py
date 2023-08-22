@@ -9,7 +9,7 @@ import pytest
 import tempfile
 
 from ipyeos import eos, net, log
-from ipyeos.chaintester import ChainTester
+from ipyeos.tester.chaintester import ChainTester
 from ipyeos.types import *
 from ipyeos.signed_transaction import SignedTransaction
 from ipyeos import eos, net, node_config
@@ -24,7 +24,7 @@ from ipyeos import utils
 from ipyeos.blocks import BlockHeader
 from ipyeos.structs import Symbol, Asset, Transfer
 from ipyeos.trace_api import TraceAPI
-from ipyeos.database import TableIdObjectIndex, KeyValueObjectIndex
+from ipyeos.core.database import TableIdObjectIndex, KeyValueObjectIndex
 from ipyeos.node import Node
 
 logger = log.get_logger(__name__)

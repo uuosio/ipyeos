@@ -12,11 +12,11 @@ from typing import Any, Dict, List, Optional, Type, Union
 
 from . import debug, eos, log, utils, node_config
 from .blocks import BlockHeader
-from .chain import Chain
-from .chain_exceptions import (DatabaseGuardException, ForkDatabaseException,
+from .core.chain import Chain
+from .core.chain_exceptions import (DatabaseGuardException, ForkDatabaseException,
                                UnlinkableBlockException)
+from .core.signed_transaction import SignedTransaction
 from .packer import Decoder, Encoder
-from .signed_transaction import SignedTransaction
 from .types import I16, I64, U16, U32, U64, Checksum256, PublicKey, Signature
 
 handshake_message = 0

@@ -8,14 +8,14 @@ import time
 import tempfile
 
 from ipyeos import eos, log
-from ipyeos import chaintester
-from ipyeos.chaintester import ChainTester
+from ipyeos.tester import chaintester
+from ipyeos.tester.chaintester import ChainTester
 
-from ipyeos.chain_exceptions import BlockValidateException, ChainException, ForkDatabaseException, get_last_exception
+from ipyeos.core.chain_exceptions import BlockValidateException, ChainException, ForkDatabaseException, get_last_exception
 from ipyeos.types import PublicKey
-from ipyeos.database_objects import KeyWeight, Authority
-from ipyeos.database import PermissionObjectIndex, GlobalPropertyObjectIndex
-from ipyeos.block_log import BlockLog
+from ipyeos.core.database_objects import KeyWeight, Authority
+from ipyeos.core.database import PermissionObjectIndex, GlobalPropertyObjectIndex
+from ipyeos.core.block_log import BlockLog
 from ipyeos.trace_api import TraceAPI
 
 chaintester.chain_config['contracts_console'] = True
@@ -382,7 +382,7 @@ def rent_cpu(t, account, cpu_frac):
     except ChainException as e:
         raise e
 
-from ipyeos.database import *
+from ipyeos.core.database import *
 
 def load_data(db, contract):
     table_ids = []

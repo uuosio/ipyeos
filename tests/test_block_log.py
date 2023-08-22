@@ -6,12 +6,12 @@ import platform
 import time
 
 from ipyeos import eos, log
-from ipyeos import chaintester
-from ipyeos.chaintester import ChainTester
+from ipyeos.tester import chaintester
+from ipyeos.tester.chaintester import ChainTester
 
-from ipyeos.chain_exceptions import BlockValidateException, ChainException, ForkDatabaseException, get_last_exception
-from ipyeos.block_log import BlockLog
-from ipyeos.signed_block import SignedBlock
+from ipyeos.core.chain_exceptions import BlockValidateException, ChainException, ForkDatabaseException, get_last_exception
+from ipyeos.core.block_log import BlockLog
+from ipyeos.core.signed_block import SignedBlock
 
 chaintester.chain_config['contracts_console'] = True
 dir_name = os.path.dirname(__file__)

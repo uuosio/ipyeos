@@ -1,13 +1,14 @@
 import json
 from typing import Dict, List, Union, Optional
 
-from .native_modules import _packed_transaction
 from .signed_transaction import SignedTransaction
-from . import eos
-
 from .chain_exceptions import get_last_exception
-from .packer import Packer
-from .types import I64, U8, U16, U32, U64, Checksum256, Name, PrivateKey
+
+
+from .. import eos
+from ..native_modules import _packed_transaction
+from ..packer import Packer
+from ..types import I64, U8, U16, U32, U64, Checksum256, Name, PrivateKey
 
 class PackedTransaction(object):
     def __init__(self, ptr, attach = False):
