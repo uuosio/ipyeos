@@ -559,7 +559,8 @@ class ChainTester(object):
 
     def gen_transaction_ex(self, actions: List, json_str=False, compress=False):
         chain_id = self.chain.chain_id()
-        ref_block_id = self.chain.last_irreversible_block_id().to_string()
+        # ref_block_id = self.chain.last_irreversible_block_id().to_string()
+        ref_block_id = self.chain.head_block_id().to_string()
         read_only_tx = True
         for a in actions:
             if a['authorization']:

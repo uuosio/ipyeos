@@ -24,11 +24,11 @@ def test_tx():
     logger.info(SignedTransaction.to_json(raw_tx, 0))
     logger.info(SignedTransaction.to_json(raw_tx, 1))
 
-    pt = PackedTransaction.from_raw(raw_tx)
+    pt = PackedTransaction.unpack(raw_tx)
     logger.info(pt)
 
     try:
-        pt = PackedTransaction.from_raw(b'aabb')
+        pt = PackedTransaction.unpack(b'aabb')
         assert False
     except Exception as e:
         logger.info(e)

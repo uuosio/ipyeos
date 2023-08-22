@@ -25,7 +25,7 @@ class TransactionTrace:
         return self.to_json()
 
     @classmethod
-    def from_raw(cls, data: bytes):
+    def unpack(cls, data: bytes):
         ret = cls.__new__(cls)
         ret._ptr = _transaction_trace.new_ex(data)
         if not ret._ptr:

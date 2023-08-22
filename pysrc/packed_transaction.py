@@ -25,7 +25,7 @@ class PackedTransaction(object):
         return cls(signed_transaction_ptr, True)
 
     @classmethod
-    def from_raw(cls, raw_packed_tx: bytes):
+    def unpack(cls, raw_packed_tx: bytes):
         ptr = _packed_transaction.new_ex(raw_packed_tx)
         if not ptr:
             raise get_last_exception()

@@ -48,7 +48,7 @@ def on_applied_transaction_event(trace_ptr, signed_tx_ptr):
     t = TransactionTrace(trace_ptr)
     raw = t.pack()
     logger.info("%s", raw)
-    logger.info("%s", TransactionTrace.from_raw(raw))
+    logger.info("%s", TransactionTrace.unpack(raw))
 
     logger.info("%s %s %s", t.block_num(), t.is_onblock(), t.get_action_traces_size())
     if t.get_action_traces_size() > 0:
