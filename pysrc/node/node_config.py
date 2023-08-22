@@ -5,7 +5,7 @@ from typing import Optional
 
 import yaml
 
-from . import log
+from .. import log
 
 logger = log.get_logger(__name__)
 

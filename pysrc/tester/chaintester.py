@@ -13,13 +13,14 @@ from enum import Enum
 from typing import Dict, List, Optional, Union
 
 from .. import eos, log
-from .. import chainapi, node_config
+from .. import chainapi
 
 from ..core import chain
 from ..core import database
 
 from ..core.database import GeneratedTransactionObjectIndex
 from ..core.database_objects import GeneratedTransactionObject
+from ..node import node_config
 from ..packer import Decoder
 from ..types import Name
 from ..core.chain_exceptions import ChainException, TransactionException

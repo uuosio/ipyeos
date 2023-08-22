@@ -16,7 +16,8 @@ import yaml
 from multiprocessing import Process, Lock, Queue, Event
 from typing import Optional
 
-from . import args, debug, eos, helper, log, node, node_config, rpc, worker, utils
+from . import args, debug, eos, helper, log, utils
+from .node import node, node_config, rpc, worker
 from .tester import debug_server, server
 from .core.chain_exceptions import ChainException
 

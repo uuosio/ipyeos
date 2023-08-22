@@ -10,14 +10,15 @@ import time
 from enum import Enum
 from typing import Any, Dict, List, Optional, Type, Union
 
-from . import debug, eos, log, utils, node_config
-from .blocks import BlockHeader
-from .core.chain import Chain
-from .core.chain_exceptions import (DatabaseGuardException, ForkDatabaseException,
+from .. import debug, eos, log, utils
+from . import node_config
+from ..core.blocks import BlockHeader
+from ..core.chain import Chain
+from ..core.chain_exceptions import (DatabaseGuardException, ForkDatabaseException,
                                UnlinkableBlockException)
-from .core.signed_transaction import SignedTransaction
-from .packer import Decoder, Encoder
-from .types import I16, I64, U16, U32, U64, Checksum256, PublicKey, Signature
+from ..core.signed_transaction import SignedTransaction
+from ..packer import Decoder, Encoder
+from ..types import I16, I64, U16, U32, U64, Checksum256, PublicKey, Signature
 
 handshake_message = 0
 chain_size_message = 1
