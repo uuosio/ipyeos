@@ -1,9 +1,9 @@
 import json
 
-from . import eos
-from .core.chain import Chain
-from .core.chain_exceptions import get_last_exception
-from .native_modules import _snapshot
+from .. import eos
+from ..core.chain import Chain
+from ..core.chain_exceptions import get_last_exception
+from ..native_modules import _snapshot
 
 class Snapshot(object):
     def __init__(self, chain: Chain, snapshot_dir: str):

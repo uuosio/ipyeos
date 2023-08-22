@@ -8,7 +8,7 @@ from ipyeos import eos
 from ipyeos.tester import chaintester
 from ipyeos.tester.chaintester import ChainTester
 
-from ipyeos.snapshot import Snapshot
+from ipyeos.extensions.snapshot import Snapshot
 from ipyeos.core.chain_exceptions import SnapshotRequestNotFoundException, InvalidSnapshotRequestException
 
 chaintester.chain_config['contracts_console'] = True

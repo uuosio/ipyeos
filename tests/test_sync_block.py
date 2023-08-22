@@ -4,7 +4,7 @@ import time
 
 from ipyeos.tester.chaintester import ChainTester
 from ipyeos.core.block_log import BlockLog
-from ipyeos.trace_api import TraceAPI
+from ipyeos.extensions.trace_api import TraceAPI
 
 logger = logging.getLogger(__name__)
 

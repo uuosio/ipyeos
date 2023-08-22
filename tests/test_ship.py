@@ -5,8 +5,8 @@ import pytest
 
 from ipyeos import eos, log
 from ipyeos.packer import Packer, Encoder, Decoder
-from ipyeos.state_history import GetStatusRequestV0, BlockPosition, GetBlocksRequestV0, GetBlocksAckRequestV0
-from ipyeos.state_history import StateRequest, GetStatusResultV0, GetBlocksResultV0
+from ipyeos.extensions.state_history import GetStatusRequestV0, BlockPosition, GetBlocksRequestV0, GetBlocksAckRequestV0
+from ipyeos.extensions.state_history import StateRequest, GetStatusResultV0, GetBlocksResultV0
 from ipyeos.types import U32, Checksum256
 
 logger = log.get_logger(__name__)

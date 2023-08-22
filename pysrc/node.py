@@ -26,10 +26,10 @@ from .core.transaction_trace import TransactionTrace
 
 from .packer import Decoder
 
-from .snapshot import Snapshot
-from .state_history import StateHistory
+from .extensions.snapshot import Snapshot
+from .extensions.state_history import StateHistory
 from .types import Name
-from .trace_api import TraceAPI
+from .extensions.trace_api import TraceAPI
 
 logger = log.get_logger(__name__)
 

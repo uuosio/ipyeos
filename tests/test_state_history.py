@@ -12,9 +12,9 @@ import pytest
 from ipyeos.tester import chaintester
 from ipyeos.tester.chaintester import ChainTester
 
-from ipyeos.state_history import StateHistory
-from ipyeos.state_history import GetStatusRequestV0, BlockPosition, GetBlocksRequestV0, GetBlocksAckRequestV0
-from ipyeos.state_history import StateRequest, GetStatusResultV0, GetBlocksResultV0
+from ipyeos.extensions.state_history import StateHistory
+from ipyeos.extensions.state_history import GetStatusRequestV0, BlockPosition, GetBlocksRequestV0, GetBlocksAckRequestV0
+from ipyeos.extensions.state_history import StateRequest, GetStatusResultV0, GetBlocksResultV0
 from ipyeos.core.chain_exceptions import SnapshotRequestNotFoundException, InvalidSnapshotRequestException
 
 from ipyeos import eos, log
