@@ -9,9 +9,9 @@ from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 
-from . import exec_result, helper, log
-from . import node_config
-from .uvicorn_server import UvicornServer
+from .. import exec_result, helper, log
+from .. import node_config
+from ..uvicorn_server import UvicornServer
 
 logger = log.get_logger(__name__)
 

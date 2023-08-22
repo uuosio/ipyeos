@@ -16,7 +16,8 @@ import yaml
 from multiprocessing import Process, Lock, Queue, Event
 from typing import Optional
 
-from . import args, debug, debug_server, eos, helper, log, node, node_config, rpc, server, worker, utils
+from . import args, debug, eos, helper, log, node, node_config, rpc, worker, utils
+from .tester import debug_server, server
 from .core.chain_exceptions import ChainException
 
 if not 'RUN_IPYEOS' in os.environ:

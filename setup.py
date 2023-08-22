@@ -72,7 +72,8 @@ ext_modules = [
 
 packages=[
     'ipyeos',
-    'ipyeos.interfaces',
+    'ipyeos.tester',
+    'ipyeos.tester.interfaces',
     'ipyeos.tests',
     'ipyeos.tests.contracts',
     'ipyeos.tests.contracts.micropython',
@@ -94,7 +95,7 @@ setup(
     package_dir={
         'ipyeos': 'pysrc',
         'ipyeos.core': 'pysrc/core',
-        'ipyeos.interfaces': 'pysrc/interfaces',
+        'ipyeos.tester.interfaces': 'pysrc/tester/interfaces',
         'ipyeos.tests': 'pysrc/tests',
         'ipyeos.tests.contracts': 'pysrc/tester/contracts',
         'ipyeos.tester': 'pysrc/tester',

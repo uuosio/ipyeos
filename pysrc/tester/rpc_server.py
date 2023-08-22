@@ -7,11 +7,12 @@ from fastapi import FastAPI, Request
 from fastapi.responses import PlainTextResponse
 from typing import Dict, List, NewType, Optional
 
-from .uvicorn_server import UvicornServer
+from ..uvicorn_server import UvicornServer
 
-from . import eos
 from .interfaces.ttypes import Action, ActionArguments
-from . import log
+
+from .. import eos
+from .. import log
 
 i32 = NewType('i32', int)
 i64 = NewType('i64', int)
