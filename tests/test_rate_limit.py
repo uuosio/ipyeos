@@ -1,6 +1,6 @@
 import asyncio
 import pytest
-from ipyeos import rate_limit
+from ipyeos.bases import rate_limit
 
 def int_to_ip(n):
     return ".".join(str((n >> (i << 3)) & 0xFF) for i in reversed(range(4)))

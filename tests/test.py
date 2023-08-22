@@ -7,16 +7,17 @@ import pytest
 import time
 import tempfile
 
-from ipyeos import eos, log
+from ipyeos import eos
+from ipyeos.bases import log
 from ipyeos.tester import chaintester
 from ipyeos.tester.chaintester import ChainTester
 
 from ipyeos.core.chain_exceptions import BlockValidateException, ChainException, ForkDatabaseException, get_last_exception
-from ipyeos.types import PublicKey
+from ipyeos.bases.types import PublicKey
 from ipyeos.core.database_objects import KeyWeight, Authority
 from ipyeos.core.database import PermissionObjectIndex, GlobalPropertyObjectIndex
 from ipyeos.core.block_log import BlockLog
-from ipyeos.trace_api import TraceAPI
+from ipyeos.extensions.trace_api import TraceAPI
 
 chaintester.chain_config['contracts_console'] = True
 dir_name = os.path.dirname(__file__)

@@ -8,9 +8,11 @@ import yaml
 import pytest
 import tempfile
 
-from ipyeos import eos, net, log
+from ipyeos import eos
+from ipyeos.node import net
+from ipyeos.bases import log
 from ipyeos.tester.chaintester import ChainTester
-from ipyeos.types import *
+from ipyeos.bases.types import *
 from ipyeos.signed_transaction import SignedTransaction
 from ipyeos import eos, net, node_config
 from ipyeos.net import HandshakeMessage, ChainSizeMessage, GoAwayMessage, GoAwayReason, TimeMessage
@@ -23,7 +25,7 @@ from ipyeos.packer import Encoder, Decoder
 from ipyeos import utils
 from ipyeos.blocks import BlockHeader
 from ipyeos.structs import Symbol, Asset, Transfer
-from ipyeos.trace_api import TraceAPI
+from ipyeos.extensions.trace_api import TraceAPI
 from ipyeos.core.database import TableIdObjectIndex, KeyValueObjectIndex
 from ipyeos.node import Node
 

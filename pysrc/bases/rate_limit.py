@@ -7,8 +7,10 @@ from aiocache import cached, Cache
 from aiocache.serializers import PickleSerializer
 from queue import PriorityQueue
 
-from . import eos, log
+from . import log
 from .multi_index import key_u64_value_double_index, secondary_double_index
+
+from .. import eos
 
 cache = Cache(Cache.MEMORY, serializer=PickleSerializer())
 

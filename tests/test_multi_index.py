@@ -1,6 +1,6 @@
 import time
-from ipyeos import log
-from ipyeos.multi_index import key_u64_value_double_index, secondary_double_index
+from ipyeos.bases import log
+from ipyeos.bases.multi_index import key_u64_value_double_index, secondary_double_index
 
 logger = log.get_logger(__name__)
 

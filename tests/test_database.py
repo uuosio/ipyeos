@@ -9,7 +9,8 @@ import time
 test_dir = os.path.dirname(__file__)
 sys.path.append(os.path.join(test_dir, '..'))
 
-from ipyeos import eos, log
+from ipyeos import eos
+from ipyeos.bases import log
 from ipyeos.tester import chaintester
 from ipyeos.core import database
 
@@ -17,10 +18,10 @@ from ipyeos.core.database_objects import PermissionObject
 from ipyeos.core.database import *
 from ipyeos.core.chain_exceptions import TransactionException, ChainException, SetExactCodeException
 from ipyeos.tester.chaintester import ChainTester
-from ipyeos.types import PublicKey
-from ipyeos.packer import Encoder, Decoder
-from ipyeos.structs import KeyWeight, Authority
-from ipyeos.types import F128
+from ipyeos.bases.types import PublicKey
+from ipyeos.bases.packer import Encoder, Decoder
+from ipyeos.bases.structs import KeyWeight, Authority
+from ipyeos.bases.types import F128
 
 chaintester.chain_config['contracts_console'] = True
 

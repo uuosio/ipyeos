@@ -5,7 +5,8 @@ import sys
 import platform
 import time
 
-from ipyeos import eos, log
+from ipyeos import eos
+from ipyeos.bases import log
 from ipyeos.tester import chaintester
 from ipyeos.tester.chaintester import ChainTester
 

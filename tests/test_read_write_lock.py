@@ -1,6 +1,6 @@
 import time
 import multiprocessing as mp
-from ipyeos.read_write_lock import ReadWriteLock
+from ipyeos.bases.read_write_lock import ReadWriteLock
 
 
 def read_lock_worker(proc_id):

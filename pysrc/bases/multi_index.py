@@ -1,6 +1,7 @@
 from typing import List, Tuple, Optional
-from .native_modules import _multi_index
 from .types import U64, F64
+
+from ..native_modules import _multi_index
 
 sort_type_u64 = 0
 sort_type_f64 = 1

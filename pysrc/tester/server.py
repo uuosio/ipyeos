@@ -35,7 +35,8 @@ from .interfaces.ttypes import (Action, ActionArguments, FindPrimaryReturn,
                                 LowerBoundUpperBoundReturn, NextPreviousReturn,
                                 Uint64)
 
-from .. import eos, log, stop_process
+from .. import eos
+from ..bases import log, stop_process
 from ..native_modules import _chainapi, _eos, _vm_api
 from ..core.chain_exceptions import ChainException, TransactionException
 from ..chainapi import ChainApi

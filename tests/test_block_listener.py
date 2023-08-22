@@ -4,7 +4,7 @@ import secrets
 import json
 import time
 
-from ipyeos import log
+from ipyeos.bases import log
 from ipyeos.tester.chaintester import ChainTester
 from ipyeos.core.block_state import BlockState
 from ipyeos.core.transaction_trace import TransactionTrace

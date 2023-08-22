@@ -8,7 +8,7 @@ import subprocess
 import sys
 import sysconfig
 
-from . import args, log, stop_process
+from .bases import args, log, stop_process
 
 logger = log.get_logger(__name__)
 

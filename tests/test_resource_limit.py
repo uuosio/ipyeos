@@ -4,10 +4,12 @@ import secrets
 import json
 import time
 
-from ipyeos.types import *
-from ipyeos import eos, net, log
+from ipyeos.bases.types import *
+from ipyeos import eos
+from ipyeos.bases import log
+from ipyeos.node import net
 from ipyeos.tester.chaintester import ChainTester
-from ipyeos.resource_limit import ResourceLimit
+from ipyeos.core.resource_limit import ResourceLimit
 
 logger = log.get_logger(__name__)
 

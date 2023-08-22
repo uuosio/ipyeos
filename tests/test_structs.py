@@ -1,9 +1,10 @@
 import json
 import time
-from ipyeos import log, eos
-from ipyeos.net import HandshakeMessage
-from ipyeos.packer import Encoder, Decoder
-from ipyeos.structs import Symbol, Asset, Transfer
+from ipyeos.bases import log
+from ipyeos import eos
+from ipyeos.node.net import HandshakeMessage
+from ipyeos.bases.packer import Encoder, Decoder
+from ipyeos.bases.structs import Symbol, Asset, Transfer
 
 logger = log.get_logger(__name__)
 

@@ -7,8 +7,8 @@ from .chain_exceptions import get_last_exception
 
 from .. import eos
 from ..native_modules import _packed_transaction
-from ..packer import Packer
-from ..types import I64, U8, U16, U32, U64, Checksum256, Name, PrivateKey
+from ..bases.packer import Packer
+from ..bases.types import I64, U8, U16, U32, U64, Checksum256, Name, PrivateKey
 
 class PackedTransaction(object):
     def __init__(self, ptr, attach = False):

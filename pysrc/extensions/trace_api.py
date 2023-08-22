@@ -1,6 +1,6 @@
 from ..native_modules import _trace_api
 from ..core.chain_exceptions import get_last_exception
-from ..types import I32, U32
+from ..bases.types import I32, U32
 
 
 class TraceAPI(object):

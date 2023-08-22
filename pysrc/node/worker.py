@@ -18,8 +18,9 @@ from multiprocessing import Process, Condition, Value, Lock, Event
 
 from . import net, node
 
-from .. import eos, log, rate_limit
-from ..uvicorn_server import UvicornServer
+from .. import eos
+from ..bases import log, rate_limit
+from ..bases.uvicorn_server import UvicornServer
 from ..core.chain_exceptions import BlockValidateException, DatabaseGuardException, ChainException
 
 logger = log.get_logger(__name__)

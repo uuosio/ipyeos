@@ -1,7 +1,7 @@
 import struct
 from typing import Any, List, Type, Union
 
-from . import eos
+from .. import eos
 from .types import (I16, I64, U8, U16, U32, U64, U128, U256, Checksum256, Name,
                     PublicKey)
 

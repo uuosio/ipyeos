@@ -1,4 +1,4 @@
-from .native_modules import _read_write_lock
+from ..native_modules import _read_write_lock
 
 class ReadWriteLock(object):
     def __init__(self, name):

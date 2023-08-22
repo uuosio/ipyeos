@@ -1,12 +1,12 @@
-from .. import log
+from ..bases import log
 from ..core import chain
 from ..core.chain import Chain
 from ..core.chain_exceptions import get_last_exception
 
 from ..native_modules import _state_history
 
-from ..types import U32, U64, Checksum256
-from ..packer import Packer, Encoder, Decoder
+from ..bases.types import U32, U64, Checksum256
+from ..bases.packer import Packer, Encoder, Decoder
 
 logger = log.get_logger(__name__)
 

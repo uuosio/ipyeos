@@ -5,7 +5,7 @@ import requests
 import time
 
 from ipyeos import eos
-from ipyeos.types import PrivateKey
+from ipyeos.bases.types import PrivateKey
 from ipyeos.signed_transaction import SignedTransaction
 from ipyeos.core.chain_exceptions import AssertException
 

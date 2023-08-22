@@ -17,9 +17,10 @@ from ipyeos.extensions.state_history import GetStatusRequestV0, BlockPosition, G
 from ipyeos.extensions.state_history import StateRequest, GetStatusResultV0, GetBlocksResultV0
 from ipyeos.core.chain_exceptions import SnapshotRequestNotFoundException, InvalidSnapshotRequestException
 
-from ipyeos import eos, log
-from ipyeos.packer import Packer, Encoder, Decoder
-from ipyeos.types import U32, Checksum256
+from ipyeos import eos
+from ipyeos.bases import log
+from ipyeos.bases.packer import Packer, Encoder, Decoder
+from ipyeos.bases.types import U32, Checksum256
 
 
 chaintester.chain_config['contracts_console'] = True
@@ -39,7 +40,7 @@ def deploy_contract(tester, package_name):
         abi = f.read()
     tester.deploy_contract('hello', code, abi)
 
-from ipyeos.packer import Packer, Encoder, Decoder
+from ipyeos.bases.packer import Packer, Encoder, Decoder
 from ipyeos.core.database import AccountObject, AccountMetadataObject, CodeObject
 
 def parse_deltas(deltas):
