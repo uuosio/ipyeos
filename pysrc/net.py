@@ -10,7 +10,7 @@ import time
 from enum import Enum
 from typing import Any, Dict, List, Optional, Type, Union
 
-from . import debug, eos, log, node_config
+from . import debug, eos, log, utils, node_config
 from .blocks import BlockHeader
 from .chain import Chain
 from .chain_exceptions import (DatabaseGuardException, ForkDatabaseException,
@@ -751,20 +751,6 @@ class PackedTransactionMessage(NetMessage):
 #                                     signed_block,         // which = 7
 #                                     packed_transaction>;  // which = 8
 
-class SyncBlockInfo(object):
-    def __init__(self, conn = None, task = None, start_block = 0, end_block = 0):
-        self.conn = conn
-        self.task = task
-        self.start_block = start_block
-        self.end_block = end_block
-        self.current_block = start_block
-
-    def __repr__(self):
-        return f'SyncBlockInfo(conn={self.conn}, start_block={self.start_block}, end_block={self.end_block}, current_block={self.current_block})'
-
-    def __str__(self):
-        return self.__repr__()
-
 class Connection(object):
     def __init__(self, chain: Chain, rwlock = None, peer: str = ''):
         self.peer = peer
@@ -777,6 +763,8 @@ class Connection(object):
         self.heart_beat_task = None
         self.last_handshake = None
         self.lock = asyncio.Lock()
+        self.sync_request_task = None
+        self.sync_task = None
 
         self.has_producer = node_config.get_producer_config() is not None
 
@@ -985,7 +973,7 @@ class Connection(object):
     async def heart_beat(self):
         while not eos.should_exit():
             try:
-                await self.sleep(10.0)
+                await self.sleep(30.0)
                 self.logger.info("+++++++++++=heart beat")
                 if not self.connected:
                     return
@@ -1102,7 +1090,7 @@ class Connection(object):
         else:
             self.logger.info(f"block speed: {block_sync_speed} b/s, current block num: {received_block_num}, current block time: {header.block_time()}")
 
-    def push_block(self, raw_block, return_statistics):
+    def push_block(self, raw_block: bytes, return_statistics: bool = False):
         if self.has_producer:
             if self.rwlock:
                 with self.rwlock.wlock():
@@ -1120,35 +1108,220 @@ class Connection(object):
                 if statistics:
                     self.logger.info(statistics)
 
+
+    async def on_signed_block_message(self, raw_msg: bytes):
+        header = BlockHeader.unpack_bytes(raw_msg)
+        received_block_num = header.block_num()
+        head_block_num = self.chain.head_block_num()
+        # self.logger.info(f"++++++++head_block_num: {head_block_num}, received_block_num: {received_block_num}, received_block_time: {header.block_time()}")
+        # if received_block_num % 100 == 0:
+        #     self.logger.info("++++++++head_block_num: %s, received_block_num: %s", head_block_num, received_block_num)
+        if head_block_num >= received_block_num:
+            received_block_id = header.calculate_id()
+            block_id = self.chain.get_block_id_for_num(received_block_num)
+            if block_id == received_block_id:
+                self.logger.info(f"++++++++receive duplicated block: head_block_num: {head_block_num}, received_block_num: {received_block_num}, received block_id: {received_block_id}")
+                return True
+            else:
+                self.logger.info(f"++++++++receive invalid block, maybe fork happened: {received_block_num}, block_id: {block_id}, received block_id: {received_block_id}")
+        elif head_block_num +1 < received_block_num:
+            self.logger.error(f"++++++++++invalid incomming block number: expected: {head_block_num + 1}: received: {received_block_num}")
+            if not await self.send_reset_sync_request_message():
+                return False
+            req_trx = OrderedIds(IdListModes.none, 0, [])
+            req_blocks = OrderedIds(IdListModes.catch_up, 0, [self.chain.head_block_id()])
+            msg = RequestMessage(req_trx, req_blocks)
+            self.logger.info(f'send request message: {msg}')
+            return await self.send_message(msg)
+
+            # if not await self.send_handshake_message():
+            #     return False
+            # return True
+        try:
+            if time.time() - header.block_time_ms() / 1000 < 60:
+                return_statistics = True
+            else:
+                return_statistics = False
+
+            self.push_block(raw_msg, return_statistics)
+
+            await asyncio.sleep(0.0)
+        # unlinkable_block_exception
+        except UnlinkableBlockException as e:
+            if not await self.send_reset_sync_request_message():
+                return False
+            received_block_id = header.calculate_id()
+            self.logger.warning(f"++++++++receive unlinkable block: {received_block_num}, received_block_id: {received_block_id}")
+            # return await self.resync_from_irreversible_block_num_plus_one()
+            req_trx = OrderedIds(IdListModes.none, 0, [])
+            req_blocks = OrderedIds(IdListModes.catch_up, 0, [])
+            msg = RequestMessage(req_trx, req_blocks)
+            self.logger.info(f'send request message: {msg}')
+            return await self.send_message(msg)
+        except ForkDatabaseException as e:
+            # fork_database_exception
+            self.logger.exception(e)
+            if e.json()['stack'][0]['format'].startswith('we already know about this block'):
+                self.logger.warning(f"++++++++receive duplicated block: {received_block_num}, block_id: {block_id}")
+                return True
+            else:
+                eos.exit()
+                return False
+        except DatabaseGuardException as e:
+            self.logger.fatal(f"%s", e)
+            eos.exit()
+            return False
+        except Exception as e:
+            self.logger.fatal(f"%s", e)
+            self.logger.exception(e)
+            eos.exit()
+            return False
+
+        self.calculate_block_sync_info(header, len(raw_msg))
+
+        # self.logger.info(f"++++++++++self.last_handshake.head_num: {self.last_handshake.head_num}, received_block_num: {received_block_num}")
+        if self.last_handshake and self.last_handshake.head_num == received_block_num:
+            if not await self.send_handshake_message():
+                return False
+
+        if self.last_sync_request and self.last_sync_request.end_block == received_block_num:
+            assert self.last_handshake, "last_handshake is None"
+            if self.last_handshake.last_irreversible_block_num > received_block_num:
+                return await self.send_sync_request_message()
+
+            if not await self.send_handshake_message():
+                return False
+
+            # send catch up request
+            self.last_sync_request = None #SyncRequestMessage(0, 0)
+
+            req_trx = OrderedIds(IdListModes.none, 0, [])
+            req_blocks = OrderedIds(IdListModes.catch_up, 0, [self.chain.head_block_id()])
+            msg = RequestMessage(req_trx, req_blocks)
+            self.logger.info(f'send request message: {msg}')
+            return await self.send_message(msg)
+        # elif self.last_handshake and self.last_handshake.head_num == received_block_num:
+        #     if not await self.send_handshake_message():
+        #         return False
+
+        return True
+
+    async def handle_sync_request_message(self, message: SyncRequestMessage):
+        try:
+            for num in range(message.start_block, message.end_block+1):
+                raw_block = self.chain.fetch_block_by_number(num)
+                if raw_block:
+                    if not await self.send_message(SignedBlockMessage(raw_block)):
+                        return False
+                else:
+                    self.logger.info(f"+++++++++no block for num: {num}")
+                    break
+        except asyncio.exceptions.CancelledError:
+            self.logger.info(f"handle_sync_request_message CancelledError")
+        self.sync_request_task = None
+
+    async def on_handshake_message(self, message: HandshakeMessage):
+        self.last_handshake = message
+        self.logger.info("received handshake message: %s", message)
+        if self.chain.head_block_num() < message.last_irreversible_block_num:
+            if not await self.send_sync_request_message():
+                return False
+        elif self.chain.head_block_id() == message.head_id:
+            return True
+        elif 0 < message.head_num - self.chain.head_block_num() < default_block_latency:
+            req_trx = OrderedIds(IdListModes.none, 0, [])
+            req_blocks = OrderedIds(IdListModes.catch_up, 0, [self.chain.head_block_id()])
+            msg = RequestMessage(req_trx, req_blocks)
+            self.logger.info(f'send request message: {msg}')
+            return await self.send_message(msg)
+        elif self.chain.last_irreversible_block_num() > message.head_num + default_block_latency:
+            # notice_message note;
+            # note.known_trx.pending = chain_info.lib_num;
+            # note.known_trx.mode = last_irr_catch_up;
+            # note.known_blocks.mode = last_irr_catch_up;
+            # note.known_blocks.pending = chain_info.head_num;
+            # note.known_blocks.ids.push_back(chain_info.head_id);
+            # if (c->protocol_version >= proto_block_range) {
+            # // begin, more efficient to encode a block num instead of retrieving actual block id
+            # note.known_blocks.ids.push_back(make_block_id(cc.earliest_available_block_num()));
+            # }
+            known_trx = OrderedIds(IdListModes.last_irr_catch_up, self.chain.last_irreversible_block_num(), [])
+            know_blocks = OrderedIds(IdListModes.last_irr_catch_up, self.chain.head_block_num(), [self.chain.head_block_id()])
+            msg = NoticeMessage(known_trx, know_blocks)
+            self.logger.info(f'send notice message: {msg}')
+            return await self.send_message(msg)
+        elif self.chain.head_block_num() > message.head_num + default_block_latency:
+            ahead_num = self.chain.head_block_num() - message.head_num
+            self.logger.info(f"block num is ahead of peer by {ahead_num}")
+            # notice_message note;
+            # note.known_trx.mode = none;
+            # note.known_blocks.mode = catch_up;
+            # note.known_blocks.pending = chain_info.head_num;
+            # note.known_blocks.ids.push_back(chain_info.head_id);
+            # if (c->protocol_version >= proto_block_range) {
+            # // begin, more efficient to encode a block num instead of retrieving actual block id
+            # note.known_blocks.ids.push_back(make_block_id(cc.earliest_available_block_num()));
+            # }
+            known_trx = OrderedIds(IdListModes.none, 0, [])
+            ids = [self.chain.head_block_id(), utils.make_block_id(self.chain.earliest_available_block_num())]
+            know_blocks = OrderedIds(IdListModes.catch_up, self.chain.head_block_num(), ids)
+            msg = NoticeMessage(known_trx, know_blocks)
+            self.logger.info(f'send notice message: {msg}')
+            return await self.send_message(msg)
+        return True
+
+    async def on_notice_message(self, message: NoticeMessage):
+        if message.known_blocks.mode == IdListModes.catch_up:
+            pending = message.known_blocks.pending
+            try:
+                block_id = message.known_blocks.ids[0]
+                # ret = self.chain.fetch_block_by_id(block_id.to_string())
+                # self.logger.info(f"++++++++++fetch block by id: {block_id}, ret: {ret}")
+            except IndexError:
+                msg = GoAwayMessage(GoAwayReasonEnum.no_reason, "no blocks in notice message")
+                for listener in self.goway_listeners:
+                    listener(self, msg)
+                await self.send_message(msg)
+                return False
+
+            req_trx = OrderedIds(IdListModes.none, 0, [])
+            req_blocks = OrderedIds(IdListModes.catch_up, 0, [self.chain.head_block_id()])
+            msg = RequestMessage(req_trx, req_blocks)
+            self.logger.info(f'send request message: {msg}')
+            return await self.send_message(msg)
+
+            my_block_id = self.chain.get_block_id_for_num(pending)
+            if my_block_id and my_block_id == block_id:
+                return await self.send_handshake_message()
+            else:
+                req_trx = OrderedIds(IdListModes.none, 0, [])
+                req_blocks = OrderedIds(IdListModes.catch_up, 0, [self.chain.head_block_id()])
+                msg = RequestMessage(req_trx, req_blocks)
+                self.logger.info(f'{msg}')
+                return await self.send_message(msg)
+        elif message.known_blocks.mode  == IdListModes.last_irr_catch_up:
+            pending = message.known_blocks.pending
+            start_block = self.chain.head_block_num() + 1
+            if start_block > pending:
+                self.logger.info(f"++++++++++already in sync, start_block: {start_block}, pending: {pending}")
+                return True
+            msg = SyncRequestMessage(0, 0)
+            self.logger.info('+++++reset sync request before sending sync request when process notice_message')
+            if not await self.send_message(msg):
+                return False
+            return await self.send_sync_request_message(start_block, pending)
+        return True
+
+    async def on_request_message(self, message: RequestMessage):
+        return True
+
     async def _handle_message(self):
         tp, raw_msg = await self.read_message()
         if not raw_msg or eos.should_exit():
             return False
         if tp == handshake_message:
             message = HandshakeMessage.unpack_bytes(raw_msg)
-            self.last_handshake = message
-            self.logger.info("received handshake message: %s", message)
-            if self.chain.head_block_num() < message.last_irreversible_block_num:
-                if not await self.send_sync_request_message():
-                    return False
-            elif self.chain.head_block_id() == message.head_id:
-                return True
-            elif 0 < message.head_num - self.chain.head_block_num() < default_block_latency:
-                req_trx = OrderedIds(IdListModes.none, 0, [])
-                req_blocks = OrderedIds(IdListModes.catch_up, 0, [self.chain.head_block_id()])
-                msg = RequestMessage(req_trx, req_blocks)
-                self.logger.info(f'send request message: {msg}')
-                return await self.send_message(msg)
-            elif self.chain.head_block_num() > message.head_num:
-                ahead_num = self.chain.head_block_num() - message.head_num
-                self.logger.info(f"block num is ahead of peer by {ahead_num}")
-                return True
-            # else:
-            #     # last_irr_catch_up catch_up
-            #     req_trx = OrderedIds(IdListModes.none, 0, [])
-            #     req_blocks = OrderedIds(IdListModes.catch_up, self.chain.head_block_num() + 1, [])
-            #     msg = RequestMessage(req_trx, req_blocks)
-            #     self.logger.info(msg)
+            return await self.on_handshake_message(message)
         elif tp == go_away_message:
             message = GoAwayMessage.unpack_bytes(raw_msg)
             self.logger.info(message)
@@ -1159,103 +1332,9 @@ class Connection(object):
         elif tp == request_message:
             message = RequestMessage.unpack_bytes(raw_msg)
             self.logger.info(message)
+            return await self.on_request_message(message)
         elif tp == signed_block_message:
-            header = BlockHeader.unpack_bytes(raw_msg)
-            received_block_num = header.block_num()
-            head_block_num = self.chain.head_block_num()
-            # self.logger.info(f"++++++++head_block_num: {head_block_num}, received_block_num: {received_block_num}, received_block_time: {header.block_time()}")
-            # if received_block_num % 100 == 0:
-            #     self.logger.info("++++++++head_block_num: %s, received_block_num: %s", head_block_num, received_block_num)
-            if head_block_num >= received_block_num:
-                received_block_id = header.calculate_id()
-                block_id = self.chain.get_block_id_for_num(received_block_num)
-                if block_id == received_block_id:
-                    self.logger.info(f"++++++++receive duplicated block: head_block_num: {head_block_num}, received_block_num: {received_block_num}, received block_id: {received_block_id}")
-                    return True
-                else:
-                    self.logger.info(f"++++++++receive invalid block, maybe fork happened: {received_block_num}, block_id: {block_id}, received block_id: {received_block_id}")
-            elif head_block_num +1 < received_block_num:
-                self.logger.error(f"++++++++++invalid incomming block number: expected: {head_block_num + 1}: received: {received_block_num}")
-                if not await self.send_reset_sync_request_message():
-                    return False
-                req_trx = OrderedIds(IdListModes.none, 0, [])
-                req_blocks = OrderedIds(IdListModes.catch_up, 0, [self.chain.head_block_id()])
-                msg = RequestMessage(req_trx, req_blocks)
-                self.logger.info(f'send request message: {msg}')
-                return await self.send_message(msg)
-
-                # if not await self.send_handshake_message():
-                #     return False
-                # return True
-            try:
-                if time.time() - header.block_time_ms() / 1000 < 60:
-                    return_statistics = True
-                else:
-                    return_statistics = False
-
-                self.push_block(raw_msg, return_statistics)
-
-                await asyncio.sleep(0.0)
-            # unlinkable_block_exception
-            except UnlinkableBlockException as e:
-                if not await self.send_reset_sync_request_message():
-                    return False
-                received_block_id = header.calculate_id()
-                self.logger.warning(f"++++++++receive unlinkable block: {received_block_num}, received_block_id: {received_block_id}")
-                # return await self.resync_from_irreversible_block_num_plus_one()
-                req_trx = OrderedIds(IdListModes.none, 0, [])
-                req_blocks = OrderedIds(IdListModes.catch_up, 0, [])
-                msg = RequestMessage(req_trx, req_blocks)
-                self.logger.info(f'send request message: {msg}')
-                return await self.send_message(msg)
-            except ForkDatabaseException as e:
-                # fork_database_exception
-                self.logger.exception(e)
-                if e.json()['stack'][0]['format'].startswith('we already know about this block'):
-                    self.logger.warning(f"++++++++receive duplicated block: {received_block_num}, block_id: {block_id}")
-                    return True
-                else:
-                    eos.exit()
-                    return False
-            except DatabaseGuardException as e:
-                self.logger.fatal(f"%s", e)
-                eos.exit()
-                return False
-            except Exception as e:
-                self.logger.fatal(f"%s", e)
-                self.logger.exception(e)
-                eos.exit()
-                return False
-
-            self.calculate_block_sync_info(header, len(raw_msg))
-
-            # self.logger.info(f"++++++++++self.last_handshake.head_num: {self.last_handshake.head_num}, received_block_num: {received_block_num}")
-            if self.last_handshake and self.last_handshake.head_num == received_block_num:
-                if not await self.send_handshake_message():
-                    return False
-
-            if self.last_sync_request and self.last_sync_request.end_block == received_block_num:
-                assert self.last_handshake, "last_handshake is None"
-                if self.last_handshake.last_irreversible_block_num > received_block_num:
-                    return await self.send_sync_request_message()
-
-                if not await self.send_handshake_message():
-                    return False
-
-                # send catch up request
-                self.last_sync_request = None #SyncRequestMessage(0, 0)
-
-                req_trx = OrderedIds(IdListModes.none, 0, [])
-                req_blocks = OrderedIds(IdListModes.catch_up, 0, [self.chain.head_block_id()])
-                msg = RequestMessage(req_trx, req_blocks)
-                self.logger.info(f'send request message: {msg}')
-                return await self.send_message(msg)
-            # elif self.last_handshake and self.last_handshake.head_num == received_block_num:
-            #     if not await self.send_handshake_message():
-            #         return False
-
-            return True
-
+            return await self.on_signed_block_message(raw_msg)
         elif tp == time_message:
             message = TimeMessage.unpack_bytes(raw_msg)
             # self.logger.info(message)
@@ -1263,50 +1342,14 @@ class Connection(object):
         elif tp == sync_request_message:
             message = SyncRequestMessage.unpack_bytes(raw_msg)
             self.logger.info(message)
+            if self.sync_request_task:
+                self.sync_request_task.cancel()
+            self.sync_request_task = asyncio.create_task(self.handle_sync_request_message(message))
             #TODO: create a task to send blocks
         elif tp == notice_message:
             message = NoticeMessage.unpack_bytes(raw_msg)
             self.logger.info(f"receive notice message: {message}")
-
-            if message.known_blocks.mode == IdListModes.catch_up:
-                pending = message.known_blocks.pending
-                try:
-                    block_id = message.known_blocks.ids[0]
-                    # ret = self.chain.fetch_block_by_id(block_id.to_string())
-                    # self.logger.info(f"++++++++++fetch block by id: {block_id}, ret: {ret}")
-                except IndexError:
-                    msg = GoAwayMessage(GoAwayReasonEnum.no_reason, "no blocks in notice message")
-                    for listener in self.goway_listeners:
-                        listener(self, msg)
-                    await self.send_message(msg)
-                    return False
-
-                req_trx = OrderedIds(IdListModes.none, 0, [])
-                req_blocks = OrderedIds(IdListModes.catch_up, 0, [self.chain.head_block_id()])
-                msg = RequestMessage(req_trx, req_blocks)
-                self.logger.info(f'send request message: {msg}')
-                return await self.send_message(msg)
-
-                my_block_id = self.chain.get_block_id_for_num(pending)
-                if my_block_id and my_block_id == block_id:
-                    return await self.send_handshake_message()
-                else:
-                    req_trx = OrderedIds(IdListModes.none, 0, [])
-                    req_blocks = OrderedIds(IdListModes.catch_up, 0, [self.chain.head_block_id()])
-                    msg = RequestMessage(req_trx, req_blocks)
-                    self.logger.info(f'{msg}')
-                    return await self.send_message(msg)
-            elif message.known_blocks.mode  == IdListModes.last_irr_catch_up:
-                pending = message.known_blocks.pending
-                start_block = self.chain.head_block_num() + 1
-                if start_block > pending:
-                    self.logger.info(f"++++++++++already in sync, start_block: {start_block}, pending: {pending}")
-                    return True
-                msg = SyncRequestMessage(0, 0)
-                self.logger.info('+++++reset sync request before sending sync request when process notice_message')
-                if not await self.send_message(msg):
-                    return False
-                return await self.send_sync_request_message(start_block, pending)
+            return await self.on_notice_message(message)
         elif tp == packed_transaction_message:
             # TODO: handle packed transaction message
             # message = PackedTransactionMessage.unpack_bytes(raw_msg)
@@ -1393,8 +1436,8 @@ class OutConnection(Connection):
                 return self
             return None
         except Exception as e:
-            self.logger.info(f'connect to error: %s', e)
-            # self.logger.exception(e)
+            self.logger.info(f'connect to error:')
+            self.logger.exception(e)
         return None
 
     async def connect(self):
