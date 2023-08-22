@@ -7,7 +7,6 @@ import sys
 import sysconfig
 
 from . import run
-from . import core
 
 __version__ = "0.4.9"
 
