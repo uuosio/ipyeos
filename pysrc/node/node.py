@@ -16,7 +16,7 @@ import yaml
 
 from . import net, node_config
 
-from .. import chainapi
+from . import chainapi
 from .. import eos
 from ..bases import log
 

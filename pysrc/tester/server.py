@@ -39,7 +39,7 @@ from .. import eos
 from ..bases import log, stop_process
 from ..native_modules import _chainapi, _eos, _vm_api
 from ..core.chain_exceptions import ChainException, TransactionException
-from ..chainapi import ChainApi
+from ..node.chainapi import ChainApi
 
 
 chaintester.chain_config['contracts_console'] = True
