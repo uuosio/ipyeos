@@ -59,18 +59,22 @@ class Connection(object):
         self.sync_request_task = None
         self.sync_task = None
 
-        self.has_producer = node_config.get_producer_config() is not None
-
-        net_config = node_config.get_net_config()
         try:
+            self.has_producer = node_config.get_producer_config()
+        except:
+            self.has_producer = False
+
+        try:
+            net_config = node_config.get_net_config()
             self.sync_fetch_span = net_config['sync_fetch_span']
-        except KeyError:
+        except:
             self.sync_fetch_span = default_sync_fetch_span
 
         try:
+            net_config = node_config.get_net_config()
             socks5_proxy = net_config['socks5_proxy']
             self.proxy_host, self.proxy_port = socks5_proxy.split(':')
-        except KeyError:
+        except:
             self.proxy_host, self.proxy_port = None, None
         
         self.logger = logging.getLogger(peer)
@@ -119,7 +123,8 @@ class Connection(object):
             self.heart_beat_task = None
         self.connected = False
         self.closed = True
-        self.writer.close()
+        if self.writer:
+            self.writer.close()
         self.reader = None
 
     async def sleep(self, seconds: float):

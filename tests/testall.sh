@@ -12,6 +12,6 @@ eostest test_database.py  || exit 1
 eostest test_transaction.py  || exit 1
 eostest test_multi_index.py  || exit 1
 eostest test_types.py  || exit 1
-# eostest test_net.py  || exit 1
+eostest test_net.py  || exit 1
 eostest test_utils.py  || exit 1
 eostest test_snapshot.py  || exit 1
