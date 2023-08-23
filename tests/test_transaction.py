@@ -21,6 +21,7 @@ def test_tx():
     priv_key = PrivateKey.from_base58('5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3')
     tx.sign(priv_key, Checksum256.empty())
     logger.info(tx.id())
+    assert tx.first_authorizer() == 'eosio'
 
     raw_tx = tx.pack(0)
     logger.info(raw_tx)
@@ -32,6 +33,7 @@ def test_tx():
     logger.info(tx.to_json(1))
 
     pt = PackedTransaction.unpack(raw_tx)
+    assert pt.first_authorizer() == 'eosio'
     logger.info(pt)
     logger.info(pt.get_signed_transaction())
 

@@ -17,6 +17,7 @@ cdef extern from "_ipyeos.hpp":
         pass
 
     ctypedef struct packed_transaction_proxy:
+        string first_authorizer()
         signed_transaction_proxy *get_signed_transaction()
         vector[char] pack()
         string to_json()
@@ -45,6 +46,9 @@ def new_from_signed_transaction(uint64_t signed_transaction_ptr, bool compressed
 
 def free_transaction(uint64_t ptr):
     get_ipyeos_proxy().packed_transaction_proxy_free(<packed_transaction_proxy *>ptr)
+
+def first_authorizer(uint64_t ptr) -> str:
+    return proxy(ptr).first_authorizer()
 
 def pack(uint64_t ptr) -> bytes:
     cdef vector[char] packed = proxy(ptr).pack()

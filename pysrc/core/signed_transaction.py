@@ -97,6 +97,18 @@ class SignedTransaction(object):
     def __exit__(self, type, value, traceback):
         self.free()
 
+    def first_authorizer(self) -> str:
+        """
+        Returns the first authorizer of the transaction.
+
+        Args:
+            None
+
+        Returns:
+            str: The name of the first authorizer of the transaction.
+        """
+        return _signed_transaction.first_authorizer(self.ptr)
+
     def add_action(self, account: Name, name: Name, data: Union[bytes, Packer], auths: Dict[str, str]):
         """
         Adds an action to the transaction.

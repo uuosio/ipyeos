@@ -62,6 +62,9 @@ class PackedTransaction(object):
     def __del__(self):
         self.free()
 
+    def first_authorizer(self) -> str:
+        return _packed_transaction.first_authorizer(self.ptr)
+
     def get_signed_transaction(self):
         ptr = _packed_transaction.get_signed_transaction(self.ptr)
         return SignedTransaction.init(ptr)

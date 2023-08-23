@@ -8,7 +8,7 @@ cdef extern from "_ipyeos.hpp":
         pass
 
     ctypedef struct signed_transaction_proxy:
-        void *new_transaction(uint32_t expiration, const char *ref_block_id, size_t ref_block_id_size, uint32_t max_net_usage_words, uint8_t  max_cpu_usage_ms, uint32_t delay_sec)
+        string first_authorizer()
         void id(vector[char]& _id)
         void add_action(uint64_t account, uint64_t name, const char *data, size_t size, vector[pair[uint64_t, uint64_t]]& auths)
         bool sign(const char *private_key, size_t size, const char *chain_id, size_t chain_id_size)
@@ -41,6 +41,9 @@ def attach_transaction(uint64_t ptr) -> uint64_t:
 def free_transaction(uint64_t ptr):
     get_ipyeos_proxy().transaction_proxy_free(<void *>ptr)
 
+def first_authorizer(uint64_t ptr) -> str:
+    return proxy(ptr).first_authorizer()
+ 
 def id(uint64_t ptr) -> bytes:
     cdef vector[char] _id
     proxy(ptr).id(_id)
