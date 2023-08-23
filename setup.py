@@ -72,6 +72,7 @@ ext_modules = [
 
 packages=[
     'ipyeos',
+    'ipyeos.bases',
     'ipyeos.extensions',
     'ipyeos.node',
     'ipyeos.tester',
@@ -97,6 +98,7 @@ setup(
     package_dir={
         'ipyeos': 'pysrc',
         'ipyeos.core': 'pysrc/core',
+        'ipyeos.bases': 'pysrc/bases',
         'ipyeos.extensions': 'pysrc/extensions',
         'ipyeos.node': 'pysrc/node',
         'ipyeos.tester.interfaces': 'pysrc/tester/interfaces',
