@@ -23,8 +23,6 @@ release_files.extend([
     'tester/contracts/eosio.token/*',
     'tester/contracts/eosio.wrap/*',
     'tester/contracts/micropython/*',
-    'tester/test_template.py',
-    'tester/activate_kv.wasm',
 ])
 
 dir_name = os.path.dirname(os.path.realpath(__file__))
@@ -77,9 +75,7 @@ packages=[
     'ipyeos.node',
     'ipyeos.tester',
     'ipyeos.tester.interfaces',
-    'ipyeos.tests',
-    'ipyeos.tests.contracts',
-    'ipyeos.tests.contracts.micropython',
+    'ipyeos.tester.contracts',
 ]
 
 if os.path.exists('pysrc/release'):
@@ -102,12 +98,9 @@ setup(
         'ipyeos.extensions': 'pysrc/extensions',
         'ipyeos.node': 'pysrc/node',
         'ipyeos.tester.interfaces': 'pysrc/tester/interfaces',
-        'ipyeos.tests': 'pysrc/tests',
-        'ipyeos.tests.contracts': 'pysrc/tester/contracts',
         'ipyeos.tester': 'pysrc/tester',
         'ipyeos.release.bin': 'pysrc/release/bin',
         'ipyeos.release.lib': 'pysrc/release/lib',
-        'ipyeos.tests.contracts.micropython': 'pysrc/tester/contracts/micropython',
     },
     package_data={'ipyeos': release_files},
     ext_modules=cythonize(
