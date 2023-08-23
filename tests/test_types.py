@@ -3,7 +3,7 @@ import time
 
 from ipyeos import eos
 from ipyeos.bases import log
-from ipyeos.node.net import HandshakeMessage
+from ipyeos.node.messages import HandshakeMessage
 from ipyeos.bases.packer import Encoder, Decoder
 from ipyeos.bases.types import Checksum256, PublicKey, PrivateKey, Signature
 

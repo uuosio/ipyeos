@@ -2,7 +2,7 @@ import json
 import time
 from ipyeos.bases import log
 from ipyeos import eos
-from ipyeos.node.net import HandshakeMessage
+from ipyeos.node.messages import HandshakeMessage
 from ipyeos.bases.packer import Encoder, Decoder
 from ipyeos.bases.structs import Symbol, Asset, Transfer
 
