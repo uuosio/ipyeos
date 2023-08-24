@@ -44,7 +44,7 @@ def setup_env():
     print('export VM_API_LIB=', os.environ['VM_API_LIB'], sep='')
     print('export PYTHON_SHARED_LIB_PATH=', os.environ['PYTHON_SHARED_LIB_PATH'], sep='')
 
-def run_ipyeos_in_docker():
+def run_ipyeos_in_docker(custom_cmds=None):
     cmd = f'docker run --entrypoint ipyeos -it --rm -v "{os.getcwd()}:/develop" -w /develop -t ghcr.io/uuosio/ipyeos'
     cmd = shlex.split(cmd)
     if not custom_cmds:
@@ -60,7 +60,7 @@ def run_ipyeos(custom_cmds=None):
         return
 
     if platform.system() == 'Windows' or is_macos_arm():
-        return run_ipyeos_in_docker()
+        return run_ipyeos_in_docker(custom_cmds)
 
     setup_env()
     cmds = [ipyeos_program]

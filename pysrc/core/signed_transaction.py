@@ -155,7 +155,7 @@ class SignedTransaction(object):
 
     def pack(self, pack_type=0, compress: bool = False) -> bytes:
         """
-        Packs the signed transaction into a binary format that can be sent over the network.
+        Packs the signed transaction into a binary format.
 
         Args:
             compress: A boolean indicating whether to compress the packed data.
@@ -165,6 +165,18 @@ class SignedTransaction(object):
         """
         assert pack_type == 0 or pack_type == 1, "pack_type must be 0 or 1"
         return _signed_transaction.pack(self.ptr, compress, pack_type)
+
+    def pack_ex(self, compress: bool = False) -> bytes:
+        """
+        Packs the signed transaction into a binary format that can be sent over the network.
+
+        Args:
+            compress: A boolean indicating whether to compress the packed data.
+
+        Returns:
+            A bytes object containing the packed transaction data.
+        """
+        return self.pack(1, compress)
 
     def to_json(self, result_type: int = 0, compressed: bool = False):
         """

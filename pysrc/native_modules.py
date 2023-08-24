@@ -16,15 +16,17 @@ def load_modules():
         '_block_log',
         '_signed_transaction',
         '_packed_transaction',
-        '_trace_api',
-        '_snapshot',
-        '_state_history',
-        '_multi_index',
-        '_read_write_lock',
         '_block_state',
         '_transaction_trace',
         '_action_trace',
         '_signed_block',
+
+        '_multi_index',
+        '_read_write_lock',
+
+        '_trace_api',
+        '_snapshot',
+        '_state_history',
     ]
     ipyeos_module = sys.modules.get('ipyeos._eos')
     assert ipyeos_module, 'ipyeos._eos module not found'
@@ -46,13 +48,14 @@ from . import _database
 from . import _block_log
 from . import _signed_transaction
 from . import _packed_transaction
-from . import _trace_api
-from . import _snapshot
-from . import _state_history
-from . import _multi_index
-from . import _read_write_lock
 from . import _block_state
 from . import _transaction_trace
 from . import _action_trace
 from . import _signed_block
 
+from . import _multi_index
+from . import _read_write_lock
+
+from . import _trace_api
+from . import _snapshot
+from . import _state_history

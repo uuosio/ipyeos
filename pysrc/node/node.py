@@ -1,3 +1,4 @@
+import asyncio
 import atexit
 import copy
 import hashlib
@@ -161,7 +162,7 @@ def init(genesis_file: str, snapshot_file: str):
         except FileNotFoundError:
             logger.error('genesis file not found: %s', genesis_file)
             return
-        except JSONDecodeError:
+        except json.JSONDecodeError:
             logger.error('genesis file is not a valid json file: %s', genesis_file)
             return
         if 'genesis' in config:

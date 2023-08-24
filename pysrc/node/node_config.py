@@ -1,4 +1,5 @@
 import argparse
+import io
 import os
 import sys
 from typing import Optional
@@ -96,10 +97,16 @@ def str2bool(v):
 
 class Config(object):
 
-    def __init__(self, config_file: str):
-        with open(config_file) as f:
+    def __init__(self, config_file: str=None, config_str: str=None):
+        assert config_file or config_str
+        if config_file:
+            with open(config_file) as f:
+                self.config = yaml.safe_load(f)
+                logger.info(f'config_file: {config_file}, config: {self.config}')
+        else:
+            f = io.StringIO(config_str)
             self.config = yaml.safe_load(f)
-        logger.info(f'config_file: {config_file}, config: {self.config}')
+            logger.info(f'config: {self.config}')
 
     def get_config(self):
         return self.config
@@ -124,10 +131,16 @@ class Config(object):
 
 config: Optional[Config] = None
 
+def load_config_from_str(config_str: str):
+    global config
+    if not config:
+        config = Config(config_str=config_str)
+    return config.get_config()
+
 def load_config(config_file: str):
     global config
-    assert not config
-    config = Config(config_file)
+    if not config:
+        config = Config(config_file)
     return config.get_config()
 
 def get_config():

@@ -11,6 +11,7 @@ from pydantic import BaseModel
 from . import net, node, node_config
 from ..bases import log, rate_limit
 from ..core.chain_exceptions import BlockValidateException, InvalidSnapshotRequestException, SnapshotRequestNotFoundException, ChainException
+from ..node.messages import PackedTransactionMessage
 from ..bases.uvicorn_server import UvicornServer
 
 logger = log.get_logger(__name__)
@@ -111,7 +112,7 @@ async def push_transaction(request: Request, args: PushTransactionArgs):
     conn = await node.get_network().get_connection()
     if not conn:
         return generate_error_response("no node connection")
-    msg = net.PackedTransactionMessage(packed_tx)
+    msg = PackedTransactionMessage(packed_tx)
 
     if not args.speculate:
         if await conn.send_message(msg):
@@ -128,13 +129,13 @@ async def push_transaction(request: Request, args: PushTransactionArgs):
             with rwlock.wlock():
                 chain.start_block()
                 success, ret = chain.push_transaction_ex(packed_tx, return_json=False)
-                chain.abort_block()
         else:
             chain.start_block()
             success, ret = chain.push_transaction_ex(packed_tx, return_json=False)
-            chain.abort_block()
     except Exception as e:
         return generate_error_response(str(e))
+    finally:
+        chain.abort_block()
 
     if success:
         if await conn.send_message(msg):

@@ -284,27 +284,36 @@ def test_abort_block():
 
 @chain_test(True)
 def test_start_block(t: ChainTester):
-    # if 'pytest' in sys.modules:
-    #     print('in pytest')
-    #     return
+    with open('./test.wasm', 'rb') as f:
+        code = f.read()
+    with open('./test.abi', 'rb') as f:
+        abi = f.read()
+    t.deploy_contract('hello', code, abi)
+    t.produce_block()
+
     t.chain.abort_block()
     count = 1000
-    txs = []
-    for i in range(count):
-        action = {
-            'account': 'hello',
-            'name': 'hi',
-            'data': b'hi'.hex() + str(i).encode().hex(),
-            'authorization': [{'actor':'hello', 'permission':'active'}]
-        }
-        ret = t.gen_transaction_ex([action])
-        txs.append(ret)
+    args = {
+        'key': 0,
+        'secondary1': 1,
+        'secondary2': 2,
+        'secondary3': (b'\x03' + b'\x00' * 31).hex(),
+        'secondary4': "4.0",
+        'secondary5': "0x" + '05'*16
+    }
+
+    action = ['hello', 'teststore', args, {'hello': 'active'}]
+    tx = t.gen_transaction([action])
 
     start = time.monotonic()
 
-    for tx in txs:
+    for _ in range(count):
         t.chain.start_block()
-        t.chain.push_transaction(tx)
+        r = t.chain.push_transaction(tx)
+        # logger.info(r['elapsed'])
+        # rows = t.get_table_rows(True, 'hello', '', 'mytable', '', '', 10)
+        # logger.info(rows)
+        # break
         t.chain.abort_block()
 
     end = time.monotonic()

@@ -6,7 +6,7 @@ import time
 
 from ipyeos import eos
 from ipyeos.bases.types import PrivateKey
-from ipyeos.signed_transaction import SignedTransaction
+from ipyeos.core.signed_transaction import SignedTransaction
 from ipyeos.core.chain_exceptions import AssertException
 
 logger = logging.getLogger(__name__)
@@ -78,3 +78,27 @@ def test_get_table_rows():
     for i in range(20):
         ret = requests.post(url, json=args)
         logger.info(ret.text)
+
+def test_push_transaction():
+    port = 8820
+    ret = requests.get(f'http://127.0.0.1:{port}/v1/chain/get_info')
+    info = json.loads(ret.text)
+    logger.info(info)
+    ref_block_id = info['last_irreversible_block_id']
+    count = 5000
+    txs = []
+    for i in range(count):
+        tx = SignedTransaction(int(time.time())+60*10, ref_block_id)
+        tx.add_action('eosio', 'sayhello', b'hello, world' + str(i).encode(), {'eosio': 'active'})
+        priv_key = PrivateKey.from_base58('5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3')
+        tx.sign(priv_key, info['chain_id'])
+        raw_tx = tx.pack_ex()
+        packed_tx = raw_tx.hex()
+        txs.append(packed_tx)
+    for packed_tx in txs:
+        args = {'packed_tx': packed_tx, 'speculate': False}
+        ret = requests.post(f'http://127.0.0.1:{port}/v1/chain/push_transaction', json=args)
+        text = ret.text
+        # logger.info(text)
+        # logger.info(json.loads(text))
+        assert ret.status_code == 200

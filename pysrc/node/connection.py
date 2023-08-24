@@ -129,8 +129,8 @@ class Connection(object):
 
     async def sleep(self, seconds: float):
         while seconds > 0.0:
-            await asyncio.sleep(0.1)
-            seconds -= 0.1
+            await asyncio.sleep(0.01)
+            seconds -= 0.01
             if eos.should_exit():
                 return
 
