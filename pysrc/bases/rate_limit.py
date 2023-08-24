@@ -60,7 +60,7 @@ class Connection:
         if not self.tasks:
             return None
         task = self.tasks.pop(0)
-        logger.debug(f"Processing task {task.task} for {self.host} {task.url}")
+        #logger.debug(f"Processing task {task.task} for {self.host} {task.url}")
         start = time.monotonic()
         ret = await task.run()
         duration = time.monotonic() - start
@@ -135,20 +135,18 @@ class WeightedFairScheduler:
             self.priority_index.remove(id)
             conn = self.connections[id]
             del self.connections[id]
-            logger.debug("Removing inactive connection %s", conn)
 
     async def _process_task(self):
         self.clear_inactive_connections()
         ret = self.priority_index.last()
         if not ret:
-            await asyncio.sleep(0.01)
+            await asyncio.sleep(0.001)
             return
         id, priority = ret
         conn = self.connections[id]
         if not conn.tasks:
-            await asyncio.sleep(0.01)
+            await asyncio.sleep(0.001)
             return
-        logger.debug(f"Processing connection {conn}")
         ret = await conn.process()
         if not ret:
             return
@@ -202,11 +200,11 @@ async def rate_limit_middleware(request: Request, call_next):
             client_data['start_time'] = current_time
     # Store the updated client data
     await cache.set(client_ip, client_data)
+    # return await call_next(request)
+
     task = scheduler.add_task(request.client.host, request.url, call_next(request))
     if not task:
         error = '{"code":400, "message":"Too Many Connections, try again later.","error":{"code":0,"name":"","what":"","details":[]}}'
         return PlainTextResponse(error, status_code=400)
-    logger.debug("+++++++= Waiting for task %s", task)
     response = await task.wait()
-    logger.debug("+++++++= Got response for task %s", response)
     return response
