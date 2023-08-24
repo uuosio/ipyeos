@@ -18,9 +18,14 @@ def parse_args(cmds=None):
     debug_sub_parser.add_argument('--apply-request-port', default="9091", help="client side apply request server port, default to 9091")
 
     start_eos_parser = subparser.add_parser('eosnode', help='run a eos node')
-    start_eos_parser.add_argument('-c', '--config-file', default="config.yaml", help="config file for eosnode, default to config.yaml")
+    start_eos_parser.add_argument('-c', '--config-file', default="", help="config file for eosnode, default to config.yaml")
     start_eos_parser.add_argument('-s', '--snapshot-file', default="", help="snapshot file for eosnode")
     start_eos_parser.add_argument('-g', '--genesis-file', default="", help="genesis file for eosnode")
+
+    start_eos_test_node_parser = subparser.add_parser('testnode', help='run a eos test node')
+    start_eos_test_node_parser.add_argument('-c', '--config-file', default="", help="config file for eosnode, default to config.yaml")
+    start_eos_test_node_parser.add_argument('-s', '--snapshot-file', default="", help="snapshot file for eosnode")
+    start_eos_test_node_parser.add_argument('-g', '--genesis-file', default="", help="genesis file for eosnode")
 
     pyeos_parser = subparser.add_parser('pyeosnode', help='run a eos node in python')
     pyeos_parser.add_argument('-c', '--config-file', default="config.yaml", help="config file for pyeosnode, default to config.yaml")

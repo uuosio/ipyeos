@@ -327,10 +327,7 @@ class Main(object):
         logger.info("handle_signal: %s", signum)
         self.quit_node()
 
-    async def main_eosnode(self):
-        result = args.parse_args()
-        node_config.load_config(result.config_file)
-
+    async def _main_eosnode(self, result):
         self.async_queue = asyncio.Queue()
         future = asyncio.get_event_loop().run_in_executor(self.executor, self._run_eos, result.genesis_file, result.snapshot_file)
 
@@ -358,6 +355,17 @@ class Main(object):
         logger.info('++++++++run_eos done!')
         await self.shutdown()
         logger.info('all done!')
+
+    async def main_eosnode(self):
+        result = args.parse_args()
+        node_config.load_config(result.config_file)
+        return await self._main_eosnode(result)
+
+    async def main_testnode(self):
+        from .tester import testnet
+        result = args.parse_args()
+        testnet.init(result.config_file)
+        return await self._main_eosnode(result)
 
     async def main_pyeosnode(self):
         result = args.parse_args()
@@ -419,6 +427,8 @@ class Main(object):
             logger.info("Now you can connect with: nc localhost 50101 or rlwrap nc localhost 50101")
             if self.node_type == 'eosnode':
                 return await self.main_eosnode()
+            if self.node_type == 'testnode':
+                return await self.main_testnode()
             elif self.node_type == 'pyeosnode':
                 return await self.main_pyeosnode()
             assert False, 'unknown node type'
@@ -444,6 +454,10 @@ def run_eosnode():
     m = Main('eosnode')
     run_node(m)
 
+def run_testnode():
+    m = Main('testnode')
+    run_node(m)
+
 def run_pyeosnode():
     m = Main('pyeosnode')
     run_node(m)
@@ -453,6 +467,8 @@ def run():
         return run_eosnode()
     elif sys.argv[1] == 'pyeosnode':
         return run_pyeosnode()
+    elif sys.argv[1] == 'testnode':
+        return run_testnode()
     else:
         result = args.parse_args()
         if result.subparser == 'eosdebugger':

@@ -20,6 +20,11 @@ def run_eosnode():
     custom_cmds.extend(sys.argv[1:])
     return run.run_ipyeos(custom_cmds)
 
+def run_testnode():
+    custom_cmds=['-m', 'ipyeos', 'testnode']
+    custom_cmds.extend(sys.argv[1:])
+    return run.run_ipyeos(custom_cmds)
+
 def run_pyeosnode():
     custom_cmds=['-m', 'ipyeos', 'pyeosnode']
     custom_cmds.extend(sys.argv[1:])
